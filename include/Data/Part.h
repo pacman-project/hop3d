@@ -1,10 +1,16 @@
 #ifndef DATA_PART_H
 #define DATA_PART_H
+#include "Data/Defs.h"
+#include <vector>
 
 class Part{
 
 public:
-
+hop3d::U64 Id;
+hop3d::U8 LayerId;
+hop3d::U64 Central;
+std::vector<hop3d::U64> Members;
+typedef std::vector<Part> Seq;
 protected:
 
 private:
@@ -14,7 +20,11 @@ private:
 class PartRealization : public Part {
 
 public:
-
+hop3d::Position position;
+hop3d::ReferenceFrame referenceFrame;
+hop3d::F32 Activation;
+hop3d::I8 Scale;
+typedef std::vector<PartRealization>  Seq;
 protected:
 
 private:
