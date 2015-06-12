@@ -3,11 +3,66 @@ CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
 SET( PROJ_NAME      "HOP3D" )
 SET( PROJ_PATH      ${CMAKE_SOURCE_DIR} )
 SET( PROJ_OUT_PATH  ${CMAKE_BINARY_DIR} )
-#header files added to sources to display include files in QtCreator
-SET( PROJ_SOURCES   "main.cpp" "src/GraphBuilder.cpp" "src/LayerFilter.cpp" "src/LayerVocabulary.cpp" "src/LocalInhibitor.cpp" "src/ObjectCloud.cpp" "src/ObjectGraph.cpp" "src/ObjectReader.cpp" "src/ObjectWriter.cpp" "src/Part.cpp" "src/PartRealization.cpp" "src/PartSelector.cpp" "src/StatisticsBuilder.cpp" "src/Vocabulary.cpp" "include/GraphBuilder.h" "include/LayerFilter.h" "include/LayerVocabulary.h" "include/LocalInhibitor.h" "include/ObjectCloud.h" "include/ObjectGraph.h" "include/ObjectReader.h" "include/ObjectWriter.h" "include/Part.h" "include/PartRealization.h" "include/PartSelector.h" "include/StatisticsBuilder.h" "include/Vocabulary.h")
-SET( PROJ_HEADERS   "include/GraphBuilder.h" "include/LayerFilter.h" "include/LayerVocabulary.h" "include/LocalInhibitor.h" "include/ObjectCloud.h" "include/ObjectGraph.h" "include/ObjectReader.h" "include/ObjectWriter.h" "include/Part.h" "include/PartRealization.h" "include/PartSelector.h" "include/StatisticsBuilder.h" "include/Vocabulary.h")
+
+# Project root directory
+GET_FILENAME_COMPONENT(PROJECT_PATH . ABSOLUTE CACHE INTERNAL "Path prefix for the project")
+SET(CORE_SOURCES
+        ${PROJECT_PATH}/src/Core/GraphBuilder.cpp
+        ${PROJECT_PATH}/src/Core/LayerFilterer.cpp
+        ${PROJECT_PATH}/src/Core/LocalInhibiter.cpp
+        ${PROJECT_PATH}/src/Core/PartSelector.cpp
+        ${PROJECT_PATH}/src/Core/Reader.cpp
+        ${PROJECT_PATH}/src/Core/StatisticsBuilder.cpp
+        ${PROJECT_PATH}/src/Core/Writer.cpp
+)
+SET(CORE_HEADERS
+        ${PROJECT_PATH}/include/Core/GraphBuilder.h
+        ${PROJECT_PATH}/include/Core/LayerFilterer.h
+        ${PROJECT_PATH}/include/Core/LocalInhibiter.h
+        ${PROJECT_PATH}/include/Core/PartSelector.h
+        ${PROJECT_PATH}/include/Core/Reader.h
+        ${PROJECT_PATH}/include/Core/StatisticsBuilder.h
+        ${PROJECT_PATH}/include/Core/Writer.h
+)
+SET(CORE_FILES
+)
+
+SET(DATA_SOURCES
+
+        ${PROJECT_PATH}/src/Data/Cloud.cpp
+        ${PROJECT_PATH}/src/Data/Defs.cpp
+        ${PROJECT_PATH}/src/Data/Graph.cpp
+        ${PROJECT_PATH}/src/Data/Part.cpp
+        ${PROJECT_PATH}/src/Data/Vocabulary.cpp
+)
+SET(DATA_HEADERS
+        ${PROJECT_PATH}/include/Data/Cloud.h
+        ${PROJECT_PATH}/include/Data/Defs.h
+        ${PROJECT_PATH}/include/Data/Graph.h
+        ${PROJECT_PATH}/include/Data/Part.h
+        ${PROJECT_PATH}/include/Data/Vocabulary.h
+)
+SET(DATA_FILES
+)
+SET(APPS_SOURCES
+
+        ${PROJECT_PATH}/src/Apps/Learning/Data.cpp
+        ${PROJECT_PATH}/src/Apps/Learning/Learning.cpp
+        ${PROJECT_PATH}/src/Apps/Inference/Data.cpp
+        ${PROJECT_PATH}/src/Apps/Inference/Inference.cpp
+)
+SET(APPS_HEADERS
+        ${PROJECT_PATH}/include/Apps/Learning/Data.h
+        ${PROJECT_PATH}/include/Apps/Learning/Learning.h
+        ${PROJECT_PATH}/include/Apps/Inference/Data.h
+        ${PROJECT_PATH}/include/Apps/Inference/Inference.h
+)
+SET(DATA_FILES
+)
+
+
 SET( PROJ_LIBRARIES "" )
-SET( PROJ_INCLUDES  "include/" )
+SET( PROJ_INCLUDES  "${PROJECT_PATH}/include/" )
 
 PROJECT( ${PROJ_NAME} )
 
@@ -21,6 +76,6 @@ FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
 INCLUDE_DIRECTORIES( ${OpenCV_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES( ${PROJ_INCLUDES} )
 SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread")
-ADD_EXECUTABLE(${PROJ_NAME} ${PROJ_SOURCES})
+ADD_EXECUTABLE(${PROJ_NAME} "main.cpp" ${CORE_SOURCES} ${CORE_HEADERS} ${DATA_SOURCES} ${DATA_HEADERS} ${APPS_SOURCES} ${APPS_HEADERS})
 TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
