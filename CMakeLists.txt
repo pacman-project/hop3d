@@ -11,20 +11,27 @@ SET(CORE_SOURCES
         ${PROJECT_PATH}/src/Core/LayerFilterer.cpp
         ${PROJECT_PATH}/src/Core/LocalInhibiter.cpp
         ${PROJECT_PATH}/src/Core/PartSelector.cpp
-        ${PROJECT_PATH}/src/Core/Reader.cpp
         ${PROJECT_PATH}/src/Core/StatisticsBuilder.cpp
-        ${PROJECT_PATH}/src/Core/Writer.cpp
 )
 SET(CORE_HEADERS
         ${PROJECT_PATH}/include/Core/GraphBuilder.h
         ${PROJECT_PATH}/include/Core/LayerFilterer.h
         ${PROJECT_PATH}/include/Core/LocalInhibiter.h
         ${PROJECT_PATH}/include/Core/PartSelector.h
-        ${PROJECT_PATH}/include/Core/Reader.h
         ${PROJECT_PATH}/include/Core/StatisticsBuilder.h
-        ${PROJECT_PATH}/include/Core/Writer.h
 )
 SET(CORE_FILES
+)
+
+SET(UTILITIES_SOURCES
+        ${PROJECT_PATH}/src/Utilities/Reader.cpp
+        ${PROJECT_PATH}/src/Utilities/Writer.cpp
+)
+SET(UTILITIES_HEADERS
+        ${PROJECT_PATH}/include/Utilities/Reader.h
+        ${PROJECT_PATH}/include/Utilities/Writer.h
+)
+SET(UTILITIES_FILES
 )
 
 SET(DATA_SOURCES
@@ -76,6 +83,6 @@ FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
 INCLUDE_DIRECTORIES( ${OpenCV_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES( ${PROJ_INCLUDES} )
 SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread")
-ADD_EXECUTABLE(${PROJ_NAME} "main.cpp" ${CORE_SOURCES} ${CORE_HEADERS} ${DATA_SOURCES} ${DATA_HEADERS} ${APPS_SOURCES} ${APPS_HEADERS})
+ADD_EXECUTABLE(${PROJ_NAME} "main.cpp" ${CORE_SOURCES} ${CORE_HEADERS} ${UTILITIES_SOURCES} ${UTILITIES_HEADERS} ${DATA_SOURCES} ${DATA_HEADERS} ${APPS_SOURCES} ${APPS_HEADERS})
 TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
