@@ -35,7 +35,7 @@ class PointCloud : public Cloud{
 public:
     /// Pointer
     typedef std::unique_ptr<PointCloud> Ptr;
-std::vector<hop3d::PointNormal> PointCloudNormal;
+    std::vector<hop3d::PointNormal> PointCloudNormal;
 
 
 protected:

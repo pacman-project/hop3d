@@ -8,16 +8,19 @@
 
 
 class Part{
+    friend class LayerVocabulary;
 
 public:
+
+
+protected:
     /// Pointer
     typedef std::unique_ptr<Part> Ptr;
-hop3d::U64 Id;
-hop3d::U8 LayerId;
-hop3d::U64 Central;
-std::vector<hop3d::U64> Members;
-typedef std::vector<Part> Seq;
-protected:
+    hop3d::U64 Id;
+    hop3d::U8 LayerId;
+    hop3d::U64 Central;
+    std::vector<hop3d::U64> Members;
+    typedef std::vector<Part> Seq;
 
 private:
 
@@ -29,11 +32,12 @@ public:
     /// Pointer
     typedef std::unique_ptr<PartRealization> Ptr;
 
-hop3d::Position position;
-hop3d::ReferenceFrame referenceFrame;
-hop3d::F32 Activation;
-hop3d::I8 Scale;
-typedef std::vector<PartRealization>  Seq;
+    hop3d::Position position;
+    hop3d::ReferenceFrame referenceFrame;
+    hop3d::F32 Activation;
+    hop3d::I8 Scale;
+    typedef std::vector<PartRealization>  Seq;
+
 protected:
 
 private:
