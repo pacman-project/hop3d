@@ -25,6 +25,7 @@
 
 #BUILD Dirs
 
+build/*
 BUILD/*
 CameraWrapper/BUILD/*
 
