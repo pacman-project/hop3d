@@ -1,5 +1,8 @@
 #ifndef DATA_DEFS_H
 #define DATA_DEFS_H
+#include <iostream>
+#include <memory>
+
 #include <eigen3/Eigen/Dense>
 
 namespace hop3d {

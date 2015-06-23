@@ -1,11 +1,17 @@
 #ifndef DATA_PART_H
 #define DATA_PART_H
-#include "Data/Defs.h"
+#include <iostream>
+#include <memory>
 #include <vector>
+
+#include "Data/Defs.h"
+
 
 class Part{
 
 public:
+    /// Pointer
+    typedef std::unique_ptr<Part> Ptr;
 hop3d::U64 Id;
 hop3d::U8 LayerId;
 hop3d::U64 Central;
@@ -20,6 +26,9 @@ private:
 class PartRealization : public Part {
 
 public:
+    /// Pointer
+    typedef std::unique_ptr<PartRealization> Ptr;
+
 hop3d::Position position;
 hop3d::ReferenceFrame referenceFrame;
 hop3d::F32 Activation;
