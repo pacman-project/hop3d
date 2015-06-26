@@ -1,9 +1,11 @@
 <map id="include/Data/Defs.h" name="include/Data/Defs.h">
-<area shape="rect" id="node2" href="$_cloud_8h.html" title="include/Data/Cloud.h" alt="" coords="105,155,249,181"/>
-<area shape="rect" id="node6" href="$_part_8h.html" title="include/Data/Part.h" alt="" coords="215,80,349,107"/>
-<area shape="rect" id="node8" href="$_defs_8cpp.html" title="src/Data/Defs.cpp" alt="" coords="374,80,503,107"/>
+<area shape="rect" id="node2" href="$_cloud_8h.html" title="include/Data/Cloud.h" alt="" coords="113,155,257,181"/>
+<area shape="rect" id="node6" href="$_part_8h.html" title="include/Data/Part.h" alt="" coords="277,80,411,107"/>
+<area shape="rect" id="node7" href="$_vocabulary_8h.html" title="include/Data/Vocabulary.h" alt="" coords="431,155,605,181"/>
+<area shape="rect" id="node10" href="$_defs_8cpp.html" title="src/Data/Defs.cpp" alt="" coords="487,80,616,107"/>
 <area shape="rect" id="node3" href="$_reader_8h.html" title="include/Utilities/Reader.h" alt="" coords="5,229,173,256"/>
 <area shape="rect" id="node5" href="$_cloud_8cpp.html" title="src/Data/Cloud.cpp" alt="" coords="198,229,332,256"/>
 <area shape="rect" id="node4" href="$_reader_8cpp.html" title="src/Utilities/Reader.cpp" alt="" coords="10,304,168,331"/>
-<area shape="rect" id="node7" href="$_part_8cpp.html" title="src/Data/Part.cpp" alt="" coords="273,155,399,181"/>
+<area shape="rect" id="node9" href="$_part_8cpp.html" title="src/Data/Part.cpp" alt="" coords="281,155,407,181"/>
+<area shape="rect" id="node8" href="$_vocabulary_8cpp.html" title="src/Data/Vocabulary.cpp" alt="" coords="435,229,601,256"/>
 </map>

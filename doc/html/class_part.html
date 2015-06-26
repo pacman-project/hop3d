@@ -72,7 +72,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Friends</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -84,8 +84,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-types">Public Types</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pro-types">Protected Types</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="class_part-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">Part Class Reference</div>  </div>
@@ -101,16 +102,16 @@ Inheritance diagram for Part:</div>
 <area shape="rect" id="node2" href="class_part_realization.html" title="PartRealization" alt="" coords="5,80,115,107"/></map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
-Public Types</h2></td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-types"></a>
+Protected Types</h2></td></tr>
 <tr class="memitem:a270255868bbd294da6cdbe1a22fd71c0"><td class="memItemLeft" align="right" valign="top">typedef std::unique_ptr&lt; <a class="el" href="class_part.html">Part</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_part.html#a270255868bbd294da6cdbe1a22fd71c0">Ptr</a></td></tr>
 <tr class="memdesc:a270255868bbd294da6cdbe1a22fd71c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer.  <a href="#a270255868bbd294da6cdbe1a22fd71c0">More...</a><br/></td></tr>
 <tr class="separator:a270255868bbd294da6cdbe1a22fd71c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9cbb31df0bd4615cb133293acd55a938"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; <a class="el" href="class_part.html">Part</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_part.html#a9cbb31df0bd4615cb133293acd55a938">Seq</a></td></tr>
 <tr class="separator:a9cbb31df0bd4615cb133293acd55a938"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
 <tr class="memitem:a3d19e990ee30d25cd5f12610864300db"><td class="memItemLeft" align="right" valign="top">hop3d::U64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_part.html#a3d19e990ee30d25cd5f12610864300db">Id</a></td></tr>
 <tr class="separator:a3d19e990ee30d25cd5f12610864300db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4e9f24ead3926518a74b37c5101efc0"><td class="memItemLeft" align="right" valign="top">hop3d::U8&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_part.html#ac4e9f24ead3926518a74b37c5101efc0">LayerId</a></td></tr>
@@ -119,16 +120,29 @@ Public Attributes</h2></td></tr>
 <tr class="separator:a1dafacbc907066c3976ca09dc69a7421"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5e3891ace1e60c4b0c9b86bad225a38"><td class="memItemLeft" align="right" valign="top">std::vector&lt; hop3d::U64 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_part.html#ad5e3891ace1e60c4b0c9b86bad225a38">Members</a></td></tr>
 <tr class="separator:ad5e3891ace1e60c4b0c9b86bad225a38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:a89d34d14776f6667e8cf4c088578f931"><td class="memItemLeft" align="right" valign="top">class&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_part.html#a89d34d14776f6667e8cf4c088578f931">LayerVocabulary</a></td></tr>
+<tr class="separator:a89d34d14776f6667e8cf4c088578f931"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Typedef Documentation</h2>
 <a class="anchor" id="a270255868bbd294da6cdbe1a22fd71c0"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">typedef std::unique_ptr&lt;<a class="el" href="class_part.html">Part</a>&gt; <a class="el" href="class_part.html#a270255868bbd294da6cdbe1a22fd71c0">Part::Ptr</a></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>Pointer. </p>
@@ -138,11 +152,40 @@ Public Attributes</h2></td></tr>
 <a class="anchor" id="a9cbb31df0bd4615cb133293acd55a938"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">typedef std::vector&lt;<a class="el" href="class_part.html">Part</a>&gt; <a class="el" href="class_part.html#a9cbb31df0bd4615cb133293acd55a938">Part::Seq</a></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Friends And Related Function Documentation</h2>
+<a class="anchor" id="a89d34d14776f6667e8cf4c088578f931"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">friend class <a class="el" href="class_layer_vocabulary.html">LayerVocabulary</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
@@ -151,11 +194,19 @@ Public Attributes</h2></td></tr>
 <a class="anchor" id="a1dafacbc907066c3976ca09dc69a7421"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">hop3d::U64 Part::Central</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
@@ -163,11 +214,19 @@ Public Attributes</h2></td></tr>
 <a class="anchor" id="a3d19e990ee30d25cd5f12610864300db"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">hop3d::U64 Part::Id</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
@@ -175,11 +234,19 @@ Public Attributes</h2></td></tr>
 <a class="anchor" id="ac4e9f24ead3926518a74b37c5101efc0"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">hop3d::U8 Part::LayerId</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
@@ -187,11 +254,19 @@ Public Attributes</h2></td></tr>
 <a class="anchor" id="ad5e3891ace1e60c4b0c9b86bad225a38"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">std::vector&lt;hop3d::U64&gt; Part::Members</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
@@ -202,7 +277,7 @@ Public Attributes</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jun 23 2015 16:45:13 for HOP3D by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Jun 23 2015 18:12:42 for HOP3D by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

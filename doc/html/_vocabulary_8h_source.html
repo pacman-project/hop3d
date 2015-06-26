@@ -70,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Friends</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -93,38 +93,55 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define DATA_VOCABULARY_H</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;memory&gt;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;</div>
-<div class="line"><a name="l00006"></a><span class="lineno"><a class="line" href="class_vocabulary.html">    6</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_vocabulary.html">Vocabulary</a>{</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00010"></a><span class="lineno"><a class="line" href="class_vocabulary.html#aaeaf17c4e25e6d7c8cb3ce9598c74715">   10</a></span>&#160;    <span class="keyword">typedef</span> std::unique_ptr&lt;Vocabulary&gt; <a class="code" href="class_vocabulary.html#aaeaf17c4e25e6d7c8cb3ce9598c74715">Ptr</a>;</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;};</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
-<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="class_layer_vocabulary.html">   18</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_layer_vocabulary.html">LayerVocabulary</a> : <span class="keyword">public</span> <a class="code" href="class_vocabulary.html">Vocabulary</a> {</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="class_layer_vocabulary.html#adc324deadcd03d2844a300b98421a39b">   22</a></span>&#160;    <span class="keyword">typedef</span> std::unique_ptr&lt;LayerVocabulary&gt; <a class="code" href="class_layer_vocabulary.html#adc324deadcd03d2844a300b98421a39b">Ptr</a>;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;};</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* DATA_VOCABULARY_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="class_layer_vocabulary_html"><div class="ttname"><a href="class_layer_vocabulary.html">LayerVocabulary</a></div><div class="ttdef"><b>Definition:</b> Vocabulary.h:18</div></div>
-<div class="ttc" id="class_layer_vocabulary_html_adc324deadcd03d2844a300b98421a39b"><div class="ttname"><a href="class_layer_vocabulary.html#adc324deadcd03d2844a300b98421a39b">LayerVocabulary::Ptr</a></div><div class="ttdeci">std::unique_ptr&lt; LayerVocabulary &gt; Ptr</div><div class="ttdoc">Pointer. </div><div class="ttdef"><b>Definition:</b> Vocabulary.h:22</div></div>
-<div class="ttc" id="class_vocabulary_html_aaeaf17c4e25e6d7c8cb3ce9598c74715"><div class="ttname"><a href="class_vocabulary.html#aaeaf17c4e25e6d7c8cb3ce9598c74715">Vocabulary::Ptr</a></div><div class="ttdeci">std::unique_ptr&lt; Vocabulary &gt; Ptr</div><div class="ttdoc">Pointer. </div><div class="ttdef"><b>Definition:</b> Vocabulary.h:10</div></div>
-<div class="ttc" id="class_vocabulary_html"><div class="ttname"><a href="class_vocabulary.html">Vocabulary</a></div><div class="ttdef"><b>Definition:</b> Vocabulary.h:6</div></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="_defs_8h.html">Data/Defs.h</a>&quot;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="_part_8h.html">Data/Part.h</a>&quot;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;</div>
+<div class="line"><a name="l00011"></a><span class="lineno"><a class="line" href="class_layer_vocabulary.html">   11</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_layer_vocabulary.html">LayerVocabulary</a>{</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="class_layer_vocabulary.html#adc324deadcd03d2844a300b98421a39b">   15</a></span>&#160;    <span class="keyword">typedef</span> std::unique_ptr&lt;LayerVocabulary&gt; <a class="code" href="class_layer_vocabulary.html#adc324deadcd03d2844a300b98421a39b">Ptr</a>;</div>
+<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="class_layer_vocabulary.html#a6f7881278bd7896751e23ae258bcbcb9">   16</a></span>&#160;    hop3d::U8 <a class="code" href="class_layer_vocabulary.html#a6f7881278bd7896751e23ae258bcbcb9">Id</a>;</div>
+<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="class_layer_vocabulary.html#a5a33255cbfcdbf3a63fd78a4003bd865">   17</a></span>&#160;    <a class="code" href="class_part.html#a9cbb31df0bd4615cb133293acd55a938">Part::Seq</a> <a class="code" href="class_layer_vocabulary.html#a5a33255cbfcdbf3a63fd78a4003bd865">PartVector</a>;</div>
+<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="class_layer_vocabulary.html#a6098bd61090934286a749873181b5077">   18</a></span>&#160;    <span class="keyword">typedef</span> std::vector&lt;LayerVocabulary&gt; <a class="code" href="class_layer_vocabulary.html#a6098bd61090934286a749873181b5077">Seq</a>;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;};</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
+<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="class_vocabulary.html">   25</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_vocabulary.html">Vocabulary</a>{</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="class_vocabulary.html#aaeaf17c4e25e6d7c8cb3ce9598c74715">   29</a></span>&#160;    <span class="keyword">typedef</span> std::unique_ptr&lt;Vocabulary&gt; <a class="code" href="class_vocabulary.html#aaeaf17c4e25e6d7c8cb3ce9598c74715">Ptr</a>;</div>
+<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="class_vocabulary.html#a773229c5a76412765f5e486c287bea88">   30</a></span>&#160;    <a class="code" href="class_layer_vocabulary.html#a6098bd61090934286a749873181b5077">LayerVocabulary::Seq</a> <a class="code" href="class_vocabulary.html#a773229c5a76412765f5e486c287bea88">LearntVocabulary</a>;</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;};</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* DATA_VOCABULARY_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="class_layer_vocabulary_html_a6f7881278bd7896751e23ae258bcbcb9"><div class="ttname"><a href="class_layer_vocabulary.html#a6f7881278bd7896751e23ae258bcbcb9">LayerVocabulary::Id</a></div><div class="ttdeci">hop3d::U8 Id</div><div class="ttdef"><b>Definition:</b> Vocabulary.h:16</div></div>
+<div class="ttc" id="class_part_html_a9cbb31df0bd4615cb133293acd55a938"><div class="ttname"><a href="class_part.html#a9cbb31df0bd4615cb133293acd55a938">Part::Seq</a></div><div class="ttdeci">std::vector&lt; Part &gt; Seq</div><div class="ttdef"><b>Definition:</b> Part.h:23</div></div>
+<div class="ttc" id="class_vocabulary_html_a773229c5a76412765f5e486c287bea88"><div class="ttname"><a href="class_vocabulary.html#a773229c5a76412765f5e486c287bea88">Vocabulary::LearntVocabulary</a></div><div class="ttdeci">LayerVocabulary::Seq LearntVocabulary</div><div class="ttdef"><b>Definition:</b> Vocabulary.h:30</div></div>
+<div class="ttc" id="_part_8h_html"><div class="ttname"><a href="_part_8h.html">Part.h</a></div></div>
+<div class="ttc" id="class_layer_vocabulary_html"><div class="ttname"><a href="class_layer_vocabulary.html">LayerVocabulary</a></div><div class="ttdef"><b>Definition:</b> Vocabulary.h:11</div></div>
+<div class="ttc" id="class_layer_vocabulary_html_adc324deadcd03d2844a300b98421a39b"><div class="ttname"><a href="class_layer_vocabulary.html#adc324deadcd03d2844a300b98421a39b">LayerVocabulary::Ptr</a></div><div class="ttdeci">std::unique_ptr&lt; LayerVocabulary &gt; Ptr</div><div class="ttdoc">Pointer. </div><div class="ttdef"><b>Definition:</b> Vocabulary.h:15</div></div>
+<div class="ttc" id="class_vocabulary_html_aaeaf17c4e25e6d7c8cb3ce9598c74715"><div class="ttname"><a href="class_vocabulary.html#aaeaf17c4e25e6d7c8cb3ce9598c74715">Vocabulary::Ptr</a></div><div class="ttdeci">std::unique_ptr&lt; Vocabulary &gt; Ptr</div><div class="ttdoc">Pointer. </div><div class="ttdef"><b>Definition:</b> Vocabulary.h:29</div></div>
+<div class="ttc" id="class_layer_vocabulary_html_a6098bd61090934286a749873181b5077"><div class="ttname"><a href="class_layer_vocabulary.html#a6098bd61090934286a749873181b5077">LayerVocabulary::Seq</a></div><div class="ttdeci">std::vector&lt; LayerVocabulary &gt; Seq</div><div class="ttdef"><b>Definition:</b> Vocabulary.h:18</div></div>
+<div class="ttc" id="class_layer_vocabulary_html_a5a33255cbfcdbf3a63fd78a4003bd865"><div class="ttname"><a href="class_layer_vocabulary.html#a5a33255cbfcdbf3a63fd78a4003bd865">LayerVocabulary::PartVector</a></div><div class="ttdeci">Part::Seq PartVector</div><div class="ttdef"><b>Definition:</b> Vocabulary.h:17</div></div>
+<div class="ttc" id="_defs_8h_html"><div class="ttname"><a href="_defs_8h.html">Defs.h</a></div></div>
+<div class="ttc" id="class_vocabulary_html"><div class="ttname"><a href="class_vocabulary.html">Vocabulary</a></div><div class="ttdef"><b>Definition:</b> Vocabulary.h:25</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jun 23 2015 16:45:13 for HOP3D by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Jun 23 2015 18:12:42 for HOP3D by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
