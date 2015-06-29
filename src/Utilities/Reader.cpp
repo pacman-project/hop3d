@@ -17,7 +17,7 @@ void Reader::split(const std::string& s, char c,std::vector<std::string>& v) {
    }
 }
 
-int Reader::readPlyFile(std::string fileName, PointCloud& pointCloud, std::vector<Eigen::Vector4i> &outputFaces){
+int Reader::readPlyFile(std::string fileName, PointCloud& outputPointCloud, std::vector<Eigen::Vector4i> &outputFaces){
     std::cout << "Loading file: " << fileName << std::endl;
     std::string line;
     std::ifstream myfile (fileName.c_str());
@@ -59,10 +59,10 @@ int Reader::readPlyFile(std::string fileName, PointCloud& pointCloud, std::vecto
             hop3d::PointNormal tempPointNormal;
             tempPointNormal.position = vecPoint;
             tempPointNormal.normal = vecNorm;
-            pointCloud.PointCloudNormal.push_back(tempPointNormal);
+            outputPointCloud.PointCloudNormal.push_back(tempPointNormal);
         }
         std::cout << "Points and normals successfuly loaded from " << fileName << std::endl;
-        //std::cout << "The data occupies " << (2*(sizeof(std::vector<Eigen::Vector3f>) + (sizeof(Eigen::Vector3f) * outputCloud.size())))/1024/1024 << " MB" << std::endl;
+        std::cout << "The data occupies " << (2*(sizeof(std::vector<Eigen::Vector3f>) + (sizeof(Eigen::Vector3f) * outputPointCloud.PointCloudNormal.size())))/1024/1024 << " MB" << std::endl;
         for(unsigned long  i=0; i < faceElements; i++ ){
         getline (myfile,line);
         line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());

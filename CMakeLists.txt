@@ -57,12 +57,16 @@ SET(APPS_SOURCES
         ${PROJECT_PATH}/src/Apps/Learning/Learning.cpp
         ${PROJECT_PATH}/src/Apps/Inference/Data.cpp
         ${PROJECT_PATH}/src/Apps/Inference/Inference.cpp
+        ${PROJECT_PATH}/src/Apps/Visualization/Data.cpp
+        ${PROJECT_PATH}/src/Apps/Visualization/Visualization.cpp
 )
 SET(APPS_HEADERS
         ${PROJECT_PATH}/include/Apps/Learning/Data.h
         ${PROJECT_PATH}/include/Apps/Learning/Learning.h
         ${PROJECT_PATH}/include/Apps/Inference/Data.h
         ${PROJECT_PATH}/include/Apps/Inference/Inference.h
+        ${PROJECT_PATH}/include/Apps/Visualization/Data.h
+        ${PROJECT_PATH}/include/Apps/Visualization/Visualization.h
 )
 SET(DATA_FILES
 )
@@ -83,6 +87,10 @@ FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
 INCLUDE_DIRECTORIES( ${OpenCV_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES( ${PROJ_INCLUDES} )
 SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread")
-ADD_EXECUTABLE(${PROJ_NAME} "main.cpp" ${CORE_SOURCES} ${CORE_HEADERS} ${UTILITIES_SOURCES} ${UTILITIES_HEADERS} ${DATA_SOURCES} ${DATA_HEADERS} ${APPS_SOURCES} ${APPS_HEADERS})
+ADD_EXECUTABLE(${PROJ_NAME} "main.cpp" ${CORE_SOURCES} ${CORE_HEADERS} ${UTILITIES_SOURCES} ${UTILITIES_HEADERS} ${DATA_SOURCES} ${DATA_HEADERS})
+ADD_EXECUTABLE("${PROJ_NAME}_Visualization" "src/Apps/Visualization/Visualization.cpp" ${CORE_SOURCES} ${CORE_HEADERS} ${UTILITIES_SOURCES} ${UTILITIES_HEADERS} ${DATA_SOURCES} ${DATA_HEADERS})
+ADD_EXECUTABLE("${PROJ_NAME}_Learning" "src/Apps/Learning/Learning.cpp" ${CORE_SOURCES} ${CORE_HEADERS} ${UTILITIES_SOURCES} ${UTILITIES_HEADERS} ${DATA_SOURCES} ${DATA_HEADERS})
+ADD_EXECUTABLE("${PROJ_NAME}_Inference" "src/Apps/Inference/Inference.cpp" ${CORE_SOURCES} ${CORE_HEADERS} ${UTILITIES_SOURCES} ${UTILITIES_HEADERS} ${DATA_SOURCES} ${DATA_HEADERS})
+
 TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 

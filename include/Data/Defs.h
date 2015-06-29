@@ -49,6 +49,7 @@ typedef double					F64;
 
 typedef Eigen::Vector3f         Position;
 typedef Eigen::Vector3f         Normal;
+typedef Eigen::Vector4i         Face;
 class PointNormal{
 public:
     Position position;

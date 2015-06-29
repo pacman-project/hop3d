@@ -11,7 +11,7 @@ class Reader{
 public:
 /// Pointer
     typedef std::unique_ptr<Reader> Ptr;
-    int readPlyFile(std::string fileName, PointCloud& pointCloud, std::vector<Eigen::Vector4i> &outputFaces);
+    int readPlyFile(std::string fileName, PointCloud& outputPointCloud, std::vector<Eigen::Vector4i> &outputFaces);
 
 
 
