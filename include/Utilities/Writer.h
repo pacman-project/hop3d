@@ -1,5 +1,5 @@
-#ifndef CORE_WRITER_H
-#define CORE_WRITER_H
+#ifndef UTILITIES_WRITER_H
+#define UTILITIES_WRITER_H
 #include "Data/Cloud.h"
 
 #include <iostream>
@@ -22,4 +22,4 @@ private:
 };
 
 
-#endif /* CORE_WRITER_H */
+#endif /* UTILITIES_WRITER_H */

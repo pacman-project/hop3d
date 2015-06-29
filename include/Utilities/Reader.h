@@ -1,5 +1,5 @@
-#ifndef CORE_READER_H
-#define CORE_READER_H
+#ifndef UTILITIES_READER_H
+#define UTILITIES_READER_H
 #include "Data/Cloud.h"
 #include <iostream>
 #include <memory>
@@ -23,4 +23,4 @@ private:
 };
 
 
-#endif /* CORE_READER_H */
+#endif /* UTILITIES_READER_H */
