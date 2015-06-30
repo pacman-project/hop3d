@@ -46,6 +46,7 @@ typedef unsigned long long		U64;
 
 typedef float					F32;
 typedef double					F64;
+#endif
 
 typedef Eigen::Vector3f         Position;
 typedef Eigen::Vector3f         Normal;
@@ -57,7 +58,7 @@ public:
 };
 typedef Eigen::Matrix3f         ReferenceFrame;
 
-#endif
+
 
 
 }

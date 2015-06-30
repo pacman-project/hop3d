@@ -3,8 +3,8 @@
 
 
 void Reader::split(const std::string& s, char c,std::vector<std::string>& v) {
-   int i = 0;
-   int j = s.find(c);
+   std::size_t i = 0;
+   std::size_t j = s.find(c);
 
    while (j >= 0) {
       v.push_back(s.substr(i, j-i));
@@ -31,11 +31,11 @@ int Reader::readPlyFile(std::string fileName, PointCloud& outputPointCloud, std:
            if(lineSeq.size() > 0){
                 if(lineSeq[0] == "element"){
                     if(lineSeq[1] == "vertex"){
-                        vertexElements = ::atof(lineSeq[2].c_str());
+                        vertexElements = std::atol(lineSeq[2].c_str());
                         std::cout << "Number of vertices: " << vertexElements <<std::endl;
                     }
                     if(lineSeq[1] == "face"){
-                        faceElements = ::atof(lineSeq[2].c_str());
+                        faceElements = std::atol(lineSeq[2].c_str());
                         std::cout << "Number of faces: " << faceElements <<std::endl;
                     }
 
@@ -54,8 +54,8 @@ int Reader::readPlyFile(std::string fileName, PointCloud& outputPointCloud, std:
             split(line,' ',lineSeq);
             Eigen::Vector3f vecPoint;
             Eigen::Vector3f vecNorm;
-            for(int i = 0; i< 3; i++) vecPoint(i) = ::atof(lineSeq[i].c_str());
-            for(int i = 3; i< 6; i++) vecNorm(i-3) = ::atof(lineSeq[i].c_str());
+            for(int i = 0; i< 3; i++) vecPoint(i) = float(std::atof(lineSeq[i].c_str()));
+            for(int i = 3; i< 6; i++) vecNorm(i-3) = float(std::atof(lineSeq[i].c_str()));
             hop3d::PointNormal tempPointNormal;
             tempPointNormal.position = vecPoint;
             tempPointNormal.normal = vecNorm;
@@ -71,7 +71,7 @@ int Reader::readPlyFile(std::string fileName, PointCloud& outputPointCloud, std:
             std::vector<std::string> lineSeq;
             split(line,' ',lineSeq);
             Eigen::Vector4i vecFace;
-            for(int i = 1; i< 5; i++) vecFace(i-1) = ::atof(lineSeq[i].c_str());
+            for(int i = 1; i< 5; i++) vecFace(i-1) = std::atoi(lineSeq[i].c_str());
             outputFaces.push_back(vecFace);
         }
         myfile.close();
