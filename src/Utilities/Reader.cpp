@@ -6,12 +6,12 @@ void Reader::split(const std::string& s, char c,std::vector<std::string>& v) {
    std::size_t i = 0;
    std::size_t j = s.find(c);
 
-   while (j >= 0) {
+   while (j != std::string::npos) {
       v.push_back(s.substr(i, j-i));
       i = ++j;
       j = s.find(c, j);
 
-      if (j < 0) {
+      if (j == std::string::npos) {
          v.push_back(s.substr(i, s.length()));
       }
    }
@@ -21,7 +21,6 @@ int Reader::readPlyFile(std::string fileName, PointCloud& outputPointCloud, std:
     std::cout << "Loading file: " << fileName << std::endl;
     std::string line;
     std::ifstream myfile (fileName.c_str());
-    int j = 0;
     unsigned long vertexElements;
     unsigned long faceElements;
     if (myfile.is_open()){
@@ -31,11 +30,11 @@ int Reader::readPlyFile(std::string fileName, PointCloud& outputPointCloud, std:
            if(lineSeq.size() > 0){
                 if(lineSeq[0] == "element"){
                     if(lineSeq[1] == "vertex"){
-                        vertexElements = std::atol(lineSeq[2].c_str());
+                        vertexElements = std::atoi(lineSeq[2].c_str());
                         std::cout << "Number of vertices: " << vertexElements <<std::endl;
                     }
                     if(lineSeq[1] == "face"){
-                        faceElements = std::atol(lineSeq[2].c_str());
+                        faceElements = std::stol(lineSeq[2].c_str());
                         std::cout << "Number of faces: " << faceElements <<std::endl;
                     }
 
@@ -54,8 +53,8 @@ int Reader::readPlyFile(std::string fileName, PointCloud& outputPointCloud, std:
             split(line,' ',lineSeq);
             Eigen::Vector3f vecPoint;
             Eigen::Vector3f vecNorm;
-            for(int i = 0; i< 3; i++) vecPoint(i) = float(std::atof(lineSeq[i].c_str()));
-            for(int i = 3; i< 6; i++) vecNorm(i-3) = float(std::atof(lineSeq[i].c_str()));
+            for(int i = 0; i< 3; i++) vecPoint(i) = std::stof(lineSeq[i].c_str());
+            for(int i = 3; i< 6; i++) vecNorm(i-3) = std::stof(lineSeq[i].c_str());
             hop3d::PointNormal tempPointNormal;
             tempPointNormal.position = vecPoint;
             tempPointNormal.normal = vecNorm;
@@ -71,7 +70,7 @@ int Reader::readPlyFile(std::string fileName, PointCloud& outputPointCloud, std:
             std::vector<std::string> lineSeq;
             split(line,' ',lineSeq);
             Eigen::Vector4i vecFace;
-            for(int i = 1; i< 5; i++) vecFace(i-1) = std::atoi(lineSeq[i].c_str());
+            for(int i = 1; i< 5; i++) vecFace(i-1) = std::stoi(lineSeq[i].c_str());
             outputFaces.push_back(vecFace);
         }
         myfile.close();

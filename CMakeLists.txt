@@ -20,6 +20,7 @@ IF (WIN32)
 	ENDIF(X86_64)
 ENDIF()
 
+
 SET(DATA_SOURCES
 
         ${PROJECT_PATH}/src/Data/Cloud.cpp
@@ -115,7 +116,8 @@ ENDIF()
 #INCLUDE_DIRECTORIES( ${OpenCV_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES( ${EIGEN_INCLUDE} ${PROJ_INCLUDES} )
 IF (UNIX)
-SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread")
+#"-Wall -Wextra -Wconversion" warning flags for equivalence with VS W4
+SET(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -std=c++11 -pthread")
 ENDIF()
 
 ADD_LIBRARY("${PROJ_NAME}_data" ${DATA_HEADERS} ${DATA_SOURCES})
