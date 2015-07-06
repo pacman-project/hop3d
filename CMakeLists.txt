@@ -1,4 +1,6 @@
-CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
+CMAKE_MINIMUM_REQUIRED( VERSION 2.6 )
+
+option(BUILD_VISUALIZATION_MODULE "Build HOP3D OpenGL 3.0 visualization module" ON)
 
 SET( PROJ_NAME      "HOP3D" )
 SET( PROJ_PATH      ${CMAKE_SOURCE_DIR} )
@@ -8,17 +10,19 @@ SET( PROJ_OUT_PATH  ${CMAKE_BINARY_DIR} )
 GET_FILENAME_COMPONENT(PROJECT_PATH . ABSOLUTE CACHE INTERNAL "Path prefix for the project")
 # Windows 32/64 bit
 IF (WIN32)
-	SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
-	IF(X86_64)
-		SET(PROGRAM_FILES $ENV{ProgramW6432})
-		SET(X86_WIN "64")
-		SET(X86_X64 "/x64")
-	ELSE(X86_64)
-		SET(PROGRAM_FILES $ENV{ProgramFiles})
-		SET(X86_WIN "32")
-		SET(X86_X64 "")
-	ENDIF(X86_64)
+        SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+        IF(X86_64)
+                SET(PROGRAM_FILES $ENV{ProgramW6432})
+                SET(X86_WIN "64")
+                SET(X86_X64 "/x64")
+        ELSE(X86_64)
+                SET(PROGRAM_FILES $ENV{ProgramFiles})
+                SET(X86_WIN "32")
+                SET(X86_X64 "")
+        ENDIF(X86_64)
 ENDIF()
+
+
 
 
 SET(DATA_SOURCES
@@ -59,19 +63,49 @@ SET(CORE_HEADERS
 SET(CORE_FILES
 )
 SOURCE_GROUP("Core" FILES ${CORE_HEADERS})
+SOURCE_GROUP("Core" FILES ${CORE_SOURCES})
+
 SET(UTILITIES_SOURCES
         ${PROJECT_PATH}/src/Utilities/Reader.cpp
-        ${PROJECT_PATH}/src/Utilities/Visualizer.cpp
         ${PROJECT_PATH}/src/Utilities/Writer.cpp
 )
+
+
+
 SET(UTILITIES_HEADERS
         ${PROJECT_PATH}/include/Utilities/Reader.h
-        ${PROJECT_PATH}/include/Utilities/Visualizer.h
         ${PROJECT_PATH}/include/Utilities/Writer.h
+
 )
 SET(UTILITIES_FILES
 )
-SOURCE_GROUP("Utilities" FILES ${UTILITIES_HEADERS})
+
+IF (BUILD_VISUALIZATION_MODULE)
+SET(VISUALIZER_SOURCES
+        ${PROJECT_PATH}/src/Visualizer/Visualizer.cpp
+        ${PROJECT_PATH}/src/Visualizer/shader.cpp
+        ${PROJECT_PATH}/src/Visualizer/texture.cpp
+        ${PROJECT_PATH}/src/Visualizer/objloader.cpp
+        ${PROJECT_PATH}/src/Visualizer/vboindexer.cpp
+        ${PROJECT_PATH}/src/Visualizer/quaternion_utils.cpp
+
+)
+
+SET(VISUALIZER_HEADERS
+        ${PROJECT_PATH}/include/Visualizer/Visualizer.h
+        ${PROJECT_PATH}/include/Visualizer/shader.hpp
+        ${PROJECT_PATH}/include/Visualizer/texture.hpp
+        ${PROJECT_PATH}/include/Visualizer/objloader.hpp
+        ${PROJECT_PATH}/include/Visualizer/vboindexer.hpp
+        ${PROJECT_PATH}/include/Visualizer/quaternion_utils.hpp
+)
+SET(VISUALIZER_FILES
+        ${PROJECT_PATH}/src/shaders/StandardShading.fragmentshader
+        ${PROJECT_PATH}/src/shaders/StandardShading.vertexshader
+)
+SOURCE_GROUP("VISUALIZER" FILES ${VISUALISATION_HEADERS})
+SOURCE_GROUP("VISUALIZER" FILES ${VISUALISATION_SOURCES})
+ENDIF (BUILD_VISUALIZATION_MODULE)
 
 SET(APPS_SOURCES
 
@@ -93,12 +127,51 @@ SET(APPS_HEADERS
 SET(DATA_FILES
 )
 SOURCE_GROUP("APPS" FILES ${APPS_HEADERS})
+SOURCE_GROUP("APPS" FILES ${APPS_SOURCES})
 
 
 SET( PROJ_LIBRARIES "" )
 SET( PROJ_INCLUDES  "${PROJECT_PATH}/include/" )
 
 PROJECT( ${PROJ_NAME} )
+
+IF (BUILD_VISUALIZATION_MODULE)
+    FIND_PACKAGE ( OpenGL REQUIRED)
+# Compile external dependencies
+add_subdirectory (external)
+
+# On Visual 2005 and above, this module can set the debug working directory
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/external/rpavlik-cmake-modules-1c73e35")
+include(CreateLaunchers)
+include(MSVCMultipleProcessCompile) # /MP
+
+include_directories(
+        external/AntTweakBar-1.16/include/
+        external/glfw-3.0.3/include/GLFW/
+        external/glm-0.9.4.0/
+        external/glew-1.9.0/include/
+        external/assimp-3.0.1270/include/
+        include/
+        .
+)
+
+set(ALL_LIBS
+        ${OPENGL_LIBRARY}
+        GLFW_303
+        GLEW_190
+        ANTTWEAKBAR_116_OGLCORE_GLFW
+)
+
+add_definitions(
+        -DTW_STATIC
+        -DTW_NO_LIB_PRAGMA
+        -DTW_NO_DIRECT3D
+        -DGLEW_STATIC
+        -D_CRT_SECURE_NO_WARNINGS
+)
+
+ENDIF (BUILD_VISUALIZATION_MODULE)
+
 
 FIND_PACKAGE(OpenMP)
 IF (OPENMP_FOUND)
@@ -108,7 +181,7 @@ ENDIF()
 
 IF (WIN32)
 # Eigen
-	SET(EIGEN_INCLUDE "${PROGRAM_FILES}/eigen" CACHE PATH "Path prefix for EIGEN include")
+        SET(EIGEN_INCLUDE "${PROGRAM_FILES}/eigen" CACHE PATH "Path prefix for EIGEN include")
 ENDIF()
 
 #FIND_PACKAGE( OpenCV REQUIRED )
@@ -123,6 +196,8 @@ ENDIF()
 ADD_LIBRARY("${PROJ_NAME}_data" ${DATA_HEADERS} ${DATA_SOURCES})
 ADD_LIBRARY("${PROJ_NAME}_core" ${CORE_HEADERS} ${CORE_SOURCES})
 ADD_LIBRARY("${PROJ_NAME}_utilities" ${UTILITIES_HEADERS} ${UTILITIES_SOURCES})
+ADD_LIBRARY("${PROJ_NAME}_visualizer" ${VISUALIZER_HEADERS} ${VISUALIZER_SOURCES})
+
 
 ADD_EXECUTABLE(${PROJ_NAME} "main.cpp"   )
 ADD_EXECUTABLE("${PROJ_NAME}_Visualization" "src/Apps/Visualization/Visualization.cpp")
@@ -131,5 +206,5 @@ ADD_EXECUTABLE("${PROJ_NAME}_Inference" "src/Apps/Inference/Inference.cpp")
 
 #TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" "${PROJ_NAME}_utilities")
-TARGET_LINK_LIBRARIES( "${PROJ_NAME}_Visualization" ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" "${PROJ_NAME}_utilities")
+TARGET_LINK_LIBRARIES( "${PROJ_NAME}_Visualization" ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" "${PROJ_NAME}_utilities" "${PROJ_NAME}_visualizer" ${ALL_LIBS} )
 

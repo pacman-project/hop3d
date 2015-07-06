@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/krzysztof/Dokumenty/Birmingham_research/3DScanner/external/AntTweakBar-1.16/src/MiniGLFW.h
+
+/home/krzysztof/Dokumenty/Birmingham_research/3DScanner/external/AntTweakBar-1.16/src/TwEventGLFW.c
+MiniGLFW.h
+/home/krzysztof/Dokumenty/Birmingham_research/3DScanner/external/AntTweakBar-1.16/src/MiniGLFW.h
+AntTweakBar.h
+-
+
+external/AntTweakBar-1.16/include/AntTweakBar.h
+stddef.h
+-
+string
+-
+string
+-
+
