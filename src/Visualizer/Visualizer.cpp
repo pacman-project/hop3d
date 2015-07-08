@@ -99,6 +99,56 @@ int Visualizer::initialize(int windowWidth, int windowHeight, const char* window
 }
 
 int Visualizer::loadVertices(const char* imagePath, const char* objPath){
+//    // Get a handle for our buffers
+//    vertexPosition_modelspaceID = glGetAttribLocation(programID, "vertexPosition_modelspace");
+//    vertexUVID = glGetAttribLocation(programID, "vertexUV");
+//    vertexNormal_modelspaceID = glGetAttribLocation(programID, "vertexNormal_modelspace");
+
+//    // Load the texture
+//    Texture = loadDDS(imagePath);
+
+//    // Get a handle for our "myTextureSampler" uniform
+//    TextureID  = glGetUniformLocation(programID, "myTextureSampler");
+
+//    // Read our .obj file
+//    std::vector<glm::vec3> vertices;
+//    std::vector<glm::vec2> uvs;
+//    std::vector<glm::vec3> normals;
+//    bool res = loadOBJ(objPath, vertices, uvs, normals);
+
+
+//    std::vector<glm::vec3> indexed_vertices;
+//    std::vector<glm::vec2> indexed_uvs;
+//    std::vector<glm::vec3> indexed_normals;
+//    indexVBO(vertices, uvs, normals, indices, indexed_vertices, indexed_uvs, indexed_normals);
+
+//    // Load it into a VBO
+
+//    glGenBuffers(1, &vertexbuffer);
+//    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+//    glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(glm::vec3), &indexed_vertices[0], GL_STATIC_DRAW);
+
+//    glGenBuffers(1, &uvbuffer);
+//    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+//    glBufferData(GL_ARRAY_BUFFER, indexed_uvs.size() * sizeof(glm::vec2), &indexed_uvs[0], GL_STATIC_DRAW);
+
+//    glGenBuffers(1, &normalbuffer);
+//    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+//    glBufferData(GL_ARRAY_BUFFER, indexed_normals.size() * sizeof(glm::vec3), &indexed_normals[0], GL_STATIC_DRAW);
+
+//    // Generate a buffer for the indices as well
+//    glGenBuffers(1, &elementbuffer);
+//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0] , GL_STATIC_DRAW);
+
+//    // Get a handle for our "LightPosition" uniform
+//    glUseProgram(programID);
+//    LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
+//    return 0;
+
+}
+
+int Visualizer::loadPoints(const char* imagePath, const PointCloud& inputPointCloud){
     // Get a handle for our buffers
     vertexPosition_modelspaceID = glGetAttribLocation(programID, "vertexPosition_modelspace");
     vertexUVID = glGetAttribLocation(programID, "vertexUV");
@@ -114,32 +164,30 @@ int Visualizer::loadVertices(const char* imagePath, const char* objPath){
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals;
-    bool res = loadOBJ(objPath, vertices, uvs, normals);
-
-
-    std::vector<glm::vec3> indexed_vertices;
-    std::vector<glm::vec2> indexed_uvs;
-    std::vector<glm::vec3> indexed_normals;
-    indexVBO(vertices, uvs, normals, indices, indexed_vertices, indexed_uvs, indexed_normals);
-
+    for(unsigned int  i=0; i < inputPointCloud.PointCloudNormal.size(); i++ ){
+        vertices.push_back(glm::vec3(inputPointCloud.PointCloudNormal[i].position(0), inputPointCloud.PointCloudNormal[i].position(1), inputPointCloud.PointCloudNormal[i].position(2)));
+        normals.push_back(glm::vec3(inputPointCloud.PointCloudNormal[i].normal(0), inputPointCloud.PointCloudNormal[i].normal(1), inputPointCloud.PointCloudNormal[i].normal(2)));
+        indices.push_back(i);
+        uvs.push_back(glm::vec2(1.0f,1.0f));
+    }
     // Load it into a VBO
 
     glGenBuffers(1, &vertexbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(glm::vec3), &indexed_vertices[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);;
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
 
     glGenBuffers(1, &uvbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_uvs.size() * sizeof(glm::vec2), &indexed_uvs[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
 
     glGenBuffers(1, &normalbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_normals.size() * sizeof(glm::vec3), &indexed_normals[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
 
     // Generate a buffer for the indices as well
     glGenBuffers(1, &elementbuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0] , GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0] , GL_STATIC_DRAW);
 
     // Get a handle for our "LightPosition" uniform
     glUseProgram(programID);
@@ -149,7 +197,9 @@ int Visualizer::loadVertices(const char* imagePath, const char* objPath){
 }
 
 
-int Visualizer::render(){
+
+int Visualizer::render()
+{
 
 
     // Measure speed
@@ -308,6 +358,128 @@ int Visualizer::render(){
 
     return 0;
 }
+
+int Visualizer::renderPoints(){
+
+
+    // Measure speed
+    double currentTime = glfwGetTime();
+    float deltaTime = (float)(currentTime - lastFrameTime);
+    lastFrameTime = currentTime;
+    nbFrames++;
+    if ( currentTime - lastTime >= 1.0 ){ // If last prinf() was more than 1sec ago
+        // printf and reset
+        std::cout << 1000.0/double(nbFrames) << "ms/frame" << std::endl;
+        nbFrames = 0;
+        lastTime += 1.0;
+    }
+
+    // Clear the screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Use our shader
+    glUseProgram(programID);
+
+    glm::mat4 ProjectionMatrix = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+    glm::mat4 ViewMatrix = glm::lookAt(
+        glm::vec3( 0, 0, 7 ), // Camera is here
+        glm::vec3( 0, 0, 0 ), // and looks here
+        glm::vec3( 0, 1, 0 )  // Head is up (set to 0,-1,0 to look upside-down)
+    );
+
+    // Bind our texture in Texture Unit 0
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, Texture);
+    // Set our "myTextureSampler" sampler to user Texture Unit 0
+    glUniform1i(TextureID, 0);
+
+    // 1rst attribute buffer : vertices
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    glVertexAttribPointer(
+        vertexPosition_modelspaceID,  // The attribute we want to configure
+        3,                            // size
+        GL_FLOAT,                     // type
+        GL_FALSE,                     // normalized?
+        0,                            // stride
+        (void*)0                      // array buffer offset
+    );
+
+    // 2nd attribute buffer : UVs
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+    glVertexAttribPointer(
+        vertexUVID,                   // The attribute we want to configure
+        2,                            // size : U+V => 2
+        GL_FLOAT,                     // type
+        GL_FALSE,                     // normalized?
+        0,                            // stride
+        (void*)0                      // array buffer offset
+    );
+
+    // 3rd attribute buffer : normals
+    glEnableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+    glVertexAttribPointer(
+        vertexNormal_modelspaceID,    // The attribute we want to configure
+        3,                            // size
+        GL_FLOAT,                     // type
+        GL_FALSE,                     // normalized?
+        0,                            // stride
+        (void*)0                      // array buffer offset
+    );
+
+    // Index buffer
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+
+    glm::vec3 lightPos = glm::vec3(4,4,4);
+
+    glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
+
+    { // Euler
+
+        // As an example, rotate arount the vertical axis at 180�/sec
+        gOrientation1.y += 3.14159f/2.0f * deltaTime;
+
+        // Build the model matrix
+        glm::mat4 RotationMatrix = glm::eulerAngleYXZ(gOrientation1.y, gOrientation1.x, gOrientation1.z);
+        glm::mat4 TranslationMatrix = glm::translate(glm::mat4(), gPosition1); // A bit to the left
+        glm::mat4 ScalingMatrix = glm::scale(glm::mat4(), glm::vec3(1.0f, 1.0f, 1.0f));
+        glm::mat4 ModelMatrix = TranslationMatrix * RotationMatrix * ScalingMatrix;
+
+        glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+        // Send our transformation to the currently bound shader,
+        // in the "MVP" uniform
+        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
+        glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
+
+        // Draw the triangles !
+        glDrawElements(
+            GL_POINTS,      // mode
+            indices.size(),    // count
+            GL_UNSIGNED_INT,   // type
+            (void*)0           // element array buffer offset
+        );
+
+
+    }
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+
+    // Draw GUI
+    TwDraw();
+
+    // Swap buffers
+    glfwSwapBuffers(window);
+    glfwPollEvents();
+
+    return 0;
+}
+
 
 int Visualizer::close(){
     // Cleanup VBO and shader

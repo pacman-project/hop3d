@@ -45,6 +45,8 @@ public:
 
     int initialize(int windowWidth, int windowHeight, const char* windowName);
     int loadVertices(const char *imagePath, const char *objPath);
+    int loadPoints(const char* imagePath, const PointCloud& inputPointCloud);
+    int renderPoints();
     int render();
     int close();
     int checkClose();
@@ -89,7 +91,7 @@ private:
     // Get a handle for our "LightPosition" uniform
     GLuint LightID;
 
-    std::vector<unsigned short> indices;
+    std::vector<unsigned int> indices;
     //For measuring frame rate
     double lastTime;
     double lastFrameTime;

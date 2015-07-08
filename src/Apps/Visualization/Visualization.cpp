@@ -25,11 +25,11 @@ writer.writePlyToFile(std::string("cubeOut.ply"), pointCloud, faces);
 
 Visualizer visualizer(1024,768,"testing vis");
 
-visualizer.loadVertices("uvmap.DDS","suzanne.obj");
+visualizer.loadPoints("uvmap.DDS",pointCloud);
 
 do{
 
-    visualizer.render();
+    visualizer.renderPoints();
 } // Check if the ESC key was pressed or the window was closed
 while( visualizer.checkClose());
 
