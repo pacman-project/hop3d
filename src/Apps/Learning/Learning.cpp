@@ -23,7 +23,8 @@ reader.readPlyFile(std::string("cube.ply"), pointCloud, faces );
 writer.writePlyToFile(std::string("cubeOut.ply"), pointCloud, faces);
 
 LayerFilterer layerFilterer;
-layerFilterer.nearestNeighbour(pointCloud);
+//layerFilterer.nearestNeighbour(pointCloud);
+layerFilterer.radiusSearch(pointCloud,0.01);
 
 return 0;
 }
