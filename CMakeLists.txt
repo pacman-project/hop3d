@@ -140,6 +140,8 @@ IF (BUILD_VISUALIZATION_MODULE)
 # Compile external dependencies
 add_subdirectory (external)
 
+
+
 # On Visual 2005 and above, this module can set the debug working directory
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/external/rpavlik-cmake-modules-1c73e35")
 include(CreateLaunchers)
@@ -174,6 +176,30 @@ ENDIF (BUILD_VISUALIZATION_MODULE)
 
 
 FIND_PACKAGE(OpenMP)
+
+
+#Adding flan to the project
+find_package(PkgConfig)
+pkg_check_modules(PC_FLANN flann)
+set(FLANN_DEFINITIONS ${PC_FLANN_CFLAGS_OTHER})
+
+find_path(FLANN_INCLUDE_DIR flann/flann.hpp
+    HINTS ${PC_FLANN_INCLUDEDIR} ${PC_FLANN_INCLUDE_DIRS})
+
+find_library(FLANN_LIBRARY flann
+    HINTS ${PC_FLANN_LIBDIR} ${PC_FLANN_LIBRARY_DIRS})
+
+set(FLANN_INCLUDE_DIRS ${FLANN_INCLUDE_DIR})
+set(FLANN_LIBRARIES ${FLANN_LIBRARY})
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Flann DEFAULT_MSG
+    FLANN_LIBRARY FLANN_INCLUDE_DIR)
+
+mark_as_advanced(FLANN_LIBRARY FLANN_INCLUDE_DIR)
+
+
+#Adding OpenMP
 IF (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -186,6 +212,7 @@ ENDIF()
 
 #FIND_PACKAGE( OpenCV REQUIRED )
 #FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
+
 #INCLUDE_DIRECTORIES( ${OpenCV_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES( ${EIGEN_INCLUDE} ${PROJ_INCLUDES} )
 IF (UNIX)
