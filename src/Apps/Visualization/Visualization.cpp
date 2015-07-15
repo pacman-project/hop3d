@@ -23,13 +23,15 @@ std::vector<hop3d::Face> faces;
 reader.readPlyFile(std::string("cube.ply"), pointCloud, faces );
 writer.writePlyToFile(std::string("cubeOut.ply"), pointCloud, faces);
 
-Visualizer visualizer(1024,768,"testing vis");
+Visualizer visualizer(1920,1080,"testing vis");
 
 visualizer.loadPoints("uvmap.DDS",pointCloud);
-
+//visualizer.loadVertices("uvmap.DDS","suzanne.obj");
+visualizer.creatSphere("uvmap.DDS",0.05,10);
 do{
 
-    visualizer.renderPoints();
+    visualizer.renderPoints(pointCloud);
+    //visualizer.render();
 } // Check if the ESC key was pressed or the window was closed
 while( visualizer.checkClose());
 

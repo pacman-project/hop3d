@@ -4,6 +4,7 @@
 #include <memory>
 #include <chrono>
 #include "Data/Cloud.h"
+#include "Data/Part.h"
 #include <flann/flann.hpp>
 
 class LayerFilterer{
@@ -18,7 +19,7 @@ protected:
     template<typename T>
     void loadPointCloud(flann::Matrix<T>& dataset, const PointCloud &inputPointCloud);
 private:
-
+    PartRealization partRealization;
 };
 
 

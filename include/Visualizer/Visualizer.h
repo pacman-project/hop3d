@@ -46,7 +46,8 @@ public:
     int initialize(int windowWidth, int windowHeight, const char* windowName);
     int loadVertices(const char *imagePath, const char *objPath);
     int loadPoints(const char* imagePath, const PointCloud& inputPointCloud);
-    int renderPoints();
+    int creatSphere(const char* imagePath, float radius, int resolution);
+    int renderPoints(const PointCloud& inputPointCloud);
     int render();
     int close();
     int checkClose();
@@ -55,6 +56,10 @@ public:
 protected:
 
 private:
+    template<typename T>
+    int loadToVBO(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec2> &uvs, const std::vector<glm::vec3> &normals, std::vector<T> &indices, GLuint &v, GLuint &u, GLuint &n, GLuint &e);
+    int bindBuffers(GLuint &Texture, GLuint &TextureID, GLuint &vertexbuffer, GLuint &uvbuffer, GLuint &normalbuffer, GLuint &elementbuffer);
+
     GLFWwindow* window;
 
     // Create and compile our GLSL program from the shaders
@@ -78,20 +83,44 @@ private:
     GLuint vertexNormal_modelspaceID;
 
     // Load the texture
-    GLuint Texture;
+    GLuint TexturePoints;
+
     // Get a handle for our "myTextureSampler" uniform
-    GLuint TextureID;
-    GLuint vertexbuffer;
-    GLuint uvbuffer;
-    GLuint normalbuffer;
+    GLuint TextureIDPoints;
+    GLuint vertexbufferPoints;
+    GLuint uvbufferPoints;
+    GLuint normalbufferPoints;
+    // Buffer for the indices as well
+    GLuint elementbufferPoints;
+
+    // Load the texture
+    GLuint TextureSphere;
+    // Get a handle for our "myTextureSampler" uniform
+    GLuint TextureIDSphere;
+    GLuint vertexbufferSphere;
+    GLuint uvbufferSphere;
+    GLuint normalbufferSphere;
 
     // Buffer for the indices as well
-    GLuint elementbuffer;
+    GLuint elementbufferSphere;
+
+    // Load the texture
+    GLuint TextureShort;
+    // Get a handle for our "myTextureSampler" uniform
+    GLuint TextureIDShort;
+    GLuint vertexbufferShort;
+    GLuint uvbufferShort;
+    GLuint normalbufferShort;
+
+    // Buffer for the indices as well
+    GLuint elementbufferShort;
 
     // Get a handle for our "LightPosition" uniform
     GLuint LightID;
 
-    std::vector<unsigned int> indices;
+    std::vector<unsigned int> indicesPoints;
+    std::vector<unsigned short> indicesShort;
+    std::vector<unsigned short> indicesSphere;
     //For measuring frame rate
     double lastTime;
     double lastFrameTime;

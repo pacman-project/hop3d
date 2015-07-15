@@ -24,7 +24,7 @@ writer.writePlyToFile(std::string("cubeOut.ply"), pointCloud, faces);
 
 LayerFilterer layerFilterer;
 //layerFilterer.nearestNeighbour(pointCloud);
-layerFilterer.radiusSearch(pointCloud,0.01);
+layerFilterer.radiusSearch(pointCloud,0.01f);
 
 return 0;
 }
