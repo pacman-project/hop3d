@@ -27,7 +27,8 @@ Visualizer visualizer(1920,1080,"testing vis");
 
 visualizer.loadPoints("uvmap.DDS",pointCloud);
 //visualizer.loadVertices("uvmap.DDS","suzanne.obj");
-visualizer.creatSphere("uvmap.DDS",0.05,10);
+//visualizer.creatSphere("uvmap.DDS",0.05,10);
+visualizer.creatCircle("uvmap.DDS",0.05,20);
 do{
 
     visualizer.renderPoints(pointCloud);

@@ -47,6 +47,8 @@ public:
     int loadVertices(const char *imagePath, const char *objPath);
     int loadPoints(const char* imagePath, const PointCloud& inputPointCloud);
     int creatSphere(const char* imagePath, float radius, int resolution);
+    int creatCircle(const char* imagePath, float radius, int resolution);
+
     int renderPoints(const PointCloud& inputPointCloud);
     int render();
     int close();

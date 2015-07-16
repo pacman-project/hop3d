@@ -225,7 +225,6 @@ int Visualizer::creatSphere(const char* imagePath, float radius, int resolution)
            normals.push_back(glm::vec3(X1,Z1,Y1)/ glm::length(glm::vec3(X1,Z1,Y1)));
            normals.push_back(glm::vec3(X2,Z2,Y2)/ glm::length(glm::vec3(X2,Z2,Y2)));
            normals.push_back(glm::vec3(X1,Z2,Y1)/ glm::length(glm::vec3(X1,Z2,Y1)));
-           for(int i=0; i<6;i++) indicesShort.push_back(indicesIter++);
           }
 
  }
@@ -235,6 +234,64 @@ int Visualizer::creatSphere(const char* imagePath, float radius, int resolution)
     //indexing mechanism
     indexVBO(vertices, uvs, normals, indicesSphere, indexed_vertices, indexed_uvs, indexed_normals);
 
+    // Load it into a VBO
+    loadToVBO(indexed_vertices,indexed_uvs,indexed_normals,indicesSphere,vertexbufferSphere,uvbufferSphere,normalbufferSphere,elementbufferSphere);
+
+    return 0;
+
+}
+
+int Visualizer::creatCircle(const char* imagePath, float radius, int resolution){
+
+    // Get a handle for our buffers
+    vertexPosition_modelspaceID = glGetAttribLocation(programID, "vertexPosition_modelspace");
+    vertexUVID = glGetAttribLocation(programID, "vertexUV");
+    vertexNormal_modelspaceID = glGetAttribLocation(programID, "vertexNormal_modelspace");
+
+    // Load the texture
+    TextureSphere = loadDDS(imagePath);
+
+    // Get a handle for our "myTextureSampler" uniform
+    TextureIDSphere  = glGetUniformLocation(programID, "myTextureSampler");
+
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec2> uvs;
+    std::vector<glm::vec3> normals;
+    // iniatiate the variable we are going to use
+    float X1,Y1,X2,Y2,Z;
+    float inc1,inc2;
+    unsigned short indicesIter =0;
+    double PI = 3.14159;
+
+
+    for(int w = 0; w < resolution; w++) {
+             inc1 = (w/(float)resolution)*2*PI;
+             inc2 = ((w+1)/(float)resolution)*2*PI;
+
+             X1 = sin(inc1);
+             Y1 = cos(inc1);
+             X2 = sin(inc2);
+             Y2 = cos(inc2);
+             Z = 0;
+            // insert the triangle coordinates
+            vertices.push_back(glm::vec3(radius*X1,radius*Y1,Z));
+            vertices.push_back(glm::vec3(radius*X2,radius*Y2,Z));
+            vertices.push_back(glm::vec3(0,0,Z));
+            //insert uv coordinates
+            uvs.push_back(glm::vec2(1.0f,1.0f));
+            uvs.push_back(glm::vec2(1.0f,1.0f));
+            uvs.push_back(glm::vec2(1.0f,1.0f));
+
+            // insert the normal data
+           normals.push_back(glm::vec3(0,0,1)/ glm::length(glm::vec3(0,0,1)));
+           normals.push_back(glm::vec3(0,0,1)/ glm::length(glm::vec3(0,0,1)));
+           normals.push_back(glm::vec3(0,0,1)/ glm::length(glm::vec3(0,0,1)));
+ }
+    std::vector<glm::vec3> indexed_vertices;
+    std::vector<glm::vec2> indexed_uvs;
+    std::vector<glm::vec3> indexed_normals;
+    //indexing mechanism
+    indexVBO(vertices, uvs, normals, indicesSphere, indexed_vertices, indexed_uvs, indexed_normals);
     // Load it into a VBO
     loadToVBO(indexed_vertices,indexed_uvs,indexed_normals,indicesSphere,vertexbufferSphere,uvbufferSphere,normalbufferSphere,elementbufferSphere);
 
@@ -495,9 +552,51 @@ int Visualizer::renderPoints(const PointCloud &inputPointCloud){
     if (gLookAtOther){
         for(unsigned int  i=0; i < inputPointCloud.PointCloudNormal.size(); i+=100 ){
             glm::vec3 gPosition3(inputPointCloud.PointCloudNormal[i].position(0), inputPointCloud.PointCloudNormal[i].position(1), inputPointCloud.PointCloudNormal[i].position(2));
+            glm::vec3 gNormal3(inputPointCloud.PointCloudNormal[i].normal(0), inputPointCloud.PointCloudNormal[i].normal(1), inputPointCloud.PointCloudNormal[i].normal(2));
             // Receptive Fields
+
+            glm::mat4 RotToNormal( 1.0f ); // construct identity matrix
+            glm::vec3 ObjNormal = glm::vec3(0.0f,0.0f,1.0f);
+            if( ObjNormal != gNormal3 && ObjNormal != -gNormal3){
+            glm::vec3 xaxis = glm::cross(ObjNormal, -gNormal3);
+            xaxis = glm::normalize(xaxis);
+
+            glm::vec3 yaxis = glm::cross(-gNormal3,xaxis);
+            yaxis = glm::normalize(yaxis);
+
+            RotToNormal[0].x = xaxis.x;
+            RotToNormal[1].x = yaxis.x;
+            RotToNormal[2].x = gNormal3.x;
+            RotToNormal[0].y = xaxis.y;
+            RotToNormal[1].y = yaxis.y;
+            RotToNormal[2].y = gNormal3.y;
+            RotToNormal[0].z = xaxis.z;
+            RotToNormal[1].z = yaxis.z;
+            RotToNormal[2].z = gNormal3.z;
+
+            }
+            else if (ObjNormal == -gNormal3) {
+
+                RotToNormal[0].x = 1.0f;
+                RotToNormal[1].y = 1.0f;
+                RotToNormal[2].z = 1.0f;
+//                std::cout << gNormal3.x << "; "<< gNormal3.y << "; "<< gNormal3.z << std::endl;
+//                std::cout << RotToNormal[0].x << "; "<< RotToNormal[1].x << "; "<< RotToNormal[2].x << "; "<< RotToNormal[3].x << std::endl;
+//                std::cout << RotToNormal[0].y << "; "<< RotToNormal[1].y << "; "<< RotToNormal[2].y << "; "<< RotToNormal[3].y << std::endl;
+//                std::cout << RotToNormal[0].z << "; "<< RotToNormal[1].z << "; "<< RotToNormal[2].z << "; "<< RotToNormal[3].z << std::endl;
+//                std::cout << RotToNormal[0].w << "; "<< RotToNormal[1].w << "; "<< RotToNormal[2].w << "; "<< RotToNormal[3].w << std::endl;
+//                std::cout << "<<<<<<<<<<<<<<<" << std::endl;
+
+            }
+            else if (ObjNormal == gNormal3) {
+                RotToNormal[0].x = -1.0f;
+                RotToNormal[1].y = 1.0f;
+                RotToNormal[2].z = 1.0f;
+            }
+
+
             //rotate receptive fields with pointcloud
-            glm::mat4 RotationMatrix = glm::eulerAngleYXZ(gOrientation1.x, gOrientation1.y, gOrientation1.z)*glm::translate(glm::mat4(), gPosition3);
+            glm::mat4 RotationMatrix = glm::eulerAngleYXZ(gOrientation1.x, gOrientation1.y, gOrientation1.z)*glm::translate(glm::mat4(), gPosition3)*RotToNormal;
             //and then translate
             glm::mat4 TranslationMatrix = glm::translate(glm::mat4(), gPosition1); // A bit to the left
             glm::mat4 ScalingMatrix = glm::scale(glm::mat4(), glm::vec3(1.0f, 1.0f, 1.0f));
@@ -508,7 +607,7 @@ int Visualizer::renderPoints(const PointCloud &inputPointCloud){
             glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
             glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
             glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
-
+            //std::cout<<indicesSphere.size() << std::endl;
             // Draw the triangles !
             glDrawElements(
                 GL_TRIANGLES,      // mode
