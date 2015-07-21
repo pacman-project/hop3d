@@ -1,10 +1,10 @@
 #include "Visualizer/Visualizer.h"
 
-Visualizer::Visualizer() : gPosition1(0.0f, 0.0f, 0.0f), gPosition2( 1.5f, 0.0f, 0.0f), gLookAtOther(true) {
+Visualizer::Visualizer() : FOV(45.0f), gCameraPosition(0.0f, 0.0f, 6.0f), gCameraOrientation(0.0f, 0.0f, 0.0f), gPosition1(0.0f, 0.0f, 0.0f), gPosition2( 1.5f, 0.0f, 0.0f), gLookAtOther(true) {
     initialize(1024,768,"windowName");
 }
 
-Visualizer::Visualizer(int windowWidth, int windowHeight, const char* windowName) : gPosition1(0.0f, 0.0f, 0.0f), gPosition2( 1.5f, 0.0f, 0.0f), gLookAtOther(true) {
+Visualizer::Visualizer(int windowWidth, int windowHeight, const char* windowName) : FOV(45.0f), gCameraPosition(0.0f, 0.0f, 6.0f), gCameraOrientation(0.0f, 0.0f, 0.0f), gPosition1(0.0f, 0.0f, 0.0f), gPosition2( 1.5f, 0.0f, 0.0f), gLookAtOther(true) {
     initialize(windowWidth,windowHeight,windowName);
 }
 
@@ -44,21 +44,29 @@ int Visualizer::initialize(int windowWidth, int windowHeight, const char* window
     // Initialize the GUI
     TwInit(TW_OPENGL_CORE, NULL);
     TwWindowSize(windowWidth, windowHeight);
-    TwBar * EulerGUI = TwNewBar("Euler settings");
-    TwBar * QuaternionGUI = TwNewBar("Quaternion settings");
-    TwSetParam(EulerGUI, NULL, "refresh", TW_PARAM_CSTRING, 1, "0.1");
+    TwBar * ObjectGUI = TwNewBar("Object pose");
+    TwBar * CameraGUI = TwNewBar("Camera pose");
+    std::stringstream oss;
+    oss << 10 << " " << 10;
+    TwSetParam(ObjectGUI, NULL, "refresh", TW_PARAM_CSTRING, 1, oss.str().c_str());
+    oss.str("");
+    oss << windowWidth-210 << " " << 10;
+    std::cout << oss.str().c_str() << std::endl;
+    TwSetParam(CameraGUI, NULL, "position", TW_PARAM_CSTRING, 1, oss.str().c_str());
 
-    TwSetParam(QuaternionGUI, NULL, "position", TW_PARAM_CSTRING, 1, "1608 16");
+    TwAddVarRW(ObjectGUI, "Euler X", TW_TYPE_FLOAT, &gOrientation1.x, "step=0.01");
+    TwAddVarRW(ObjectGUI, "Euler Y", TW_TYPE_FLOAT, &gOrientation1.y, "step=0.01");
+    TwAddVarRW(ObjectGUI, "Euler Z", TW_TYPE_FLOAT, &gOrientation1.z, "step=0.01");
+    TwAddVarRW(ObjectGUI, "Pos X"  , TW_TYPE_FLOAT, &gPosition1.x, "step=0.1");
+    TwAddVarRW(ObjectGUI, "Pos Y"  , TW_TYPE_FLOAT, &gPosition1.y, "step=0.1");
+    TwAddVarRW(ObjectGUI, "Pos Z"  , TW_TYPE_FLOAT, &gPosition1.z, "step=0.1");
 
-    TwAddVarRW(EulerGUI, "Euler X", TW_TYPE_FLOAT, &gOrientation1.x, "step=0.01");
-    TwAddVarRW(EulerGUI, "Euler Y", TW_TYPE_FLOAT, &gOrientation1.y, "step=0.01");
-    TwAddVarRW(EulerGUI, "Euler Z", TW_TYPE_FLOAT, &gOrientation1.z, "step=0.01");
-    TwAddVarRW(EulerGUI, "Pos X"  , TW_TYPE_FLOAT, &gPosition1.x, "step=0.1");
-    TwAddVarRW(EulerGUI, "Pos Y"  , TW_TYPE_FLOAT, &gPosition1.y, "step=0.1");
-    TwAddVarRW(EulerGUI, "Pos Z"  , TW_TYPE_FLOAT, &gPosition1.z, "step=0.1");
+    TwAddVarRW(CameraGUI, "Position X", TW_TYPE_FLOAT, &gCameraPosition.x, "step=0.1");
+    TwAddVarRW(CameraGUI, "Position Y", TW_TYPE_FLOAT, &gCameraPosition.y, "step=0.1");
+    TwAddVarRW(CameraGUI, "Position Z", TW_TYPE_FLOAT, &gCameraPosition.z, "step=0.1");
+    TwAddVarRW(CameraGUI, "FOV"  , TW_TYPE_FLOAT, &FOV, "step=0.5");
 
-    TwAddVarRW(QuaternionGUI, "Quaternion", TW_TYPE_QUAT4F, &gOrientation2, "showval=true open=true");
-    TwAddVarRW(QuaternionGUI, "Receptive Fields", TW_TYPE_BOOL8 , &gLookAtOther, "help='Look at the other monkey ?'");
+    TwAddVarRW(CameraGUI, "Receptive Fields", TW_TYPE_BOOL8 , &gLookAtOther, "help='Turning on/off RF?'");
 
     // Set GLFW event callbacks. I removed glfwSetWindowSizeCallback for conciseness
     glfwSetMouseButtonCallback(window, (GLFWmousebuttonfun)TwEventMouseButtonGLFW); // - Directly redirect GLFW mouse button events to AntTweakBar
@@ -151,7 +159,7 @@ int Visualizer::loadPoints(const char* imagePath, const PointCloud& inputPointCl
         vertices.push_back(glm::vec3(inputPointCloud.PointCloudNormal[i].position(0), inputPointCloud.PointCloudNormal[i].position(1), inputPointCloud.PointCloudNormal[i].position(2)));
         normals.push_back(glm::vec3(inputPointCloud.PointCloudNormal[i].normal(0), inputPointCloud.PointCloudNormal[i].normal(1), inputPointCloud.PointCloudNormal[i].normal(2)));
         indicesPoints.push_back(i);
-        uvs.push_back(glm::vec2(1.0f,1.0f));
+        uvs.push_back(glm::vec2(0.1f,0.1f));
     }
     // Load it into a VBO
     loadToVBO(vertices,uvs,normals,indicesPoints,vertexbufferPoints,uvbufferPoints,normalbufferPoints,elementbufferPoints);
@@ -161,7 +169,7 @@ int Visualizer::loadPoints(const char* imagePath, const PointCloud& inputPointCl
 }
 
 
-int Visualizer::creatSphere(const char* imagePath, float radius, int resolution){
+int Visualizer::createSphere(const char* imagePath, float radius, int resolution){
 
     // Get a handle for our buffers
     vertexPosition_modelspaceID = glGetAttribLocation(programID, "vertexPosition_modelspace");
@@ -241,7 +249,7 @@ int Visualizer::creatSphere(const char* imagePath, float radius, int resolution)
 
 }
 
-int Visualizer::creatCircle(const char* imagePath, float radius, int resolution){
+int Visualizer::createEllipse(const char* imagePath, float radius1, float radius2, int resolution){
 
     // Get a handle for our buffers
     vertexPosition_modelspaceID = glGetAttribLocation(programID, "vertexPosition_modelspace");
@@ -274,13 +282,13 @@ int Visualizer::creatCircle(const char* imagePath, float radius, int resolution)
              Y2 = cos(inc2);
              Z = 0;
             // insert the triangle coordinates
-            vertices.push_back(glm::vec3(radius*X1,radius*Y1,Z));
-            vertices.push_back(glm::vec3(radius*X2,radius*Y2,Z));
+            vertices.push_back(glm::vec3(radius1*X1,radius2*Y1,Z));
+            vertices.push_back(glm::vec3(radius1*X2,radius2*Y2,Z));
             vertices.push_back(glm::vec3(0,0,Z));
             //insert uv coordinates
-            uvs.push_back(glm::vec2(1.0f,1.0f));
-            uvs.push_back(glm::vec2(1.0f,1.0f));
-            uvs.push_back(glm::vec2(1.0f,1.0f));
+            uvs.push_back(glm::vec2(0.5f,0.5f));
+            uvs.push_back(glm::vec2(0.5f,0.5f));
+            uvs.push_back(glm::vec2(0.5f,0.5f));
 
             // insert the normal data
            normals.push_back(glm::vec3(0,0,1)/ glm::length(glm::vec3(0,0,1)));
@@ -508,10 +516,10 @@ int Visualizer::renderPoints(const PointCloud &inputPointCloud){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // Use our shader
     glUseProgram(programID);
-    glm::mat4 ProjectionMatrix = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+    glm::mat4 ProjectionMatrix = glm::perspective(FOV, 4.0f / 3.0f, 0.1f, 100.0f);
     glm::mat4 ViewMatrix = glm::lookAt(
-        glm::vec3( 0, 0, 8 ), // Camera is here
-        glm::vec3( 0, 0, 0 ), // and looks here
+        gCameraPosition, // Camera is here
+        gCameraPosition-glm::vec3(0.0f,0.0f,1.0f), // and looks here
         glm::vec3( 0, 1, 0 )  // Head is up (set to 0,-1,0 to look upside-down)
     );
 
@@ -580,6 +588,8 @@ int Visualizer::renderPoints(const PointCloud &inputPointCloud){
                 RotToNormal[0].x = 1.0f;
                 RotToNormal[1].y = 1.0f;
                 RotToNormal[2].z = 1.0f;
+
+                //Printing out matrices and vectors from glm, bug in glm/ext.hpp
 //                std::cout << gNormal3.x << "; "<< gNormal3.y << "; "<< gNormal3.z << std::endl;
 //                std::cout << RotToNormal[0].x << "; "<< RotToNormal[1].x << "; "<< RotToNormal[2].x << "; "<< RotToNormal[3].x << std::endl;
 //                std::cout << RotToNormal[0].y << "; "<< RotToNormal[1].y << "; "<< RotToNormal[2].y << "; "<< RotToNormal[3].y << std::endl;

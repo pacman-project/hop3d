@@ -8,6 +8,7 @@
 #include <string>
 #include <iomanip>
 #include <vector>
+#include <sstream>
 
 // Include GLEW
 #include <GL/glew.h>
@@ -46,8 +47,8 @@ public:
     int initialize(int windowWidth, int windowHeight, const char* windowName);
     int loadVertices(const char *imagePath, const char *objPath);
     int loadPoints(const char* imagePath, const PointCloud& inputPointCloud);
-    int creatSphere(const char* imagePath, float radius, int resolution);
-    int creatCircle(const char* imagePath, float radius, int resolution);
+    int createSphere(const char* imagePath, float radius, int resolution);
+    int createEllipse(const char* imagePath, float radius1, float radius2, int resolution);
 
     int renderPoints(const PointCloud& inputPointCloud);
     int render();
@@ -78,6 +79,10 @@ private:
     glm::vec3 gPosition2;
     glm::quat gOrientation2;
     bool gLookAtOther;
+    //position and orientation of objects in a scene
+    glm::vec3 gCameraPosition;
+    glm::vec3 gCameraOrientation;
+    GLfloat FOV;
 
     // Get a handle for our buffers
     GLuint vertexPosition_modelspaceID;

@@ -23,12 +23,12 @@ std::vector<hop3d::Face> faces;
 reader.readPlyFile(std::string("cube.ply"), pointCloud, faces );
 writer.writePlyToFile(std::string("cubeOut.ply"), pointCloud, faces);
 
-Visualizer visualizer(1920,1080,"testing vis");
+Visualizer visualizer(1024,768,"testing vis");
 
 visualizer.loadPoints("uvmap.DDS",pointCloud);
 //visualizer.loadVertices("uvmap.DDS","suzanne.obj");
-//visualizer.creatSphere("uvmap.DDS",0.05,10);
-visualizer.creatCircle("uvmap.DDS",0.05,20);
+//visualizer.createSphere("uvmap.DDS",0.05,10);
+visualizer.createEllipse("uvmap.DDS",0.05,0.01,20);
 do{
 
     visualizer.renderPoints(pointCloud);
