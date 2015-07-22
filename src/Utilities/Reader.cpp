@@ -2,7 +2,7 @@
 
 
 
-void Reader::split(const std::string& s, char c,std::vector<std::string>& v) {
+void hop3d::Reader::split(const std::string& s, char c,std::vector<std::string>& v) {
    std::size_t i = 0;
    std::size_t j = s.find(c);
 
@@ -17,7 +17,7 @@ void Reader::split(const std::string& s, char c,std::vector<std::string>& v) {
    }
 }
 
-int Reader::readPlyFile(std::string fileName, PointCloud& outputPointCloud, std::vector<Eigen::Vector4i> &outputFaces){
+int hop3d::Reader::readPlyFile(std::string fileName, PointCloud& outputPointCloud, std::vector<Eigen::Vector4i> &outputFaces){
     std::cout << "Loading file: " << fileName << std::endl;
     std::string line;
     std::ifstream myfile (fileName.c_str());
@@ -80,5 +80,54 @@ int Reader::readPlyFile(std::string fileName, PointCloud& outputPointCloud, std:
         std::cout << "Unable to open ply file";
         return 1;
     }
+    return 0;
+}
+
+int hop3d::Reader::readFirstLayerVoc(std::string fileName, hop3d::FirstLayerPart::Seq &parts){
+    std::vector<hop3d::Normal> discretizedNormals;
+    std::cout << "Loading file: " << fileName << std::endl;
+    std::string line;
+    std::ifstream myfile (fileName.c_str());
+    hop3d::U64 id = 0;
+    if (myfile.is_open()){
+        while ( getline (myfile,line) ){
+
+        line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
+        line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
+        line.erase(std::remove(line.begin(), line.end(), '\t'), line.end());
+            std::vector<std::string> lineSeq;
+            split(line,',',lineSeq);
+            Eigen::Vector3f vecNorm;
+            for(int i = 0; i< 3; i++) vecNorm(i) = ::atof(lineSeq[i].c_str());
+            hop3d::FirstLayerPart part;
+            part.setPartId(id);
+            part.setNormal(vecNorm);
+            parts.push_back(part);
+            id++;
+            //discretizedNormals.push_back(vecNorm);
+        }
+        std::cout << "Normals successfuly loaded from " << fileName << std::endl;
+        std::cout << "The data occupies " << (sizeof(std::vector<Eigen::Vector3f>) + (sizeof(Eigen::Vector3f) * discretizedNormals.size()))/1024 << " kB" << std::endl;
+        myfile.close();
+    }
+    else{
+        std::cout << "Unable to first layer vocabulary file.";
+        return 1;
+    }
+//    for(int i = 0; i < discretizedNormals.size(); i++){
+//        float dist;
+//        float dot;
+//        dot = discretizedNormals[0].dot(discretizedNormals[i]);
+//        if(dot > 1) dot = 1;
+//        if(dot < -1) dot = -1;
+//        dist = acos(dot);
+//        cout << discretizedNormals[0].dot(discretizedNormals[i]) << std::endl;
+
+//        _normalsDiscreteMap[dist] = discretizedNormals[i];
+//    }
+//    std::cout << "mymap contains:";
+//      for ( auto it = _normalsDiscreteMap.begin(); it != _normalsDiscreteMap.end(); ++it )
+//        std::cout << " " << it->first << ":" << std::endl << it->second << std::endl;
+//        std::cout << std::endl;
     return 0;
 }

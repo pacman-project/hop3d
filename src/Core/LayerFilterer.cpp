@@ -1,7 +1,7 @@
 #include "Core/LayerFilterer.h"
 
 
-int LayerFilterer::nearestNeighbour(const PointCloud &inputPointCloud, int nearestNeigbours)
+int LayerFilterer::nearestNeighbour(const hop3d::PointCloud &inputPointCloud, int nearestNeigbours)
 {
         int nn = 0;
         nn =  nearestNeigbours;
@@ -24,6 +24,8 @@ int LayerFilterer::nearestNeighbour(const PointCloud &inputPointCloud, int neare
 
        auto end = std::chrono::high_resolution_clock::now();
        std::cout << (std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count()) << "ms" << std::endl;
+       
+       //partRealization.
 
        std::cout << dataset[0][0] << "; "<< dataset[0][1] << "; "<< dataset[0][2] << std::endl;
        std::cout << dataset[1][0] << "; "<< dataset[1][1] << "; "<< dataset[1][2] << std::endl;
@@ -41,7 +43,7 @@ int LayerFilterer::nearestNeighbour(const PointCloud &inputPointCloud, int neare
 
 }
 
-int LayerFilterer::radiusSearch(const PointCloud &inputPointCloud, float radius)
+int LayerFilterer::radiusSearch(const hop3d::PointCloud &inputPointCloud, float radius)
 {
 
        flann::Matrix<float> dataset;
@@ -80,7 +82,7 @@ int LayerFilterer::radiusSearch(const PointCloud &inputPointCloud, float radius)
 
 
 template<typename T>
-void LayerFilterer::loadPointCloud(flann::Matrix<T>& dataset, const PointCloud &inputPointCloud)
+void LayerFilterer::loadPointCloud(flann::Matrix<T>& dataset, const hop3d::PointCloud &inputPointCloud)
 {
 
 

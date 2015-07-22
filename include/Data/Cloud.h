@@ -7,6 +7,9 @@
 #include "Data/Defs.h"
 #include "Data/Part.h"
 
+namespace hop3d {
+
+
 class Cloud{
 
 public:
@@ -21,7 +24,8 @@ private:
 
 class PartCloud : public Cloud{
 public:
-    /// Pointer
+    /// Pointernamespace hop3d {
+
     typedef std::unique_ptr<PartCloud> Ptr;
 std::vector<PartRealization> partCloud;
 
@@ -44,5 +48,6 @@ private:
 
 };
 
+}
 
 #endif /* DATA_CLOUD_H */

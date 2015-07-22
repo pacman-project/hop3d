@@ -15,9 +15,9 @@ int main( int argc, char** argv )
 std::cout << "Hello World" << std::endl;
 std::clog << "Hello World" << std::endl;
 
-Reader reader;
-Writer writer;
-PointCloud pointCloud;
+hop3d::Reader reader;
+hop3d::Writer writer;
+hop3d::PointCloud pointCloud;
 std::vector<hop3d::Face> faces;
 
 reader.readPlyFile(std::string("cube.ply"), pointCloud, faces );

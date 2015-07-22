@@ -46,11 +46,11 @@ public:
 
     int initialize(int windowWidth, int windowHeight, const char* windowName);
     int loadVertices(const char *imagePath, const char *objPath);
-    int loadPoints(const char* imagePath, const PointCloud& inputPointCloud);
+    int loadPoints(const char* imagePath, const hop3d::PointCloud& inputPointCloud);
     int createSphere(const char* imagePath, float radius, int resolution);
     int createEllipse(const char* imagePath, float radius1, float radius2, int resolution);
 
-    int renderPoints(const PointCloud& inputPointCloud);
+    int renderPoints(const hop3d::PointCloud& inputPointCloud);
     int render();
     int close();
     int checkClose();

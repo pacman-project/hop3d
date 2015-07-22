@@ -139,7 +139,7 @@ int Visualizer::loadVertices(const char* imagePath, const char* objPath){
 
 }
 
-int Visualizer::loadPoints(const char* imagePath, const PointCloud& inputPointCloud){
+int Visualizer::loadPoints(const char* imagePath, const hop3d::PointCloud& inputPointCloud){
     // Get a handle for our buffers
     vertexPosition_modelspaceID = glGetAttribLocation(programID, "vertexPosition_modelspace");
     vertexUVID = glGetAttribLocation(programID, "vertexUV");
@@ -497,7 +497,7 @@ int Visualizer::render()
 
 
 
-int Visualizer::renderPoints(const PointCloud &inputPointCloud){
+int Visualizer::renderPoints(const hop3d::PointCloud &inputPointCloud){
 
 
     // Measure speed

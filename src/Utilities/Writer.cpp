@@ -1,7 +1,7 @@
 #include "Utilities/Writer.h"
 
 
-int Writer::writePlyToFile(std::string fileName, const PointCloud& inputPointCloud, const std::vector<Eigen::Vector4i> &inputFaces){
+int hop3d::Writer::writePlyToFile(std::string fileName, const hop3d::PointCloud& inputPointCloud, const std::vector<Eigen::Vector4i> &inputFaces){
     std::ofstream myfile;
     myfile.open(fileName);
     myfile << "ply\r\n";
