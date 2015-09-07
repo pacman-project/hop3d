@@ -20,15 +20,15 @@ hop3d::Writer writer;
 hop3d::PointCloud pointCloud;
 std::vector<hop3d::Face> faces;
 
-reader.readPlyFile(std::string("cube.ply"), pointCloud, faces );
-writer.writePlyToFile(std::string("cubeOut.ply"), pointCloud, faces);
+reader.readPlyFile(std::string("cylinder.ply"), pointCloud, faces );
+writer.writePlyToFile(std::string("cylinderOut.ply"), pointCloud, faces);
 
-Visualizer visualizer(1024,768,"testing vis");
+Visualizer visualizer(1920,1440,"testing vis");
 
 visualizer.loadPoints("uvmap.DDS",pointCloud);
 //visualizer.loadVertices("uvmap.DDS","suzanne.obj");
 //visualizer.createSphere("uvmap.DDS",0.05,10);
-visualizer.createEllipse("uvmap.DDS",0.05,0.01,20);
+visualizer.createEllipse("uvmap.DDS",0.05,0.05,20);
 do{
 
     visualizer.renderPoints(pointCloud);

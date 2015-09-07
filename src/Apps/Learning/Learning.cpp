@@ -24,6 +24,7 @@ hop3d::LayerVocabulary first;
 reader.readPlyFile(std::string("cube.ply"), pointCloud, faces );
 writer.writePlyToFile(std::string("cubeOut.ply"), pointCloud, faces);
 reader.readFirstLayerVoc("crude_400.txt", first.FirstLayerPartVec);
+
 for(auto iter : first.FirstLayerPartVec){
     std::cout << iter.getPartId() << std::endl;
     std::cout << iter.getNormal() << std::endl;

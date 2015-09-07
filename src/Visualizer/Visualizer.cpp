@@ -403,7 +403,8 @@ int Visualizer::render()
     // Use our shader
     glUseProgram(programID);
 
-    glm::mat4 ProjectionMatrix = glm::perspective(35.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+    //glm::mat4 ProjectionMatrix = glm::perspective(35.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+    glm::mat4 ProjectionMatrix = glm::ortho(-1.0f,1.0f,-1.0f,1.0f);
     glm::mat4 ViewMatrix = glm::lookAt(
         glm::vec3( 0, 0, 5 ), // Camera is here
         glm::vec3( 0, 0, 0 ), // and looks here
@@ -558,7 +559,7 @@ int Visualizer::renderPoints(const hop3d::PointCloud &inputPointCloud){
     bindBuffers(TextureSphere,TextureIDSphere,vertexbufferSphere,uvbufferSphere,normalbufferSphere,elementbufferSphere);
 
     if (gLookAtOther){
-        for(unsigned int  i=0; i < inputPointCloud.PointCloudNormal.size(); i+=100 ){
+        for(unsigned int  i=0; i < inputPointCloud.PointCloudNormal.size(); i+=150 ){
             glm::vec3 gPosition3(inputPointCloud.PointCloudNormal[i].position(0), inputPointCloud.PointCloudNormal[i].position(1), inputPointCloud.PointCloudNormal[i].position(2));
             glm::vec3 gNormal3(inputPointCloud.PointCloudNormal[i].normal(0), inputPointCloud.PointCloudNormal[i].normal(1), inputPointCloud.PointCloudNormal[i].normal(2));
             // Receptive Fields

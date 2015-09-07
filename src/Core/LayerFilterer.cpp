@@ -80,6 +80,26 @@ int LayerFilterer::radiusSearch(const hop3d::PointCloud &inputPointCloud, float 
 
 }
 
+int LayerFilterer::readFirstLayerVocabulary(std::string fileName)
+{
+    reader.readFirstLayerVoc(fileName, first.FirstLayerPartVec);
+    return 0;
+}
+
+int LayerFilterer::findActivations(const hop3d::PointCloud &inputPointCloud)
+{
+
+    for(auto iter : inputPointCloud.PointCloudNormal){
+
+        hop3d::PartRealization part;
+        part.Activation = 0;
+        part.setPartId(0);
+        part.position = Eigen::Vector3f(0.0f,0.0f,0.0f);
+        part.referenceFrame = Eigen::Matrix3f::Identity(3,3);
+        partRealizations.push_back(part);
+    }
+}
+
 
 template<typename T>
 void LayerFilterer::loadPointCloud(flann::Matrix<T>& dataset, const hop3d::PointCloud &inputPointCloud)
