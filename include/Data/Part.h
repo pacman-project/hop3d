@@ -34,11 +34,7 @@ public:
     int setNormal(hop3d::Vec3 normal);
     hop3d::Vec3 getNormal() const;
 protected:
-<<<<<<< HEAD
     hop3d::Vec3 normal;
-=======
-    hop3d::Vec3 Normals;
->>>>>>> my-temporary-work
 private:
 
 };
