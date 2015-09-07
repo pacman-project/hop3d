@@ -51,8 +51,8 @@ int hop3d::Reader::readPlyFile(std::string fileName, PointCloud& outputPointClou
         line.erase(std::remove(line.begin(), line.end(), '\t'), line.end());
             std::vector<std::string> lineSeq;
             split(line,' ',lineSeq);
-            Eigen::Vector3f vecPoint;
-            Eigen::Vector3f vecNorm;
+            Eigen::Vector3d vecPoint;
+            Eigen::Vector3d vecNorm;
             for(int i = 0; i< 3; i++) vecPoint(i) = std::stof(lineSeq[i].c_str());
             for(int i = 3; i< 6; i++) vecNorm(i-3) = std::stof(lineSeq[i].c_str());
             hop3d::PointNormal tempPointNormal;
@@ -61,7 +61,7 @@ int hop3d::Reader::readPlyFile(std::string fileName, PointCloud& outputPointClou
             outputPointCloud.PointCloudNormal.push_back(tempPointNormal);
         }
         std::cout << "Points and normals successfuly loaded from " << fileName << std::endl;
-        std::cout << "The data occupies " << (2*(sizeof(std::vector<Eigen::Vector3f>) + (sizeof(Eigen::Vector3f) * outputPointCloud.PointCloudNormal.size())))/1024/1024 << " MB" << std::endl;
+        std::cout << "The data occupies " << (2*(sizeof(std::vector<Eigen::Vector3d>) + (sizeof(Eigen::Vector3d) * outputPointCloud.PointCloudNormal.size())))/1024/1024 << " MB" << std::endl;
         for(unsigned long  i=0; i < faceElements; i++ ){
         getline (myfile,line);
         line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
@@ -84,7 +84,7 @@ int hop3d::Reader::readPlyFile(std::string fileName, PointCloud& outputPointClou
 }
 
 int hop3d::Reader::readFirstLayerVoc(std::string fileName, hop3d::FirstLayerPart::Seq &parts){
-    std::vector<hop3d::Normal> discretizedNormals;
+    std::vector<hop3d::Vec3> discretizedNormals;
     std::cout << "Loading file: " << fileName << std::endl;
     std::string line;
     std::ifstream myfile (fileName.c_str());
@@ -97,7 +97,7 @@ int hop3d::Reader::readFirstLayerVoc(std::string fileName, hop3d::FirstLayerPart
         line.erase(std::remove(line.begin(), line.end(), '\t'), line.end());
             std::vector<std::string> lineSeq;
             split(line,',',lineSeq);
-            Eigen::Vector3f vecNorm;
+            Eigen::Vector3d vecNorm;
             for(int i = 0; i< 3; i++) vecNorm(i) = ::atof(lineSeq[i].c_str());
             hop3d::FirstLayerPart part;
             part.setPartId(id);
@@ -107,7 +107,7 @@ int hop3d::Reader::readFirstLayerVoc(std::string fileName, hop3d::FirstLayerPart
             //discretizedNormals.push_back(vecNorm);
         }
         std::cout << "Normals successfuly loaded from " << fileName << std::endl;
-        std::cout << "The data occupies " << (sizeof(std::vector<Eigen::Vector3f>) + (sizeof(Eigen::Vector3f) * discretizedNormals.size()))/1024 << " kB" << std::endl;
+        std::cout << "The data occupies " << (sizeof(std::vector<Eigen::Vector3d>) + (sizeof(Eigen::Vector3d) * discretizedNormals.size()))/1024 << " kB" << std::endl;
         myfile.close();
     }
     else{
