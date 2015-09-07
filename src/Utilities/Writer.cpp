@@ -8,12 +8,12 @@ int hop3d::Writer::writePlyToFile(std::string fileName, const hop3d::PointCloud&
     myfile << "format ascii 1.0\r\n";
     myfile << "comment file created with HOP3D\r\n";
     myfile << "element vertex " << inputPointCloud.PointCloudNormal.size() << "\r\n";
-    myfile << "property float x\r\n";
-    myfile << "property float y\r\n";
-    myfile << "property float z\r\n";
-    myfile << "property float nx\r\n";
-    myfile << "property float ny\r\n";
-    myfile << "property float nz\r\n";
+    myfile << "property double x\r\n";
+    myfile << "property double y\r\n";
+    myfile << "property double z\r\n";
+    myfile << "property double nx\r\n";
+    myfile << "property double ny\r\n";
+    myfile << "property double nz\r\n";
     myfile << "element face " << inputFaces.size() << "\r\n";
     myfile << "property list uchar uint vertex_indices\r\n";
     myfile << "end_header\r\n";

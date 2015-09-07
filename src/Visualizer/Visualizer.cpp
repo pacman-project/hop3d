@@ -169,7 +169,7 @@ int Visualizer::loadPoints(const char* imagePath, const hop3d::PointCloud& input
 }
 
 
-int Visualizer::createSphere(const char* imagePath, float radius, int resolution){
+int Visualizer::createSphere(const char* imagePath, double radius, int resolution){
 
     // Get a handle for our buffers
     vertexPosition_modelspaceID = glGetAttribLocation(programID, "vertexPosition_modelspace");
@@ -186,8 +186,8 @@ int Visualizer::createSphere(const char* imagePath, float radius, int resolution
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals;
     // iniatiate the variable we are going to use
-    float X1,Y1,X2,Y2,Z1,Z2;
-    float inc1,inc2,inc3,inc4,Radius1,Radius2;
+    double X1,Y1,X2,Y2,Z1,Z2;
+    double inc1,inc2,inc3,inc4,Radius1,Radius2;
     unsigned short indicesIter =0;
     double PI = 3.14159;
 
@@ -195,10 +195,10 @@ int Visualizer::createSphere(const char* imagePath, float radius, int resolution
     for(int w = 0; w < resolution; w++) {
          for(int h = (-resolution/2); h < (resolution/2); h++){
 
-             inc1 = (w/(float)resolution)*2*PI;
-             inc2 = ((w+1)/(float)resolution)*2*PI;
-             inc3 = (h/(float)resolution)*PI;
-             inc4 = ((h+1)/(float)resolution)*PI;
+             inc1 = (w/(double)resolution)*2*PI;
+             inc2 = ((w+1)/(double)resolution)*2*PI;
+             inc3 = (h/(double)resolution)*PI;
+             inc4 = ((h+1)/(double)resolution)*PI;
 
              X1 = sin(inc1);
              Y1 = cos(inc1);
@@ -249,7 +249,7 @@ int Visualizer::createSphere(const char* imagePath, float radius, int resolution
 
 }
 
-int Visualizer::createEllipse(const char* imagePath, float radius1, float radius2, int resolution){
+int Visualizer::createEllipse(const char* imagePath, double radius1, double radius2, int resolution){
 
     // Get a handle for our buffers
     vertexPosition_modelspaceID = glGetAttribLocation(programID, "vertexPosition_modelspace");
@@ -266,15 +266,15 @@ int Visualizer::createEllipse(const char* imagePath, float radius1, float radius
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals;
     // iniatiate the variable we are going to use
-    float X1,Y1,X2,Y2,Z;
-    float inc1,inc2;
+    double X1,Y1,X2,Y2,Z;
+    double inc1,inc2;
     unsigned short indicesIter =0;
     double PI = 3.14159;
 
 
     for(int w = 0; w < resolution; w++) {
-             inc1 = (w/(float)resolution)*2*PI;
-             inc2 = ((w+1)/(float)resolution)*2*PI;
+             inc1 = (w/(double)resolution)*2*PI;
+             inc2 = ((w+1)/(double)resolution)*2*PI;
 
              X1 = sin(inc1);
              Y1 = cos(inc1);
@@ -387,7 +387,7 @@ int Visualizer::render()
 
     // Measure speed
     double currentTime = glfwGetTime();
-    float deltaTime = (float)(currentTime - lastFrameTime);
+    double deltaTime = (double)(currentTime - lastFrameTime);
     lastFrameTime = currentTime;
     nbFrames++;
     if ( currentTime - lastTime >= 1.0 ){ // If last prinf() was more than 1sec ago
@@ -503,7 +503,7 @@ int Visualizer::renderPoints(const hop3d::PointCloud &inputPointCloud){
 
     // Measure speed
     double currentTime = glfwGetTime();
-    float deltaTime = (float)(currentTime - lastFrameTime);
+    double deltaTime = (double)(currentTime - lastFrameTime);
     lastFrameTime = currentTime;
     nbFrames++;
     if ( currentTime - lastTime >= 1.0 ){ // If last prinf() was more than 1sec ago

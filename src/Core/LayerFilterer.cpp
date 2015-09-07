@@ -5,18 +5,18 @@ int LayerFilterer::nearestNeighbour(const hop3d::PointCloud &inputPointCloud, in
 {
         int nn = 0;
         nn =  nearestNeigbours;
-       flann::Matrix<float> dataset;
-       flann::Matrix<float> query;
+       flann::Matrix<double> dataset;
+       flann::Matrix<double> query;
        loadPointCloud(dataset,inputPointCloud);
        loadPointCloud(query,inputPointCloud);
 
        flann::Matrix<int> indices(new int[query.rows*nn], query.rows, nn);
-       flann::Matrix<float> dists(new float[query.rows*nn], query.rows, nn);
+       flann::Matrix<double> dists(new double[query.rows*nn], query.rows, nn);
 
        auto begin = std::chrono::high_resolution_clock::now();
 
        // construct an randomized kd-tree index using 4 kd-trees
-       flann::Index<flann::L2<float> > index(dataset, flann::KDTreeIndexParams(4));
+       flann::Index<flann::L2<double> > index(dataset, flann::KDTreeIndexParams(4));
        index.buildIndex();
 
        // do a knn search, using 128 checks
@@ -43,24 +43,24 @@ int LayerFilterer::nearestNeighbour(const hop3d::PointCloud &inputPointCloud, in
 
 }
 
-int LayerFilterer::radiusSearch(const hop3d::PointCloud &inputPointCloud, float radius)
+int LayerFilterer::radiusSearch(const hop3d::PointCloud &inputPointCloud, double radius)
 {
 
-       flann::Matrix<float> dataset;
-       flann::Matrix<float> query;
+       flann::Matrix<double> dataset;
+       flann::Matrix<double> query;
        loadPointCloud(dataset,inputPointCloud);
        loadPointCloud(query,inputPointCloud);
 
        std::vector<std::vector<int> > indices;
-       std::vector<std::vector<float> > dists;
+       std::vector<std::vector<double> > dists;
        auto begin = std::chrono::high_resolution_clock::now();
 
        // construct an randomized kd-tree index using 4 kd-trees
-       flann::Index<flann::L2<float> > index(dataset, flann::KDTreeIndexParams(4));
+       flann::Index<flann::L2<double> > index(dataset, flann::KDTreeIndexParams(4));
        index.buildIndex();
 
        // do a knn search, using 128 checks
-       index.radiusSearch(query, indices, dists, radius , flann::SearchParams(128));
+       index.radiusSearch(query, indices, dists, (float)radius , flann::SearchParams(128));
 
        auto end = std::chrono::high_resolution_clock::now();
        std::cout << (std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count()) << "ms" << std::endl;

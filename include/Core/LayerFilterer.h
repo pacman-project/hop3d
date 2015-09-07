@@ -15,7 +15,7 @@ public:
     /// Pointer
     typedef std::unique_ptr<LayerFilterer> Ptr;
     int nearestNeighbour(const hop3d::PointCloud& inputPointCloud, int nearestNeigbours = 4 );
-    int radiusSearch(const hop3d::PointCloud &inputPointCloud, float radius);
+    int radiusSearch(const hop3d::PointCloud &inputPointCloud, double radius);
     int findActivations(const hop3d::PointCloud &inputPointCloud);
     int readFirstLayerVocabulary(std::string fileName);
 
