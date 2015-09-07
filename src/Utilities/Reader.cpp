@@ -115,8 +115,8 @@ int hop3d::Reader::readFirstLayerVoc(std::string fileName, hop3d::FirstLayerPart
         return 1;
     }
 //    for(int i = 0; i < discretizedNormals.size(); i++){
-//        float dist;
-//        float dot;
+//        double dist;
+//        double dot;
 //        dot = discretizedNormals[0].dot(discretizedNormals[i]);
 //        if(dot > 1) dot = 1;
 //        if(dot < -1) dot = -1;

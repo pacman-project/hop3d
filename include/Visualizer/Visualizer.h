@@ -47,8 +47,8 @@ public:
     int initialize(int windowWidth, int windowHeight, const char* windowName);
     int loadVertices(const char *imagePath, const char *objPath);
     int loadPoints(const char* imagePath, const hop3d::PointCloud& inputPointCloud);
-    int createSphere(const char* imagePath, float radius, int resolution);
-    int createEllipse(const char* imagePath, float radius1, float radius2, int resolution);
+    int createSphere(const char* imagePath, double radius, int resolution);
+    int createEllipse(const char* imagePath, double radius1, double radius2, int resolution);
 
     int renderPoints(const hop3d::PointCloud& inputPointCloud);
     int render();
@@ -73,16 +73,18 @@ private:
     GLuint MatrixID;
     GLuint ViewMatrixID;
     GLuint ModelMatrixID;
+
     //position and orientation of objects in a scene
-    glm::vec3 gPosition1;
-    glm::vec3 gOrientation1;
-    glm::vec3 gPosition2;
-    glm::quat gOrientation2;
-    bool gLookAtOther;
-    //position and orientation of objects in a scene
+    GLfloat FOV;
     glm::vec3 gCameraPosition;
     glm::vec3 gCameraOrientation;
-    GLfloat FOV;
+
+    //position and orientation of objects in a scene
+    glm::vec3 gPosition1;
+    glm::vec3 gPosition2;
+    glm::vec3 gOrientation1;
+    glm::quat gOrientation2;
+    bool gLookAtOther;
 
     // Get a handle for our buffers
     GLuint vertexPosition_modelspaceID;

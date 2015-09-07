@@ -34,7 +34,11 @@ public:
     int setNormal(hop3d::Vec3 normal);
     hop3d::Vec3 getNormal() const;
 protected:
+<<<<<<< HEAD
     hop3d::Vec3 normal;
+=======
+    hop3d::Vec3 Normals;
+>>>>>>> my-temporary-work
 private:
 
 };
@@ -47,8 +51,8 @@ public:
 
     hop3d::Vec3 position;
     hop3d::ReferenceFrame referenceFrame;
-    hop3d::F32 Activation;
-    hop3d::I8 Scale;
+    hop3d::F32 activation;
+    hop3d::I8 scale;
     typedef std::vector<PartRealization>  Seq;
 
 protected:

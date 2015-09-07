@@ -21,7 +21,7 @@ typedef unsigned short			U16;
 typedef unsigned int			U32;
 typedef unsigned __int64		U64;
 
-typedef float					F32;
+typedef double					F32;
 typedef double					F64;
 
 #elif __linux__
@@ -44,7 +44,7 @@ typedef unsigned long int 		U64;
 typedef unsigned long long		U64;
 #endif
 
-typedef float					F32;
+typedef double					F32;
 typedef double					F64;
 #endif
 

@@ -9,7 +9,7 @@
 
 
 // Returns true iif v1 can be considered equal to v2
-bool is_near(float v1, float v2){
+bool is_near(double v1, double v2){
 	return fabs( v1-v2 ) < 0.01f;
 }
 
@@ -26,7 +26,7 @@ bool getSimilarVertexIndex(
 	unsigned short & result
 ){
 	// Lame linear search
-	for ( unsigned int i=0; i<out_vertices.size(); i++ ){
+    for ( unsigned short i=0; i<out_vertices.size(); i++ ){
 		if (
 			is_near( in_vertex.x , out_vertices[i].x ) &&
 			is_near( in_vertex.y , out_vertices[i].y ) &&
@@ -37,7 +37,7 @@ bool getSimilarVertexIndex(
 			is_near( in_normal.y , out_normals [i].y ) &&
 			is_near( in_normal.z , out_normals [i].z )
 		){
-			result = i;
+            result = i;
 			return true;
 		}
 	}
@@ -69,7 +69,7 @@ void indexVBO_slow(
 			out_vertices.push_back( in_vertices[i]);
 			out_uvs     .push_back( in_uvs[i]);
 			out_normals .push_back( in_normals[i]);
-			out_indices .push_back( (unsigned short)out_vertices.size() - 1 );
+            out_indices .push_back( (unsigned short)(out_vertices.size() - 1) );
 		}
 	}
 }
@@ -125,7 +125,7 @@ void indexVBO(
 			out_vertices.push_back( in_vertices[i]);
 			out_uvs     .push_back( in_uvs[i]);
 			out_normals .push_back( in_normals[i]);
-            unsigned short newindex = (unsigned short)out_vertices.size() - 1;
+            unsigned short newindex = (unsigned short)(out_vertices.size() - 1);
 			out_indices .push_back( newindex );
 			VertexToOutIndex[ packed ] = newindex;
 		}
@@ -171,7 +171,7 @@ void indexVBO_TBN(
 			out_normals .push_back( in_normals[i]);
 			out_tangents .push_back( in_tangents[i]);
 			out_bitangents .push_back( in_bitangents[i]);
-			out_indices .push_back( (unsigned short)out_vertices.size() - 1 );
+            out_indices .push_back( (unsigned short)(out_vertices.size() - 1) );
 		}
 	}
 }
