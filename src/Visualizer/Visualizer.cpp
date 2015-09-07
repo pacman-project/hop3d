@@ -188,7 +188,6 @@ int Visualizer::createSphere(const char* imagePath, double radius, int resolutio
     // iniatiate the variable we are going to use
     double X1,Y1,X2,Y2,Z1,Z2;
     double inc1,inc2,inc3,inc4,Radius1,Radius2;
-    unsigned short indicesIter =0;
     double PI = 3.14159;
 
 
@@ -268,7 +267,6 @@ int Visualizer::createEllipse(const char* imagePath, double radius1, double radi
     // iniatiate the variable we are going to use
     double X1,Y1,X2,Y2,Z;
     double inc1,inc2;
-    unsigned short indicesIter =0;
     double PI = 3.14159;
 
 
@@ -378,7 +376,7 @@ glVertexAttribPointer(
 
 // Index buffer
 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-
+    return 0;
 }
 
 
@@ -421,7 +419,7 @@ int Visualizer::render()
     { // Euler
 
         // As an example, rotate arount the vertical axis at 180�/sec
-        gOrientation1.y += 3.14159f/2.0f * deltaTime;
+        gOrientation1.y += float((3.14159f/2.0f) * deltaTime);
 
         // Build the model matrix
         glm::mat4 RotationMatrix = glm::eulerAngleYXZ(gOrientation1.x, gOrientation1.y, gOrientation1.z);
@@ -440,8 +438,8 @@ int Visualizer::render()
         // Draw the triangles !
         glDrawElements(
             GL_TRIANGLES,      // mode
-            indicesShort.size(),    // count
-            GL_UNSIGNED_SHORT,   // type
+            (unsigned int)indicesShort.size(),    // count
+            GL_UNSIGNED_INT,   // type
             (void*)0           // element array buffer offset
         );
     }
@@ -476,8 +474,8 @@ int Visualizer::render()
         // Draw the triangles !
         glDrawElements(
             GL_TRIANGLES,      // mode
-            indicesShort.size(),    // count
-            GL_UNSIGNED_SHORT,   // type
+            (unsigned int)indicesShort.size(),    // count
+            GL_UNSIGNED_INT,   // type
             (void*)0           // element array buffer offset
         );
     }
@@ -503,7 +501,7 @@ int Visualizer::renderPoints(const hop3d::PointCloud &inputPointCloud){
 
     // Measure speed
     double currentTime = glfwGetTime();
-    double deltaTime = (double)(currentTime - lastFrameTime);
+    //double deltaTime = (double)(currentTime - lastFrameTime);
     lastFrameTime = currentTime;
     nbFrames++;
     if ( currentTime - lastTime >= 1.0 ){ // If last prinf() was more than 1sec ago
@@ -548,12 +546,10 @@ int Visualizer::renderPoints(const hop3d::PointCloud &inputPointCloud){
         // Draw the triangles !
         glDrawElements(
             GL_POINTS,      // mode
-            indicesPoints.size(),    // count
+            (unsigned int)indicesPoints.size(),    // count
             GL_UNSIGNED_INT,   // type
             (void*)0           // element array buffer offset
         );
-
-
     }
 
     bindBuffers(TextureSphere,TextureIDSphere,vertexbufferSphere,uvbufferSphere,normalbufferSphere,elementbufferSphere);
@@ -622,7 +618,7 @@ int Visualizer::renderPoints(const hop3d::PointCloud &inputPointCloud){
             // Draw the triangles !
             glDrawElements(
                 GL_TRIANGLES,      // mode
-                indicesSphere.size(),    // count
+                (unsigned short int)indicesSphere.size(),    // count
                 GL_UNSIGNED_SHORT,   // type
                 (void*)0           // element array buffer offset
             );
