@@ -14,15 +14,15 @@ hop3d::U64 hop3d::Part::getPartId() const
 
 
 
-int hop3d::FirstLayerPart::setNormal(hop3d::Normal normal)
+int hop3d::FirstLayerPart::setNormal(hop3d::Vec3 normal)
 {
-    this->Normals = normal;
+    this->normal = normal;
     return 0;
 }
 
-hop3d::Normal hop3d::FirstLayerPart::getNormal() const
+hop3d::Vec3 hop3d::FirstLayerPart::getNormal() const
 {
-    return this->Normals;
+    return this->normal;
 }
 
 

@@ -48,15 +48,14 @@ typedef float					F32;
 typedef double					F64;
 #endif
 
-typedef Eigen::Vector3f         Position;
-typedef Eigen::Vector3f         Normal;
+typedef Eigen::Vector3d         Vec3;
 typedef Eigen::Vector4i         Face;
 class PointNormal{
 public:
-    Position position;
-    Normal normal;
+    Vec3 position;
+    Vec3 normal;
 };
-typedef Eigen::Matrix3f         ReferenceFrame;
+typedef Eigen::Matrix3d         ReferenceFrame;
 
 
 

@@ -31,10 +31,10 @@ private:
 class FirstLayerPart : public Part{
 public:
     typedef std::vector<FirstLayerPart> Seq;
-    int setNormal(hop3d::Normal normal);
-    hop3d::Normal getNormal() const;
+    int setNormal(hop3d::Vec3 normal);
+    hop3d::Vec3 getNormal() const;
 protected:
-    hop3d::Normal Normals;
+    hop3d::Vec3 normal;
 private:
 
 };
@@ -45,7 +45,7 @@ public:
     /// Pointer
     typedef std::unique_ptr<PartRealization> Ptr;
 
-    hop3d::Position position;
+    hop3d::Vec3 position;
     hop3d::ReferenceFrame referenceFrame;
     hop3d::F32 Activation;
     hop3d::I8 Scale;
