@@ -73,16 +73,18 @@ private:
     GLuint MatrixID;
     GLuint ViewMatrixID;
     GLuint ModelMatrixID;
+
     //position and orientation of objects in a scene
-    glm::vec3 gPosition1;
-    glm::vec3 gOrientation1;
-    glm::vec3 gPosition2;
-    glm::quat gOrientation2;
-    bool gLookAtOther;
-    //position and orientation of objects in a scene
+    GLfloat FOV;
     glm::vec3 gCameraPosition;
     glm::vec3 gCameraOrientation;
-    GLfloat FOV;
+
+    //position and orientation of objects in a scene
+    glm::vec3 gPosition1;
+    glm::vec3 gPosition2;
+    glm::vec3 gOrientation1;
+    glm::quat gOrientation2;
+    bool gLookAtOther;
 
     // Get a handle for our buffers
     GLuint vertexPosition_modelspaceID;

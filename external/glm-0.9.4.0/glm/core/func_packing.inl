@@ -41,8 +41,8 @@ namespace glm
 		detail::uint32 A((p >>  0) & Mask16);
 		detail::uint32 B((p >> 16) & Mask16);
 		return detail::tvec2<detail::float32>(
-			A * 1.0f / 65535.0f, 
-			B * 1.0f / 65535.0f);
+            A * 1.0 / 65535.0,
+            B * 1.0 / 65535.0);
 	}
 	
 	GLM_FUNC_QUALIFIER detail::uint32 packSnorm2x16(detail::tvec2<detail::float32> const & v)
@@ -93,10 +93,10 @@ namespace glm
 		detail::uint32 C((p >> 16) & Mask8);
 		detail::uint32 D((p >> 24) & Mask8);
 		return detail::tvec4<detail::float32>(
-			A * 1.0f / 255.0f, 
-			B * 1.0f / 255.0f, 
-			C * 1.0f / 255.0f, 
-			D * 1.0f / 255.0f);
+            A * 1.0 / 255.0,
+            B * 1.0 / 255.0,
+            C * 1.0 / 255.0,
+            D * 1.0 / 255.0);
 	}
 	
 	GLM_FUNC_QUALIFIER detail::uint32 packSnorm4x8(detail::tvec4<detail::float32> const & v)
