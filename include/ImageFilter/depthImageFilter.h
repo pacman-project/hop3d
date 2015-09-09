@@ -11,10 +11,10 @@
 #include "../../external/tinyXML/tinyxml2.h"
 
 namespace hop3d {
-/// create a single depth image filter
-ImageFilter* createDepthImageFilter(void);
-/// create a single depth image filter
-ImageFilter* createDepthImageFilter(std::string config);
+    /// create a single depth image filter
+    ImageFilter* createDepthImageFilter(void);
+    /// create a single depth image filter
+    ImageFilter* createDepthImageFilter(std::string config);
 }
 
 using namespace hop3d;
@@ -47,6 +47,8 @@ public:
 
         Config(std::string configFilename);
         public:
+            // number of filters
+            int filtersNo;
     };
 
 private:

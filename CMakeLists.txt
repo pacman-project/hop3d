@@ -72,13 +72,42 @@ IF (WIN32)
 # Eigen
         SET(EIGEN_INCLUDE "${PROGRAM_FILES}/eigen" CACHE PATH "Path prefix for EIGEN include")
 ENDIF()
+INCLUDE_DIRECTORIES( ${EIGEN_INCLUDE} ${PROJ_INCLUDES} )
 
 # OpenCV
 FIND_PACKAGE(OpenCV REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 #FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
 
-INCLUDE_DIRECTORIES( ${EIGEN_INCLUDE} ${PROJ_INCLUDES} )
+
+find_package(GLEW REQUIRED)
+if (GLEW_FOUND)
+    include_directories(${GLEW_INCLUDE_DIRS})
+    link_libraries(${GLEW_LIBRARIES})
+endif()
+
+# Executable output directory
+SET(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build/bin${OUTPUT_DIRECTORY_POSTFIX} CACHE PATH "Executable output directory")
+mark_as_advanced(RUNTIME_OUTPUT_DIRECTORY)
+
+# Dynamic library output directory
+SET(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build/bin${OUTPUT_DIRECTORY_POSTFIX} CACHE PATH "Dynamic library output directory")
+mark_as_advanced(LIBRARY_OUTPUT_DIRECTORY)
+
+# Static library output directory
+SET(ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build/lib${OUTPUT_DIRECTORY_POSTFIX} CACHE PATH "Static library output directory")
+mark_as_advanced(ARCHIVE_OUTPUT_DIRECTORY)
+
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY})
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_DIRECTORY})
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ARCHIVE_OUTPUT_DIRECTORY})
+foreach(CONFIGURATION_TYPE ${CMAKE_CONFIGURATION_TYPES})
+        string(TOUPPER ${CONFIGURATION_TYPE} CONFIGURATION_TYPE)
+        SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${CONFIGURATION_TYPE} ${RUNTIME_OUTPUT_DIRECTORY})
+        SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${CONFIGURATION_TYPE} ${LIBRARY_OUTPUT_DIRECTORY})
+        SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${CONFIGURATION_TYPE} ${ARCHIVE_OUTPUT_DIRECTORY})
+endforeach(CONFIGURATION_TYPE CMAKE_CONFIGURATION_TYPES)
+
 IF (UNIX)
 #"-Wall -Wextra -Wconversion" warning flags for equivalence with VS W4
 SET(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -std=c++11 -pthread -fopenmp")
@@ -204,7 +233,6 @@ include(MSVCMultipleProcessCompile) # /MP
 include_directories(
         external/AntTweakBar-1.16/include/
         external/glfw-3.0.3/include/GLFW/
-        external/glew-1.9.0/include/
         include/
         .
 )
@@ -212,7 +240,6 @@ include_directories(
 set(ALL_LIBS
         ${OPENGL_LIBRARY}
         GLFW_303
-        GLEW_190
         ANTTWEAKBAR_116_OGLCORE_GLFW
 )
 
@@ -220,7 +247,6 @@ add_definitions(
         -DTW_STATIC
         -DTW_NO_LIB_PRAGMA
         -DTW_NO_DIRECT3D
-        -DGLEW_STATIC
         -D_CRT_SECURE_NO_WARNINGS
 )
 

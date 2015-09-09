@@ -82,7 +82,7 @@ class Octet {
     // id of the filter
     std::array<std::array<int,3>,3> filterIds;
     // filter response
-    std::array<std::array<int,3>,3> responses;
+    std::array<std::array<double,3>,3> responses;
     // mask of the filter
     std::array<std::array<ImageFeature,3>,3> filterPos;
     //camera pose Id

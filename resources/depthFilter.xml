@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+  <!-- filter configuration -->
+  <Filterer>
+    <name>DepthFilter</name>
+    <parameters filtersNo="100"></parameters>
+  </Filterer>

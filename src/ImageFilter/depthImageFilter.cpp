@@ -24,8 +24,10 @@ DepthImageFilter::Config::Config(std::string configFilename){
     config.LoadFile(filename.c_str());
     if (config.ErrorID())
         std::cout << "unable to load depth filter config file.\n";
-    //tinyxml2::XMLElement * model = config.FirstChildElement( "MapConfig" );
-    //model->FirstChildElement( "parameters" )->QueryBoolAttribute("useUncertainty", &useUncertainty);
+    tinyxml2::XMLElement * model = config.FirstChildElement( "Filterer" );
+    model->FirstChildElement( "parameters" )->QueryIntAttribute("filtersNo", &filtersNo);
+    std::cout << "Load filter parameters...\n";
+    std::cout << "Filters no.: " << filtersNo << "\n";
 }
 
 const std::string& DepthImageFilter::getName() const {
