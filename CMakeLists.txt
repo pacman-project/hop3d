@@ -1,10 +1,28 @@
-CMAKE_MINIMUM_REQUIRED( VERSION 2.6 )
+CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
 
-option(BUILD_VISUALIZATION_MODULE "Build HOP3D OpenGL 3.0 visualization module" ON)
+option(BUILD_HOP3D "Build HOP3D libraries" ON)
+option(BUILD_VISUALIZATION_MODULE "Build HOP3D" ON)
+mark_as_advanced(BUILD_VISUALIZATION_MODULE)
+option(BUILD_HOP3D_FILTER "Build PUTSLAM Utilities library" ON)
+mark_as_advanced(BUILD_HOP3D_FILTER)
 
+# Build options have to be before PROJECT(...)
+SET(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE PATH "Configuration types")
+SET(CMAKE_BUILD_TYPE "Release" CACHE PATH "Current build configuration")
+
+# HOP3D Project configuration
 SET( PROJ_NAME      "HOP3D" )
 SET( PROJ_PATH      ${CMAKE_SOURCE_DIR} )
 SET( PROJ_OUT_PATH  ${CMAKE_BINARY_DIR} )
+
+SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread")
+
+# Folders
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# Settings
+INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include")
+INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/Defs")
 
 # Project root directory
 GET_FILENAME_COMPONENT(PROJECT_PATH . ABSOLUTE CACHE INTERNAL "Path prefix for the project")
@@ -23,7 +41,48 @@ IF (WIN32)
 ENDIF()
 
 
+#Adding flan to the project
+find_package(PkgConfig)
+pkg_check_modules(PC_FLANN flann)
+set(FLANN_DEFINITIONS ${PC_FLANN_CFLAGS_OTHER})
 
+find_path(FLANN_INCLUDE_DIR flann/flann.hpp
+    HINTS ${PC_FLANN_INCLUDEDIR} ${PC_FLANN_INCLUDE_DIRS})
+
+find_library(FLANN_LIBRARY flann
+    HINTS ${PC_FLANN_LIBDIR} ${PC_FLANN_LIBRARY_DIRS})
+
+set(FLANN_INCLUDE_DIRS ${FLANN_INCLUDE_DIR})
+set(FLANN_LIBRARIES ${FLANN_LIBRARY})
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Flann DEFAULT_MSG
+    FLANN_LIBRARY FLANN_INCLUDE_DIR)
+
+mark_as_advanced(FLANN_LIBRARY FLANN_INCLUDE_DIR)
+
+
+#Adding OpenMP
+IF (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+ENDIF()
+
+IF (WIN32)
+# Eigen
+        SET(EIGEN_INCLUDE "${PROGRAM_FILES}/eigen" CACHE PATH "Path prefix for EIGEN include")
+ENDIF()
+
+# OpenCV
+FIND_PACKAGE(OpenCV REQUIRED)
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+#FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
+
+INCLUDE_DIRECTORIES( ${EIGEN_INCLUDE} ${PROJ_INCLUDES} )
+IF (UNIX)
+#"-Wall -Wextra -Wconversion" warning flags for equivalence with VS W4
+SET(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -std=c++11 -pthread -fopenmp")
+ENDIF()
 
 SET(DATA_SOURCES
 
@@ -70,8 +129,6 @@ SET(UTILITIES_SOURCES
         ${PROJECT_PATH}/src/Utilities/Writer.cpp
 )
 
-
-
 SET(UTILITIES_HEADERS
         ${PROJECT_PATH}/include/Utilities/Reader.h
         ${PROJECT_PATH}/include/Utilities/Writer.h
@@ -108,7 +165,6 @@ SOURCE_GROUP("VISUALIZER" FILES ${VISUALISATION_SOURCES})
 ENDIF (BUILD_VISUALIZATION_MODULE)
 
 SET(APPS_SOURCES
-
         ${PROJECT_PATH}/src/Apps/Learning/Data.cpp
         ${PROJECT_PATH}/src/Apps/Learning/Learning.cpp
         ${PROJECT_PATH}/src/Apps/Inference/Data.cpp
@@ -133,8 +189,6 @@ SOURCE_GROUP("APPS" FILES ${APPS_SOURCES})
 SET( PROJ_LIBRARIES "flann" )
 SET( PROJ_INCLUDES  "${PROJECT_PATH}/include/" )
 
-PROJECT( ${PROJ_NAME} )
-
 IF (BUILD_VISUALIZATION_MODULE)
     FIND_PACKAGE ( OpenGL REQUIRED)
 # Compile external dependencies
@@ -150,9 +204,7 @@ include(MSVCMultipleProcessCompile) # /MP
 include_directories(
         external/AntTweakBar-1.16/include/
         external/glfw-3.0.3/include/GLFW/
-        external/glm-0.9.4.0/
         external/glew-1.9.0/include/
-        external/assimp-3.0.1270/include/
         include/
         .
 )
@@ -174,51 +226,6 @@ add_definitions(
 
 ENDIF (BUILD_VISUALIZATION_MODULE)
 
-
-FIND_PACKAGE(OpenMP)
-
-
-#Adding flan to the project
-find_package(PkgConfig)
-pkg_check_modules(PC_FLANN flann)
-set(FLANN_DEFINITIONS ${PC_FLANN_CFLAGS_OTHER})
-
-find_path(FLANN_INCLUDE_DIR flann/flann.hpp
-    HINTS ${PC_FLANN_INCLUDEDIR} ${PC_FLANN_INCLUDE_DIRS})
-
-find_library(FLANN_LIBRARY flann
-    HINTS ${PC_FLANN_LIBDIR} ${PC_FLANN_LIBRARY_DIRS})
-
-set(FLANN_INCLUDE_DIRS ${FLANN_INCLUDE_DIR})
-set(FLANN_LIBRARIES ${FLANN_LIBRARY})
-
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Flann DEFAULT_MSG
-    FLANN_LIBRARY FLANN_INCLUDE_DIR)
-
-mark_as_advanced(FLANN_LIBRARY FLANN_INCLUDE_DIR)
-
-
-#Adding OpenMP
-IF (OPENMP_FOUND)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-ENDIF()
-
-IF (WIN32)
-# Eigen
-        SET(EIGEN_INCLUDE "${PROGRAM_FILES}/eigen" CACHE PATH "Path prefix for EIGEN include")
-ENDIF()
-
-#FIND_PACKAGE( OpenCV REQUIRED )
-#FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
-
-#INCLUDE_DIRECTORIES( ${OpenCV_INCLUDE_DIRS})
-INCLUDE_DIRECTORIES( ${EIGEN_INCLUDE} ${PROJ_INCLUDES} )
-IF (UNIX)
-#"-Wall -Wextra -Wconversion" warning flags for equivalence with VS W4
-SET(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -std=c++11 -pthread -fopenmp")
-ENDIF()
 ###############################################################################
 #
 # tinyXML2 library
@@ -227,12 +234,31 @@ ENDIF()
 
 add_library(tinyxml2 SHARED ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.h ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.cpp)
 
+###############################################################################
+#
+# HOP3D image filter library
+#
+###############################################################################
+
+if(BUILD_HOP3D AND BUILD_HOP3D_FILTER)
+        file(GLOB FILTER_SOURCES
+            "${CMAKE_SOURCE_DIR}/src/ImageFilter/*.cpp"
+        )
+        file(GLOB FILTER_HEADERS
+            "${CMAKE_SOURCE_DIR}/include/ImageFilter/*.h"
+        )
+
+        ADD_LIBRARY(imageFilter STATIC ${FILTER_SOURCES} ${FILTER_HEADERS})
+        TARGET_LINK_LIBRARIES(imageFilter)
+        INSTALL(TARGETS imageFilter RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
+        INSTALL(FILES ${FILTER_HEADERS} DESTINATION include/hop3d/ImageFilter/)
+endif(BUILD_HOP3D AND BUILD_HOP3D_FILTER)
+
 ADD_LIBRARY("${PROJ_NAME}_data" ${DATA_HEADERS} ${DATA_SOURCES})
 ADD_LIBRARY("${PROJ_NAME}_core" ${CORE_HEADERS} ${CORE_SOURCES})
 ADD_LIBRARY("${PROJ_NAME}_utilities" ${UTILITIES_HEADERS} ${UTILITIES_SOURCES})
 TARGET_LINK_LIBRARIES( "${PROJ_NAME}_utilities" "${PROJ_NAME}_data")
 ADD_LIBRARY("${PROJ_NAME}_visualizer" ${VISUALIZER_HEADERS} ${VISUALIZER_SOURCES})
-
 
 ADD_EXECUTABLE(${PROJ_NAME} "main.cpp"   )
 ADD_EXECUTABLE("${PROJ_NAME}_Visualization" "src/Apps/Visualization/Visualization.cpp")
@@ -240,6 +266,6 @@ ADD_EXECUTABLE("${PROJ_NAME}_Learning" "src/Apps/Learning/Learning.cpp")
 ADD_EXECUTABLE("${PROJ_NAME}_Inference" "src/Apps/Inference/Inference.cpp")
 
 #TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" "${PROJ_NAME}_utilities")
+TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" "${PROJ_NAME}_utilities" imageFilter tinyxml2)
 TARGET_LINK_LIBRARIES( "${PROJ_NAME}_Visualization" ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" "${PROJ_NAME}_utilities" "${PROJ_NAME}_visualizer" ${ALL_LIBS} )
 TARGET_LINK_LIBRARIES( "${PROJ_NAME}_Learning" ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" "${PROJ_NAME}_utilities")

@@ -155,9 +155,9 @@ int Visualizer::loadPoints(const char* imagePath, const hop3d::PointCloud& input
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals;
-    for(unsigned int  i=0; i < inputPointCloud.PointCloudNormal.size(); i++ ){
-        vertices.push_back(glm::vec3(inputPointCloud.PointCloudNormal[i].position(0), inputPointCloud.PointCloudNormal[i].position(1), inputPointCloud.PointCloudNormal[i].position(2)));
-        normals.push_back(glm::vec3(inputPointCloud.PointCloudNormal[i].normal(0), inputPointCloud.PointCloudNormal[i].normal(1), inputPointCloud.PointCloudNormal[i].normal(2)));
+    for(unsigned int  i=0; i < inputPointCloud.pointCloudNormal.size(); i++ ){
+        vertices.push_back(glm::vec3(inputPointCloud.pointCloudNormal[i].position(0), inputPointCloud.pointCloudNormal[i].position(1), inputPointCloud.pointCloudNormal[i].position(2)));
+        normals.push_back(glm::vec3(inputPointCloud.pointCloudNormal[i].normal(0), inputPointCloud.pointCloudNormal[i].normal(1), inputPointCloud.pointCloudNormal[i].normal(2)));
         indicesPoints.push_back(i);
         uvs.push_back(glm::vec2(0.1f,0.1f));
     }
@@ -555,9 +555,9 @@ int Visualizer::renderPoints(const hop3d::PointCloud &inputPointCloud){
     bindBuffers(TextureSphere,TextureIDSphere,vertexbufferSphere,uvbufferSphere,normalbufferSphere,elementbufferSphere);
 
     if (gLookAtOther){
-        for(unsigned int  i=0; i < inputPointCloud.PointCloudNormal.size(); i+=150 ){
-            glm::vec3 gPosition3(inputPointCloud.PointCloudNormal[i].position(0), inputPointCloud.PointCloudNormal[i].position(1), inputPointCloud.PointCloudNormal[i].position(2));
-            glm::vec3 gNormal3(inputPointCloud.PointCloudNormal[i].normal(0), inputPointCloud.PointCloudNormal[i].normal(1), inputPointCloud.PointCloudNormal[i].normal(2));
+        for(unsigned int  i=0; i < inputPointCloud.pointCloudNormal.size(); i+=150 ){
+            glm::vec3 gPosition3(inputPointCloud.pointCloudNormal[i].position(0), inputPointCloud.pointCloudNormal[i].position(1), inputPointCloud.pointCloudNormal[i].position(2));
+            glm::vec3 gNormal3(inputPointCloud.pointCloudNormal[i].normal(0), inputPointCloud.pointCloudNormal[i].normal(1), inputPointCloud.pointCloudNormal[i].normal(2));
             // Receptive Fields
 
             glm::mat4 RotToNormal( 1.0f ); // construct identity matrix

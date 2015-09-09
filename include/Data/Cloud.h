@@ -9,6 +9,11 @@
 
 namespace hop3d {
 
+class PointNormal{
+public:
+    Vec3 position;
+    Vec3 normal;
+};
 
 class Cloud{
 
@@ -39,7 +44,7 @@ class PointCloud : public Cloud{
 public:
     /// Pointer
     typedef std::unique_ptr<PointCloud> Ptr;
-    std::vector<hop3d::PointNormal> PointCloudNormal;
+    std::vector<hop3d::PointNormal> pointCloudNormal;
 
 
 protected:

@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <eigen3/Eigen/Dense>
+#include "opencv2/core/core.hpp"
 
 namespace hop3d {
 
@@ -48,16 +49,45 @@ typedef double					F32;
 typedef double					F64;
 #endif
 
-typedef Eigen::Vector3d         Vec3;
-typedef Eigen::Vector4i         Face;
-class PointNormal{
-public:
-    Vec3 position;
+/// 3 element vector class
+typedef Eigen::Vector3d Vec3;
+/// Matrix representation of SO(3) group of rotations
+typedef Eigen::Matrix<double, 3, 3> Mat33;
+/// Homogeneous representation of SE(3) rigid body transformations
+typedef Eigen::Transform<double, 3, Eigen::Affine> Mat34;
+
+/// Depth image filter representation
+class Filter {
+    // id of the filter
+    int id;
+    // mask of the filter
+    cv::Mat patch;
+    // vector normal to the center of the patch
     Vec3 normal;
 };
-typedef Eigen::Matrix3d         ReferenceFrame;
 
+/// 2D image feature
+class ImageFeature {
+public:
+    /// set of features
+    typedef std::vector<ImageFeature> Seq;
 
+    /// 2D feature location
+    double u;
+    double v;
+};
+
+/// Octet representation
+class Octet {
+    // id of the filter
+    std::array<std::array<int,3>,3> filterIds;
+    // filter response
+    std::array<std::array<int,3>,3> responses;
+    // mask of the filter
+    std::array<std::array<ImageFeature,3>,3> filterPos;
+    //camera pose Id
+    int poseId;
+};
 
 
 }

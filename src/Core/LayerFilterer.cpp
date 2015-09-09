@@ -89,13 +89,13 @@ int LayerFilterer::readFirstLayerVocabulary(std::string fileName)
 int LayerFilterer::findActivations(const hop3d::PointCloud &inputPointCloud)
 {
 
-    for(auto iter : inputPointCloud.PointCloudNormal){
+    for(auto iter : inputPointCloud.pointCloudNormal){
 
         hop3d::PartRealization part;
         part.activation = 0;
         part.setPartId(0);
         part.position = Eigen::Vector3d(0.0f,0.0f,0.0f);
-        part.referenceFrame = Eigen::Matrix3d::Identity(3,3);
+        //part.referenceFrame = Eigen::Matrix3d::Identity(3,3);
         partRealizations.push_back(part);
         hop3d::Vec3 normTmp = iter.normal;//!!
         normTmp(0)=1;//!!
@@ -110,17 +110,17 @@ void LayerFilterer::loadPointCloud(flann::Matrix<T>& dataset, const hop3d::Point
 
 
     unsigned long long dimsOut[2];
-    dimsOut[0] = inputPointCloud.PointCloudNormal.size();
-    dimsOut[1] = inputPointCloud.PointCloudNormal[0].position.size();
+    dimsOut[0] = inputPointCloud.pointCloudNormal.size();
+    dimsOut[1] = inputPointCloud.pointCloudNormal[0].position.size();
     std::cout << dimsOut[0] << "; "<< dimsOut[1] << std::endl;
 
     dataset = flann::Matrix<T>(new T[dimsOut[0]*dimsOut[1]], dimsOut[0], dimsOut[1]);
     auto begin = std::chrono::high_resolution_clock::now();
     #pragma omp parallel for
-        for(unsigned long  i=0; i < inputPointCloud.PointCloudNormal.size(); i++ ){
-            dataset[i][0] = inputPointCloud.PointCloudNormal[i].position(0);;
-            dataset[i][1] = inputPointCloud.PointCloudNormal[i].position(1);
-            dataset[i][2] = inputPointCloud.PointCloudNormal[i].position(2);
+        for(unsigned long  i=0; i < inputPointCloud.pointCloudNormal.size(); i++ ){
+            dataset[i][0] = inputPointCloud.pointCloudNormal[i].position(0);;
+            dataset[i][1] = inputPointCloud.pointCloudNormal[i].position(1);
+            dataset[i][2] = inputPointCloud.pointCloudNormal[i].position(2);
         }
     auto end = std::chrono::high_resolution_clock::now();
     std::cout << (std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count()) << "ms" << std::endl;

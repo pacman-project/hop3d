@@ -18,7 +18,7 @@ std::clog << "Hello World" << std::endl;
 hop3d::Reader reader;
 hop3d::Writer writer;
 hop3d::PointCloud pointCloud;
-std::vector<hop3d::Face> faces;
+std::vector<Eigen::Vector4i> faces;
 hop3d::LayerVocabulary first;
 
 reader.readPlyFile(std::string("cube.ply"), pointCloud, faces );

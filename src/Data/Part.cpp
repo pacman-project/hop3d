@@ -2,17 +2,14 @@
 
 int hop3d::Part::setPartId(hop3d::U64 id)
 {
-    Id = id;
+    this->id = id;
     return 0;
 }
 
 hop3d::U64 hop3d::Part::getPartId() const
 {
-    return Id;
+    return id;
 }
-
-
-
 
 int hop3d::FirstLayerPart::setNormal(hop3d::Vec3 normal)
 {

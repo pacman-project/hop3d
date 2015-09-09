@@ -20,10 +20,10 @@ public:
 protected:
     /// Pointer
     typedef std::unique_ptr<Part> Ptr;
-    hop3d::U64 Id;
-    hop3d::U8 LayerId;
-    hop3d::U64 Central;
-    std::vector<hop3d::U64> Members;
+    hop3d::U64 id;
+    hop3d::U8 layerId;
+    hop3d::U64 central;
+    std::vector<hop3d::U64> members;
 private:
 
 };
@@ -46,7 +46,7 @@ public:
     typedef std::unique_ptr<PartRealization> Ptr;
 
     hop3d::Vec3 position;
-    hop3d::ReferenceFrame referenceFrame;
+    //hop3d::ReferenceFrame referenceFrame;
     hop3d::F32 activation;
     hop3d::I8 scale;
     typedef std::vector<PartRealization>  Seq;
