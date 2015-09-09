@@ -3,6 +3,20 @@ Hierarchy of parts for 3D shapes.
 
 Installation of the software:
 
-Required essential libraries + OpenGL 3.3+ libs:
+Required essential libraries 
 
-sudo apt-get install cmake make g++ libx11-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxrandr-dev libxext-dev 
+sudo apt-get install cmake make g++ 
+
+or sudo apt-get install build-essential
+
++ OpenGL 3.3+ libs:
+ 
+sudo apt-get install libx11-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxrandr-dev libxext-dev 
+
++ FLANN 
+
+sudo apt-get install libflann1.8   libflann-dev
+
++EIGEN
+
+sudo apt-get install libeigen3-dev
