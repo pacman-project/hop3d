@@ -91,7 +91,7 @@ int Visualizer::initialize(int windowWidth, int windowHeight, const char* window
     glEnable(GL_CULL_FACE);
 
     // Create and compile our GLSL program from the shaders
-    programID = LoadShaders( "StandardShading.vertexshader", "StandardShading.fragmentshader" );
+    programID = LoadShaders( "../../resources/StandardShading.vertexshader", "../../resources/StandardShading.fragmentshader" );
 
     // Get a handle for our "MVP" uniform
     MatrixID = glGetUniformLocation(programID, "MVP");
