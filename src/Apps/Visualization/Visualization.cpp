@@ -13,7 +13,7 @@ int main( void)
 
 
 std::cout << "Hello World" << std::endl;
-std::clog << "Hello World" << std::endl;
+std::clog << "Hello World log" << std::endl;
 
 hop3d::Reader reader;
 hop3d::Writer writer;

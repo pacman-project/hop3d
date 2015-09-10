@@ -35,7 +35,7 @@ int Visualizer::initialize(int windowWidth, int windowHeight, const char* window
     glfwMakeContextCurrent(window);
 
     // Initialize GLEW
-    glewExperimental = true; // Needed for core profile
+    glewExperimental = true; // Needed for core profile and other
     if (glewInit() != GLEW_OK) {
         std::cerr << "Failed to initialize GLEW" << std::endl;
         return -1;
