@@ -9,7 +9,7 @@
 
 namespace hop3d {
 
-
+/*
 class LayerVocabulary{
 
 public:
@@ -36,7 +36,7 @@ protected:
 
 private:
 
-};
+};*/
 
 }
 

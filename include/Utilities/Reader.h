@@ -18,7 +18,7 @@ public:
 /// Pointer
     typedef std::unique_ptr<Reader> Ptr;
     int readPlyFile(std::string fileName, PointCloud& outputPointCloud, std::vector<Eigen::Vector4i> &outputFaces);
-    int readFirstLayerVoc(std::string fileName, FirstLayerPart::Seq &parts);
+    int readFirstLayerVoc(std::string fileName, Filter::Seq &parts);
 
 
 

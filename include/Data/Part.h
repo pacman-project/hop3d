@@ -28,41 +28,21 @@ public:
     /// Pointer
     typedef std::unique_ptr<ViewDependentPart> Ptr;
 
-    /// id of the neighbouring parts from the same layer
+    /// Position of the part on the image
+    ImageCoords location;
+
+    /// Id of the neighbouring parts from the same layer
     std::array<std::array<int,3>,3> partIds;
 
     /// Gaussians related to positions of neighbouring parts
     std::array<std::array<Gaussian2D,3>,3> gaussians;
+
+    /// OR parts -- aggregated parts at the same layer
+    std::vector<int> ORparts;
 };
 
-/*class Part{
-    friend class LayerVocabulary;
 
-public:
-    typedef std::vector<Part> Seq;
-    int setPartId(hop3d::U64 id);
-    hop3d::U64 getPartId() const;
-protected:
-    /// Pointer
-    typedef std::unique_ptr<Part> Ptr;
-    hop3d::U64 id;
-    hop3d::U8 layerId;
-    hop3d::U64 central;
-    std::vector<hop3d::U64> members;
-private:
-
-};*/
-
-class FirstLayerPart : public Part{
-public:
-    typedef std::vector<FirstLayerPart> Seq;
-    int setNormal(hop3d::Vec3 normal);
-    hop3d::Vec3 getNormal() const;
-protected:
-    hop3d::Vec3 normal;
-private:
-
-};
+typedef std::vector<ViewDependentPart> LayerVocabulary;
 
 class PartRealization : public Part {
 

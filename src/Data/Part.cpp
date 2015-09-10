@@ -9,7 +9,7 @@
 hop3d::U64 hop3d::Part::getPartId() const
 {
     return id;
-}*/
+}
 
 int hop3d::FirstLayerPart::setNormal(hop3d::Vec3 normal)
 {
@@ -20,6 +20,6 @@ int hop3d::FirstLayerPart::setNormal(hop3d::Vec3 normal)
 hop3d::Vec3 hop3d::FirstLayerPart::getNormal() const
 {
     return this->normal;
-}
+}*/
 
 
