@@ -88,7 +88,7 @@ int LayerFilterer::readFirstLayerVocabulary(std::string fileName)
 
 int LayerFilterer::findActivations(const hop3d::PointCloud &inputPointCloud)
 {
-
+/*
     for(auto iter : inputPointCloud.pointCloudNormal){
 
         hop3d::PartRealization part;
@@ -99,7 +99,7 @@ int LayerFilterer::findActivations(const hop3d::PointCloud &inputPointCloud)
         partRealizations.push_back(part);
         hop3d::Vec3 normTmp = iter.normal;//!!
         normTmp(0)=1;//!!
-    }
+    }*/
     return 0;
 }
 

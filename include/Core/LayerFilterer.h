@@ -23,8 +23,8 @@ protected:
     template<typename T>
     void loadPointCloud(flann::Matrix<T>& dataset, const hop3d::PointCloud &inputPointCloud);
 private:
-    hop3d::PartRealization::Seq partRealizations;
-    hop3d::LayerVocabulary first;
+    //hop3d::PartRealization::Seq partRealizations;
+    //hop3d::LayerVocabulary first;
     hop3d::Reader reader;
 
 };

@@ -32,7 +32,7 @@ public:
     /// Pointernamespace hop3d {
 
     typedef std::unique_ptr<PartCloud> Ptr;
-std::vector<PartRealization> partCloud;
+//std::vector<PartRealization> partCloud;
 
 protected:
 

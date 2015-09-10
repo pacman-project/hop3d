@@ -14,11 +14,30 @@ public:
     typedef std::vector<Part> Seq;
     /// Pointer
     typedef std::unique_ptr<Part> Ptr;
+    /// Part type
+    enum Type {
+        /// view dependent
+        PART_VIEW_DEP,
+        /// view independent
+        PART_VIEW_INDEP,
+    };
 
     /// Part id
     int id;
     /// Layer id
     int layerId;
+    /// Type of the part
+    Type type;
+
+    /// Id of the neighbouring parts from the same layer
+    std::array<std::array<int,3>,3> partIds;
+
+    /// OR parts -- aggregated parts at the same layer
+    std::vector<int> ORparts;
+
+    /// Construction
+    inline Part(int _id, int _layerId, Type _type) : id(_id), layerId(_layerId), type(_type){
+    }
 };
 
 class ViewDependentPart : Part{
@@ -31,35 +50,50 @@ public:
     /// Position of the part on the image
     ImageCoords location;
 
-    /// Id of the neighbouring parts from the same layer
-    std::array<std::array<int,3>,3> partIds;
+    /// Camera pose id
+    int cameraPoseId;
 
     /// Gaussians related to positions of neighbouring parts
     std::array<std::array<Gaussian2D,3>,3> gaussians;
 
-    /// OR parts -- aggregated parts at the same layer
-    std::vector<int> ORparts;
+    /// Construction
+    inline ViewDependentPart(int _id, int _layerId, Type _type, ImageCoords _location) :
+        Part(_id, _layerId, _type), location(_location){
+    }
 };
 
-
-typedef std::vector<ViewDependentPart> LayerVocabulary;
-
-class PartRealization : public Part {
-
+class ViewIndependentPart : Part{
 public:
+    /// Sequence
+    typedef std::vector<ViewIndependentPart> Seq;
     /// Pointer
-    typedef std::unique_ptr<PartRealization> Ptr;
+    typedef std::unique_ptr<ViewIndependentPart> Ptr;
 
-    hop3d::Vec3 position;
-    //hop3d::ReferenceFrame referenceFrame;
-    hop3d::F32 activation;
-    hop3d::I8 scale;
-    typedef std::vector<PartRealization>  Seq;
+    /// Pose of the part in 3D space
+    Mat34 pose;
 
-protected:
+    /// Construction
+    inline ViewIndependentPart(int _id, int _layerId, Type _type, Mat34 _pose) :
+        Part(_id, _layerId, _type), pose(_pose){
+    }
+};
 
-private:
+/// Vocaulary of a view dependent layer
+typedef std::vector<ViewDependentPart> VDLayerVocabulary;
+/// Vocaulary of a view independent layer
+typedef std::vector<ViewIndependentPart> VILayerVocabulary;
 
+class Hierarchy {
+public:
+    /// View dependent layers
+    std::vector<VDLayerVocabulary> viewDependentLayers;
+    /// View independent layers
+    std::vector<VILayerVocabulary> viewIndependentLayers;
+
+    /// Construction
+    inline Hierarchy(int _viewDepLayersNo, int _viewIndepLayersNo) :
+        viewDependentLayers(_viewDepLayersNo), viewIndependentLayers(_viewIndepLayersNo){
+    }
 };
 
 }

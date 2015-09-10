@@ -62,7 +62,6 @@ typedef Eigen::Transform<double, 3, Eigen::Affine> Mat34;
 
 /// Depth image filter representation
 class Filter {
-
 public:
     /// set of filters
     typedef std::vector<Filter> Seq;
@@ -112,16 +111,6 @@ class Gaussian2D{
     Mat22 covariance;
 };
 
-/// 3D Gaussian
-class Gaussian3D{
-    /// set of 3d Gaussians
-    typedef std::vector<Gaussian3D> Seq;
-
-    /// position
-    Vec3 mean;
-    /// covariance matrix
-    Mat33 covariance;
-};
 
 }
 #endif /* DATA_DEFS_H */
