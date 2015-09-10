@@ -35,7 +35,7 @@ int Visualizer::initialize(int windowWidth, int windowHeight, const char* window
     glfwMakeContextCurrent(window);
 
     // Initialize GLEW
-    glewExperimental = true; // Needed for core profile
+    glewExperimental = true; // Needed for core profile and other
     if (glewInit() != GLEW_OK) {
         std::cerr << "Failed to initialize GLEW" << std::endl;
         return -1;
@@ -91,7 +91,7 @@ int Visualizer::initialize(int windowWidth, int windowHeight, const char* window
     glEnable(GL_CULL_FACE);
 
     // Create and compile our GLSL program from the shaders
-    programID = LoadShaders( "StandardShading.vertexshader", "StandardShading.fragmentshader" );
+    programID = LoadShaders( "../../resources/StandardShading.vertexshader", "../../resources/StandardShading.fragmentshader" );
 
     // Get a handle for our "MVP" uniform
     MatrixID = glGetUniformLocation(programID, "MVP");
