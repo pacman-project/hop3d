@@ -4,6 +4,8 @@
 #include "Data/Defs.h"
 #include "Data/Part.h"
 #include "Data/Vocabulary.h"
+#include "../../external/tinyXML/tinyxml2.h"
+
 #include <iostream>
 #include <memory>
 #include <fstream>
@@ -17,8 +19,11 @@ class Reader{
 public:
 /// Pointer
     typedef std::unique_ptr<Reader> Ptr;
+
     int readPlyFile(std::string fileName, PointCloud& outputPointCloud, std::vector<Eigen::Vector4i> &outputFaces);
     int readFirstLayerVoc(std::string fileName, FirstLayerPart::Seq &parts);
+/// reading first layer filters defined in Octave -- reading from xml file using tinyXML
+    int readFilters(std::string patchesFileName, std::string normalsFileName, Filter::Seq &filters);
 
 
 

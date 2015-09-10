@@ -131,3 +131,22 @@ int hop3d::Reader::readFirstLayerVoc(std::string fileName, hop3d::FirstLayerPart
 //        std::cout << std::endl;
     return 0;
 }
+
+
+/// reading first layer filters defined in Octave -- reading from xml file using tinyXML
+
+int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsFileName, hop3d::Filter::Seq &filters)
+{
+    tinyxml2::XMLDocument patchesFile;
+    std::string filenamePatches = "../../resources/" + patchesFileName;
+    config.LoadFile(filenamePatches.c_str());
+    if (patchesFile.ErrorID())
+        std::cout << "unable to load depth filter config file.\n";
+    tinyxml2::XMLDocument normalsFile;
+    std::string filenameNormals = "../../resources/" + normalsFileName;
+    config.LoadFile(filenameNormals.c_str());
+    if (normalsFile.ErrorID())
+        std::cout << "unable to load depth filter config file.\n";
+
+
+}
