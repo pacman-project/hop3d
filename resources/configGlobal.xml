@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+  <!-- filter configuration -->
+  <Filterer configFilename="depthFilter.xml">
+  </Filterer>
+  
+<!--   Hierarchy configuration -->
+  <Hierarchy>
+    <parameters viewDependentLayersNo="3" viewIndependentLayersNo="3"></parameters>
+  </Hierarchy>
