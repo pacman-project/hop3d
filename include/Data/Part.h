@@ -78,23 +78,5 @@ public:
     }
 };
 
-/// Vocaulary of a view dependent layer
-typedef std::vector<ViewDependentPart> VDLayerVocabulary;
-/// Vocaulary of a view independent layer
-typedef std::vector<ViewIndependentPart> VILayerVocabulary;
-
-class Hierarchy {
-public:
-    /// View dependent layers
-    std::vector<VDLayerVocabulary> viewDependentLayers;
-    /// View independent layers
-    std::vector<VILayerVocabulary> viewIndependentLayers;
-
-    /// Construction
-    inline Hierarchy(int _viewDepLayersNo, int _viewIndepLayersNo) :
-        viewDependentLayers(_viewDepLayersNo), viewIndependentLayers(_viewIndepLayersNo){
-    }
-};
-
 }
 #endif /* DATA_PART_H */

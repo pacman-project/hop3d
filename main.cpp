@@ -1,5 +1,6 @@
 #include <iostream>
-#include "include/ImageFilter/depthImageFilter.h"
+#include "ImageFilter/depthImageFilter.h"
+#include "Data/Graph.h"
 
 int main(void){
     try {
@@ -14,7 +15,10 @@ int main(void){
         ImageFilter *imageFilter;
         imageFilter = createDepthImageFilter(filtererType);
         std::cout << imageFilter->getName() << "\n";
-        std::cout << "Hello World" << std::endl;
+
+        Hierarchy hierarchy("../../resources/configGlobal.xml");
+        std::cout << "Hierarchy: number of view-dependent layers: " << hierarchy.viewDependentLayers.size() << "\n";
+        std::cout << "Finished" << std::endl;
     }
     catch (const std::exception& ex) {
         std::cerr << ex.what() << std::endl;
