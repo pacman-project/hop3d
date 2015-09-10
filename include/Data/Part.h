@@ -6,11 +6,36 @@
 
 #include "Data/Defs.h"
 
-
-
 namespace hop3d {
 
 class Part{
+public:
+    /// Sequence
+    typedef std::vector<Part> Seq;
+    /// Pointer
+    typedef std::unique_ptr<Part> Ptr;
+
+    /// Part id
+    int id;
+    /// Layer id
+    int layerId;
+};
+
+class ViewDependentPart : Part{
+public:
+    /// sequence
+    typedef std::vector<ViewDependentPart> Seq;
+    /// Pointer
+    typedef std::unique_ptr<ViewDependentPart> Ptr;
+
+    /// id of the neighbouring parts from the same layer
+    std::array<std::array<int,3>,3> partIds;
+
+    /// Gaussians related to positions of neighbouring parts
+    std::array<std::array<Gaussian2D,3>,3> gaussians;
+};
+
+/*class Part{
     friend class LayerVocabulary;
 
 public:
@@ -26,7 +51,7 @@ protected:
     std::vector<hop3d::U64> members;
 private:
 
-};
+};*/
 
 class FirstLayerPart : public Part{
 public:

@@ -100,7 +100,7 @@ int hop3d::Reader::readFirstLayerVoc(std::string fileName, hop3d::FirstLayerPart
             Eigen::Vector3d vecNorm;
             for(int i = 0; i< 3; i++) vecNorm(i) = ::atof(lineSeq[i].c_str());
             hop3d::FirstLayerPart part;
-            part.setPartId(id);
+            //part.setPartId(id);
             part.setNormal(vecNorm);
             parts.push_back(part);
             id++;

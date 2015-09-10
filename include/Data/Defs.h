@@ -49,9 +49,13 @@ typedef double					F32;
 typedef double					F64;
 #endif
 
+/// 2 element vector class
+typedef Eigen::Vector2d Vec2;
 /// 3 element vector class
 typedef Eigen::Vector3d Vec3;
-/// Matrix representation of SO(3) group of rotations
+/// Matrix representation of SO(2) group of rotations or other 2D matrices
+typedef Eigen::Matrix<double, 2, 2> Mat22;
+/// Matrix representation of SO(3) group of rotations or other 3D matrices
 typedef Eigen::Matrix<double, 3, 3> Mat33;
 /// Homogeneous representation of SE(3) rigid body transformations
 typedef Eigen::Transform<double, 3, Eigen::Affine> Mat34;
@@ -79,6 +83,9 @@ public:
 
 /// Octet representation
 class Octet {
+    /// set of octets
+    typedef std::vector<Octet> Seq;
+
     // id of the filter
     std::array<std::array<int,3>,3> filterIds;
     // filter response
@@ -89,6 +96,27 @@ class Octet {
     int poseId;
 };
 
+/// 2D Gaussian
+class Gaussian2D{
+    /// set of 2d Gaussians
+    typedef std::vector<Gaussian2D> Seq;
+
+    /// position
+    Vec2 mean;
+    /// covariance matrix
+    Mat22 covariance;
+};
+
+/// 3D Gaussian
+class Gaussian3D{
+    /// set of 3d Gaussians
+    typedef std::vector<Gaussian3D> Seq;
+
+    /// position
+    Vec3 mean;
+    /// covariance matrix
+    Mat33 covariance;
+};
 
 }
 #endif /* DATA_DEFS_H */

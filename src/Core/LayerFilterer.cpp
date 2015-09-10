@@ -93,7 +93,7 @@ int LayerFilterer::findActivations(const hop3d::PointCloud &inputPointCloud)
 
         hop3d::PartRealization part;
         part.activation = 0;
-        part.setPartId(0);
+        //part.setPartId(0);
         part.position = Eigen::Vector3d(0.0f,0.0f,0.0f);
         //part.referenceFrame = Eigen::Matrix3d::Identity(3,3);
         partRealizations.push_back(part);
