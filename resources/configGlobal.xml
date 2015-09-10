@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+  <!-- filter configuration -->
+  <Filterer configFilename="depthFilter.xml">
+  </Filterer>
+  
+  <!-- stats builder configuration -->
+  <StatisticsBuilder configFilename="statsBuilder.xml">
+  </StatisticsBuilder>
+  
+<!--   Hierarchy configuration -->
+  <Hierarchy>
+    <parameters viewDependentLayersNo="3" viewIndependentLayersNo="3"></parameters>
+  </Hierarchy>
