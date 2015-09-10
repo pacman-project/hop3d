@@ -4,6 +4,10 @@
   <Filterer configFilename="depthFilter.xml">
   </Filterer>
   
+  <!-- stats builder configuration -->
+  <StatisticsBuilder configFilename="statsBuilder.xml">
+  </StatisticsBuilder>
+  
 <!--   Hierarchy configuration -->
   <Hierarchy>
     <parameters viewDependentLayersNo="3" viewIndependentLayersNo="3"></parameters>

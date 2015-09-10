@@ -40,7 +40,7 @@ public:
     }
 };
 
-class ViewDependentPart : Part{
+class ViewDependentPart: Part{
 public:
     /// Sequence
     typedef std::vector<ViewDependentPart> Seq;
@@ -62,7 +62,7 @@ public:
     }
 };
 
-class ViewIndependentPart : Part{
+class ViewIndependentPart: Part{
 public:
     /// Sequence
     typedef std::vector<ViewIndependentPart> Seq;

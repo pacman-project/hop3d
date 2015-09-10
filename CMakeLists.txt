@@ -3,8 +3,15 @@ CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
 option(BUILD_HOP3D "Build HOP3D libraries" ON)
 option(BUILD_VISUALIZATION_MODULE "Build HOP3D" ON)
 mark_as_advanced(BUILD_VISUALIZATION_MODULE)
-option(BUILD_HOP3D_FILTER "Build PUTSLAM Utilities library" ON)
+option(BUILD_HOP3D_FILTER "Build HOP3D filter library" ON)
 mark_as_advanced(BUILD_HOP3D_FILTER)
+option(BUILD_HOP3D_STATISTICS "Build HOP3D statistics builder library" ON)
+mark_as_advanced(BUILD_HOP3D_STATISTICS)
+
+# demos
+option(BUILD_HOP3D_DEMO "Build HOP3D demonstration programs and libraries" ON)
+option(BUILD_HOP3D_DEMO_STATS "Build hop3d build statistics test" ON)
+mark_as_advanced(BUILD_HOP3D_DEMO_STATS)
 
 # Build options have to be before PROJECT(...)
 SET(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE PATH "Configuration types")
@@ -139,14 +146,12 @@ SET(CORE_SOURCES
         ${PROJECT_PATH}/src/Core/LayerFilterer.cpp
         ${PROJECT_PATH}/src/Core/LocalInhibiter.cpp
         ${PROJECT_PATH}/src/Core/PartSelector.cpp
-        ${PROJECT_PATH}/src/Core/StatisticsBuilder.cpp
 )
 SET(CORE_HEADERS
         ${PROJECT_PATH}/include/Core/GraphBuilder.h
         ${PROJECT_PATH}/include/Core/LayerFilterer.h
         ${PROJECT_PATH}/include/Core/LocalInhibiter.h
         ${PROJECT_PATH}/include/Core/PartSelector.h
-        ${PROJECT_PATH}/include/Core/StatisticsBuilder.h
 )
 SET(CORE_FILES
 )
@@ -279,6 +284,48 @@ if(BUILD_HOP3D AND BUILD_HOP3D_FILTER)
         INSTALL(TARGETS imageFilter RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${FILTER_HEADERS} DESTINATION include/hop3d/ImageFilter/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_FILTER)
+
+###############################################################################
+#
+# HOP3D statistics builder library
+#
+###############################################################################
+
+if(BUILD_HOP3D AND BUILD_HOP3D_STATISTICS)
+        file(GLOB FILTER_SOURCES
+            "${CMAKE_SOURCE_DIR}/src/StatisticsBuilder/*.cpp"
+        )
+        file(GLOB FILTER_HEADERS
+            "${CMAKE_SOURCE_DIR}/include/StatisticsBuilder/*.h"
+        )
+
+        ADD_LIBRARY(statisticsBuilder STATIC ${FILTER_SOURCES} ${FILTER_HEADERS})
+        TARGET_LINK_LIBRARIES(statisticsBuilder)
+        INSTALL(TARGETS statisticsBuilder RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
+        INSTALL(FILES ${FILTER_HEADERS} DESTINATION include/hop3d/StatisticsBuilder/)
+endif(BUILD_HOP3D AND BUILD_HOP3D_STATISTICS)
+
+###############################################################################
+#
+# HOP3D DEMO stats builder
+#
+###############################################################################
+
+if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_STATS)
+
+        SET(DEMO_FILES
+                ${PROJECT_ROOT}/resources/configGlobal.xml
+        )
+
+        SET(DEMO_SOURCES ./src/Apps/DemoStatsBuilder/statsBuilder.cpp)
+        ADD_EXECUTABLE(statsBuilder ${DEMO_SOURCES})
+        TARGET_LINK_LIBRARIES(statsBuilder tinyxml2 statisticsBuilder)
+        INSTALL(TARGETS statsBuilder RUNTIME DESTINATION bin)
+        INSTALL(FILES ${DEMO_FILES} DESTINATION bin)
+
+endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_STATS)
+
+
 
 ADD_LIBRARY("${PROJ_NAME}_data" ${DATA_HEADERS} ${DATA_SOURCES})
 ADD_LIBRARY("${PROJ_NAME}_core" ${CORE_HEADERS} ${CORE_SOURCES})

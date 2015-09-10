@@ -10,10 +10,10 @@ int main(void){
             std::cout << "unable to load global config file.\n";
             return 1;
         }
-        std::string filtererType(config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
+        std::string filterConfig(config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
 
         ImageFilter *imageFilter;
-        imageFilter = createDepthImageFilter(filtererType);
+        imageFilter = createDepthImageFilter(filterConfig);
         std::cout << imageFilter->getName() << "\n";
 
         Hierarchy hierarchy("../../resources/configGlobal.xml");
