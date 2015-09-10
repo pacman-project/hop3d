@@ -23,7 +23,7 @@ public:
 
 class ViewDependentPart : Part{
 public:
-    /// sequence
+    /// Sequence
     typedef std::vector<ViewDependentPart> Seq;
     /// Pointer
     typedef std::unique_ptr<ViewDependentPart> Ptr;

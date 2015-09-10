@@ -70,11 +70,11 @@ class Filter {
     Vec3 normal;
 };
 
-/// 2D image feature
-class ImageFeature {
+/// 2D image coordinates
+class ImageCoords {
 public:
     /// set of features
-    typedef std::vector<ImageFeature> Seq;
+    typedef std::vector<ImageCoords> Seq;
 
     /// 2D feature location
     double u;
@@ -91,7 +91,7 @@ class Octet {
     // filter response
     std::array<std::array<double,3>,3> responses;
     // mask of the filter
-    std::array<std::array<ImageFeature,3>,3> filterPos;
+    std::array<std::array<ImageCoords,3>,3> filterPos;
     //camera pose Id
     int poseId;
 };
