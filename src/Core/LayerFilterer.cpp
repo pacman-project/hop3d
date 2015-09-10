@@ -82,7 +82,7 @@ int LayerFilterer::radiusSearch(const hop3d::PointCloud &inputPointCloud, double
 
 int LayerFilterer::readFirstLayerVocabulary(std::string fileName)
 {
-    reader.readFirstLayerVoc(fileName, first.FirstLayerPartVec);
+    //reader.readFirstLayerVoc(fileName, first.FirstLayerPartVec);
     return 0;
 }
 

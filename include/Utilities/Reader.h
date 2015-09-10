@@ -21,7 +21,6 @@ public:
     typedef std::unique_ptr<Reader> Ptr;
 
     int readPlyFile(std::string fileName, PointCloud& outputPointCloud, std::vector<Eigen::Vector4i> &outputFaces);
-    int readFirstLayerVoc(std::string fileName, FirstLayerPart::Seq &parts);
 /// reading first layer filters defined in Octave -- reading from xml file using tinyXML
     int readFilters(std::string patchesFileName, std::string normalsFileName, Filter::Seq &filters);
 

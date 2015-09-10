@@ -62,13 +62,16 @@ typedef Eigen::Transform<double, 3, Eigen::Affine> Mat34;
 
 /// Depth image filter representation
 class Filter {
-    /// set of features
+
+public:
+    /// set of filters
     typedef std::vector<Filter> Seq;
-    // id of the filter
+
+    /// id of the filter
     int id;
-    // mask of the filter
+    /// mask of the filter
     cv::Mat patch;
-    // vector normal to the center of the patch
+    /// vector normal to the center of the patch
     Vec3 normal;
 };
 
