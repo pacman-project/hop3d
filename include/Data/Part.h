@@ -36,11 +36,14 @@ public:
     std::vector<int> ORparts;
 
     /// Construction
+    inline Part(){};
+
+    /// Construction
     inline Part(int _id, int _layerId, Type _type) : id(_id), layerId(_layerId), type(_type){
     }
 };
 
-class ViewDependentPart: Part{
+class ViewDependentPart : public Part{
 public:
     /// Sequence
     typedef std::vector<ViewDependentPart> Seq;
@@ -57,12 +60,18 @@ public:
     std::array<std::array<Gaussian3D,3>,3> gaussians;
 
     /// Construction
+    inline ViewDependentPart(){};
+
+    /// Construction
     inline ViewDependentPart(int _id, int _layerId, Type _type, ImageCoords _location) :
         Part(_id, _layerId, _type), location(_location){
     }
+
+    /// Print
+    void print();
 };
 
-class ViewIndependentPart: Part{
+class ViewIndependentPart : public Part{
 public:
     /// Sequence
     typedef std::vector<ViewIndependentPart> Seq;

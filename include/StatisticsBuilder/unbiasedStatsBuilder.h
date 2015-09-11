@@ -31,6 +31,9 @@ public:
     /// Construction
     UnbiasedStatsBuilder(std::string config);
 
+    /// compute statistics for the set of octets
+    void computeStatistics(const std::vector<Octet>& octets, ViewDependentPart::Seq& dictionary);
+
     /// Destruction
     ~UnbiasedStatsBuilder(void);
 
@@ -42,6 +45,12 @@ public:
         Config(std::string configFilename);
         public:
     };
+
+private:
+    /// Is octet in vector
+    bool isOctetInGroups(const Octet& octet, std::vector<Octet::Seq>& groups) const;
+    /// Compute distance between octets
+    //double distance(const Octet& octetA, const Octet& octetB) const;
 
 private:
     ///Configuration of the module
