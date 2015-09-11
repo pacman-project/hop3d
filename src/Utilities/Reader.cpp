@@ -95,22 +95,40 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
         std::cout << "unable to load depth filter config file.\n";
 
     int filtersNumber = 0;
-    int filterSize = 0;
+    int arraySize = 0;
     tinyxml2::XMLElement * patchParse = patchesFile.FirstChildElement( "octave" );
     patchParse->FirstChildElement( "matrix" )->QueryIntAttribute("rows", &filtersNumber);
-    patchParse->FirstChildElement( "matrix" )->QueryIntAttribute("columns", &filterSize);
+    patchParse->FirstChildElement( "matrix" )->QueryIntAttribute("columns", &arraySize);
+    int filterSize = int(sqrt(double(arraySize)));
     std::cout << "Load filter parameters...\n";
     std::cout << "Filters no.: " << filtersNumber << "\n";
-    std::cout << "Filters size: " << int(sqrt(double(filterSize))) << "\n";
+    std::cout << "Filters size: " << filterSize << "\n";
+
+    int fNumber = 0;
+    cv::Mat filterTemp(filterSize,filterSize, cv::DataType<double>::type);
     for(tinyxml2::XMLElement* e = patchParse->FirstChildElement("matrix")->FirstChildElement("scalar"); e != NULL; e = e->NextSiblingElement("scalar"))
     {
-
+        int arrayElem = fNumber%arraySize;
+        if (!arrayElem && fNumber){
+            std::cout << "filterTemp = " << std::endl <<        filterTemp           << std::endl << std::endl;
+            std::cout << "Data released" << std::endl;
+        }
         tinyxml2::XMLText* text = e->FirstChild()->ToText();
-            if(text == NULL){
-                continue;
-            }
-            std::string t = text->Value();
-            std::cout << t << std::endl;
+                        if(text == NULL){
+                            continue;
+                        }
+
+        std::string t = text->Value();
+
+        int xCol = arrayElem/filterSize;
+        int yCol = arrayElem%filterSize;
+
+        filterTemp.at<double>(xCol,yCol) = std::stod(t);
+
+
+
+    fNumber++;
+
 
     }
 
@@ -140,7 +158,7 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
                 continue;
             }
             std::string t = text->Value();
-            std::cout << t << std::endl;
+//            std::cout << t << std::endl;
 
     }
 
@@ -152,6 +170,6 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
 //    filters.push_back(readFilter);
 //    }
 
-
+    return 0;
 }
 
