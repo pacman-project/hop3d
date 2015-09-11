@@ -72,6 +72,9 @@ public:
     cv::Mat patch;
     /// vector normal to the center of the patch
     Vec3 normal;
+
+    ///Construction
+    Filter(){};
 };
 
 /// 2D image coordinates
@@ -83,25 +86,54 @@ public:
     /// 2D feature location
     double u;
     double v;
+
+    /// Construction
+    ImageCoords(){};
+
+    /// Construction
+    ImageCoords(double _u, double _v) : u(_u), v(_v) {};
+};
+
+class ImageCoordsDepth : public ImageCoords {
+public:
+    /// set of features
+    typedef std::vector<ImageCoords> Seq;
+
+    ///Depth value
+    double depth;
+
+    /// Construction
+    ImageCoordsDepth(){};
+
+    /// Construction
+    ImageCoordsDepth(double _u, double _v, double _depth) : ImageCoords(_u, _v), depth(_depth) {};
 };
 
 /// Octet representation
 class Octet {
+public:
     /// set of octets
     typedef std::vector<Octet> Seq;
 
-    // id of the filter
+    /// id of the filter
     std::array<std::array<int,3>,3> filterIds;
-    // filter response
+    /// filter response
     std::array<std::array<double,3>,3> responses;
-    // mask of the filter
-    std::array<std::array<ImageCoords,3>,3> filterPos;
-    //camera pose Id
+    /// mask of the filter
+    std::array<std::array<ImageCoordsDepth,3>,3> filterPos;
+    /// camera pose Id
     int poseId;
+
+    /// Construction
+    Octet(){};
+
+    /// Print
+    void print();
 };
 
 /// 2D Gaussian
 class Gaussian3D{
+public:
     /// set of 2d Gaussians
     typedef std::vector<Gaussian3D> Seq;
 
@@ -109,6 +141,9 @@ class Gaussian3D{
     Vec3 mean;
     /// covariance matrix
     Mat33 covariance;
+
+    /// Construction
+    Gaussian3D(){};
 };
 
 }

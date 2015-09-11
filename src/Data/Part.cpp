@@ -1,25 +1,20 @@
 #include "Data/Part.h"
 
-/*int hop3d::Part::setPartId(hop3d::U64 id)
-{
-    this->id = id;
-    return 0;
+namespace hop3d {
+
+/// Print
+void ViewDependentPart::print(){
+    std::cout << "Id: " << id << "\n";
+    std::cout << "Layer id: " << layerId << "\n";
+    std::cout << "Image coords: " << location.u << ", " << location.v << "\n";
+    for (size_t i=0; i<gaussians.size();i++){
+        for (size_t j=0; j<gaussians.size();j++){
+            std::cout << "mean(" << i-1 << ", " << j-1 << "):\n";
+            std::cout << gaussians[i][j].mean << "\n";
+            std::cout << "covariance(" << i-1 << ", " << j-1 << "):\n";
+            std::cout << gaussians[i][j].covariance << "\n";
+        }
+    }
 }
 
-hop3d::U64 hop3d::Part::getPartId() const
-{
-    return id;
 }
-
-int hop3d::FirstLayerPart::setNormal(hop3d::Vec3 normal)
-{
-    this->normal = normal;
-    return 0;
-}
-
-hop3d::Vec3 hop3d::FirstLayerPart::getNormal() const
-{
-    return this->normal;
-}*/
-
-

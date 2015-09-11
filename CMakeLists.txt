@@ -5,8 +5,15 @@ cmake_minimum_required(VERSION 2.8)
 SET(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE PATH "Configuration types")
 SET(CMAKE_BUILD_TYPE "Release" CACHE PATH "Current build configuration")
 
-# PUTSLAM Project configuration
+# HOP3D Project configuration
 PROJECT(HOP3D)
+
+# HOP3D Project configuration
+SET( PROJ_NAME      "HOP3D" )
+SET( PROJ_PATH      ${CMAKE_SOURCE_DIR} )
+SET( PROJ_OUT_PATH  ${CMAKE_BINARY_DIR} )
+
+SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread")
 
 option(BUILD_HOP3D "Build HOP3D libraries" ON)
 option(BUILD_VISUALIZATION_MODULE "Build HOP3D" ON)
@@ -24,13 +31,6 @@ mark_as_advanced(BUILD_HOP3D_DEMO_STATS)
 # Build options have to be before PROJECT(...)
 SET(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE PATH "Configuration types")
 SET(CMAKE_BUILD_TYPE "Release" CACHE PATH "Current build configuration")
-
-# HOP3D Project configuration
-SET( PROJ_NAME      "HOP3D" )
-SET( PROJ_PATH      ${CMAKE_SOURCE_DIR} )
-SET( PROJ_OUT_PATH  ${CMAKE_BINARY_DIR} )
-
-SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread")
 
 # Folders
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -55,6 +55,17 @@ IF (WIN32)
         ENDIF(X86_64)
 ENDIF()
 
+#OpenGL library
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
+FIND_PACKAGE(OpenGL)
+include_directories(${OPENGL_INCLUDE_DIR})
+link_directories(${OPENGL_LIBRARY})
+
+#QGLViewer library
+#FIND_PACKAGE(QGLViewer)
+#include_directories(${QGLVIEWER_INCLUDE_DIR})
+#include_directories(${QT_INCLUDES})
+#link_directories(${QGLVIEWER_LIBRARY})
 
 #Adding flan to the project
 find_package(PkgConfig)
@@ -93,12 +104,6 @@ INCLUDE_DIRECTORIES( ${EIGEN_INCLUDE} ${PROJ_INCLUDES} )
 FIND_PACKAGE(OpenCV REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 #FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
-
-#QGLViewer library
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
-FIND_PACKAGE(OpenGL)
-include_directories(${OPENGL_INCLUDE_DIR})
-link_directories(${OPENGL_LIBRARY})
 
 find_package(GLEW REQUIRED)
 if (GLEW_FOUND)
@@ -313,7 +318,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_STATISTICS)
         )
 
         ADD_LIBRARY(statisticsBuilder STATIC ${FILTER_SOURCES} ${FILTER_HEADERS})
-        TARGET_LINK_LIBRARIES(statisticsBuilder)
+        TARGET_LINK_LIBRARIES(statisticsBuilder "${PROJ_NAME}_data")
         INSTALL(TARGETS statisticsBuilder RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${FILTER_HEADERS} DESTINATION include/hop3d/StatisticsBuilder/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_STATISTICS)

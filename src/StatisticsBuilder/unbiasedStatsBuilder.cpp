@@ -30,6 +30,28 @@ UnbiasedStatsBuilder::Config::Config(std::string configFilename){
     //std::cout << "Filters no.: " << filtersNo << "\n";
 }
 
+/// compute statistics for the set of octets
+void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, ViewDependentPart::Seq& dictionary){
+    ViewDependentPart part;
+    //part.
+    std::vector<Octet::Seq> groups;
+    for (auto it=octets.begin();it!=octets.end();it++){
+        if(!isOctetInGroups(*it,groups)){
+
+        }
+    }
+}
+
+/// is octet in vector
+bool UnbiasedStatsBuilder::isOctetInGroups(const Octet& octet, std::vector<Octet::Seq>& groups) const{
+    //for (auto it = groups.begin(); groups.end(); it++){
+        //if (distance(octet, *it)){
+        //    std::cout << "fd\n";
+        //}
+    //}
+    return false;
+}
+
 hop3d::StatsBuilder* hop3d::createUnbiasedStatsBuilder(void) {
     builder.reset(new UnbiasedStatsBuilder());
     return builder.get();
