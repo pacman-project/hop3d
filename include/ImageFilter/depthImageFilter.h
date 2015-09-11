@@ -40,6 +40,9 @@ public:
     ///compute set of octets from set of the depth images
     void computeOctets(const cv::Mat& depthImage, std::vector<Octet>& octets);
 
+    /// get filters
+    void getFilters(Filter::Seq& filters) const;
+
     class Config{
       public:
         Config() {

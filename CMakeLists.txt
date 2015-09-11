@@ -1,4 +1,12 @@
-CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
+# cmake requirements
+cmake_minimum_required(VERSION 2.8)
+
+# Build options have to be before PROJECT(...)
+SET(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE PATH "Configuration types")
+SET(CMAKE_BUILD_TYPE "Release" CACHE PATH "Current build configuration")
+
+# PUTSLAM Project configuration
+PROJECT(HOP3D)
 
 option(BUILD_HOP3D "Build HOP3D libraries" ON)
 option(BUILD_VISUALIZATION_MODULE "Build HOP3D" ON)
@@ -86,6 +94,11 @@ FIND_PACKAGE(OpenCV REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 #FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
 
+#QGLViewer library
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
+FIND_PACKAGE(OpenGL)
+include_directories(${OPENGL_INCLUDE_DIR})
+link_directories(${OPENGL_LIBRARY})
 
 find_package(GLEW REQUIRED)
 if (GLEW_FOUND)
@@ -338,7 +351,7 @@ ADD_EXECUTABLE("${PROJ_NAME}_Visualization" "src/Apps/Visualization/Visualizatio
 ADD_EXECUTABLE("${PROJ_NAME}_Learning" "src/Apps/Learning/Learning.cpp")
 ADD_EXECUTABLE("${PROJ_NAME}_Inference" "src/Apps/Inference/Inference.cpp")
 
-#TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" "${PROJ_NAME}_utilities" imageFilter tinyxml2)
 TARGET_LINK_LIBRARIES( "${PROJ_NAME}_Visualization" ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" "${PROJ_NAME}_utilities" "${PROJ_NAME}_visualizer" ${ALL_LIBS} )
 TARGET_LINK_LIBRARIES( "${PROJ_NAME}_Learning" ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" "${PROJ_NAME}_utilities")

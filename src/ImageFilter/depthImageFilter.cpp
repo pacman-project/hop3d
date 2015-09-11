@@ -40,6 +40,11 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, std::vector<Octe
     octets.size();//!!
 }
 
+/// get filters
+void DepthImageFilter::getFilters(Filter::Seq& filters) const{
+
+}
+
 hop3d::ImageFilter* hop3d::createDepthImageFilter(void) {
     filter.reset(new DepthImageFilter());
     return filter.get();

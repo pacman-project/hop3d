@@ -12,6 +12,8 @@ public:
     /// View independent layers
     std::vector<VILayerVocabulary> viewIndependentLayers;
 
+    Filter::Seq firstLayer;
+
     /// Construction
     inline Hierarchy(int _viewDepLayersNo, int _viewIndepLayersNo) :
         viewDependentLayers(_viewDepLayersNo), viewIndependentLayers(_viewIndepLayersNo){

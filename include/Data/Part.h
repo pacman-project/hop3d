@@ -54,7 +54,7 @@ public:
     int cameraPoseId;
 
     /// Gaussians related to positions of neighbouring parts
-    std::array<std::array<Gaussian2D,3>,3> gaussians;
+    std::array<std::array<Gaussian3D,3>,3> gaussians;
 
     /// Construction
     inline ViewDependentPart(int _id, int _layerId, Type _type, ImageCoords _location) :

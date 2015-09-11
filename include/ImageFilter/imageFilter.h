@@ -29,8 +29,11 @@ public:
     /// Name of the map
     virtual const std::string& getName() const = 0;
 
-    ///compute set of octets from set of the depth images
+    /// compute set of octets from set of the depth images
     virtual void computeOctets(const cv::Mat& depthImage, std::vector<Octet>& octets) = 0;
+
+    /// get filters
+    virtual void getFilters(Filter::Seq& filters) const = 0;
 
     /// Virtual descrutor
     virtual ~ImageFilter() {

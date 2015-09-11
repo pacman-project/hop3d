@@ -101,16 +101,15 @@ class Octet {
 };
 
 /// 2D Gaussian
-class Gaussian2D{
+class Gaussian3D{
     /// set of 2d Gaussians
-    typedef std::vector<Gaussian2D> Seq;
+    typedef std::vector<Gaussian3D> Seq;
 
     /// position
-    Vec2 mean;
+    Vec3 mean;
     /// covariance matrix
-    Mat22 covariance;
+    Mat33 covariance;
 };
-
 
 }
 #endif /* DATA_DEFS_H */
