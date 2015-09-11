@@ -15,9 +15,7 @@ namespace hop3d {
     ImageFilter* createDepthImageFilter(void);
     /// create a single depth image filter
     ImageFilter* createDepthImageFilter(std::string config);
-}
 
-using namespace hop3d;
 
 /// Map implementation
 class DepthImageFilter: public ImageFilter {
@@ -59,4 +57,5 @@ private:
     Config config;
 };
 
+}
 #endif // DEPTH_IMAGE_FILTER_H_INCLUDED

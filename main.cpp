@@ -1,4 +1,6 @@
 #include <iostream>
+#include "Data/Defs.h"
+#include "Utilities/Reader.h"
 #include "ImageFilter/depthImageFilter.h"
 #include "Data/Graph.h"
 
@@ -12,13 +14,16 @@ int main(void){
         }
         std::string filterConfig(config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
 
-        ImageFilter *imageFilter;
-        imageFilter = createDepthImageFilter(filterConfig);
+        hop3d::ImageFilter *imageFilter;
+        imageFilter = hop3d::createDepthImageFilter(filterConfig);
         std::cout << imageFilter->getName() << "\n";
 
-        Hierarchy hierarchy("../../resources/configGlobal.xml");
+        hop3d::Hierarchy hierarchy("../../resources/configGlobal.xml");
         std::cout << "Hierarchy: number of view-dependent layers: " << hierarchy.viewDependentLayers.size() << "\n";
         std::cout << "Finished" << std::endl;
+        std::vector<hop3d::Filter> filters;
+        hop3d::Reader reader;
+        reader.readFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml",filters);
     }
     catch (const std::exception& ex) {
         std::cerr << ex.what() << std::endl;

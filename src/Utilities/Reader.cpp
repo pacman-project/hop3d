@@ -88,16 +88,69 @@ int hop3d::Reader::readPlyFile(std::string fileName, PointCloud& outputPointClou
 
 int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsFileName, hop3d::Filter::Seq &filters)
 {
-    tinyxml2::XMLDocument patchesFile;
     std::string filenamePatches = "../../resources/" + patchesFileName;
+    tinyxml2::XMLDocument patchesFile;
     patchesFile.LoadFile(filenamePatches.c_str());
     if (patchesFile.ErrorID())
         std::cout << "unable to load depth filter config file.\n";
+
+    int filtersNumber = 0;
+    int filterSize = 0;
+    tinyxml2::XMLElement * patchParse = patchesFile.FirstChildElement( "octave" );
+    patchParse->FirstChildElement( "matrix" )->QueryIntAttribute("rows", &filtersNumber);
+    patchParse->FirstChildElement( "matrix" )->QueryIntAttribute("columns", &filterSize);
+    std::cout << "Load filter parameters...\n";
+    std::cout << "Filters no.: " << filtersNumber << "\n";
+    std::cout << "Filters size: " << int(sqrt(double(filterSize))) << "\n";
+    for(tinyxml2::XMLElement* e = patchParse->FirstChildElement("matrix")->FirstChildElement("scalar"); e != NULL; e = e->NextSiblingElement("scalar"))
+    {
+
+        tinyxml2::XMLText* text = e->FirstChild()->ToText();
+            if(text == NULL){
+                continue;
+            }
+            std::string t = text->Value();
+            std::cout << t << std::endl;
+
+    }
+
+
+
     tinyxml2::XMLDocument normalsFile;
     std::string filenameNormals = "../../resources/" + normalsFileName;
     normalsFile.LoadFile(filenameNormals.c_str());
     if (normalsFile.ErrorID())
         std::cout << "unable to load depth filter config file.\n";
+
+
+    int normalsNumber = 0;
+    int normalSize = 0;
+    tinyxml2::XMLElement * normalParse = normalsFile.FirstChildElement( "octave" );
+    normalParse->FirstChildElement( "matrix" )->QueryIntAttribute("rows", &normalsNumber);
+    normalParse->FirstChildElement( "matrix" )->QueryIntAttribute("columns", &normalSize);
+    std::cout << "Load filter parameters...\n";
+    std::cout << "Filters no.: " << normalsNumber << "\n";
+    std::cout << "Filters size: " << normalSize << "\n";
+
+    for(tinyxml2::XMLElement* e = normalParse->FirstChildElement("matrix")->FirstChildElement("scalar"); e != NULL; e = e->NextSiblingElement("scalar"))
+    {
+
+        tinyxml2::XMLText* text = e->FirstChild()->ToText();
+            if(text == NULL){
+                continue;
+            }
+            std::string t = text->Value();
+            std::cout << t << std::endl;
+
+    }
+
+//    int size =2;
+//    for(int i=0; i<size <i++)
+//    {
+
+//    hop3d::Filter readFilter = ;
+//    filters.push_back(readFilter);
+//    }
 
 
 }
