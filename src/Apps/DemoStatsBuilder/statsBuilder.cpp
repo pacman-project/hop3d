@@ -35,12 +35,8 @@ int main(void){
             }
             for (size_t i=0;i<it.filterPos.size();i++){
                 for (size_t j=0;j<it.filterPos[i].size();j++){
-<<<<<<< HEAD
-                    ImageCoordsDepth coords(double(j*(filterSize-1))-double(filterSize-1)+distributionUV(generator), double(i*(filterSize-1))-double(filterSize-1)+distributionUV(generator), distributionDepth(generator));
-                    if (i==0 && j==0) std::cout << coords.u << ", ";
-=======
                     hop3d::ImageCoordsDepth coords(double(j*(filterSize-1))-double(filterSize-1)+distributionUV(generator), double(i*(filterSize-1))-double(filterSize-1)+distributionUV(generator), distributionDepth(generator));
->>>>>>> 201d9a8ee5d6b7ab1960364d9b6b309b770e6f51
+                    if (i==0 && j==0) std::cout << coords.u << ", ";                
                     it.filterPos[i][j]=coords;
                 }
             }
@@ -48,13 +44,7 @@ int main(void){
         //Octet.
         octets[0].print();
 
-
-<<<<<<< HEAD
-        ViewDependentPart::Seq dictionary;
-        std::cout << "compute statistics\n";
-=======
         hop3d::ViewDependentPart::Seq dictionary;
->>>>>>> 201d9a8ee5d6b7ab1960364d9b6b309b770e6f51
         statsBuilder->computeStatistics(octets, dictionary);
         std::cout << "groups size: " << dictionary.size() << "\n";
         dictionary[0].print();
