@@ -55,6 +55,8 @@ public:
 private:
     ///Configuration of the module
     Config config;
+    ///Loaded filters
+    hop3d::Filter::Seq filters;
 };
 
 }
