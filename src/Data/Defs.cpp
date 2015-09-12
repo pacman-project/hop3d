@@ -3,7 +3,7 @@
 namespace hop3d {
 
     /// Print octet
-    void Octet::print(){
+    void Octet::print() const{
         std::cout << "Camera pose id:" << poseId << "\n";
         std::cout << "Filter ids:\n";
         for (size_t i=0;i<filterIds.size();i++){
