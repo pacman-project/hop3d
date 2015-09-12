@@ -24,6 +24,9 @@ int main(void){
         hop3d::Filter::Seq filters;
         hop3d::Reader reader;
         reader.readFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml",filters);
+        std::vector<cv::Mat> vecImages;
+        reader.readMultipleImages("../../resources/depthImages",vecImages);
+        std::cout<< vecImages.size() << std::endl;
     }
     catch (const std::exception& ex) {
         std::cerr << ex.what() << std::endl;

@@ -126,8 +126,6 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
         }
     }
 
-
-
     tinyxml2::XMLDocument normalsFile;
     std::string filenameNormals = "../../resources/" + normalsFileName;
     normalsFile.LoadFile(filenameNormals.c_str());
@@ -170,5 +168,47 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
         filters.push_back(tempFilter);
     }
     return 0;
+}
+
+int hop3d::Reader::readMultipleImages(boost::filesystem::path directoryPath, std::vector<cv::Mat> &output)
+{
+    try
+          {
+            if (exists(directoryPath))    // does directoryPath actually exist?
+            {
+              if (is_regular_file(directoryPath))        // is directoryPath a regular file?
+                std::cout << directoryPath << " size is " << file_size(directoryPath) << '\n';
+
+              else if (is_directory(directoryPath))      // is directoryPath a directory?
+              {
+                std::cout << directoryPath << " is a directory containing:\n";
+
+                typedef std::vector<boost::filesystem::path> vec;             // store paths,
+                vec v;                                // so we can sort them later
+
+                copy(boost::filesystem::directory_iterator(directoryPath), boost::filesystem::directory_iterator(), back_inserter(v));
+
+                sort(v.begin(), v.end());             // sort, since directory iteration
+                                                      // is not ordered on some file systems
+                int counter = 0;
+                for (vec::const_iterator it(v.begin()), it_end(v.end()); it != it_end; ++it)
+                {
+                  std::cout << "   " << *it << '\n';
+                  cv::Mat image = cv::imread(it->string(), CV_LOAD_IMAGE_UNCHANGED);
+                  output.push_back(image);
+                  counter++;
+                }
+              }
+              else
+                std::cout << directoryPath << " exists, but is neither a regular file nor a directory\n";
+            }
+            else
+              std::cout << directoryPath << " does not exist\n";
+          }
+
+    catch (const boost::filesystem::filesystem_error& ex)
+    {
+        std::cout << ex.what() << '\n';
+    }
 }
 
