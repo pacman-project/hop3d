@@ -21,7 +21,7 @@ int main(void){
         hop3d::Hierarchy hierarchy("../../resources/configGlobal.xml");
         std::cout << "Hierarchy: number of view-dependent layers: " << hierarchy.viewDependentLayers.size() << "\n";
         std::cout << "Finished" << std::endl;
-        std::vector<hop3d::Filter> filters;
+        hop3d::Filter::Seq filters;
         hop3d::Reader reader;
         reader.readFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml",filters);
     }

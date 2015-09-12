@@ -46,6 +46,6 @@ protected:
     /// Map type
     Type type;
 };
-};
+}
 
 #endif // _IMAGEFILTER_H_

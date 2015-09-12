@@ -15,9 +15,9 @@ namespace hop3d {
     StatsBuilder* createUnbiasedStatsBuilder(void);
     /// create a single unbiased statisctics builder
     StatsBuilder* createUnbiasedStatsBuilder(std::string config);
-}
 
-using namespace hop3d;
+
+
 
 /// Unbiased statistics implementation
 class UnbiasedStatsBuilder: public StatsBuilder {
@@ -56,5 +56,5 @@ private:
     ///Configuration of the module
     Config config;
 };
-
+}
 #endif // UNBIASED_STATISTICS_BUILDER_H_INCLUDED

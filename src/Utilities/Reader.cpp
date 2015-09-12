@@ -1,7 +1,6 @@
 #include "Utilities/Reader.h"
 
 
-
 void hop3d::Reader::split(const std::string& s, char c,std::vector<std::string>& v) {
    std::size_t i = 0;
    std::size_t j = s.find(c);
@@ -92,7 +91,7 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
     tinyxml2::XMLDocument patchesFile;
     patchesFile.LoadFile(filenamePatches.c_str());
     if (patchesFile.ErrorID())
-        std::cout << "unable to load depth filter config file.\n";
+        std::cout << "unable to load depth filter data.\n";
 
     int filtersNumber = 0;
     int arraySize = 0;
@@ -100,36 +99,31 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
     patchParse->FirstChildElement( "matrix" )->QueryIntAttribute("rows", &filtersNumber);
     patchParse->FirstChildElement( "matrix" )->QueryIntAttribute("columns", &arraySize);
     int filterSize = int(sqrt(double(arraySize)));
-    std::cout << "Load filter parameters...\n";
+    std::cout << "Loading filters and normals...\n";
     std::cout << "Filters no.: " << filtersNumber << "\n";
-    std::cout << "Filters size: " << filterSize << "\n";
+    std::cout << "Filter size: " << filterSize << "\n";
 
     int fNumber = 0;
     cv::Mat filterTemp(filterSize,filterSize, cv::DataType<double>::type);
+    std::vector<cv::Mat> filtersTemps;
     for(tinyxml2::XMLElement* e = patchParse->FirstChildElement("matrix")->FirstChildElement("scalar"); e != NULL; e = e->NextSiblingElement("scalar"))
     {
         int arrayElem = fNumber%arraySize;
-        if (!arrayElem && fNumber){
-            std::cout << "filterTemp = " << std::endl <<        filterTemp           << std::endl << std::endl;
-            std::cout << "Data released" << std::endl;
-        }
+
         tinyxml2::XMLText* text = e->FirstChild()->ToText();
-                        if(text == NULL){
-                            continue;
-                        }
-
+        if(text == NULL){
+            continue;
+        }
         std::string t = text->Value();
-
         int xCol = arrayElem/filterSize;
         int yCol = arrayElem%filterSize;
-
         filterTemp.at<double>(xCol,yCol) = std::stod(t);
-
-
-
-    fNumber++;
-
-
+        fNumber++;
+        arrayElem = fNumber%arraySize;
+        if (!arrayElem){
+            std::cout << "filterTemp " << fNumber/arraySize << " = " << std::endl <<        filterTemp           << std::endl << std::endl;
+            filtersTemps.push_back(filterTemp);
+        }
     }
 
 
@@ -138,9 +132,7 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
     std::string filenameNormals = "../../resources/" + normalsFileName;
     normalsFile.LoadFile(filenameNormals.c_str());
     if (normalsFile.ErrorID())
-        std::cout << "unable to load depth filter config file.\n";
-
-
+        std::cout << "unable to load depth filter data.\n";
     int normalsNumber = 0;
     int normalSize = 0;
     tinyxml2::XMLElement * normalParse = normalsFile.FirstChildElement( "octave" );
@@ -150,26 +142,33 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
     std::cout << "Filters no.: " << normalsNumber << "\n";
     std::cout << "Filters size: " << normalSize << "\n";
 
+    int nNumber = 0;
+    hop3d::Vec3 normalTemp;
+    std::vector<hop3d::Vec3> normalsTemps;
     for(tinyxml2::XMLElement* e = normalParse->FirstChildElement("matrix")->FirstChildElement("scalar"); e != NULL; e = e->NextSiblingElement("scalar"))
     {
-
+        int arrayElem = nNumber%normalSize;
         tinyxml2::XMLText* text = e->FirstChild()->ToText();
-            if(text == NULL){
-                continue;
-            }
-            std::string t = text->Value();
-//            std::cout << t << std::endl;
-
+        if(text == NULL){
+            continue;
+        }
+        std::string t = text->Value();
+        normalTemp(arrayElem,0) = std::stod(t);
+        nNumber++;
+        arrayElem = nNumber%normalSize;
+        if (!arrayElem){
+            std::cout << "normalTemp "<< nNumber/normalSize <<" = " << std::endl <<        normalTemp           << std::endl << std::endl;
+            normalsTemps.push_back(normalTemp);
+        }
     }
-
-//    int size =2;
-//    for(int i=0; i<size <i++)
-//    {
-
-//    hop3d::Filter readFilter = ;
-//    filters.push_back(readFilter);
-//    }
-
+    std::cout << normalsTemps.size() << std::endl;
+    for(unsigned int i = 0; i < normalsTemps.size();i++){
+        hop3d::Filter tempFilter;
+        tempFilter.id = i;
+        tempFilter.patch = filtersTemps[i];
+        tempFilter.normal = normalsTemps[i];
+        filters.push_back(tempFilter);
+    }
     return 0;
 }
 
