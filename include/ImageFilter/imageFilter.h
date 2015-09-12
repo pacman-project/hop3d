@@ -30,10 +30,12 @@ public:
     virtual const std::string& getName() const = 0;
 
     /// compute set of octets from set of the depth images
-    virtual void computeOctets(const cv::Mat& depthImage, std::vector<Octet>& octets) = 0;
+    virtual void computeOctets(const cv::Mat& depthImage, hop3d::Octet::Seq& octets) = 0;
 
     /// get filters
     virtual void getFilters(Filter::Seq& filters) const = 0;
+    /// set filters
+    virtual void setFilters(std::string patchesFileName, std::string normalsFileName) = 0;
 
     /// Virtual descrutor
     virtual ~ImageFilter() {

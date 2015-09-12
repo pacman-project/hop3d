@@ -8,8 +8,9 @@
 #define DEPTH_IMAGE_FILTER_H_INCLUDED
 
 #include "imageFilter.h"
-#include "../../external/tinyXML/tinyxml2.h"
+#include "Utilities/Reader.h"
 
+#include "../../external/tinyXML/tinyxml2.h"
 namespace hop3d {
     /// create a single depth image filter
     ImageFilter* createDepthImageFilter(void);
@@ -36,11 +37,11 @@ public:
     const std::string& getName() const;
 
     ///compute set of octets from set of the depth images
-    void computeOctets(const cv::Mat& depthImage, std::vector<Octet>& octets);
+    void computeOctets(const cv::Mat& depthImage, hop3d::Octet::Seq& octets);
 
     /// get filters
     void getFilters(Filter::Seq& filters) const;
-
+    void setFilters(std::string patchesFileName, std::string normalsFileName);
     class Config{
       public:
         Config() {
