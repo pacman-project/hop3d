@@ -14,11 +14,11 @@ int main(void){
         }
         std::string statsConfig(config.FirstChildElement( "StatisticsBuilder" )->Attribute( "configFilename" ));
 
-        StatsBuilder *statsBuilder;
-        statsBuilder = createUnbiasedStatsBuilder(statsConfig);
+        hop3d::StatsBuilder *statsBuilder;
+        statsBuilder = hop3d::createUnbiasedStatsBuilder(statsConfig);
         std::cout << statsBuilder->getName() << "\n";
 
-        std::vector<Octet> octets;
+        std::vector<hop3d::Octet> octets;
         std::default_random_engine generator(time(0));
         std::uniform_int_distribution<int> distribution(0,0); // filters ids distribution
         int filterSize = 7;
@@ -35,8 +35,12 @@ int main(void){
             }
             for (size_t i=0;i<it.filterPos.size();i++){
                 for (size_t j=0;j<it.filterPos[i].size();j++){
+<<<<<<< HEAD
                     ImageCoordsDepth coords(double(j*(filterSize-1))-double(filterSize-1)+distributionUV(generator), double(i*(filterSize-1))-double(filterSize-1)+distributionUV(generator), distributionDepth(generator));
                     if (i==0 && j==0) std::cout << coords.u << ", ";
+=======
+                    hop3d::ImageCoordsDepth coords(double(j*(filterSize-1))-double(filterSize-1)+distributionUV(generator), double(i*(filterSize-1))-double(filterSize-1)+distributionUV(generator), distributionDepth(generator));
+>>>>>>> 201d9a8ee5d6b7ab1960364d9b6b309b770e6f51
                     it.filterPos[i][j]=coords;
                 }
             }
@@ -45,8 +49,12 @@ int main(void){
         octets[0].print();
 
 
+<<<<<<< HEAD
         ViewDependentPart::Seq dictionary;
         std::cout << "compute statistics\n";
+=======
+        hop3d::ViewDependentPart::Seq dictionary;
+>>>>>>> 201d9a8ee5d6b7ab1960364d9b6b309b770e6f51
         statsBuilder->computeStatistics(octets, dictionary);
         std::cout << "groups size: " << dictionary.size() << "\n";
         dictionary[0].print();

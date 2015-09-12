@@ -1,7 +1,6 @@
 #include "Utilities/Reader.h"
 
 
-
 void hop3d::Reader::split(const std::string& s, char c,std::vector<std::string>& v) {
    std::size_t i = 0;
    std::size_t j = s.find(c);
@@ -92,37 +91,46 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
     tinyxml2::XMLDocument patchesFile;
     patchesFile.LoadFile(filenamePatches.c_str());
     if (patchesFile.ErrorID())
-        std::cout << "unable to load depth filter config file.\n";
+        std::cout << "unable to load depth filter data.\n";
 
     int filtersNumber = 0;
-    int filterSize = 0;
+    int arraySize = 0;
     tinyxml2::XMLElement * patchParse = patchesFile.FirstChildElement( "octave" );
     patchParse->FirstChildElement( "matrix" )->QueryIntAttribute("rows", &filtersNumber);
-    patchParse->FirstChildElement( "matrix" )->QueryIntAttribute("columns", &filterSize);
-    std::cout << "Load filter parameters...\n";
+    patchParse->FirstChildElement( "matrix" )->QueryIntAttribute("columns", &arraySize);
+    int filterSize = int(sqrt(double(arraySize)));
+    std::cout << "Loading filters and normals...\n";
     std::cout << "Filters no.: " << filtersNumber << "\n";
-    std::cout << "Filters size: " << int(sqrt(double(filterSize))) << "\n";
+    std::cout << "Filter size: " << filterSize << "\n";
+
+    int fNumber = 0;
+    cv::Mat filterTemp(filterSize,filterSize, cv::DataType<double>::type);
+    std::vector<cv::Mat> filtersTemps;
     for(tinyxml2::XMLElement* e = patchParse->FirstChildElement("matrix")->FirstChildElement("scalar"); e != NULL; e = e->NextSiblingElement("scalar"))
     {
+        int arrayElem = fNumber%arraySize;
 
         tinyxml2::XMLText* text = e->FirstChild()->ToText();
-            if(text == NULL){
-                continue;
-            }
-            std::string t = text->Value();
-            std::cout << t << std::endl;
-
+        if(text == NULL){
+            continue;
+        }
+        std::string t = text->Value();
+        int xCol = arrayElem/filterSize;
+        int yCol = arrayElem%filterSize;
+        filterTemp.at<double>(xCol,yCol) = std::stod(t);
+        fNumber++;
+        arrayElem = fNumber%arraySize;
+        if (!arrayElem){
+            std::cout << "filterTemp " << fNumber/arraySize << " = " << std::endl <<        filterTemp           << std::endl << std::endl;
+            filtersTemps.push_back(filterTemp);
+        }
     }
-
-
 
     tinyxml2::XMLDocument normalsFile;
     std::string filenameNormals = "../../resources/" + normalsFileName;
     normalsFile.LoadFile(filenameNormals.c_str());
     if (normalsFile.ErrorID())
-        std::cout << "unable to load depth filter config file.\n";
-
-
+        std::cout << "unable to load depth filter data.\n";
     int normalsNumber = 0;
     int normalSize = 0;
     tinyxml2::XMLElement * normalParse = normalsFile.FirstChildElement( "octave" );
@@ -132,26 +140,75 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
     std::cout << "Filters no.: " << normalsNumber << "\n";
     std::cout << "Filters size: " << normalSize << "\n";
 
+    int nNumber = 0;
+    hop3d::Vec3 normalTemp;
+    std::vector<hop3d::Vec3> normalsTemps;
     for(tinyxml2::XMLElement* e = normalParse->FirstChildElement("matrix")->FirstChildElement("scalar"); e != NULL; e = e->NextSiblingElement("scalar"))
     {
-
+        int arrayElem = nNumber%normalSize;
         tinyxml2::XMLText* text = e->FirstChild()->ToText();
-            if(text == NULL){
-                continue;
-            }
-            std::string t = text->Value();
-            std::cout << t << std::endl;
-
+        if(text == NULL){
+            continue;
+        }
+        std::string t = text->Value();
+        normalTemp(arrayElem,0) = std::stod(t);
+        nNumber++;
+        arrayElem = nNumber%normalSize;
+        if (!arrayElem){
+            std::cout << "normalTemp "<< nNumber/normalSize <<" = " << std::endl <<        normalTemp           << std::endl << std::endl;
+            normalsTemps.push_back(normalTemp);
+        }
     }
+    std::cout << normalsTemps.size() << std::endl;
+    for(unsigned int i = 0; i < normalsTemps.size();i++){
+        hop3d::Filter tempFilter;
+        tempFilter.id = i;
+        tempFilter.patch = filtersTemps[i];
+        tempFilter.normal = normalsTemps[i];
+        filters.push_back(tempFilter);
+    }
+    return 0;
+}
 
-//    int size =2;
-//    for(int i=0; i<size <i++)
-//    {
+int hop3d::Reader::readMultipleImages(boost::filesystem::path directoryPath, std::vector<cv::Mat> &output)
+{
+    try
+          {
+            if (exists(directoryPath))    // does directoryPath actually exist?
+            {
+              if (is_regular_file(directoryPath))        // is directoryPath a regular file?
+                std::cout << directoryPath << " size is " << file_size(directoryPath) << '\n';
 
-//    hop3d::Filter readFilter = ;
-//    filters.push_back(readFilter);
-//    }
+              else if (is_directory(directoryPath))      // is directoryPath a directory?
+              {
+                std::cout << directoryPath << " is a directory containing:\n";
 
+                typedef std::vector<boost::filesystem::path> vec;             // store paths,
+                vec v;                                // so we can sort them later
 
+                copy(boost::filesystem::directory_iterator(directoryPath), boost::filesystem::directory_iterator(), back_inserter(v));
+
+                sort(v.begin(), v.end());             // sort, since directory iteration
+                                                      // is not ordered on some file systems
+                int counter = 0;
+                for (vec::const_iterator it(v.begin()), it_end(v.end()); it != it_end; ++it)
+                {
+                  std::cout << "   " << *it << '\n';
+                  cv::Mat image = cv::imread(it->string(), CV_LOAD_IMAGE_UNCHANGED);
+                  output.push_back(image);
+                  counter++;
+                }
+              }
+              else
+                std::cout << directoryPath << " exists, but is neither a regular file nor a directory\n";
+            }
+            else
+              std::cout << directoryPath << " does not exist\n";
+          }
+
+    catch (const boost::filesystem::filesystem_error& ex)
+    {
+        std::cout << ex.what() << '\n';
+    }
 }
 

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string>
 #include <cstring>
-
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
 #include "Visualizer/objloader.hpp"
