@@ -37,8 +37,10 @@ public:
     /// learining from the dataset
     void learn(void);
 
-    ///Attach visualizer
-    void attachVisualizer(QGLVisualizer* visualizer);
+    #ifdef QVisualizerBuild
+        ///Attach visualizer
+        void attachVisualizer(QGLVisualizer* visualizer);
+    #endif
 
     /// Destruction
     ~HOP3DBham(void);

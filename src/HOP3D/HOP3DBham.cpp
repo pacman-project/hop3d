@@ -15,10 +15,12 @@ HOP3DBham::HOP3DBham(std::string _config) :
     hierarchy.reset(new Hierarchy(_config));
 }
 
+#ifdef QVisualizerBuild
 ///Attach visualizer
 void HOP3DBham::attachVisualizer(QGLVisualizer* visualizer){
     hop3dBham->attach(visualizer);
 }
+#endif
 
 /// Destruction
 HOP3DBham::~HOP3DBham(void) {
