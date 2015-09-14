@@ -27,6 +27,7 @@ int main(void){
         reader.readMultipleImages("../../resources/depthImages",vecImages);
         std::cout<< vecImages.size() << std::endl;
         hop3d::Octet::Seq  sequenceOfOctets;
+
         imageFilter->computeOctets(vecImages[0],sequenceOfOctets);
     }
     catch (const std::exception& ex) {

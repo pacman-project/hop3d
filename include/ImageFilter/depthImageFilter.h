@@ -9,6 +9,8 @@
 
 #include "imageFilter.h"
 #include "Utilities/Reader.h"
+#include "Utilities/ImagesDisplay.h"
+
 
 #include "../../external/tinyXML/tinyxml2.h"
 namespace hop3d {

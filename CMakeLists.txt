@@ -197,8 +197,6 @@ IF (BUILD_VISUALIZATION_MODULE)
             ${PROJECT_PATH}/src/Visualizer/objloader.cpp
             ${PROJECT_PATH}/src/Visualizer/vboindexer.cpp
             ${PROJECT_PATH}/src/Visualizer/quaternion_utils.cpp
-            ${PROJECT_PATH}/src/Visualizer/ImagesVisualisation.cpp
-
     )
 
     SET(VISUALIZER_HEADERS
@@ -208,24 +206,14 @@ IF (BUILD_VISUALIZATION_MODULE)
             ${PROJECT_PATH}/include/Visualizer/objloader.hpp
             ${PROJECT_PATH}/include/Visualizer/vboindexer.hpp
             ${PROJECT_PATH}/include/Visualizer/quaternion_utils.hpp
-            ${PROJECT_PATH}/include/Visualizer/ImagesVisualisation.h
     )
     SET(VISUALIZER_FILES
             ${PROJECT_PATH}/src/shaders/StandardShading.fragmentshader
             ${PROJECT_PATH}/src/shaders/StandardShading.vertexshader
-            ${PROJECT_PATH}/include/Visualizer/ImagesVisualisation.h
-        ${PROJECT_PATH}/include/Visualizer/ImagesVisualisation.h
     )
-ELSE(BUILD_VISUALIZATION_MODULE)
-    SET(VISUALIZER_SOURCES
-            ${PROJECT_PATH}/src/Visualizer/ImagesVisualisation.cpp
-    )
-    SET(VISUALIZER_HEADERS
-            ${PROJECT_PATH}/include/Visualizer/ImagesVisualisation.h
-    )
-ENDIF (BUILD_VISUALIZATION_MODULE)
 SOURCE_GROUP("VISUALIZER" FILES ${VISUALISATION_HEADERS})
 SOURCE_GROUP("VISUALIZER" FILES ${VISUALISATION_SOURCES})
+ENDIF (BUILD_VISUALIZATION_MODULE)
 
 
 SET(APPS_SOURCES
@@ -310,7 +298,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_UTILITIES)
         )
 
         ADD_LIBRARY(Utilities STATIC ${UTILITIES_SOURCES} ${UTILITIES_HEADERS})
-        target_link_libraries(Utilities tinyxml2 opencv_core opencv_highgui ${Boost_LIBRARIES})
+        target_link_libraries(Utilities tinyxml2 opencv_core opencv_highgui opencv_contrib ${Boost_LIBRARIES})
         INSTALL(TARGETS Utilities RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${UTILITIES_HEADERS} DESTINATION include/hop3d/Utilities/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_UTILITIES)
@@ -330,7 +318,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_FILTER)
         )
 
         ADD_LIBRARY(imageFilter STATIC ${FILTER_SOURCES} ${FILTER_HEADERS})
-        TARGET_LINK_LIBRARIES(imageFilter)
+        TARGET_LINK_LIBRARIES(imageFilter Utilities)
         INSTALL(TARGETS imageFilter RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${FILTER_HEADERS} DESTINATION include/hop3d/ImageFilter/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_FILTER)

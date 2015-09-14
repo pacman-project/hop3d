@@ -38,12 +38,15 @@ const std::string& DepthImageFilter::getName() const {
 void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Seq& octets){
     depthImage.type();//!!
     octets.size();//!!
+
     int filterSize = filters[0].patch.cols;
     int offset = int(filterSize/2); //casting discards fractional part
     std::cout << "Offset of filter " << offset << std::endl;
     if (depthImage.depth() == CV_16U) std::cout << "CV_16U == unsigned short " << sizeof(unsigned short) << std::endl;
 
     cv::Mat filterImage(depthImage.cols-(2*offset),depthImage.rows-(2*offset), cv::DataType<double>::type);
+    hop3d::ImagesDisplay displayer;
+    displayer.displayDepthImage(depthImage);
     for(int i = offset; i < depthImage.cols-(offset+1);i++){
         for(int j = offset; j < depthImage.rows-(offset+1);j++){
             cv::Rect regionOfInterest = cv::Rect(i-offset, j-offset,filterSize,filterSize);
