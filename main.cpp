@@ -18,7 +18,7 @@ int main(void){
         imageFilter = hop3d::createDepthImageFilter(filterConfig);
         std::cout << imageFilter->getName() << "\n";
 
-        hop3d::Hierarchy hierarchy("../../resources/configGlobal.xml");
+        hop3d::Hierarchy hierarchy("configGlobal.xml");
         std::cout << "Hierarchy: number of view-dependent layers: " << hierarchy.viewDependentLayers.size() << "\n";
         std::cout << "Finished" << std::endl;
         imageFilter->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml");
