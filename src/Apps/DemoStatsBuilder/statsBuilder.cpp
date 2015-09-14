@@ -20,7 +20,7 @@ int main(void){
 
         std::vector<hop3d::Octet> octets;
         std::default_random_engine generator(time(0));
-        std::uniform_int_distribution<int> distribution(0,0); // filters ids distribution
+        std::uniform_int_distribution<int> distribution(0,3); // filters ids distribution
         int filterSize = 7;
         std::normal_distribution<double> distributionUV(filterSize/2.0, filterSize/2.0); // filters ids distribution
         std::normal_distribution<double> distributionDepth(1.0,0.1);
@@ -36,7 +36,6 @@ int main(void){
             for (size_t i=0;i<it.filterPos.size();i++){
                 for (size_t j=0;j<it.filterPos[i].size();j++){
                     hop3d::ImageCoordsDepth coords(double(j*(filterSize-1))-double(filterSize-1)+distributionUV(generator), double(i*(filterSize-1))-double(filterSize-1)+distributionUV(generator), distributionDepth(generator));
-                    if (i==0 && j==0) std::cout << coords.u << ", ";                
                     it.filterPos[i][j]=coords;
                 }
             }
