@@ -22,9 +22,9 @@ option(BUILD_HOP3D_FILTER "Build HOP3D filter library" ON)
 mark_as_advanced(BUILD_HOP3D_FILTER)
 option(BUILD_HOP3D_STATISTICS "Build HOP3D statistics builder library" ON)
 mark_as_advanced(BUILD_HOP3D_STATISTICS)
-option(BUILD_VISUALIZATION_MODULE "Build HOP3D visualization OpenGL3.0" OFF)
+option(BUILD_VISUALIZATION_MODULE "Build HOP3D visualization OpenGL3.0" ON)
 mark_as_advanced(BUILD_VISUALIZATION_MODULE)
-option(BUILD_VISUALIZATION_QT "Build HOP3D visualization QT" ON)
+option(BUILD_VISUALIZATION_QT "Build HOP3D visualization QT" OFF)
 mark_as_advanced(BUILD_VISUALIZATION_QT)
 if (BUILD_VISUALIZATION_MODULE AND BUILD_VISUALIZATION_QT)
 message(FATAL_ERROR "Please select one visualizer: Qt or OpenGL3.0")
@@ -190,31 +190,43 @@ SOURCE_GROUP("Core" FILES ${CORE_HEADERS})
 SOURCE_GROUP("Core" FILES ${CORE_SOURCES})
 
 IF (BUILD_VISUALIZATION_MODULE)
-SET(VISUALIZER_SOURCES
-        ${PROJECT_PATH}/src/Visualizer/Visualizer.cpp
-        ${PROJECT_PATH}/src/Visualizer/shader.cpp
-        ${PROJECT_PATH}/src/Visualizer/texture.cpp
-        ${PROJECT_PATH}/src/Visualizer/objloader.cpp
-        ${PROJECT_PATH}/src/Visualizer/vboindexer.cpp
-        ${PROJECT_PATH}/src/Visualizer/quaternion_utils.cpp
+    SET(VISUALIZER_SOURCES
+            ${PROJECT_PATH}/src/Visualizer/Visualizer.cpp
+            ${PROJECT_PATH}/src/Visualizer/shader.cpp
+            ${PROJECT_PATH}/src/Visualizer/texture.cpp
+            ${PROJECT_PATH}/src/Visualizer/objloader.cpp
+            ${PROJECT_PATH}/src/Visualizer/vboindexer.cpp
+            ${PROJECT_PATH}/src/Visualizer/quaternion_utils.cpp
+            ${PROJECT_PATH}/src/Visualizer/ImagesVisualisation.cpp
 
-)
+    )
 
-SET(VISUALIZER_HEADERS
-        ${PROJECT_PATH}/include/Visualizer/Visualizer.h
-        ${PROJECT_PATH}/include/Visualizer/shader.hpp
-        ${PROJECT_PATH}/include/Visualizer/texture.hpp
-        ${PROJECT_PATH}/include/Visualizer/objloader.hpp
-        ${PROJECT_PATH}/include/Visualizer/vboindexer.hpp
-        ${PROJECT_PATH}/include/Visualizer/quaternion_utils.hpp
-)
-SET(VISUALIZER_FILES
-        ${PROJECT_PATH}/src/shaders/StandardShading.fragmentshader
-        ${PROJECT_PATH}/src/shaders/StandardShading.vertexshader
-)
+    SET(VISUALIZER_HEADERS
+            ${PROJECT_PATH}/include/Visualizer/Visualizer.h
+            ${PROJECT_PATH}/include/Visualizer/shader.hpp
+            ${PROJECT_PATH}/include/Visualizer/texture.hpp
+            ${PROJECT_PATH}/include/Visualizer/objloader.hpp
+            ${PROJECT_PATH}/include/Visualizer/vboindexer.hpp
+            ${PROJECT_PATH}/include/Visualizer/quaternion_utils.hpp
+            ${PROJECT_PATH}/include/Visualizer/ImagesVisualisation.h
+    )
+    SET(VISUALIZER_FILES
+            ${PROJECT_PATH}/src/shaders/StandardShading.fragmentshader
+            ${PROJECT_PATH}/src/shaders/StandardShading.vertexshader
+            ${PROJECT_PATH}/include/Visualizer/ImagesVisualisation.h
+        ${PROJECT_PATH}/include/Visualizer/ImagesVisualisation.h
+    )
+ELSE(BUILD_VISUALIZATION_MODULE)
+    SET(VISUALIZER_SOURCES
+            ${PROJECT_PATH}/src/Visualizer/ImagesVisualisation.cpp
+    )
+    SET(VISUALIZER_HEADERS
+            ${PROJECT_PATH}/include/Visualizer/ImagesVisualisation.h
+    )
+ENDIF (BUILD_VISUALIZATION_MODULE)
 SOURCE_GROUP("VISUALIZER" FILES ${VISUALISATION_HEADERS})
 SOURCE_GROUP("VISUALIZER" FILES ${VISUALISATION_SOURCES})
-ENDIF (BUILD_VISUALIZATION_MODULE)
+
 
 SET(APPS_SOURCES
         ${PROJECT_PATH}/src/Apps/Learning/Data.cpp
