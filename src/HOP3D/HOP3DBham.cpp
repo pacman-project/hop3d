@@ -9,8 +9,15 @@ HOP3DBham::HOP3DBham(void) : HOP3D("Unbiased Statistics Builder", HOP3D_BHAM) {
 }
 
 /// Construction
-HOP3DBham::HOP3DBham(std::string config) :
-        HOP3D("Unbiased Statistics Builder", HOP3D_BHAM), config(config) {
+HOP3DBham::HOP3DBham(std::string _config) :
+        HOP3D("Unbiased Statistics Builder", HOP3D_BHAM), config(_config) {
+    statsBuilder = hop3d::createUnbiasedStatsBuilder(config.statsConfig);
+    hierarchy.reset(new Hierarchy(_config));
+}
+
+///Attach visualizer
+void HOP3DBham::attachVisualizer(QGLVisualizer* visualizer){
+    hop3dBham->attach(visualizer);
 }
 
 /// Destruction
@@ -31,11 +38,43 @@ HOP3DBham::Config::Config(std::string configFilename){
     }
     group->FirstChildElement( "parameters" )->QueryIntAttribute("viewDependentLayersNo", &viewDependentLayersNo);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("viewIndependentLayersNo", &viewIndependentLayersNo);
+
+    statsConfig = (config.FirstChildElement( "StatisticsBuilder" )->Attribute( "configFilename" ));
 }
 
 /// learining from the dataset
 void HOP3DBham::learn(){
+    std::vector<hop3d::Octet> octets;
+    std::default_random_engine generator(time(0));
+    std::uniform_int_distribution<int> distribution(0,3); // filters ids distribution
+    int filterSize = 7;
+    std::normal_distribution<double> distributionUV(filterSize/2.0, filterSize/2.0); // filters ids distribution
+    std::normal_distribution<double> distributionDepth(1.0,0.1);
+    int octetsNo = 10000;
+    octets.resize(octetsNo);
+    for (auto& it: octets){
+        //randomly select filter ids
+        for (size_t i=0;i<it.filterIds.size();i++){
+            for (size_t j=0;j<it.filterIds[i].size();j++){
+                it.filterIds[i][j]=distribution(generator);
+            }
+        }
+        for (size_t i=0;i<it.filterPos.size();i++){
+            for (size_t j=0;j<it.filterPos[i].size();j++){
+                hop3d::ImageCoordsDepth coords(double(j*(filterSize-1))-double(filterSize-1)+distributionUV(generator), double(i*(filterSize-1))-double(filterSize-1)+distributionUV(generator), distributionDepth(generator));
+                it.filterPos[i][j]=coords;
+            }
+        }
+    }
+    //Octet.
+    octets[0].print();
 
+    hop3d::ViewDependentPart::Seq dictionary;
+    statsBuilder->computeStatistics(octets, dictionary);
+    std::cout << "groups size: " << dictionary.size() << "\n";
+    dictionary[0].print();
+
+    std::cout << "Finished\n";
 }
 
 hop3d::HOP3D* hop3d::createHOP3DBham(void) {

@@ -9,11 +9,12 @@
 
 #include "../Data/Defs.h"
 #include "../Data/Vocabulary.h"
+#include "Utilities/observer.h"
 
 namespace hop3d {
 
 /// Statistics builder interface
-class HOP3D {
+class HOP3D : public Subject{
 public:
 
     /// HOP3d type

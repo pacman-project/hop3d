@@ -1,6 +1,7 @@
-#include "../include/Data/Defs.h"
+#include "Data/Defs.h"
 #include "../external/tinyXML/tinyxml2.h"
-#include "../include/QVisualizer/Qvisualizer.h"
+#include "QVisualizer/Qvisualizer.h"
+#include "HOP3D/HOP3DBham.h"
 #include <GL/glut.h>
 #include <qapplication.h>
 #include <iostream>
@@ -8,11 +9,12 @@
 
 using namespace std;
 
+HOP3D* lhop3d;
 // run HOP3D
 void runHOP3D(){
     std::cout << "Press Enter to start\n";
     getchar();
-    //slam.get()->startProcessing();
+    lhop3d->learn();
 }
 
 int main(int argc, char** argv)
@@ -37,7 +39,9 @@ int main(int argc, char** argv)
 
         // Make the viewer window visible on screen.
         visu.show();
-        //slam.get()->attachVisualizer(&visu);
+
+        lhop3d = createHOP3DBham("configGlobal.xml");
+        ((HOP3DBham*)lhop3d)->attachVisualizer(&visu);
 
         // run HOP3D
         std::thread tHOP3D(runHOP3D);

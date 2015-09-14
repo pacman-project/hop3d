@@ -357,11 +357,12 @@ endif(BUILD_HOP3D AND BUILD_HOP3D_STATISTICS)
 
 ###############################################################################
 #
-# PUTSLAM Visualizer library
+# HOP3D Visualizer library
 #
 ###############################################################################
 
 if(BUILD_HOP3D AND BUILD_VISUALIZATION_QT)
+        add_definitions( -DQVisualizerBuild=1 )
         file(GLOB QVISUALIZER_SOURCES
             "${CMAKE_SOURCE_DIR}/src/QVisualizer/*.cpp"
         )
@@ -388,7 +389,7 @@ if(BUILD_HOP3D)
             "${CMAKE_SOURCE_DIR}/include/HOP3D/*.h"
         )
         ADD_LIBRARY(LIBHOP3D STATIC ${LIBHOP3D_SOURCES} ${LIBHOP3D_HEADERS})
-        TARGET_LINK_LIBRARIES(LIBHOP3D tinyxml2 ${OpenCV_LIBS})
+        TARGET_LINK_LIBRARIES(LIBHOP3D tinyxml2 statisticsBuilder Utilities)
         INSTALL(TARGETS LIBHOP3D RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${LIBHOP3D_HEADERS} DESTINATION include/hop3D/HOP3D/)
 endif(BUILD_HOP3D)
