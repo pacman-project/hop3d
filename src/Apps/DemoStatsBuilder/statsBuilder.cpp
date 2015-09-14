@@ -24,7 +24,7 @@ int main(void){
         int filterSize = 7;
         std::normal_distribution<double> distributionUV(filterSize/2.0, filterSize/2.0); // filters ids distribution
         std::normal_distribution<double> distributionDepth(1.0,0.1);
-        int octetsNo = 100;
+        int octetsNo = 10000;
         octets.resize(octetsNo);
         for (auto& it: octets){
             //randomly select filter ids
@@ -43,9 +43,9 @@ int main(void){
         //Octet.
         octets[0].print();
 
-
         hop3d::ViewDependentPart::Seq dictionary;
         statsBuilder->computeStatistics(octets, dictionary);
+        std::cout << "groups size: " << dictionary.size() << "\n";
         dictionary[0].print();
 
         std::cout << "Finished\n";

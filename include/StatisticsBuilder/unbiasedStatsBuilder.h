@@ -17,8 +17,6 @@ namespace hop3d {
     StatsBuilder* createUnbiasedStatsBuilder(std::string config);
 
 
-
-
 /// Unbiased statistics implementation
 class UnbiasedStatsBuilder: public StatsBuilder {
 public:
@@ -39,18 +37,27 @@ public:
 
     class Config{
       public:
-        Config() {
+        Config() : verbose(0){
         }
 
         Config(std::string configFilename);
         public:
+            /// Verbose
+            int verbose;
     };
 
 private:
     /// Is octet in vector
-    bool isOctetInGroups(const Octet& octet, std::vector<Octet::Seq>& groups) const;
+    bool isOctetInGroups(const Octet& octet, std::vector<Octet::Seq>& groups, std::vector<Octet::Seq>::iterator& groupIt) const;
+
     /// Compute distance between octets
-    //double distance(const Octet& octetA, const Octet& octetB) const;
+    double distance(const Octet& octetA, const Octet& octetB) const;
+
+    /// Compute Gaussians for the grooup of octets
+    void computeGaussians(Octet::Seq& group, ViewDependentPart& part) const;
+
+    /// compute Gaussian parameters
+    void computeGaussian(const Octet::Seq& group, Gaussian3D& gauss, unsigned int u, unsigned int v) const;
 
 private:
     ///Configuration of the module

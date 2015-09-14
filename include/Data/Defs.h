@@ -128,7 +128,7 @@ public:
     Octet(){};
 
     /// Print
-    void print();
+    void print() const;
 };
 
 /// 2D Gaussian

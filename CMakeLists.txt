@@ -16,17 +16,28 @@ SET( PROJ_OUT_PATH  ${CMAKE_BINARY_DIR} )
 SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread")
 
 option(BUILD_HOP3D "Build HOP3D libraries" ON)
-option(BUILD_VISUALIZATION_MODULE "Build HOP3D" ON)
-mark_as_advanced(BUILD_VISUALIZATION_MODULE)
+option(BUILD_HOP3D_UTILITIES "Build HOP3D Utilities library" ON)
+mark_as_advanced(BUILD_HOP3D_UTILITIES)
 option(BUILD_HOP3D_FILTER "Build HOP3D filter library" ON)
 mark_as_advanced(BUILD_HOP3D_FILTER)
 option(BUILD_HOP3D_STATISTICS "Build HOP3D statistics builder library" ON)
 mark_as_advanced(BUILD_HOP3D_STATISTICS)
+option(BUILD_VISUALIZATION_MODULE "Build HOP3D visualization OpenGL3.0" OFF)
+mark_as_advanced(BUILD_VISUALIZATION_MODULE)
+option(BUILD_VISUALIZATION_QT "Build HOP3D visualization QT" ON)
+mark_as_advanced(BUILD_VISUALIZATION_QT)
+if (BUILD_VISUALIZATION_MODULE AND BUILD_VISUALIZATION_QT)
+message(FATAL_ERROR "Please select one visualizer: Qt or OpenGL3.0")
+endif (BUILD_VISUALIZATION_MODULE AND BUILD_VISUALIZATION_QT)
 
 # demos
 option(BUILD_HOP3D_DEMO "Build HOP3D demonstration programs and libraries" ON)
 option(BUILD_HOP3D_DEMO_STATS "Build hop3d build statistics test" ON)
 mark_as_advanced(BUILD_HOP3D_DEMO_STATS)
+option(BUILD_HOP3D_DEMO_VISUALIZER "Build hop3d visualizer demo" ON)
+mark_as_advanced(BUILD_HOP3D_DEMO_VISUALIZER)
+option(BUILD_HOP3D_DEMO_QVISUALIZER "Build hop3d Qt visualizer demo" ON)
+mark_as_advanced(BUILD_HOP3D_DEMO_QVISUALIZER)
 
 # Build options have to be before PROJECT(...)
 SET(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE PATH "Configuration types")
@@ -61,11 +72,13 @@ FIND_PACKAGE(OpenGL)
 include_directories(${OPENGL_INCLUDE_DIR})
 link_directories(${OPENGL_LIBRARY})
 
-#QGLViewer library
-#FIND_PACKAGE(QGLViewer)
-#include_directories(${QGLVIEWER_INCLUDE_DIR})
-#include_directories(${QT_INCLUDES})
-#link_directories(${QGLVIEWER_LIBRARY})
+if (BUILD_VISUALIZATION_QT)
+    #QGLViewer library
+    FIND_PACKAGE(QGLViewer)
+    include_directories(${QGLVIEWER_INCLUDE_DIR})
+    include_directories(${QT_INCLUDES})
+    link_directories(${QGLVIEWER_LIBRARY})
+endif (BUILD_VISUALIZATION_QT)
 
 #Adding flan to the project
 find_package(PkgConfig)
@@ -176,19 +189,6 @@ SET(CORE_FILES
 SOURCE_GROUP("Core" FILES ${CORE_HEADERS})
 SOURCE_GROUP("Core" FILES ${CORE_SOURCES})
 
-SET(UTILITIES_SOURCES
-        ${PROJECT_PATH}/src/Utilities/Reader.cpp
-        ${PROJECT_PATH}/src/Utilities/Writer.cpp
-)
-
-SET(UTILITIES_HEADERS
-        ${PROJECT_PATH}/include/Utilities/Reader.h
-        ${PROJECT_PATH}/include/Utilities/Writer.h
-
-)
-SET(UTILITIES_FILES
-)
-
 IF (BUILD_VISUALIZATION_MODULE)
 SET(VISUALIZER_SOURCES
         ${PROJECT_PATH}/src/Visualizer/Visualizer.cpp
@@ -285,6 +285,26 @@ add_library(tinyxml2 SHARED ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml
 
 ###############################################################################
 #
+# HOP3D Utilities library
+#
+###############################################################################
+
+if(BUILD_HOP3D AND BUILD_HOP3D_UTILITIES)
+        file(GLOB UTILITIES_SOURCES
+            "${CMAKE_SOURCE_DIR}/src/Utilities/*.cpp"
+        )
+        file(GLOB UTILITIES_HEADERS
+            "${CMAKE_SOURCE_DIR}/include/Utilities/*.h"
+        )
+
+        ADD_LIBRARY(Utilities STATIC ${UTILITIES_SOURCES} ${UTILITIES_HEADERS})
+        target_link_libraries(Utilities tinyxml2 opencv_core opencv_highgui ${Boost_LIBRARIES})
+        INSTALL(TARGETS Utilities RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
+        INSTALL(FILES ${UTILITIES_HEADERS} DESTINATION include/hop3d/Utilities/)
+endif(BUILD_HOP3D AND BUILD_HOP3D_UTILITIES)
+
+###############################################################################
+#
 # HOP3D image filter library
 #
 ###############################################################################
@@ -325,6 +345,25 @@ endif(BUILD_HOP3D AND BUILD_HOP3D_STATISTICS)
 
 ###############################################################################
 #
+# PUTSLAM Visualizer library
+#
+###############################################################################
+
+if(BUILD_HOP3D AND BUILD_VISUALIZATION_QT)
+        file(GLOB QVISUALIZER_SOURCES
+            "${CMAKE_SOURCE_DIR}/src/QVisualizer/*.cpp"
+        )
+        file(GLOB QVISUALIZER_HEADERS
+            "${CMAKE_SOURCE_DIR}/include/QVisualizer/*.h"
+        )
+        ADD_LIBRARY(QVisualizer STATIC ${QVISUALIZER_SOURCES} ${QVISUALIZER_HEADERS})
+        TARGET_LINK_LIBRARIES(QVisualizer tinyxml2 ${QGLVIEWER_LIBRARY} ${QT_LIBRARIES} QtCore QtXml QtOpenGL QtGui ${OPENGL_LIBRARY})
+        INSTALL(TARGETS QVisualizer RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
+        INSTALL(FILES ${QVISUALIZER_HEADERS} DESTINATION include/hop3d/QVisualizer/)
+endif(BUILD_HOP3D AND BUILD_VISUALIZATION_QT)
+
+###############################################################################
+#
 # HOP3D DEMO stats builder
 #
 ###############################################################################
@@ -343,20 +382,38 @@ if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_STATS)
 
 endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_STATS)
 
+###############################################################################
+#
+# HOP3D demo Visualizer
+#
+###############################################################################
+
+if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_QVISUALIZER)
+        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath ./")
+        SET(DEMO_SOURCES ./src/Apps/DemoQVisualizer/demoQVisualizer.cpp)
+        ADD_EXECUTABLE(demoQVisualizer ${DEMO_SOURCES})
+#        add_dependencies(demoVisualizer Map)
+        TARGET_LINK_LIBRARIES(demoQVisualizer QVisualizer tinyxml2 ${QGLVIEWER_LIBRARY} ${QT_LIBRARIES} ${OPENGL_LIBRARY} glut)
+        INSTALL(TARGETS demoQVisualizer RUNTIME DESTINATION bin)
+endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_QVISUALIZER)
 
 
 ADD_LIBRARY("${PROJ_NAME}_data" ${DATA_HEADERS} ${DATA_SOURCES})
 ADD_LIBRARY("${PROJ_NAME}_core" ${CORE_HEADERS} ${CORE_SOURCES})
-ADD_LIBRARY("${PROJ_NAME}_utilities" ${UTILITIES_HEADERS} ${UTILITIES_SOURCES})
-TARGET_LINK_LIBRARIES( "${PROJ_NAME}_utilities" "${PROJ_NAME}_data" tinyxml2 opencv_core opencv_highgui ${Boost_LIBRARIES})
+IF (BUILD_VISUALIZATION_MODULE)
 ADD_LIBRARY("${PROJ_NAME}_visualizer" ${VISUALIZER_HEADERS} ${VISUALIZER_SOURCES})
+ENDIF (BUILD_VISUALIZATION_MODULE)
 
 ADD_EXECUTABLE(${PROJ_NAME} "main.cpp"   )
+IF (BUILD_VISUALIZATION_MODULE)
 ADD_EXECUTABLE("${PROJ_NAME}_Visualization" "src/Apps/Visualization/Visualization.cpp")
+ENDIF (BUILD_VISUALIZATION_MODULE)
 ADD_EXECUTABLE("${PROJ_NAME}_Learning" "src/Apps/Learning/Learning.cpp")
 ADD_EXECUTABLE("${PROJ_NAME}_Inference" "src/Apps/Inference/Inference.cpp")
 
 TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" "${PROJ_NAME}_utilities" imageFilter tinyxml2 opencv_core)
-TARGET_LINK_LIBRARIES( "${PROJ_NAME}_Visualization" ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" "${PROJ_NAME}_utilities" "${PROJ_NAME}_visualizer" ${ALL_LIBS} )
-TARGET_LINK_LIBRARIES( "${PROJ_NAME}_Learning" ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" "${PROJ_NAME}_utilities")
+TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" Utilities imageFilter tinyxml2 opencv_core)
+IF (BUILD_VISUALIZATION_MODULE)
+TARGET_LINK_LIBRARIES( "${PROJ_NAME}_Visualization" ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" Utilities "${PROJ_NAME}_visualizer" ${ALL_LIBS} )
+ENDIF (BUILD_VISUALIZATION_MODULE)
+TARGET_LINK_LIBRARIES( "${PROJ_NAME}_Learning" ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" Utilities)

@@ -12,3 +12,7 @@
   <Hierarchy>
     <parameters viewDependentLayersNo="3" viewIndependentLayersNo="3"></parameters>
   </Hierarchy>
+  
+<!--   QVisualizer configuration -->
+  <Visualizer configFilename="qvisualizerConfig.xml">
+  </Visualizer>
