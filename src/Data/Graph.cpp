@@ -6,7 +6,8 @@ namespace hop3d {
 /// Construction
 Hierarchy::Hierarchy(std::string configFilename) {
     tinyxml2::XMLDocument config;
-    config.LoadFile(configFilename.c_str());
+    std::string filename = "../../resources/" + configFilename;
+    config.LoadFile(filename.c_str());
     if (config.ErrorID()){
         std::cout << "unable to load hierarchy config file.\n";
     }
