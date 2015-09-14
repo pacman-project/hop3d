@@ -10,7 +10,7 @@
   
 <!--   Hierarchy configuration -->
   <Hierarchy>
-    <parameters viewDependentLayersNo="3" viewIndependentLayersNo="3"></parameters>
+    <parameters verbose="1" viewDependentLayersNo="3" viewIndependentLayersNo="3"></parameters>
   </Hierarchy>
   
 <!--   QVisualizer configuration -->

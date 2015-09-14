@@ -376,6 +376,26 @@ endif(BUILD_HOP3D AND BUILD_VISUALIZATION_QT)
 
 ###############################################################################
 #
+# HOP3D library
+#
+###############################################################################
+
+if(BUILD_HOP3D)
+        file(GLOB LIBHOP3D_SOURCES
+            "${CMAKE_SOURCE_DIR}/src/HOP3D/*.cpp"
+        )
+        file(GLOB LIBHOP3D_HEADERS
+            "${CMAKE_SOURCE_DIR}/include/HOP3D/*.h"
+        )
+        ADD_LIBRARY(LIBHOP3D STATIC ${LIBHOP3D_SOURCES} ${LIBHOP3D_HEADERS})
+        TARGET_LINK_LIBRARIES(LIBHOP3D tinyxml2 ${OpenCV_LIBS})
+        INSTALL(TARGETS LIBHOP3D RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
+        INSTALL(FILES ${LIBHOP3D_HEADERS} DESTINATION include/hop3D/HOP3D/)
+endif(BUILD_HOP3D)
+
+
+###############################################################################
+#
 # HOP3D DEMO stats builder
 #
 ###############################################################################
@@ -405,7 +425,7 @@ if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_QVISUALIZER AND BUILD_VISUALIZATION_QT)
         SET(DEMO_SOURCES ./src/Apps/DemoQVisualizer/demoQVisualizer.cpp)
         ADD_EXECUTABLE(demoQVisualizer ${DEMO_SOURCES})
 #        add_dependencies(demoVisualizer Map)
-        TARGET_LINK_LIBRARIES(demoQVisualizer QVisualizer tinyxml2 ${QGLVIEWER_LIBRARY} ${QT_LIBRARIES} ${OPENGL_LIBRARY} glut)
+        TARGET_LINK_LIBRARIES(demoQVisualizer LIBHOP3D QVisualizer tinyxml2 ${QGLVIEWER_LIBRARY} ${QT_LIBRARIES} ${OPENGL_LIBRARY} glut)
         INSTALL(TARGETS demoQVisualizer RUNTIME DESTINATION bin)
 endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_QVISUALIZER AND BUILD_VISUALIZATION_QT)
 
