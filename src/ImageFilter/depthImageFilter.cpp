@@ -75,6 +75,7 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
 
          int octetSize = (filterSize-overlapRf)*3;
          int octetOffset = int(octetSize/2);
+         hop3d::Octet::Seq octetsTemp;
          for(int i = octetOffset; i < responseImage.rows-(octetOffset-2*overlapRf);i+=(octetSize-overlapRf)){
             for(int j = octetOffset; j < responseImage.cols-(octetOffset-2*overlapRf);j+=(octetSize-overlapRf)){
                 cv::Mat imageRoi(octetSize,octetSize, cv::DataType<double>::type);
@@ -84,34 +85,39 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                 //simple ROI is just a change of header to the same file when = is used it will start to point to the data in this other Mat
                 imageRoi = responseImage(regionOfInterest).clone();
                 idRoi = idImage(regionOfInterest).clone();
-                hop3d::Octet octetTemp;
                 int octetIter = 0;
-//                for(int k = offset; k < imageRoi.rows-(offset);k+=(offset-overlapRf)){
-//                    for(int l = offset; l < imageRoi.cols-(offset);l+=(offset-overlapRf)){
-//                        cv::Mat octetRoi(filterSize,filterSize, cv::DataType<double>::type);
-//                        cv::Mat octetIdRoi(filterSize,filterSize, cv::DataType<int>::type);
-//                        cv::Rect subRegion = cv::Rect(l-offset, k-offset,filterSize,filterSize);
-//                        octetRoi = imageRoi(subRegion).clone();
-//                        octetIdRoi = idRoi(subRegion).clone();
-//                        double minVal;
-//                        double maxVal;
-//                        cv::Point minLoc;
-//                        cv::Point maxLoc;
-//                        //location of the maximum point in the subelement of the octet
-//                        cv::minMaxLoc( octetRoi, &minVal, &maxVal, &minLoc, &maxLoc );
-//                        maxLoc.x +=(l+j+octetOffset+offset);
-//                        maxLoc.y +=(k+i+octetOffset+offset);
-//                        double depthPoint;
-//                        depthPoint = depthImageDouble.at<double>(maxLoc);
-//                        octetTemp.filterPos[octetIter/3][octetIter%3] = hop3d::ImageCoordsDepth(maxLoc.x,maxLoc.y,depthPoint);
-//                        octetRoi.release();
-//                    }
-//                }
+                for(int k = offset; k < imageRoi.rows-(offset);k+=(offset-overlapRf)){
+                    for(int l = offset; l < imageRoi.cols-(offset);l+=(offset-overlapRf)){
+                        cv::Mat octetRoi(filterSize,filterSize, cv::DataType<double>::type);
+                        cv::Mat octetIdRoi(filterSize,filterSize, cv::DataType<int>::type);
+                        cv::Rect subRegion = cv::Rect(l-offset, k-offset,filterSize,filterSize);
+                        octetRoi = imageRoi(subRegion).clone();
+                        octetIdRoi = idRoi(subRegion).clone();
+                        double minVal;
+                        double maxVal;
+                        cv::Point minLoc;
+                        cv::Point maxLoc;
+                        //location of the maximum point in the subelement of the octet
+                        cv::minMaxLoc( octetRoi, &minVal, &maxVal, &minLoc, &maxLoc );
+                        maxLoc.x +=(l+j+octetOffset+offset);
+                        maxLoc.y +=(k+i+octetOffset+offset);
+                        double depthPoint;
+                        depthPoint = depthImage.at<int>(maxLoc);
+                        octetTemp.filterPos[octetIter/3][octetIter%3] = hop3d::ImageCoordsDepth(maxLoc.x,maxLoc.y,depthPoint);
+                        octetTemp.filterIds[octetIter/3][octetIter%3] = octetIdRoi.at<int>(maxLoc);
+                        octetTemp.responses[octetIter/3][octetIter%3] = octetRoi.at<double>(maxLoc);
+                        octetRoi.release();
+                        octetIdRoi.release();
+                    }
+                }
+                octets.push_back(octetTemp);
 
               imageRoi.release();
               idRoi.release();
              }
          }
+
+
 
 
 
