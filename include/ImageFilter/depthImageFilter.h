@@ -67,6 +67,7 @@ private:
     Config config;
     ///Loaded filters
     hop3d::Filter::Seq filters;
+    int filterSingleImageSingleFilter(const cv::Mat& depthImage, hop3d::Filter& filter, cv::Mat& filteredImage);
 };
 
 }
