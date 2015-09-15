@@ -187,12 +187,13 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
 
 /// compute set of octets from set of the depth image
 void DepthImageFilter::getOctets(Octet::Seq& octets){
-
+    std::cout << octets.size();
 }
 
 /// compute set of octets from set of the ids image
 void DepthImageFilter::getOctets(const ViewDependentPart::Seq& dictionary, Octet::Seq& octets){
-
+    std::cout << dictionary.size();
+    std::cout << octets.size();
 }
 
 /// get filters

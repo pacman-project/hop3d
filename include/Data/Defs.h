@@ -76,7 +76,7 @@ public:
     Vec3 normal;
 
     /// compute distance between filters
-    static double distance (Filter& filterA, Filter& filterB);
+    static double distance(const Filter& filterA, const Filter& filterB);
 
     ///Construction
     Filter(){};
@@ -133,7 +133,7 @@ public:
     Octet(){};
 
     /// compute distance between octets -- dot product for normals for each filter
-    double distance (Octet& octetA, Octet& octetB, Filter::Seq& filters);
+    static double distance(const Octet& octetA, const Octet& octetB, const Filter::Seq& filters);
 
     /// Print
     void print() const;

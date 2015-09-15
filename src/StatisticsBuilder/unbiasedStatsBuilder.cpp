@@ -39,8 +39,8 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, c
         std::cout << "Start ocetes grouping (n=" << octets.size() << ")...\n";
     }
     int iterNo=1;
-    for (auto it=octets.begin();it!=octets.end();it++){
-        if(!isOctetInGroups(*it,groups, groupIter)){
+    for (auto it=octets.begin();it!=octets.end();it++){ // grouping
+        if(!isOctetInGroups(*it, filters, groups, groupIter)){
             Octet::Seq group; group.push_back(*it);
             groups.push_back(group);
         }
@@ -61,7 +61,7 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, c
         std::cout << "Compute Gaussians for " << groups.size() << " groups...\n";
     }
     iterNo=1;
-    for (auto it = groups.begin(); it!=groups.end(); it++){
+    for (auto it = groups.begin(); it!=groups.end(); it++){ //compute statistics
         ViewDependentPart part;
         computeGaussians(*it, part);
         part.id = partId;
@@ -108,23 +108,14 @@ void UnbiasedStatsBuilder::computeGaussian(const Octet::Seq& group, Gaussian3D& 
 }
 
 /// is octet in vector
-bool UnbiasedStatsBuilder::isOctetInGroups(const Octet& octet, std::vector<Octet::Seq>& groups, std::vector<Octet::Seq>::iterator& groupIt) const{
+bool UnbiasedStatsBuilder::isOctetInGroups(const Octet& octet, const Filter::Seq& filters, std::vector<Octet::Seq>& groups, std::vector<Octet::Seq>::iterator& groupIt) const{
     for (std::vector<Octet::Seq>::iterator it = groups.begin(); it!=groups.end(); it++){
-        if (distance(octet, it->back())==0){
+        if (Octet::distance(octet, it->back(), filters)==0){
             groupIt = it;
             return true;
         }
     }
     return false;
-}
-
-/// Compute distance between octets
-double UnbiasedStatsBuilder::distance(const Octet& octetA, const Octet& octetB) const{
-    if (octetA.filterIds==octetB.filterIds)
-        return 0;
-    else {
-        return 1.0; //!!!compute distance here
-    }
 }
 
 hop3d::StatsBuilder* hop3d::createUnbiasedStatsBuilder(void) {

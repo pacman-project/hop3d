@@ -48,10 +48,7 @@ public:
 
 private:
     /// Is octet in vector
-    bool isOctetInGroups(const Octet& octet, std::vector<Octet::Seq>& groups, std::vector<Octet::Seq>::iterator& groupIt) const;
-
-    /// Compute distance between octets
-    double distance(const Octet& octetA, const Octet& octetB) const;
+    bool isOctetInGroups(const Octet& octet, const Filter::Seq& filters, std::vector<Octet::Seq>& groups, std::vector<Octet::Seq>::iterator& groupIt) const;
 
     /// Compute Gaussians for the grooup of octets
     void computeGaussians(Octet::Seq& group, ViewDependentPart& part) const;
