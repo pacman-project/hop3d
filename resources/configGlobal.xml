@@ -14,5 +14,5 @@
   </Hierarchy>
   
 <!--   QVisualizer configuration -->
-  <Visualizer configFilename="qvisualizerConfig.xml">
-  </Visualizer>
+  <QVisualizer configFilename="qvisualizerConfig.xml">
+  </QVisualizer>

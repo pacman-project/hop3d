@@ -69,6 +69,8 @@ public:
     /// id of the filter
     int id;
     /// mask of the filter
+    cv::Mat mask;
+    /// surface of the filter
     cv::Mat patch;
     /// vector normal to the center of the patch
     Vec3 normal;

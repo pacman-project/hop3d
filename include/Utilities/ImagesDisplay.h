@@ -12,6 +12,7 @@ public:
     ImagesDisplay();
     ~ImagesDisplay();
     int displayDepthImage(const cv::Mat &inputImage);
+    int displayDepthImage(const cv::Mat &inputImage, double min, double max);
 
 };
 

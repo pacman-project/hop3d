@@ -10,6 +10,7 @@
 #include "imageFilter.h"
 #include "Utilities/Reader.h"
 #include "Utilities/ImagesDisplay.h"
+#include <algorithm>    // std::min_element, std::max_element
 
 
 #include "../../external/tinyXML/tinyxml2.h"
@@ -43,7 +44,7 @@ public:
 
     /// get filters
     void getFilters(Filter::Seq& filters) const;
-    void setFilters(std::string patchesFileName, std::string normalsFileName);
+    void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName);
     class Config{
       public:
         Config() {
