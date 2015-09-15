@@ -14,8 +14,6 @@
 #include <QGLViewer/qglviewer.h>
 #include <iostream>
 
-using namespace hop3d;
-
 /// Map implementation
 class QGLVisualizer: public QGLViewer, public Observer{
 public:
@@ -89,7 +87,7 @@ private:
     void drawEllipsoid(unsigned int uiStacks, unsigned int uiSlices, double fA, double fB, double fC) const;
 
     /// Draw ellipsoid
-    void drawEllipsoid(const Vec3& pos, const Mat33& covariance) const;
+    void drawEllipsoid(const hop3d::Vec3& pos, const hop3d::Mat33& covariance) const;
 };
 
 #endif // QVISUALIZER_H_INCLUDED

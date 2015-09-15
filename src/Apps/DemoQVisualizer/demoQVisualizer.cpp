@@ -9,7 +9,7 @@
 
 using namespace std;
 
-HOP3D* lhop3d;
+hop3d::HOP3D* lhop3d;
 // run HOP3D
 void runHOP3D(){
     std::cout << "Press Enter to start\n";
@@ -26,7 +26,10 @@ int main(int argc, char** argv)
             std::cout << "unable to load global config file.\n";
             return 1;
         }
-        std::string configFile(config.FirstChildElement( "Visualizer" )->Attribute( "configFilename" ));
+        std::string configFile(config.FirstChildElement( "QVisualizer" )->Attribute( "configFilename" ));
+
+        lhop3d = hop3d::createHOP3DBham("configGlobal.xml");
+
         QGLVisualizer::Config configVis(configFile);//something is wrong with QApplication when Qapplication
         //object is created. libTinyxml can read only ints from xml file
 
@@ -40,8 +43,7 @@ int main(int argc, char** argv)
         // Make the viewer window visible on screen.
         visu.show();
 
-        lhop3d = createHOP3DBham("configGlobal.xml");
-        ((HOP3DBham*)lhop3d)->attachVisualizer(&visu);
+        ((hop3d::HOP3DBham*)lhop3d)->attachVisualizer(&visu);
 
         // run HOP3D
         std::thread tHOP3D(runHOP3D);

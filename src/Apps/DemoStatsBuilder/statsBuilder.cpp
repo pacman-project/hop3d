@@ -48,8 +48,11 @@ int main(void){
 
         hop3d::Hierarchy hierarchy("configGlobal.xml");
         hop3d::ImageFilter* imageFilterer = hop3d::createDepthImageFilter(filtererConfig);
+        imageFilterer->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
         imageFilterer->getFilters(hierarchy.firstLayer);
-
+        std::cout << hierarchy.firstLayer[0].normal << "\n";
+        std::cout << hierarchy.firstLayer[1].normal << "\n";
+        std::cout << hierarchy.firstLayer[2].normal << "\n";
         hop3d::ViewDependentPart::Seq dictionary;
         statsBuilder->computeStatistics(octets, hierarchy.firstLayer, dictionary);
         std::cout << "groups size: " << dictionary.size() << "\n";
