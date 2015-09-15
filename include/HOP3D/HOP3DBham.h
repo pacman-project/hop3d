@@ -11,6 +11,7 @@
 #include "../../external/tinyXML/tinyxml2.h"
 #include "StatisticsBuilder/unbiasedStatsBuilder.h"
 #include "Data/Graph.h"
+#include "PartSelector/partSelectorMean.h"
 #ifdef QVisualizerBuild
 #include "QVisualizer/Qvisualizer.h"
 #endif
@@ -60,14 +61,19 @@ public:
             int viewIndependentLayersNo;
             /// statistics builder config filename
             std::string statsConfig;
+            /// part selector config filename
+            std::string selectorConfig;
     };
 
 private:
-    ///Configuration of the module
+    /// Configuration of the module
     Config config;
 
-    ///statistics builder
+    /// Statistics builder
     StatsBuilder *statsBuilder;
+
+    /// Part selector
+    PartSelector *partSelector;
 
     ///structure to store hierarchy
     std::unique_ptr<Hierarchy> hierarchy;

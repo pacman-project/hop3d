@@ -13,6 +13,7 @@ HOP3DBham::HOP3DBham(std::string _config) :
         HOP3D("Unbiased Statistics Builder", HOP3D_BHAM), config(_config) {
     statsBuilder = hop3d::createUnbiasedStatsBuilder(config.statsConfig);
     hierarchy.reset(new Hierarchy(_config));
+    partSelector = hop3d::createPartSelectorMean(config.selectorConfig);
 }
 
 #ifdef QVisualizerBuild
@@ -42,6 +43,7 @@ HOP3DBham::Config::Config(std::string configFilename){
     group->FirstChildElement( "parameters" )->QueryIntAttribute("viewIndependentLayersNo", &viewIndependentLayersNo);
 
     statsConfig = (config.FirstChildElement( "StatisticsBuilder" )->Attribute( "configFilename" ));
+    selectorConfig = (config.FirstChildElement( "PartSelector" )->Attribute( "configFilename" ));
 }
 
 /// learining from the dataset
@@ -75,6 +77,7 @@ void HOP3DBham::learn(){
     statsBuilder->computeStatistics(octets, dictionary);
     std::cout << "groups size: " << dictionary.size() << "\n";
     dictionary[0].print();
+    partSelector->selectParts(dictionary);
 
     std::cout << "Finished\n";
 }
