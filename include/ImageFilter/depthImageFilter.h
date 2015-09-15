@@ -68,6 +68,7 @@ private:
     ///Loaded filters
     hop3d::Filter::Seq filters;
     int filterSingleImageSingleFilter(const cv::Mat& depthImage, hop3d::Filter& filter, cv::Mat& filteredImage);
+    int nonMaximaSuppression(const std::vector<cv::Mat>, cv::Mat& maxResponsesImage, cv::Mat& maxResponsesIdsImage);
 };
 
 }
