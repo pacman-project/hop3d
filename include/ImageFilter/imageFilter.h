@@ -35,7 +35,7 @@ public:
     /// get filters
     virtual void getFilters(Filter::Seq& filters) const = 0;
     /// set filters
-    virtual void setFilters(std::string patchesFileName, std::string normalsFileName) = 0;
+    virtual void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName) = 0;
 
     /// Virtual descrutor
     virtual ~ImageFilter() {

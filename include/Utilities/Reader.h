@@ -25,7 +25,7 @@ public:
 
     int readPlyFile(std::string fileName, PointCloud& outputPointCloud, std::vector<Eigen::Vector4i> &outputFaces);
 /// reading first layer filters defined in Octave -- reading from xml file using tinyXML
-    int readFilters(std::string patchesFileName, std::string normalsFileName, Filter::Seq &filters);
+    int readFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName, Filter::Seq &filters);
 ///reading depth images from selected directory
     int readMultipleImages(boost::filesystem::path directoryPath,std::vector<cv::Mat> &output);
 

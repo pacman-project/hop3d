@@ -85,7 +85,7 @@ int hop3d::Reader::readPlyFile(std::string fileName, PointCloud& outputPointClou
 
 /// reading first layer filters defined in Octave -- reading from xml file using tinyXML
 
-int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsFileName, hop3d::Filter::Seq &filters)
+int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName, hop3d::Filter::Seq &filters)
 {
     std::string filenamePatches = "../../resources/" + patchesFileName;
     tinyxml2::XMLDocument patchesFile;
@@ -121,10 +121,65 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
         fNumber++;
         arrayElem = fNumber%arraySize;
         if (!arrayElem){
-            std::cout << "filterTemp " << fNumber/arraySize << " = " << std::endl <<        filterTemp           << std::endl << std::endl;
-            filtersTemps.push_back(filterTemp);
+            //Done like this because just pushing filterTemp ends up with optimisation where all the elements of the vector are the same
+            //have value of last element
+            cv::Mat imageRoi;
+            imageRoi = filterTemp.clone();
+            filtersTemps.push_back(imageRoi);
+            imageRoi.release();
         }
     }
+
+    std::string filenameMasks = "../../resources/" + masksFileName;
+    tinyxml2::XMLDocument masksFile;
+    masksFile.LoadFile(filenameMasks.c_str());
+    if (masksFile.ErrorID())
+        std::cout << "unable to load depth filter data.\n";
+
+    int masksNumber = 0;
+    int arrayMSize = 0;
+    tinyxml2::XMLElement * maskParse = masksFile.FirstChildElement( "octave" );
+    maskParse->FirstChildElement( "matrix" )->QueryIntAttribute("rows", &masksNumber);
+    maskParse->FirstChildElement( "matrix" )->QueryIntAttribute("columns", &arrayMSize);
+    int maskSize = int(sqrt(double(arrayMSize)));
+    std::cout << "Loading filters and normals...\n";
+    std::cout << "Filters no.: " << masksNumber << "\n";
+    std::cout << "Filter size: " << maskSize << "\n";
+
+    int mNumber = 0;
+    cv::Mat maskTemp(maskSize,maskSize, cv::DataType<double>::type);
+    std::vector<cv::Mat> masksTemps;
+    for(tinyxml2::XMLElement* e = maskParse->FirstChildElement("matrix")->FirstChildElement("scalar"); e != NULL; e = e->NextSiblingElement("scalar"))
+    {
+        int arrayElem = mNumber%arrayMSize;
+
+        tinyxml2::XMLText* text = e->FirstChild()->ToText();
+        if(text == NULL){
+            continue;
+        }
+        std::string t = text->Value();
+        int xCol = arrayElem/filterSize;
+        int yCol = arrayElem%filterSize;
+        maskTemp.at<double>(xCol,yCol) = std::stod(t);
+        mNumber++;
+        arrayElem = mNumber%arrayMSize;
+        if (!arrayElem){
+            //Done like this because just pushing filterTemp ends up with optimisation where all the elements of the vector are the same
+            //have value of last element
+            cv::Mat imageRoi;
+            imageRoi = maskTemp.clone();
+            masksTemps.push_back(imageRoi);
+            imageRoi.release();
+        }
+    }
+
+
+
+
+
+
+
+
 
     tinyxml2::XMLDocument normalsFile;
     std::string filenameNormals = "../../resources/" + normalsFileName;
@@ -155,14 +210,16 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
         nNumber++;
         arrayElem = nNumber%normalSize;
         if (!arrayElem){
-            std::cout << "normalTemp "<< nNumber/normalSize <<" = " << std::endl <<        normalTemp           << std::endl << std::endl;
+            //std::cout << "normalTemp "<< nNumber/normalSize <<" = " << std::endl <<        normalTemp           << std::endl << std::endl;
             normalsTemps.push_back(normalTemp);
+
         }
     }
     std::cout << normalsTemps.size() << std::endl;
     for(unsigned int i = 0; i < normalsTemps.size();i++){
         hop3d::Filter tempFilter;
         tempFilter.id = i;
+        tempFilter.mask = masksTemps[i];
         tempFilter.patch = filtersTemps[i];
         tempFilter.normal = normalsTemps[i];
         filters.push_back(tempFilter);

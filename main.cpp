@@ -21,7 +21,7 @@ int main(void){
         hop3d::Hierarchy hierarchy("configGlobal.xml");
         std::cout << "Hierarchy: number of view-dependent layers: " << hierarchy.viewDependentLayers.size() << "\n";
         std::cout << "Finished" << std::endl;
-        imageFilter->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml");
+        imageFilter->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
         hop3d::Reader reader;
         std::vector<cv::Mat> vecImages;
         reader.readMultipleImages("../../resources/depthImages",vecImages);
