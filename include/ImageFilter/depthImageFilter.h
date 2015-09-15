@@ -42,6 +42,12 @@ public:
     ///compute set of octets from set of the depth images
     void computeOctets(const cv::Mat& depthImage, hop3d::Octet::Seq& octets);
 
+    /// compute set of octets from set of the depth image
+    void getOctets(Octet::Seq& octets);
+
+    /// compute set of octets from set of the ids image
+    void getOctets(const ViewDependentPart::Seq& dictionary, Octet::Seq& octets);
+
     /// get filters
     void getFilters(Filter::Seq& filters) const;
     void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName);
