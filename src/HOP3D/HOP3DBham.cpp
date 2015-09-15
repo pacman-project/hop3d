@@ -15,6 +15,7 @@ HOP3DBham::HOP3DBham(std::string _config) :
     hierarchy.reset(new Hierarchy(_config));
     partSelector = hop3d::createPartSelectorMean(config.selectorConfig);
     imageFilterer = hop3d::createDepthImageFilter(config.filtererConfig);
+    imageFilterer->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
 }
 
 #ifdef QVisualizerBuild
@@ -72,15 +73,15 @@ void HOP3DBham::learn(){
             }
         }
     }
-    //Octet.
-    octets[0].print();
 
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
     hop3d::ViewDependentPart::Seq dictionary;
+    std::cout << "Compute statistics for " << octets.size() << " octets\n";
     statsBuilder->computeStatistics(octets, hierarchy.get()->firstLayer, dictionary);
-    std::cout << "groups size: " << dictionary.size() << "\n";
-    dictionary[0].print();
-    partSelector->selectParts(dictionary);
+    std::cout << "Dictionary size: " << dictionary.size() << "\n";
+    //dictionary[0].print();
+    partSelector->selectParts(dictionary, *hierarchy);
+    std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
 
     std::cout << "Finished\n";
 }

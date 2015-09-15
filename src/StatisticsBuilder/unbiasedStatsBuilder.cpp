@@ -64,6 +64,8 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, c
     for (auto it = groups.begin(); it!=groups.end(); it++){ //compute statistics
         ViewDependentPart part;
         computeGaussians(*it, part);
+        part.partIds=it->back().filterIds;//copy octet
+        part.layerId = 2;
         part.id = partId;
         partId++;
         dictionary.push_back(part);

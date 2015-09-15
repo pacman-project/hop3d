@@ -7,8 +7,9 @@
 #ifndef _PART_SELECTOR_H_
 #define _PART_SELECTOR_H_
 
-#include "../Data/Defs.h"
-#include "../Data/Vocabulary.h"
+#include "Data/Defs.h"
+#include "Data/Vocabulary.h"
+#include "Data/Graph.h"
 
 namespace hop3d {
 
@@ -31,7 +32,7 @@ public:
     virtual const std::string& getName() const {return name;};
 
     /// Select parts from the initial vocabulary
-    virtual void selectParts(ViewDependentPart::Seq& dictionary) = 0;
+    virtual void selectParts(ViewDependentPart::Seq& dictionary, Hierarchy& hierarchy) = 0;
 
     /// Virtual descrutor
     virtual ~PartSelector() {

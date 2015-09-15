@@ -17,4 +17,15 @@ void ViewDependentPart::print(){
     }
 }
 
+/// compute distance between view dependent parts
+double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters){
+    if (partA.partIds==partB.partIds)//fast
+        return 0;
+    double sum=0;
+    for (size_t i=0; i<partA.partIds.size();i++)
+        for (size_t j=0; j<partA.partIds.size();j++)
+            if (partA.layerId==2)
+                sum+=Filter::distance(filters[partA.partIds[i][j]], filters[partB.partIds[i][j]]);
+    return sum;
+}
 }

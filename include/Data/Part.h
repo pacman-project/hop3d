@@ -67,6 +67,9 @@ public:
         Part(_id, _layerId, _type), location(_location){
     }
 
+    /// compute distance between view dependent parts
+    static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters);
+
     /// Print
     void print();
 };
