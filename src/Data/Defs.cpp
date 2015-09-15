@@ -3,8 +3,8 @@
 namespace hop3d {
 
     /// compute distance between filters -- dot product for normals
-    double Filter::distance (Filter& filterA, Filter& filterB){
-        return filterA.normal.adjoint()*filterB.normal;
+    double Filter::distance (const Filter& filterA, const Filter& filterB){
+        return (filterA.id==filterB.id) ? 0 : filterA.normal.adjoint()*filterB.normal;
     }
 
     /// Print octet
@@ -27,11 +27,13 @@ namespace hop3d {
     }
 
     /// compute distance between octets -- dot product for normals for each filter
-    double Octet::distance (Octet& octetA, Octet& octetB, Filter::Seq& filters){
+    double Octet::distance(const Octet& octetA, const Octet& octetB, const Filter::Seq& filters){
         if (filters.size()==0){
             std::cout << "Empty filters set!\n"; getchar();
             return std::numeric_limits<double>::max();
         }
+        if (octetA.filterIds==octetB.filterIds)//fast
+            return 0;
         double sum=0;
         for (size_t i=0; i<octetA.filterIds.size();i++)
             for (size_t j=0; j<octetA.filterIds.size();j++)
