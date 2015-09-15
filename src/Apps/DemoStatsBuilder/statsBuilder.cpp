@@ -1,5 +1,7 @@
 
 #include "StatisticsBuilder/unbiasedStatsBuilder.h"
+#include "ImageFilter/depthImageFilter.h"
+#include "Data/Graph.h"
 #include "Data/Vocabulary.h"
 #include <iostream>
 #include <random>
@@ -13,6 +15,7 @@ int main(void){
             return 1;
         }
         std::string statsConfig(config.FirstChildElement( "StatisticsBuilder" )->Attribute( "configFilename" ));
+        std::string filtererConfig(config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
 
         hop3d::StatsBuilder *statsBuilder;
         statsBuilder = hop3d::createUnbiasedStatsBuilder(statsConfig);
@@ -43,8 +46,12 @@ int main(void){
         //Octet.
         octets[0].print();
 
+        hop3d::Hierarchy hierarchy("configGlobal.xml");
+        hop3d::ImageFilter* imageFilterer = hop3d::createDepthImageFilter(filtererConfig);
+        imageFilterer->getFilters(hierarchy.firstLayer);
+
         hop3d::ViewDependentPart::Seq dictionary;
-        statsBuilder->computeStatistics(octets, dictionary);
+        statsBuilder->computeStatistics(octets, hierarchy.firstLayer, dictionary);
         std::cout << "groups size: " << dictionary.size() << "\n";
         dictionary[0].print();
 

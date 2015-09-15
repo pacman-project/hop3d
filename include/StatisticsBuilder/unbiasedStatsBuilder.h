@@ -30,7 +30,7 @@ public:
     UnbiasedStatsBuilder(std::string config);
 
     /// compute statistics for the set of octets
-    void computeStatistics(const std::vector<Octet>& octets, ViewDependentPart::Seq& dictionary);
+    void computeStatistics(const std::vector<Octet>& octets, const Filter::Seq& filters, ViewDependentPart::Seq& dictionary);
 
     /// Destruction
     ~UnbiasedStatsBuilder(void);
@@ -60,8 +60,10 @@ private:
     void computeGaussian(const Octet::Seq& group, Gaussian3D& gauss, unsigned int u, unsigned int v) const;
 
 private:
-    ///Configuration of the module
+    /// Configuration of the module
     Config config;
+    /// Set of filters
+    Filter::Seq filters;
 };
 }
 #endif // UNBIASED_STATISTICS_BUILDER_H_INCLUDED

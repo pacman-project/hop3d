@@ -14,6 +14,7 @@ HOP3DBham::HOP3DBham(std::string _config) :
     statsBuilder = hop3d::createUnbiasedStatsBuilder(config.statsConfig);
     hierarchy.reset(new Hierarchy(_config));
     partSelector = hop3d::createPartSelectorMean(config.selectorConfig);
+    imageFilterer = hop3d::createDepthImageFilter(config.filtererConfig);
 }
 
 #ifdef QVisualizerBuild
@@ -44,6 +45,7 @@ HOP3DBham::Config::Config(std::string configFilename){
 
     statsConfig = (config.FirstChildElement( "StatisticsBuilder" )->Attribute( "configFilename" ));
     selectorConfig = (config.FirstChildElement( "PartSelector" )->Attribute( "configFilename" ));
+    filtererConfig = (config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
 }
 
 /// learining from the dataset
@@ -73,8 +75,9 @@ void HOP3DBham::learn(){
     //Octet.
     octets[0].print();
 
+    imageFilterer->getFilters(hierarchy.get()->firstLayer);
     hop3d::ViewDependentPart::Seq dictionary;
-    statsBuilder->computeStatistics(octets, dictionary);
+    statsBuilder->computeStatistics(octets, hierarchy.get()->firstLayer, dictionary);
     std::cout << "groups size: " << dictionary.size() << "\n";
     dictionary[0].print();
     partSelector->selectParts(dictionary);

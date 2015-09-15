@@ -38,6 +38,7 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary){
         std::cout << "Initial number of words in dictionary: " << dictionary.size() << "\n";
         std::cout << "Desired number of words: " << config.clustersNo << "\n";
     }
+
 }
 
 hop3d::PartSelector* hop3d::createPartSelectorMean(void) {

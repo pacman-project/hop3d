@@ -12,6 +12,7 @@
 #include "StatisticsBuilder/unbiasedStatsBuilder.h"
 #include "Data/Graph.h"
 #include "PartSelector/partSelectorMean.h"
+#include "ImageFilter/depthImageFilter.h"
 #ifdef QVisualizerBuild
 #include "QVisualizer/Qvisualizer.h"
 #endif
@@ -63,6 +64,8 @@ public:
             std::string statsConfig;
             /// part selector config filename
             std::string selectorConfig;
+            /// image filterer config filename
+            std::string filtererConfig;
     };
 
 private:
@@ -74,6 +77,9 @@ private:
 
     /// Part selector
     PartSelector *partSelector;
+
+    /// Image Filterer
+    ImageFilter *imageFilterer;
 
     ///structure to store hierarchy
     std::unique_ptr<Hierarchy> hierarchy;

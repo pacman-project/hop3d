@@ -399,7 +399,7 @@ if(BUILD_HOP3D)
             "${CMAKE_SOURCE_DIR}/include/HOP3D/*.h"
         )
         ADD_LIBRARY(LIBHOP3D STATIC ${LIBHOP3D_SOURCES} ${LIBHOP3D_HEADERS})
-        TARGET_LINK_LIBRARIES(LIBHOP3D tinyxml2 statisticsBuilder Utilities partSelector)
+        TARGET_LINK_LIBRARIES(LIBHOP3D tinyxml2 statisticsBuilder Utilities partSelector imageFilter)
         INSTALL(TARGETS LIBHOP3D RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${LIBHOP3D_HEADERS} DESTINATION include/hop3D/HOP3D/)
 endif(BUILD_HOP3D)
@@ -419,7 +419,7 @@ if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_STATS)
 
         SET(DEMO_SOURCES ./src/Apps/DemoStatsBuilder/statsBuilder.cpp)
         ADD_EXECUTABLE(statsBuilder ${DEMO_SOURCES})
-        TARGET_LINK_LIBRARIES(statsBuilder tinyxml2 statisticsBuilder)
+        TARGET_LINK_LIBRARIES(statsBuilder tinyxml2 statisticsBuilder imageFilter partSelector)
         INSTALL(TARGETS statsBuilder RUNTIME DESTINATION bin)
         INSTALL(FILES ${DEMO_FILES} DESTINATION bin)
 

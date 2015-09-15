@@ -2,6 +2,11 @@
 
 namespace hop3d {
 
+    /// compute distance between filters -- dot product for normals
+    double Filter::distance (Filter& filterA, Filter& filterB){
+        return filterA.normal.adjoint()*filterB.normal;
+    }
+
     /// Print octet
     void Octet::print() const{
         std::cout << "Camera pose id:" << poseId << "\n";
@@ -21,4 +26,16 @@ namespace hop3d {
         }
     }
 
+    /// compute distance between octets -- dot product for normals for each filter
+    double Octet::distance (Octet& octetA, Octet& octetB, Filter::Seq& filters){
+        if (filters.size()==0){
+            std::cout << "Empty filters set!\n"; getchar();
+            return std::numeric_limits<double>::max();
+        }
+        double sum=0;
+        for (size_t i=0; i<octetA.filterIds.size();i++)
+            for (size_t j=0; j<octetA.filterIds.size();j++)
+                sum+=Filter::distance(filters[octetA.filterIds[i][j]], filters[octetB.filterIds[i][j]]);
+        return sum;
+    }
 }

@@ -73,6 +73,9 @@ public:
     /// vector normal to the center of the patch
     Vec3 normal;
 
+    /// compute distance between filters
+    static double distance (Filter& filterA, Filter& filterB);
+
     ///Construction
     Filter(){};
 };
@@ -126,6 +129,9 @@ public:
 
     /// Construction
     Octet(){};
+
+    /// compute distance between octets -- dot product for normals for each filter
+    double distance (Octet& octetA, Octet& octetB, Filter::Seq& filters);
 
     /// Print
     void print() const;
