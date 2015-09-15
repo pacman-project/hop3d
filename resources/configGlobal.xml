@@ -4,9 +4,13 @@
   <Filterer configFilename="depthFilter.xml">
   </Filterer>
   
-  <!-- stats builder configuration -->
+  <!-- Stats builder configuration -->
   <StatisticsBuilder configFilename="statsBuilder.xml">
   </StatisticsBuilder>
+  
+  <!-- Stats builder configuration -->
+  <PartSelector configFilename="partSelector.xml">
+  </PartSelector>
   
 <!--   Hierarchy configuration -->
   <Hierarchy>

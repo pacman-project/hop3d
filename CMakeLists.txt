@@ -22,6 +22,8 @@ option(BUILD_HOP3D_FILTER "Build HOP3D filter library" ON)
 mark_as_advanced(BUILD_HOP3D_FILTER)
 option(BUILD_HOP3D_STATISTICS "Build HOP3D statistics builder library" ON)
 mark_as_advanced(BUILD_HOP3D_STATISTICS)
+option(BUILD_HOP3D_PART_SELECTOR "Build HOP3D part selector library" ON)
+mark_as_advanced(BUILD_HOP3D_PART_SELECTOR)
 option(BUILD_VISUALIZATION_MODULE "Build HOP3D visualization OpenGL3.0" ON)
 mark_as_advanced(BUILD_VISUALIZATION_MODULE)
 option(BUILD_VISUALIZATION_QT "Build HOP3D visualization QT" OFF)
@@ -345,6 +347,26 @@ endif(BUILD_HOP3D AND BUILD_HOP3D_STATISTICS)
 
 ###############################################################################
 #
+# HOP3D part selector library
+#
+###############################################################################
+
+if(BUILD_HOP3D AND BUILD_HOP3D_PART_SELECTOR)
+        file(GLOB SELECTOR_SOURCES
+            "${CMAKE_SOURCE_DIR}/src/PartSelector/*.cpp"
+        )
+        file(GLOB SELECTOR_HEADERS
+            "${CMAKE_SOURCE_DIR}/include/PartSelector/*.h"
+        )
+
+        ADD_LIBRARY(partSelector STATIC ${SELECTOR_SOURCES} ${SELECTOR_HEADERS})
+        TARGET_LINK_LIBRARIES(partSelector "${PROJ_NAME}_data")
+        INSTALL(TARGETS partSelector RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
+        INSTALL(FILES ${SELECTOR_HEADERS} DESTINATION include/hop3d/PartSelector/)
+endif(BUILD_HOP3D AND BUILD_HOP3D_PART_SELECTOR)
+
+###############################################################################
+#
 # HOP3D Visualizer library
 #
 ###############################################################################
@@ -377,7 +399,7 @@ if(BUILD_HOP3D)
             "${CMAKE_SOURCE_DIR}/include/HOP3D/*.h"
         )
         ADD_LIBRARY(LIBHOP3D STATIC ${LIBHOP3D_SOURCES} ${LIBHOP3D_HEADERS})
-        TARGET_LINK_LIBRARIES(LIBHOP3D tinyxml2 statisticsBuilder Utilities)
+        TARGET_LINK_LIBRARIES(LIBHOP3D tinyxml2 statisticsBuilder Utilities partSelector)
         INSTALL(TARGETS LIBHOP3D RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${LIBHOP3D_HEADERS} DESTINATION include/hop3D/HOP3D/)
 endif(BUILD_HOP3D)
