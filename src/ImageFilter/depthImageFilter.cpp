@@ -48,7 +48,7 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
     hop3d::ImagesDisplay displayer;
     std::vector<cv::Mat> filteredImages(filters.size());
     //applying all the filters to an image
-
+    unsigned long int e1 = cv::getTickCount();
 #pragma omp parallel for
     for(int iterF = 0 ; iterF < filters.size(); iterF++)
     {
@@ -60,7 +60,9 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
         filteredImage.release();
 
     }
-
+    unsigned long int e2 = cv::getTickCount();
+    double time = (e2 - e1)/ cv::getTickFrequency();
+    std::cout << "Execution time: " << time << std::endl;
 
 //Non-maxima suppression
         //displayer.displayDepthImage(filterImages[iterI]);
@@ -75,7 +77,6 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
 
          int octetSize = (filterSize-overlapRf)*3;
          int octetOffset = int(octetSize/2);
-         hop3d::Octet::Seq octetsTemp;
          for(int i = octetOffset; i < responseImage.rows-(octetOffset-2*overlapRf);i+=(octetSize-overlapRf)){
             for(int j = octetOffset; j < responseImage.cols-(octetOffset-2*overlapRf);j+=(octetSize-overlapRf)){
                 cv::Mat imageRoi(octetSize,octetSize, cv::DataType<double>::type);
@@ -85,6 +86,7 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                 //simple ROI is just a change of header to the same file when = is used it will start to point to the data in this other Mat
                 imageRoi = responseImage(regionOfInterest).clone();
                 idRoi = idImage(regionOfInterest).clone();
+                hop3d::Octet octetTemp;
                 int octetIter = 0;
                 for(int k = offset; k < imageRoi.rows-(offset);k+=(offset-overlapRf)){
                     for(int l = offset; l < imageRoi.cols-(offset);l+=(offset-overlapRf)){
@@ -147,7 +149,7 @@ void DepthImageFilter::setFilters(std::string patchesFileName, std::string norma
 
 int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, Filter &filter, cv::Mat &filteredImage)
 {
-    std::cout << "Applying filter number: " << filter.id << std::endl;
+    //std::cout << "Applying filter number: " << filter.id << std::endl;
     int filterSize = filter.patch.cols; //size of the applied filter
     int offset = int(filterSize/2);     //casting discards fractional part
     //if (depthImage.depth() == CV_16U) std::cout << "CV_16U == unsigned short " << sizeof(unsigned short) << std::endl;
@@ -178,13 +180,13 @@ int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, F
             imageRoi = depthImageDouble(regionOfInterest).clone();
             double middleValue = imageRoi.at<double>(offset,offset);
 //                std::cout << "middleValue: " << middleValue << std::endl;
-            cv::subtract(imageRoi,cv::Scalar(middleValue),subResult);
+            cv::subtract(imageRoi,cv::Scalar(middleValue),subResult,);
 //                std::cout << "imageRoi " << i << "; " << j << ": " << std::endl << imageRoi << std::endl << std::endl;
 //                std::cout << "filters " << i << "; " << j << ": " << std::endl << filters[iterF].patch << std::endl << std::endl;
 //                std::cout << "subResult " << i << "; " << j << ": " << std::endl << subResult << std::endl << std::endl;
-            cv::subtract(subResult,loadedFilter,responseTemp);
+            cv::absdiff(subResult,loadedFilter,responseTemp);
             responseTemp = responseTemp.mul(loadedMask);
-            responseTemp = cv::abs(responseTemp);
+            //responseTemp = cv::abs(responseTemp);
 //                std::cout << "responseTemp " << i << "; " << j << ": " << std::endl << responseTemp << std::endl << std::endl;
             double s = cv::sum(responseTemp)[0];
             //condition not to take into account boundaries of the object
