@@ -30,9 +30,9 @@ int hop3d::ImagesDisplay::displayDepthImage(const cv::Mat &inputImage)
     cv::Mat falseColorsMap;
     cv::applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_AUTUMN);
     //cv::applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_AUTUMN);
-    cv::namedWindow("Depth image", CV_WINDOW_AUTOSIZE );
-    cv::imshow("Depth image", falseColorsMap);
-    cv::waitKey(0);
+    //cv::namedWindow("Depth image", CV_WINDOW_AUTOSIZE );
+    //cv::imshow("Depth image", falseColorsMap);
+    //cv::waitKey(0);
     adjMap.release();
     falseColorsMap.release();
     return 0;
@@ -55,9 +55,9 @@ int hop3d::ImagesDisplay::displayDepthImage(const cv::Mat &inputImage, double mi
     cv::Mat falseColorsMap;
     cv::applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_AUTUMN);
     //cv::applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_AUTUMN);
-    cv::namedWindow("Depth image", CV_WINDOW_AUTOSIZE );
-    cv::imshow("Depth image", falseColorsMap);
-    cv::waitKey(0);
+    //cv::namedWindow("Depth image", CV_WINDOW_AUTOSIZE );
+    //cv::imshow("Depth image", falseColorsMap);
+    //cv::waitKey(0);
     adjMap.release();
     falseColorsMap.release();
     return 0;

@@ -40,6 +40,7 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, c
     }
     int iterNo=1;
     for (auto it=octets.begin();it!=octets.end();it++){ // grouping
+
         if(!isOctetInGroups(*it, filters, groups, groupIter)){
             Octet::Seq group; group.push_back(*it);
             groups.push_back(group);

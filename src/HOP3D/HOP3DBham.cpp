@@ -76,6 +76,12 @@ void HOP3DBham::learn(){
 
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
     hop3d::ViewDependentPart::Seq dictionary;
+
+    std::vector<cv::Mat> vecImages;
+    hop3d::Reader reader;
+    reader.readMultipleImages("../../resources/depthImages",vecImages);
+    imageFilterer->computeOctets(vecImages[0],octets);
+
     std::cout << "Compute statistics for " << octets.size() << " octets\n";
     statsBuilder->computeStatistics(octets, hierarchy.get()->firstLayer, dictionary);
     std::cout << "Dictionary size: " << dictionary.size() << "\n";

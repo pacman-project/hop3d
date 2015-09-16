@@ -37,8 +37,9 @@ namespace hop3d {
         }
         double sum=0;
         for (size_t i=0; i<octetA.filterIds.size();i++)
-            for (size_t j=0; j<octetA.filterIds.size();j++)
+            for (size_t j=0; j<octetA.filterIds.size();j++){
                 sum+=Filter::distance(filters[octetA.filterIds[i][j]], filters[octetB.filterIds[i][j]]);
+            }
         return sum;
     }
 }

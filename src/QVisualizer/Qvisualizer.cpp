@@ -161,7 +161,7 @@ void QGLVisualizer::updateHierarchy(){
         }
         //hop3d::Filter.patch
         //hop3d::Cloud cloud;
-        //createCloudList(cloud.pointCloudNormal.back());
+        createCloudList(std::make_pair(hierarchy->firstLayer[i].id, cloud));
     }
     mtxHierarchy.unlock();
 }

@@ -3,6 +3,7 @@
 #include "ImageFilter/depthImageFilter.h"
 #include "Data/Graph.h"
 #include "Data/Vocabulary.h"
+#include "PartSelector/partSelectorMean.h"
 #include <iostream>
 #include <random>
 
@@ -16,6 +17,7 @@ int main(void){
         }
         std::string statsConfig(config.FirstChildElement( "StatisticsBuilder" )->Attribute( "configFilename" ));
         std::string filtererConfig(config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
+        std::string selectorConfig(config.FirstChildElement( "PartSelector" )->Attribute( "configFilename" ));
 
         hop3d::StatsBuilder *statsBuilder;
         statsBuilder = hop3d::createUnbiasedStatsBuilder(statsConfig);
@@ -53,10 +55,22 @@ int main(void){
         std::cout << hierarchy.firstLayer[0].normal << "\n";
         std::cout << hierarchy.firstLayer[1].normal << "\n";
         std::cout << hierarchy.firstLayer[2].normal << "\n";
+
+
+        std::vector<cv::Mat> vecImages;
+        hop3d::Reader reader;
+        reader.readMultipleImages("../../resources/depthImages",vecImages);
+        imageFilterer->computeOctets(vecImages[0],octets);
+
         hop3d::ViewDependentPart::Seq dictionary;
         statsBuilder->computeStatistics(octets, hierarchy.firstLayer, dictionary);
         std::cout << "groups size: " << dictionary.size() << "\n";
         dictionary[0].print();
+
+        hop3d::PartSelector* partSelector = hop3d::createPartSelectorMean(selectorConfig);
+        partSelector->selectParts(dictionary, hierarchy);
+        std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
+        hierarchy.viewDependentLayers[0]=dictionary;
 
         std::cout << "Finished\n";
     }
