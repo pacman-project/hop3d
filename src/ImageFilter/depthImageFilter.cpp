@@ -51,7 +51,7 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
     unsigned long int e1 = cv::getTickCount();
 
 //#pragma omp parallel for
-    for(int iterF = 0 ; iterF < filters.size(); iterF++)
+    for(unsigned int iterF = 0 ; iterF < filters.size(); iterF++)
     {
         cv::Mat filteredImage(depthImage.rows-(offset),depthImage.cols-(offset), cv::DataType<double>::type,cv::Scalar(0));
         filterSingleImageSingleFilter(depthImage,filters[iterF],filteredImage);
@@ -62,7 +62,7 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
 
     }
     unsigned long int e2 = cv::getTickCount();
-    double time = (e2 - e1)/ cv::getTickFrequency();
+    double time = double((e2 - e1))/double(cv::getTickFrequency());
     std::cout << "Execution time: " << time << std::endl;
 
 //Non-maxima suppression
@@ -76,7 +76,7 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
         displayer.displayDepthImage(idImage);
 
 
-         int octetSize = (filterSize-overlapRf)*3;
+         int octetSize = (filterSize-overlapRf)*2+filterSize;
          int octetOffset = int(octetSize/2);
          for(int i = octetOffset; i < responseImage.rows-(octetOffset-2*overlapRf);i+=(octetSize-overlapRf)){
             for(int j = octetOffset; j < responseImage.cols-(octetOffset-2*overlapRf);j+=(octetSize-overlapRf)){
@@ -89,8 +89,8 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                 idRoi = idImage(regionOfInterest).clone();
                 hop3d::Octet octetTemp;
                 int octetIter = 0;
-                for(int k = offset; k < imageRoi.rows-(offset);k+=(offset-overlapRf)){
-                    for(int l = offset; l < imageRoi.cols-(offset);l+=(offset-overlapRf)){
+                for(int k = offset; k < imageRoi.rows-(offset);k+=(filterSize-overlapRf)){
+                    for(int l = offset; l < imageRoi.cols-(offset);l+=(filterSize-overlapRf)){
                         cv::Mat octetRoi(filterSize,filterSize, cv::DataType<double>::type);
                         cv::Mat octetIdRoi(filterSize,filterSize, cv::DataType<int>::type);
                         cv::Rect subRegion = cv::Rect(l-offset, k-offset,filterSize,filterSize);
@@ -109,12 +109,23 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                         octetTemp.filterPos[octetIter/3][octetIter%3] = hop3d::ImageCoordsDepth(maxLoc.x,maxLoc.y,depthPoint);
                         octetTemp.filterIds[octetIter/3][octetIter%3] = octetIdRoi.at<int>(maxLoc);
                         octetTemp.responses[octetIter/3][octetIter%3] = octetRoi.at<double>(maxLoc);
+                        octetIter++;
                         octetRoi.release();
                         octetIdRoi.release();
                     }
                 }
-                octets.push_back(octetTemp);
+//                //has to be generalized to larger neighbourhood
+                double uVal = octetTemp.filterPos[1][1].u;
+                double vVal = octetTemp.filterPos[1][1].v;
+                double depthVal = octetTemp.filterPos[1][1].depth;
 
+                for(int posIter = 0; posIter < octetIter; posIter++){
+                    if (posIter == 4) continue;
+                    octetTemp.filterPos[posIter/3][posIter%3].u -= uVal;
+                    octetTemp.filterPos[posIter/3][posIter%3].v -= vVal;
+                    octetTemp.filterPos[posIter/3][posIter%3].depth -= depthVal;
+                }
+              octets.push_back(octetTemp);
               imageRoi.release();
               idRoi.release();
              }
@@ -155,8 +166,6 @@ int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, F
     int filterSize = filter.patch.cols; //size of the applied filter
     int offset = int(filterSize/2);     //casting discards fractional part
     //if (depthImage.depth() == CV_16U) std::cout << "CV_16U == unsigned short " << sizeof(unsigned short) << std::endl;
-    //image used to store results of filter computation at each point, offset due to the fact that the border is not copied
-    cv::Mat filteredImageTemp(depthImage.rows-(offset),depthImage.cols-(offset), cv::DataType<double>::type,cv::Scalar(0));
     //depth image represented as double giving it geometrical relation
     cv::Mat depthImageDouble(depthImage.cols,depthImage.rows, cv::DataType<double>::type);
     depthImage.convertTo(depthImageDouble,CV_64F);
@@ -173,6 +182,7 @@ int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, F
     cv::Mat imageRoi(filterSize,filterSize, cv::DataType<double>::type);
     cv::Mat responseTemp(filterSize,filterSize, cv::DataType<double>::type);
     cv::Mat subResult(filterSize,filterSize, cv::DataType<double>::type);
+    //first approach with TBB, then GPU
     for(int i = offset; i < depthImageDouble.rows-(offset);i++){
         for(int j = offset; j < depthImageDouble.cols-(offset);j++){
 
@@ -191,8 +201,6 @@ int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, F
     imageRoi.release();
     subResult.release();
     responseTemp.release();
-    //filteredImage = filteredImageTemp.clone();
-    filteredImageTemp.release();
     loadedFilter.release();
     loadedMask.release();
     return 0;
@@ -207,14 +215,14 @@ int DepthImageFilter::nonMaximaSuppression(const std::vector<cv::Mat> responsesI
     for(int i = 0; i < maxResponsesImageTemp.rows;i++){
         for(int j = 0; j < maxResponsesImageTemp.cols;j++){
             std::vector<double> minResponses;
-            for(int iterI = 0 ; iterI < responsesImages.size(); iterI++){
+            for(unsigned int iterI = 0 ; iterI < responsesImages.size(); iterI++){
                     minResponses.push_back(responsesImages[iterI].at<double>(j,i));
             }
             auto itMin = std::min_element(minResponses.begin(),minResponses.end());
             auto itMax = std::max_element(minResponses.begin(),minResponses.end());
             maxResponses.push_back(*itMax);
             maxResponsesImageTemp.at<double>(j,i) = *itMin;
-            maxResponsesIdsImageTemp.at<int>(j,i) = itMin - minResponses.begin();
+            maxResponsesIdsImageTemp.at<int>(j,i) = int(itMin - minResponses.begin());
         }
 
      }
@@ -227,6 +235,7 @@ int DepthImageFilter::nonMaximaSuppression(const std::vector<cv::Mat> responsesI
      maxResponsesIdsImage = maxResponsesIdsImageTemp.clone();
      maxResponsesImageTemp.release();
      maxResponsesIdsImageTemp.release();
+     return 0;
 }
 
 hop3d::ImageFilter* hop3d::createDepthImageFilter(void) {
