@@ -38,6 +38,7 @@ const std::string& DepthImageFilter::getName() const {
 void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Seq& octets){
     depthImage.type();//!!
     octets.size();//!!
+    octets.clear();
 
     int filterSize = filters[0].patch.cols;
     int overlapRf = 1; //overlap of the receptive fields in octets
@@ -75,7 +76,7 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
         displayer.displayDepthImage(responseImage);
         displayer.displayDepthImage(idImage);
 
-
+//filling in octets
          int octetSize = (filterSize-overlapRf)*2+filterSize;
          int octetOffset = int(octetSize/2);
          for(int i = octetOffset; i < responseImage.rows-(octetOffset-2*overlapRf);i+=(octetSize-overlapRf)){
@@ -102,13 +103,15 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                         cv::Point maxLoc;
                         //location of the maximum point in the subelement of the octet
                         cv::minMaxLoc( octetRoi, &minVal, &maxVal, &minLoc, &maxLoc );
+                        //searching within ROI
+                        octetTemp.filterIds[octetIter/3][octetIter%3] = octetIdRoi.at<int>(maxLoc.x,maxLoc.y);
+                        octetTemp.responses[octetIter/3][octetIter%3] = octetRoi.at<double>(maxLoc.x,maxLoc.y);
+                        //searching within image
                         maxLoc.x +=(l+j+octetOffset+offset);
                         maxLoc.y +=(k+i+octetOffset+offset);
                         double depthPoint;
                         depthPoint = depthImage.at<int>(maxLoc);
                         octetTemp.filterPos[octetIter/3][octetIter%3] = hop3d::ImageCoordsDepth(maxLoc.x,maxLoc.y,depthPoint);
-                        octetTemp.filterIds[octetIter/3][octetIter%3] = octetIdRoi.at<int>(maxLoc);
-                        octetTemp.responses[octetIter/3][octetIter%3] = octetRoi.at<double>(maxLoc);
                         octetIter++;
                         octetRoi.release();
                         octetIdRoi.release();
