@@ -75,11 +75,12 @@ public:
 };
 
 QGLVisualizer::QGLVisualizer(void) {
+    hierarchy.reset(new Hierarchy());
 }
 
 /// Construction
 QGLVisualizer::QGLVisualizer(Config _config): config(_config){
-
+    hierarchy.reset(new Hierarchy("configGlobal.xml"));
 }
 
 /// Construction
@@ -129,8 +130,40 @@ void QGLVisualizer::drawEllipsoid(const Vec3& pos, const Mat33& covariance) cons
 }
 
 /// Observer update
-void QGLVisualizer::update(hop3d::Hierarchy& hierarchy) {
-    std::cout << hierarchy.firstLayer.size();
+void QGLVisualizer::update(hop3d::Hierarchy& _hierarchy) {
+    mtxHierarchy.lock();
+    *hierarchy = _hierarchy;
+    mtxHierarchy.unlock();
+    std::cout << "First layer size: " << hierarchy->firstLayer.size() << "\n";
+    std::cout << "View depent layers no: " << hierarchy->viewDependentLayers.size() << "\n";
+    for (size_t i=0; i<hierarchy->viewDependentLayers.size(); i++){
+        std::cout << "Layer " << i+2 << " size: " << hierarchy->viewDependentLayers[i].size() << "\n";
+        std::cout << "Ids in the group: ";
+        for (size_t j=0; j<hierarchy->viewDependentLayers[i].size(); j++){
+            std::cout << hierarchy->viewDependentLayers[i][j].id << ", ";
+        }
+        std::cout << "\n";
+    }
+    updateHierarchy();
+}
+
+///update hierarchy, prepare gl lists
+void QGLVisualizer::updateHierarchy(){
+    mtxHierarchy.lock();
+    for (size_t i=0; i<hierarchy->firstLayer.size(); i++){
+        hop3d::PointCloud cloud;
+        int cols = hierarchy->firstLayer[i].patch.cols;
+        for (int u=0;u<hierarchy->firstLayer[i].patch.cols;u++){
+            for (int v=0;v<hierarchy->firstLayer[i].patch.rows;v++){
+                hop3d::PointNormal point(Vec3((u-(cols/2))*0.001,(v-(cols/2))*0.001,hierarchy->firstLayer[i].patch.at<double>(u,v)), hierarchy->firstLayer[i].normal);
+                cloud.pointCloudNormal.push_back(point);
+            }
+        }
+        //hop3d::Filter.patch
+        //hop3d::Cloud cloud;
+        //createCloudList(cloud.pointCloudNormal.back());
+    }
+    mtxHierarchy.unlock();
 }
 
 /// Draw point clouds

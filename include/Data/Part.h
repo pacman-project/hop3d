@@ -32,9 +32,6 @@ public:
     /// Id of the neighbouring parts from the same layer
     std::array<std::array<int,3>,3> partIds;
 
-    /// OR parts -- aggregated parts at the same layer
-    std::vector<int> ORparts;
-
     /// Construction
     inline Part(){};
 
@@ -58,6 +55,9 @@ public:
 
     /// Gaussians related to positions of neighbouring parts
     std::array<std::array<Gaussian3D,3>,3> gaussians;
+
+    /// part aggregated from the same level vocabulary
+    std::vector<ViewDependentPart> group;
 
     /// Construction
     inline ViewDependentPart(){};

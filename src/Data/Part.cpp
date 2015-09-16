@@ -7,6 +7,11 @@ void ViewDependentPart::print(){
     std::cout << "Id: " << id << "\n";
     std::cout << "Layer id: " << layerId << "\n";
     std::cout << "Image coords: " << location.u << ", " << location.v << "\n";
+    std::cout << "Group size: " << group.size() << "\n";
+    std::cout << "Parts in group: ";
+    for (auto it = group.begin();it!=group.end();it++)
+        std::cout << it->id << ", ";
+    std::cout << "\n";
     for (size_t i=0; i<gaussians.size();i++){
         for (size_t j=0; j<gaussians.size();j++){
             std::cout << "mean(" << i-1 << ", " << j-1 << "):\n";

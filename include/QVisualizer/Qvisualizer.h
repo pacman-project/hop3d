@@ -12,6 +12,8 @@
 #include "../include/Utilities/observer.h"
 #include "../external/tinyXML/tinyxml2.h"
 #include <QGLViewer/qglviewer.h>
+#include <thread>
+#include <mutex>
 #include <iostream>
 
 /// Map implementation
@@ -57,10 +59,16 @@ public:
     ~QGLVisualizer(void);
 
     /// Observer update
-    void update(hop3d::Hierarchy& hierarchy);
+    void update(hop3d::Hierarchy& _hierarchy);
 
 private:
     Config config;
+
+    /// Hierarchy to draw
+    std::unique_ptr<hop3d::Hierarchy> hierarchy;
+
+    /// mtex to lock hierarchy
+    std::mutex mtxHierarchy;
 
     /// draw objects
     void draw();
@@ -74,7 +82,7 @@ private:
     /// generate help string
     std::string help() const;
 
-    ///update map
+    ///update hierarchy
     void updateHierarchy();
 
     /// Draw point clouds

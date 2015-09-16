@@ -51,7 +51,7 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy
     }
     std::vector<ViewDependentPart::Seq> clusters(config.clustersNo);
     for (int i=0;i<config.maxIter;i++){
-        if (config.verbose){
+        if (config.verbose==2){
             std::cout << "centroids: ";
             for (size_t i=0;i<centroids.size();i++){
                 std::cout << centroids[i] << ", ";
@@ -60,7 +60,7 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy
         }
         fit2clusters(centroids, dictionary, hierarchy, clusters);
         computeCentroids(clusters, centroids, hierarchy);
-        if (config.verbose){
+        if (config.verbose==2){
             std::cout << "centroids new: ";
             for (size_t i=0;i<centroids.size();i++){
                 std::cout << centroids[i] << ", ";
@@ -74,7 +74,7 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy
     for (auto it = clusters.begin(); it!=clusters.end();it++){
         ViewDependentPart part = dictionary[centroids[centroidNo]];
         for (auto itPart = it->begin(); itPart!=it->end();itPart++)
-            part.ORparts.push_back(itPart->id);
+            part.group.push_back(*itPart);
         newDictionary.push_back(part);
         centroidNo++;
     }
@@ -101,7 +101,7 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
         }
         clusters[centroidId].push_back(*it);
     }
-    if (config.verbose){
+    if (config.verbose==2){
         std::cout << "Elements no in clusters: ";
         for (size_t i=0;i<clusters.size();i++){
             std::cout << clusters[i].size() << ", ";

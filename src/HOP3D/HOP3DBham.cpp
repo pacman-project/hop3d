@@ -82,6 +82,9 @@ void HOP3DBham::learn(){
     //dictionary[0].print();
     partSelector->selectParts(dictionary, *hierarchy);
     std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
+    hierarchy.get()->viewDependentLayers[0]=dictionary;
+    notify(*hierarchy);
+    //dictionary[0].print();
 
     std::cout << "Finished\n";
 }

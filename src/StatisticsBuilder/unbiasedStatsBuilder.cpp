@@ -56,7 +56,7 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, c
     if (config.verbose==1){
         std::cout << "done.\n";
     }
-    int partId=1000;
+    size_t partId=filters.size()+1;
     if (config.verbose==1){
         std::cout << "Compute Gaussians for " << groups.size() << " groups...\n";
     }
@@ -66,7 +66,7 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, c
         computeGaussians(*it, part);
         part.partIds=it->back().filterIds;//copy octet
         part.layerId = 2;
-        part.id = partId;
+        part.id = (int)partId;
         partId++;
         dictionary.push_back(part);
         if (config.verbose==1){

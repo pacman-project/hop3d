@@ -11,8 +11,16 @@ namespace hop3d {
 
 class PointNormal{
 public:
+    /// position
     Vec3 position;
+    /// normal vector
     Vec3 normal;
+
+    ///Construction
+    PointNormal(){}
+
+    ///Construction
+    PointNormal(Vec3 _position, Vec3 _normal) : position(_position), normal(_normal) {}
 };
 
 class Cloud{

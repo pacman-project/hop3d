@@ -15,6 +15,8 @@ public:
     Filter::Seq firstLayer;
 
     /// Construction
+    inline Hierarchy(){}
+    /// Construction
     inline Hierarchy(int _viewDepLayersNo, int _viewIndepLayersNo) :
         viewDependentLayers(_viewDepLayersNo), viewIndependentLayers(_viewIndepLayersNo){
     }
