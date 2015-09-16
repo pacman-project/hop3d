@@ -123,9 +123,10 @@ void QGLVisualizer::drawEllipsoid(const Vec3& pos, const Mat33& covariance) cons
     es.compute(covariance);
     Mat33 V(es.eigenvectors());
     double GLmat[16]={V(0,0), V(1,0), V(2,0), 0, V(0,1), V(1,1), V(2,1), 0, V(0,2), V(1,2), V(2,2), 0, pos.x(), pos.y(), pos.z(), 1};
+    double ellipsoidScale=1.0;
     glPushMatrix();
         glMultMatrixd(GLmat);
-        //drawEllipsoid(10,10,sqrt(es.eigenvalues()(0))*config.ellipsoidScale, sqrt(es.eigenvalues()(1))*config.ellipsoidScale, sqrt(es.eigenvalues()(2))*config.ellipsoidScale);
+        drawEllipsoid(10,10,sqrt(es.eigenvalues()(0))*ellipsoidScale, sqrt(es.eigenvalues()(1))*ellipsoidScale, sqrt(es.eigenvalues()(2))*ellipsoidScale);
     glPopMatrix();
 }
 
@@ -144,62 +145,58 @@ void QGLVisualizer::update(hop3d::Hierarchy& _hierarchy) {
         }
         std::cout << "\n";
     }
-    updateHierarchy();
+    updateHierarchyFlag = true;
 }
 
 ///update hierarchy, prepare gl lists
 void QGLVisualizer::updateHierarchy(){
-    mtxHierarchy.lock();
-    for (size_t i=0; i<hierarchy->firstLayer.size(); i++){
-        hop3d::PointCloud cloud;
-        int cols = hierarchy->firstLayer[i].patch.cols;
-        for (int u=0;u<hierarchy->firstLayer[i].patch.cols;u++){
-            for (int v=0;v<hierarchy->firstLayer[i].patch.rows;v++){
-                hop3d::PointNormal point(Vec3((u-(cols/2))*0.001,(v-(cols/2))*0.001,hierarchy->firstLayer[i].patch.at<double>(u,v)), hierarchy->firstLayer[i].normal);
-                cloud.pointCloudNormal.push_back(point);
+    if (updateHierarchyFlag){
+        updateHierarchyFlag = false;
+        mtxHierarchy.lock();
+        for (size_t i=0; i<hierarchy->firstLayer.size(); i++){
+            hop3d::PointCloud cloud;
+            int cols = hierarchy->firstLayer[i].patch.cols;
+            for (int u=0;u<hierarchy->firstLayer[i].patch.cols;u++){
+                for (int v=0;v<hierarchy->firstLayer[i].patch.rows;v++){
+                    if (hierarchy->firstLayer[i].patch.at<double>(u,v)!=0){
+                        hop3d::PointNormal point(Vec3((u-(cols/2))*config.pixelSize,(v-(cols/2))*config.pixelSize,hierarchy->firstLayer[i].patch.at<double>(u,v)), hierarchy->firstLayer[i].normal);
+                        cloud.pointCloudNormal.push_back(point);
+                    }
+                }
             }
+            cloudsList.push_back(createCloudList(cloud));
         }
-        //hop3d::Filter.patch
-        //hop3d::Cloud cloud;
-        createCloudList(std::make_pair(hierarchy->firstLayer[i].id, cloud));
+        mtxHierarchy.unlock();
     }
-    mtxHierarchy.unlock();
 }
 
 /// Draw point clouds
 void QGLVisualizer::drawPointClouds(void){
-/*    mtxPointClouds.lock();
-    for (int i = 0;i<pointClouds.size();i++){
-        mtxCamTrajectory.lock();
-        if (camTrajectory.size()>imagesIds[i]){
-            Mat34 camPose = camTrajectory[imagesIds[i]].pose;
-            mtxCamTrajectory.unlock();
-            float_type GLmat[16]={camPose(0,0), camPose(1,0), camPose(2,0), camPose(3,0), camPose(0,1), camPose(1,1), camPose(2,1), camPose(3,1), camPose(0,2), camPose(1,2), camPose(2,2), camPose(3,2), camPose(0,3), camPose(1,3), camPose(2,3), camPose(3,3)};
-            glPushMatrix();
-                glMultMatrixd(GLmat);
-                glPointSize(config.cloudPointSize);
-                glCallList(cloudsList[i]);
-            glPopMatrix();
-        }
+    //mtxPointClouds.lock();
+    for (size_t i = 0;i<cloudsList.size();i++){
+        double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.layer1dist*double(i)-((double)cloudsList.size()/2)*config.layer1dist), 0, 0.1, 1};
+        glPushMatrix();
+            glMultMatrixd(GLmat);
+            glPointSize((float)config.cloudPointSize);
+            glCallList(cloudsList[i]);
+        glPopMatrix();
     }
-    mtxPointClouds.unlock();
-    */
+    //mtxPointClouds.unlock();
 }
 
 /// Create point cloud List
-GLuint QGLVisualizer::createCloudList(const std::pair<int,PointCloud>& pointCloud){
+GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud){
     // create one display list
     GLuint index = glGenLists(1);
-
     // compile the display list, store a triangle in it
     glNewList(index, GL_COMPILE);
         glBegin(GL_POINTS);
-        for (size_t n = 0; n < pointCloud.second.pointCloudNormal.size(); n++){
+        for (size_t n = 0; n < pointCloud.pointCloudNormal.size(); n++){
             glColor3ub(200,200,200);
             //glColor3ub(pointCloud.second.pointCloudNormal[n].r, pointCloud.second.pointCloudNormal[n].g, pointCloud.second.pointCloudNormal[n].b);
-            glVertex3d(pointCloud.second.pointCloudNormal[n].position(0),
-                       pointCloud.second.pointCloudNormal[n].position(1),
-                       pointCloud.second.pointCloudNormal[n].position(2));
+            glVertex3d(pointCloud.pointCloudNormal[n].position(0),
+                      pointCloud.pointCloudNormal[n].position(1),
+                      pointCloud.pointCloudNormal[n].position(2));
         }
         glEnd();
     glEndList();
@@ -210,6 +207,9 @@ GLuint QGLVisualizer::createCloudList(const std::pair<int,PointCloud>& pointClou
 void QGLVisualizer::draw(){
     // Here we are in the world coordinate system. Draw unit size axis.
     drawAxis();
+    //drawEllipsoid(Vec3(0,0,0),Mat33::Identity());
+    drawPointClouds();
+    updateHierarchy();
 }
 
 /// draw objects

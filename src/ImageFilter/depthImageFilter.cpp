@@ -36,8 +36,6 @@ const std::string& DepthImageFilter::getName() const {
 
 ///compute set of octets from set of the depth images
 void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Seq& octets){
-    depthImage.type();//!!
-    octets.size();//!!
     octets.clear();
 
     int filterSize = filters[0].patch.cols;

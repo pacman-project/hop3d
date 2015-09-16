@@ -40,10 +40,23 @@ public:
             model->FirstChildElement( "background" )->QueryDoubleAttribute("alpha", &rgba[3]);
             backgroundColor.setRedF(rgba[0]); backgroundColor.setGreenF(rgba[1]);
             backgroundColor.setBlueF(rgba[2]); backgroundColor.setAlphaF(rgba[3]);
+            model->FirstChildElement( "pointCloud" )->QueryBoolAttribute("drawPointClouds", &drawPointClouds);
+            model->FirstChildElement( "pointCloud" )->QueryDoubleAttribute("cloudPointSize", &cloudPointSize);
+
+            model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("pixelSize", &pixelSize);
+            model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("layer1dist", &layer1dist);
         }
         public:
         /// Background color
         QColor backgroundColor;
+        /// draw point clouds
+        bool drawPointClouds;
+        /// point size
+        double cloudPointSize;
+        /// hierarchy pixel size in patch
+        double pixelSize;
+        /// distance between filters
+        double layer1dist;
     };
 
     /// Construction
@@ -70,6 +83,12 @@ private:
     /// mtex to lock hierarchy
     std::mutex mtxHierarchy;
 
+    /// updateHierarchy
+    bool updateHierarchyFlag;
+
+    /// cloud list
+    std::vector<GLuint> cloudsList;
+
     /// draw objects
     void draw();
 
@@ -89,7 +108,7 @@ private:
     void drawPointClouds(void);
 
     /// Create point cloud List
-    GLuint createCloudList(const std::pair<int,hop3d::PointCloud>& pointCloud);
+    GLuint createCloudList(hop3d::PointCloud& pointCloud);
 
     /// Draw ellipsoid
     void drawEllipsoid(unsigned int uiStacks, unsigned int uiSlices, double fA, double fB, double fC) const;
