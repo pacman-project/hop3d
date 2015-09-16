@@ -43,13 +43,14 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
     int overlapRf = 1; //overlap of the receptive fields in octets
     int offset = int(filterSize/2); //casting discards fractional part
 
-
+//filters.size()
 
     hop3d::ImagesDisplay displayer;
     std::vector<cv::Mat> filteredImages(filters.size());
     //applying all the filters to an image
     unsigned long int e1 = cv::getTickCount();
-#pragma omp parallel for
+
+//#pragma omp parallel for
     for(int iterF = 0 ; iterF < filters.size(); iterF++)
     {
         cv::Mat filteredImage(depthImage.rows-(offset),depthImage.cols-(offset), cv::DataType<double>::type,cv::Scalar(0));
@@ -149,6 +150,7 @@ void DepthImageFilter::setFilters(std::string patchesFileName, std::string norma
 
 int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, Filter &filter, cv::Mat &filteredImage)
 {
+
     //std::cout << "Applying filter number: " << filter.id << std::endl;
     int filterSize = filter.patch.cols; //size of the applied filter
     int offset = int(filterSize/2);     //casting discards fractional part
@@ -163,48 +165,33 @@ int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, F
     cv::Mat loadedFilter;
     cv::Mat loadedMask;
     loadedFilter = filter.patch.clone();
-    loadedMask = filter.mask.clone();
+    filter.mask.convertTo(loadedMask,CV_8U);
     cv::transpose(loadedFilter,loadedFilter);
     cv::transpose(loadedMask,loadedMask);
     int numActive = cv::countNonZero(loadedMask);
     //looping over whole image
+    cv::Mat imageRoi(filterSize,filterSize, cv::DataType<double>::type);
+    cv::Mat responseTemp(filterSize,filterSize, cv::DataType<double>::type);
+    cv::Mat subResult(filterSize,filterSize, cv::DataType<double>::type);
     for(int i = offset; i < depthImageDouble.rows-(offset);i++){
         for(int j = offset; j < depthImageDouble.cols-(offset);j++){
-            cv::Mat responseTemp(filterSize,filterSize, cv::DataType<double>::type);
-            cv::Mat imageRoi(filterSize,filterSize, cv::DataType<double>::type);
-            cv::Mat subResult(filterSize,filterSize, cv::DataType<double>::type);
-            cv::Rect regionOfInterest = cv::Rect(j-offset, i-offset,filterSize,filterSize);
 
-            //have to use clone otherwise it will go along different blocks of memory after performing substract
-            //simple ROI is just a change of header to the same file when = is used it will start to point to the data in this other Mat
-            imageRoi = depthImageDouble(regionOfInterest).clone();
+            cv::Rect regionOfInterest = cv::Rect(j-offset, i-offset,filterSize,filterSize);
+            imageRoi = depthImageDouble(regionOfInterest);
             double middleValue = imageRoi.at<double>(offset,offset);
-//                std::cout << "middleValue: " << middleValue << std::endl;
-            cv::subtract(imageRoi,cv::Scalar(middleValue),subResult,);
-//                std::cout << "imageRoi " << i << "; " << j << ": " << std::endl << imageRoi << std::endl << std::endl;
-//                std::cout << "filters " << i << "; " << j << ": " << std::endl << filters[iterF].patch << std::endl << std::endl;
-//                std::cout << "subResult " << i << "; " << j << ": " << std::endl << subResult << std::endl << std::endl;
+            cv::subtract(imageRoi,cv::Scalar(middleValue),subResult,loadedMask);
             cv::absdiff(subResult,loadedFilter,responseTemp);
-            responseTemp = responseTemp.mul(loadedMask);
-            //responseTemp = cv::abs(responseTemp);
-//                std::cout << "responseTemp " << i << "; " << j << ": " << std::endl << responseTemp << std::endl << std::endl;
             double s = cv::sum(responseTemp)[0];
-            //condition not to take into account boundaries of the object
-            if (s > 0.8 || s < -0.1) s = 0;
+            if (s > 0.8) s = 0;
             //relation to number of active elements in the filter + scaling to get rid of problems with small floating point values
             else s *=(10000/numActive);
-
-            //std::cout << "Value of s: " << i << "; " << j << ": " << s << std::endl;
-
-            filteredImageTemp.at<double>(i-offset,j-offset) = s;
-
-//                displayer.displayDepthImage(depthImageDouble);
-            imageRoi.release();
-            subResult.release();
-            responseTemp.release();
+            filteredImage.at<double>(i-offset,j-offset) = s;
         }
     }
-    filteredImage = filteredImageTemp.clone();
+    imageRoi.release();
+    subResult.release();
+    responseTemp.release();
+    //filteredImage = filteredImageTemp.clone();
     filteredImageTemp.release();
     loadedFilter.release();
     loadedMask.release();
