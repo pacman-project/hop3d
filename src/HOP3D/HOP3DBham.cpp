@@ -83,12 +83,22 @@ void HOP3DBham::learn(){
     std::vector<cv::Mat> vecImages;
     hop3d::Reader reader;
     reader.readMultipleImages("../../resources/depthImages",vecImages);
-//    imageFilterer->computeOctets(vecImages[0],octets);
-
+    imageFilterer->computeOctets(vecImages[0],octets);
     std::cout << "Compute statistics for " << octets.size() << " octets\n";
     statsBuilder->computeStatistics(octets, hierarchy.get()->firstLayer, dictionary);
     std::cout << "Dictionary size: " << dictionary.size() << "\n";
-    //dictionary[0].print();
+    /*for (int i=0; i<dictionary.size();i++){
+        for (int n=0;n<3;n++){
+            for (int m=0;m<3;m++){
+                if ((dictionary[i].partIds[n][m]<0)||(dictionary[i].partIds[n][m]>=hierarchy.get()->firstLayer.size())){
+                    std::cout << "[art: \n";
+                    getchar();
+                    dictionary[i].print();
+                    getchar();
+                }
+            }
+        }
+    }*/
     partSelector->selectParts(dictionary, *hierarchy);
     std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
     hierarchy.get()->viewDependentLayers[0]=dictionary;

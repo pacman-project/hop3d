@@ -60,7 +60,7 @@ private:
     void fit2clusters(const std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewDependentPart::Seq>& clusters);
 
     /// compute centroids for give clusters
-    void computeCentroids(const std::vector<ViewDependentPart::Seq>& clusters, std::vector<int>& centroids, const Hierarchy& hierarchy);
+    void computeCentroids(const std::vector<ViewDependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy);
 };
 }
 #endif // PART_SELECTOR_MEAN_H_INCLUDED

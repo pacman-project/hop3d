@@ -71,7 +71,7 @@ public:
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters);
 
     /// Print
-    void print();
+    void print() const;
 };
 
 class ViewIndependentPart : public Part{
