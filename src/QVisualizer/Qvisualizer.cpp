@@ -76,16 +76,18 @@ public:
 
 QGLVisualizer::QGLVisualizer(void) {
     hierarchy.reset(new Hierarchy());
+    cloudsListLayers.resize(6);
 }
 
 /// Construction
-QGLVisualizer::QGLVisualizer(Config _config): config(_config){
+QGLVisualizer::QGLVisualizer(Config _config): config(_config), updateHierarchyFlag(false){
     hierarchy.reset(new Hierarchy("configGlobal.xml"));
+    cloudsListLayers.resize(6);
 }
 
 /// Construction
 QGLVisualizer::QGLVisualizer(std::string configFile) :
-        config(configFile) {
+        config(configFile), updateHierarchyFlag(false) {
     tinyxml2::XMLDocument configXML;
     std::string filename = "../../resources/" + configFile;
     configXML.LoadFile(filename.c_str());
@@ -158,14 +160,18 @@ void QGLVisualizer::updateHierarchy(){
             int cols = hierarchy->firstLayer[i].patch.cols;
             for (int u=0;u<hierarchy->firstLayer[i].patch.cols;u++){
                 for (int v=0;v<hierarchy->firstLayer[i].patch.rows;v++){
-                    if (hierarchy->firstLayer[i].patch.at<double>(u,v)!=0){
+                    if (hierarchy->firstLayer[i].mask.at<double>(u,v)!=0){
                         hop3d::PointNormal point(Vec3((u-(cols/2))*config.pixelSize,(v-(cols/2))*config.pixelSize,hierarchy->firstLayer[i].patch.at<double>(u,v)), hierarchy->firstLayer[i].normal);
                         cloud.pointCloudNormal.push_back(point);
                     }
                 }
             }
-            cloudsList.push_back(createCloudList(cloud));
+            cloudsListLayers[0].push_back(createCloudList(cloud));
         }
+        for (auto it = hierarchy->viewDependentLayers[0].begin(); it!=hierarchy->viewDependentLayers[0].end(); it++){
+            cloudsListLayers[1].push_back(createCloudList(*it));
+        }
+        linksLists.push_back(createLinksList());
         mtxHierarchy.unlock();
     }
 }
@@ -173,15 +179,44 @@ void QGLVisualizer::updateHierarchy(){
 /// Draw point clouds
 void QGLVisualizer::drawPointClouds(void){
     //mtxPointClouds.lock();
-    for (size_t i = 0;i<cloudsList.size();i++){
-        double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.layer1dist*double(i)-((double)cloudsList.size()/2)*config.layer1dist), 0, 0.1, 1};
+    for (size_t i = 0;i<cloudsListLayers[0].size();i++){
+        double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.layer1dist*double(i)-((double)cloudsListLayers[0].size()/2)*config.layer1dist), 0, 0.1, 1};
         glPushMatrix();
             glMultMatrixd(GLmat);
             glPointSize((float)config.cloudPointSize);
-            glCallList(cloudsList[i]);
+            glCallList(cloudsListLayers[0][i]);
+        glPopMatrix();
+    }
+    for (size_t i = 0;i<cloudsListLayers[1].size();i++){
+        double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)((7*config.layer1dist)*double(i)-((double)cloudsListLayers[1].size()/2)*(7*config.layer1dist)), 0, 0.3, 1};
+        glPushMatrix();
+            glMultMatrixd(GLmat);
+            glCallList(cloudsListLayers[1][i]);
         glPopMatrix();
     }
     //mtxPointClouds.unlock();
+}
+
+/// Create point cloud List
+GLuint QGLVisualizer::createCloudList(ViewDependentPart& part){
+    // create one display list
+    GLuint index = glGenLists(1);
+    // compile the display list, store a triangle in it
+    glNewList(index, GL_COMPILE);
+    glPushMatrix();
+    for (size_t n = 0; n < part.partIds.size(); n++){
+        for (size_t m = 0; m < part.partIds[n].size(); m++){
+            Vec3 pos(config.pixelSize*part.gaussians[n][m].mean(0), config.pixelSize*part.gaussians[n][m].mean(1), part.gaussians[n][m].mean(2));
+            double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
+            glPushMatrix();
+                glMultMatrixd(GLmat);
+                glCallList(cloudsListLayers[0][part.partIds[n][m]]);
+            glPopMatrix();
+        }
+    }
+    glPopMatrix();
+    glEndList();
+    return index;
 }
 
 /// Create point cloud List
@@ -203,11 +238,54 @@ GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud){
     return index;
 }
 
+/// Create layer 2 layer List
+GLuint QGLVisualizer::createLinksList(void){
+    // create one display list
+    GLuint index = glGenLists(1);
+    // compile the display list, store a triangle in it
+    glNewList(index, GL_COMPILE);
+        glLineWidth((float)config.layer2LayerWidth);
+        glColor4d(config.layer2LayerColor.red(), config.layer2LayerColor.green(), config.layer2LayerColor.blue(), config.layer2LayerColor.alpha());
+        glBegin(GL_LINES);
+        int partNo=0;
+        for (auto it = hierarchy->viewDependentLayers[0].begin(); it!=hierarchy->viewDependentLayers[0].end(); it++){
+            std::vector<int> filterIds;
+            for (size_t n = 0; n < it->partIds.size(); n++){
+                for (size_t m = 0; m < it->partIds[n].size(); m++){
+                    filterIds.push_back(it->partIds[n][m]);
+                }
+            }
+            auto itFilter = std::unique (filterIds.begin(), filterIds.end());
+            filterIds.resize( std::distance(filterIds.begin(),itFilter) );
+            for (size_t i=0;i<filterIds.size();i++){
+                // position of the i-th filter
+                Vec3 filterPos((double)(config.layer1dist*double(filterIds[i])-((double)cloudsListLayers[0].size()/2)*config.layer1dist), 0, 0.1);
+                glVertex3d(filterPos(0), filterPos(1), filterPos(2));
+                // position of the i-th part
+                Vec3 partPos((double)((7*config.layer1dist)*double(partNo)-((double)cloudsListLayers[1].size()/2)*(7*config.layer1dist)), 0, 0.3);
+                glVertex3d(partPos(0), partPos(1), partPos(2));
+            }
+            partNo++;
+        }
+        glEnd();
+    glEndList();
+    return index;
+}
+
+/// Draw layer 2 layer links
+void QGLVisualizer::drawLayer2Layer(void){
+    for (size_t i = 0;i<linksLists.size();i++){
+        glCallList(linksLists[i]);
+    }
+}
+
 /// draw objects
 void QGLVisualizer::draw(){
     // Here we are in the world coordinate system. Draw unit size axis.
     drawAxis();
     //drawEllipsoid(Vec3(0,0,0),Mat33::Identity());
+    if (config.drawLayer2Layer)
+        drawLayer2Layer();
     drawPointClouds();
     updateHierarchy();
 }

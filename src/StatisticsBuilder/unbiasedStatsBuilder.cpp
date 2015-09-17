@@ -57,7 +57,7 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, c
     if (config.verbose==1){
         std::cout << "done.\n";
     }
-    size_t partId=filters.size()+1;
+    size_t partId=filters.size();
     if (config.verbose==1){
         std::cout << "Compute Gaussians for " << groups.size() << " groups...\n";
     }

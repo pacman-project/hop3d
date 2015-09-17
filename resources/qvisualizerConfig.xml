@@ -5,4 +5,5 @@
 	<hierarchy pixelSize="0.001" layer1dist="0.01"></hierarchy>
 	<background red="0.2" green="0.2" blue="0.2" alpha="1.0"></background>
 	<pointCloud drawPointClouds="true" cloudPointSize="3"></pointCloud>
+	<layer2layer drawLayer2Layer="true" red="0.0" green="0.0" blue="0.8" alpha="0.1" width="0.5"></layer2layer>
   </VisualizerConfig>

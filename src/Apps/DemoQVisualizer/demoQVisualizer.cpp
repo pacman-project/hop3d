@@ -12,8 +12,8 @@ using namespace std;
 hop3d::HOP3D* lhop3d;
 // run HOP3D
 void runHOP3D(){
-    std::cout << "Press Enter to start\n";
-    getchar();
+    //std::cout << "Press Enter to start\n";
+    //getchar();
     lhop3d->learn();
 }
 

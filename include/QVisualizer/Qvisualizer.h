@@ -45,6 +45,15 @@ public:
 
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("pixelSize", &pixelSize);
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("layer1dist", &layer1dist);
+
+            model->FirstChildElement( "layer2layer" )->QueryBoolAttribute("drawLinks", &drawLayer2Layer);
+            model->FirstChildElement( "layer2layer" )->QueryDoubleAttribute("red", &rgba[0]);
+            model->FirstChildElement( "layer2layer" )->QueryDoubleAttribute("green", &rgba[1]);
+            model->FirstChildElement( "layer2layer" )->QueryDoubleAttribute("blue", &rgba[2]);
+            model->FirstChildElement( "layer2layer" )->QueryDoubleAttribute("alpha", &rgba[3]);
+            model->FirstChildElement( "layer2layer" )->QueryDoubleAttribute("width", &layer2LayerWidth);
+            layer2LayerColor.setRedF(rgba[0]); layer2LayerColor.setGreenF(rgba[1]);
+            layer2LayerColor.setBlueF(rgba[2]); layer2LayerColor.setAlphaF(rgba[3]);
         }
         public:
         /// Background color
@@ -57,6 +66,12 @@ public:
         double pixelSize;
         /// distance between filters
         double layer1dist;
+        /// Draw layer 2 layer link
+        bool drawLayer2Layer;
+        /// link color color
+        QColor layer2LayerColor;
+        /// layer2layer link width
+        double layer2LayerWidth;
     };
 
     /// Construction
@@ -87,7 +102,10 @@ private:
     bool updateHierarchyFlag;
 
     /// cloud list
-    std::vector<GLuint> cloudsList;
+    std::vector< std::vector<GLuint> > cloudsListLayers;
+
+    /// layer2layer list
+    std::vector< GLuint > linksLists;
 
     /// draw objects
     void draw();
@@ -109,6 +127,15 @@ private:
 
     /// Create point cloud List
     GLuint createCloudList(hop3d::PointCloud& pointCloud);
+
+    /// Create point cloud List
+    GLuint createCloudList(hop3d::ViewDependentPart& part);
+
+    /// Create layer 2 layer List
+    GLuint createLinksList(void);
+
+    /// Draw layer 2 layer links
+    void drawLayer2Layer(void);
 
     /// Draw ellipsoid
     void drawEllipsoid(unsigned int uiStacks, unsigned int uiSlices, double fA, double fB, double fC) const;
