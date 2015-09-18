@@ -105,10 +105,9 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                         octetTemp.filterIds[octetIter/3][octetIter%3] = octetIdRoi.at<int>(maxLoc.x,maxLoc.y);
                         octetTemp.responses[octetIter/3][octetIter%3] = octetRoi.at<double>(maxLoc.x,maxLoc.y);
                         //searching within image
-                        maxLoc.x +=(l+j+offset);
-                        maxLoc.y +=(k+i+offset);
-                        double depthPoint;
-                        depthPoint = depthImage.at<int>(maxLoc);
+                        maxLoc.x +=(l+(j-octetOffset)+offset);
+                        maxLoc.y +=(k+(i-octetOffset)+offset);
+                        double  depthPoint = (double(depthImage.at<unsigned short>(maxLoc))/3000);
                         octetTemp.filterPos[octetIter/3][octetIter%3] = hop3d::ImageCoordsDepth(maxLoc.x,maxLoc.y,depthPoint);
                         octetIter++;
                         octetRoi.release();
