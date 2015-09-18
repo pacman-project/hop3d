@@ -31,7 +31,7 @@ public:
     virtual const std::string& getName() const {return name;};
 
     /// compute statistics for the set of octets
-    virtual void computeStatistics(const std::vector<Octet>& octets, const Filter::Seq& filters, ViewDependentPart::Seq& dictionary) = 0;
+    virtual void computeStatistics(const std::vector<Octet>& octets, int layerNo, int startId, ViewDependentPart::Seq& dictionary) = 0;
 
     /// Virtual descrutor
     virtual ~StatsBuilder() {

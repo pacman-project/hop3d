@@ -32,7 +32,7 @@ public:
     virtual const std::string& getName() const {return name;};
 
     /// Select parts from the initial vocabulary
-    virtual void selectParts(ViewDependentPart::Seq& dictionary, Hierarchy& hierarchy) = 0;
+    virtual void selectParts(ViewDependentPart::Seq& dictionary, Hierarchy& hierarchy, int layerNo) = 0;
 
     /// Virtual descrutor
     virtual ~PartSelector() {

@@ -63,12 +63,12 @@ int main(void){
         imageFilterer->computeOctets(vecImages[0],octets);
 
         hop3d::ViewDependentPart::Seq dictionary;
-        statsBuilder->computeStatistics(octets, hierarchy.firstLayer, dictionary);
+        statsBuilder->computeStatistics(octets, 2, (int)hierarchy.firstLayer.size(), dictionary);
         std::cout << "groups size: " << dictionary.size() << "\n";
         dictionary[0].print();
 
         hop3d::PartSelector* partSelector = hop3d::createPartSelectorMean(selectorConfig);
-        partSelector->selectParts(dictionary, hierarchy);
+        partSelector->selectParts(dictionary, hierarchy, 2);
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
         hierarchy.viewDependentLayers[0]=dictionary;
 

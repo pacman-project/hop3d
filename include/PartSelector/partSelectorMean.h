@@ -30,7 +30,7 @@ public:
     PartSelectorMean(std::string config);
 
     /// Select parts from the initial vocabulary
-    void selectParts(ViewDependentPart::Seq& dictionary, Hierarchy& hierarchy);
+    void selectParts(ViewDependentPart::Seq& dictionary, Hierarchy& hierarchy, int layerNo);
 
     /// Destruction
     ~PartSelectorMean(void);
@@ -44,8 +44,10 @@ public:
         public:
             /// Verbose
             int verbose;
-            /// Clusters no
-            int clustersNo;
+            /// Clusters no -- first layer
+            int clustersSecondLayer;
+            /// Clusters no -- second layer
+            int clustersThirdLayer;
             /// Clustering -- max number of iterations
             int maxIter;
     };

@@ -29,7 +29,7 @@ public:
     /// Type of the part
     Type type;
 
-    /// Id of the neighbouring parts from the same layer
+    /// Ids (index in the vocabulary) of the neighbouring parts from the i-1 layer
     std::array<std::array<int,3>,3> partIds;
 
     /// Construction
@@ -70,6 +70,8 @@ public:
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters);
 
+    /// compute distance between view dependent parts
+    static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters);
     /// Print
     void print() const;
 };

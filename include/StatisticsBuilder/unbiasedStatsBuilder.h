@@ -30,7 +30,7 @@ public:
     UnbiasedStatsBuilder(std::string config);
 
     /// compute statistics for the set of octets
-    void computeStatistics(const std::vector<Octet>& octets, const Filter::Seq& filters, ViewDependentPart::Seq& dictionary);
+    void computeStatistics(const std::vector<Octet>& octets, int layerNo, int startId, ViewDependentPart::Seq& dictionary);
 
     /// Destruction
     ~UnbiasedStatsBuilder(void);
@@ -48,7 +48,10 @@ public:
 
 private:
     /// Is octet in vector
-    bool isOctetInGroups(const Octet& octet, const Filter::Seq& filters, std::vector<Octet::Seq>& groups, std::vector<Octet::Seq>::iterator& groupIt) const;
+    bool isOctetInGroups(const Octet& octet, std::vector<Octet::Seq>& groups, std::vector<Octet::Seq>::iterator& groupIt) const;
+
+    /// compute statistics for the set of octets
+    void groupOctets(const std::vector<Octet>& octets, std::vector<Octet::Seq>& groups);
 
     /// Compute Gaussians for the grooup of octets
     void computeGaussians(Octet::Seq& group, ViewDependentPart& part) const;
@@ -59,8 +62,6 @@ private:
 private:
     /// Configuration of the module
     Config config;
-    /// Set of filters
-    Filter::Seq filters;
 };
 }
 #endif // UNBIASED_STATISTICS_BUILDER_H_INCLUDED

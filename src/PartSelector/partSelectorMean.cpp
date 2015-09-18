@@ -30,17 +30,19 @@ PartSelectorMean::Config::Config(std::string configFilename){
     if (verbose == 1) {
         std::cout << "Load part selector parameters...\n";
     }
-    group->FirstChildElement( "parameters" )->QueryIntAttribute("clustersNo", &clustersNo);
+    group->FirstChildElement( "parameters" )->QueryIntAttribute("clustersSecondLayer", &clustersSecondLayer);
+    group->FirstChildElement( "parameters" )->QueryIntAttribute("clustersThirdLayer", &clustersThirdLayer);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("maxIter", &maxIter);
 }
 
 /// Select parts from the initial vocabulary
-void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy& hierarchy){
+void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy& hierarchy, int layerNo){
+    int clustersNo = (layerNo==2) ? config.clustersSecondLayer : config.clustersThirdLayer;
     if (config.verbose==1){
         std::cout << "Initial number of words in dictionary: " << dictionary.size() << "\n";
-        std::cout << "Desired number of words: " << config.clustersNo << "\n";
+        std::cout << "Desired number of words: " << clustersNo << "\n";
     }
-    std::vector<int> centroids(config.clustersNo);//index in dictionary of part assigned to the centroid;
+    std::vector<int> centroids(clustersNo);//index in dictionary of part assigned to the centroid;
     std::srand ( unsigned ( std::time(0) ) );
     std::vector<int> partsIds(dictionary.size(), 0);
     for (size_t i=0;i<dictionary.size();i++)
@@ -49,7 +51,7 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy
     for (size_t i=0;i<centroids.size();i++){//assign random centers of centroid
         centroids[i] = partsIds[i];
     }
-    std::vector<ViewDependentPart::Seq> clusters(config.clustersNo);
+    std::vector<ViewDependentPart::Seq> clusters(clustersNo);
     for (int i=0;i<config.maxIter;i++){
         //std::cout << "iter:  " << i << "\n";
         if (config.verbose==2){
@@ -58,15 +60,6 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy
                 std::cout << dictionary[centroids[j]].id << ", ";
             }
             std::cout << "\n";
-            /*std::cout << "clusters: ";
-            for (size_t j=0;j<clusters.size();j++){
-                std::cout << "{";
-                for (size_t k=0;k<clusters[j].size();k++){
-                    std::cout << clusters[j][k].id << ", ";
-                }
-                std::cout << "}, ";
-            }
-            std::cout << "\n";*/
         }
         fit2clusters(centroids, dictionary, hierarchy, clusters);
         computeCentroids(clusters, centroids, dictionary, hierarchy);
@@ -76,15 +69,6 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy
                 std::cout << dictionary[centroids[j]].id << ", ";
             }
             std::cout << "\n";
-            /*std::cout << "clusters2: ";
-            for (size_t j=0;j<clusters.size();j++){
-                std::cout << "{";
-                for (size_t k=0;k<clusters[j].size();k++){
-                    std::cout << clusters[j][k].id << ", ";
-                }
-                std::cout << "}, ";
-            }
-            std::cout << "\n";*/
         }
     }
     ViewDependentPart::Seq newDictionary;
@@ -111,12 +95,16 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
         int clusterNo = 0;
         int centroidId = 0;
         for (auto itCentr = centroids.begin();itCentr!=centroids.end();itCentr++){//for each cluster
+            double dist = 0;
             if (it->layerId==2){//compute distance from centroid
-                double dist = ViewDependentPart::distance(*it,dictionary[*itCentr],hierarchy.firstLayer);
-                if (dist<minDist){
-                    minDist = dist;
-                    centroidId = clusterNo;
-                }
+                dist = ViewDependentPart::distance(*it,dictionary[*itCentr],hierarchy.firstLayer);
+            }
+            else if (it->layerId==3){//compute distance from centroid
+                dist = ViewDependentPart::distance(*it,dictionary[*itCentr], dictionary, hierarchy.firstLayer);
+            }
+            if (dist<minDist){
+                minDist = dist;
+                centroidId = clusterNo;
             }
             clusterNo++;
         }
@@ -142,6 +130,9 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
             for (auto itPart2 = itClust->begin(); itPart2!=itClust->end();itPart2++){//compute mean dist for each part as a centroid
                 if (itPart->layerId==2){
                     distSum+=ViewDependentPart::distance(*itPart,*itPart2,hierarchy.firstLayer);
+                }
+                else if (itPart->layerId==3){
+                    distSum+=ViewDependentPart::distance(*itPart,*itPart2, dictionary, hierarchy.firstLayer);
                 }
             }
             if (distSum<distMin){

@@ -1,4 +1,5 @@
 #include "Data/Part.h"
+#include "Data/Vocabulary.h"
 
 namespace hop3d {
 
@@ -39,4 +40,17 @@ double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDep
                 sum+=Filter::distance(filters[partA.partIds[i][j]], filters[partB.partIds[i][j]]);
     return sum;
 }
+
+/// compute distance between view dependent parts
+double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters){
+    if (partA.partIds==partB.partIds)//fast
+        return 0;
+    double sum=0;
+    for (size_t i=0; i<partA.partIds.size();i++)
+        for (size_t j=0; j<partA.partIds.size();j++)
+            if (partA.layerId==3)
+                sum+=distance(layer2vocabulary[partA.partIds[i][j]], layer2vocabulary[partB.partIds[i][j]], filters);
+    return sum;
+}
+
 }

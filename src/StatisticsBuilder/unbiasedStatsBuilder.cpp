@@ -32,16 +32,14 @@ UnbiasedStatsBuilder::Config::Config(std::string configFilename){
 }
 
 /// compute statistics for the set of octets
-void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, const Filter::Seq& filters, ViewDependentPart::Seq& dictionary){
-    std::vector<Octet::Seq> groups;
+void UnbiasedStatsBuilder::groupOctets(const std::vector<Octet>& octets, std::vector<Octet::Seq>& groups){
     std::vector<Octet::Seq>::iterator groupIter;
     if (config.verbose==1){
         std::cout << "Start ocetes grouping (n=" << octets.size() << ")...\n";
     }
     int iterNo=1;
     for (auto it=octets.begin();it!=octets.end();it++){ // grouping
-
-        if(!isOctetInGroups(*it, filters, groups, groupIter)){
+        if(!isOctetInGroups(*it, groups, groupIter)){
             Octet::Seq group; group.push_back(*it);
             groups.push_back(group);
         }
@@ -57,16 +55,22 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, c
     if (config.verbose==1){
         std::cout << "done.\n";
     }
-    size_t partId=filters.size();
+}
+
+/// compute statistics for the set of octets
+void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, int layerNo, int startId, ViewDependentPart::Seq& dictionary){
+    std::vector<Octet::Seq> groups;
+    groupOctets(octets, groups);
     if (config.verbose==1){
         std::cout << "Compute Gaussians for " << groups.size() << " groups...\n";
     }
-    iterNo=1;
+    size_t partId=startId;
+    int iterNo=1;
     for (auto it = groups.begin(); it!=groups.end(); it++){ //compute statistics
         ViewDependentPart part;
         computeGaussians(*it, part);
         part.partIds=it->back().filterIds;//copy octet
-        part.layerId = 2;
+        part.layerId = layerNo;
         part.id = (int)partId;
         partId++;
         dictionary.push_back(part);
@@ -111,9 +115,9 @@ void UnbiasedStatsBuilder::computeGaussian(const Octet::Seq& group, Gaussian3D& 
 }
 
 /// is octet in vector
-bool UnbiasedStatsBuilder::isOctetInGroups(const Octet& octet, const Filter::Seq& filters, std::vector<Octet::Seq>& groups, std::vector<Octet::Seq>::iterator& groupIt) const{
+bool UnbiasedStatsBuilder::isOctetInGroups(const Octet& octet, std::vector<Octet::Seq>& groups, std::vector<Octet::Seq>::iterator& groupIt) const{
     for (std::vector<Octet::Seq>::iterator it = groups.begin(); it!=groups.end(); it++){
-        if (Octet::distance(octet, it->back(), filters)==0){
+        if (octet.filterIds==it->back().filterIds){
             groupIt = it;
             return true;
         }
