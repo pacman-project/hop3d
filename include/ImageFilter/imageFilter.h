@@ -9,6 +9,7 @@
 
 #include "../Data/Defs.h"
 #include "Data/Vocabulary.h"
+#include "opencv2/cudaarithm.hpp"
 
 namespace hop3d {
 

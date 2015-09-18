@@ -2,8 +2,8 @@
 #define UTILITIES_IMAGESDISPLAY_H
 
 #include "Data/Defs.h"
-#include "opencv2/contrib/contrib.hpp"
 #include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 
 namespace hop3d {
 class ImagesDisplay

@@ -300,7 +300,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_UTILITIES)
         )
 
         ADD_LIBRARY(Utilities STATIC ${UTILITIES_SOURCES} ${UTILITIES_HEADERS})
-        target_link_libraries(Utilities tinyxml2 opencv_core opencv_highgui opencv_contrib ${Boost_LIBRARIES})
+        target_link_libraries(Utilities tinyxml2 opencv_core opencv_highgui opencv_imgproc -lopencv_imgcodecs ${Boost_LIBRARIES})
         INSTALL(TARGETS Utilities RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${UTILITIES_HEADERS} DESTINATION include/hop3d/Utilities/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_UTILITIES)

@@ -105,8 +105,8 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                         octetTemp.filterIds[octetIter/3][octetIter%3] = octetIdRoi.at<int>(maxLoc.x,maxLoc.y);
                         octetTemp.responses[octetIter/3][octetIter%3] = octetRoi.at<double>(maxLoc.x,maxLoc.y);
                         //searching within image
-                        maxLoc.x +=(l+j+octetOffset+offset);
-                        maxLoc.y +=(k+i+octetOffset+offset);
+                        maxLoc.x +=(l+j+offset);
+                        maxLoc.y +=(k+i+offset);
                         double depthPoint;
                         depthPoint = depthImage.at<int>(maxLoc);
                         octetTemp.filterPos[octetIter/3][octetIter%3] = hop3d::ImageCoordsDepth(maxLoc.x,maxLoc.y,depthPoint);
@@ -184,6 +184,7 @@ int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, F
     cv::Mat responseTemp(filterSize,filterSize, cv::DataType<double>::type);
     cv::Mat subResult(filterSize,filterSize, cv::DataType<double>::type);
     //first approach with TBB, then GPU
+
     for(int i = offset; i < depthImageDouble.rows-(offset);i++){
         for(int j = offset; j < depthImageDouble.cols-(offset);j++){
 
@@ -199,6 +200,66 @@ int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, F
             filteredImage.at<double>(i-offset,j-offset) = s;
         }
     }
+
+    imageRoi.release();
+    subResult.release();
+    responseTemp.release();
+    loadedFilter.release();
+    loadedMask.release();
+    return 0;
+
+}
+
+int DepthImageFilter::filterSingleImageSingleFilterCUDA(const cv::Mat &depthImage, Filter &filter, cv::Mat &filteredImage)
+{
+
+    cv::cuda::setDevice(0);
+    //std::cout << "Applying filter number: " << filter.id << std::endl;
+    int filterSize = filter.patch.cols; //size of the applied filter
+    int offset = int(filterSize/2);     //casting discards fractional part
+    //if (depthImage.depth() == CV_16U) std::cout << "CV_16U == unsigned short " << sizeof(unsigned short) << std::endl;
+    //depth image represented as double giving it geometrical relation
+    cv::Mat depthImageDouble(depthImage.cols,depthImage.rows, cv::DataType<double>::type);
+    depthImage.convertTo(depthImageDouble,CV_32F);
+    depthImageDouble =  depthImageDouble/3000;
+
+    cv::Mat loadedFilter;
+    cv::Mat loadedMask;
+    loadedFilter = filter.patch.clone();
+    filter.mask.convertTo(loadedMask,CV_8U);
+    cv::transpose(loadedFilter,loadedFilter);
+    cv::transpose(loadedMask,loadedMask);
+    int numActive = cv::countNonZero(loadedMask);
+    //looping over whole image
+    cv::Mat imageRoi(filterSize,filterSize, cv::DataType<double>::type);
+    cv::Mat responseTemp(filterSize,filterSize, cv::DataType<double>::type);
+    cv::Mat subResult(filterSize,filterSize, cv::DataType<double>::type);
+    //first approach with TBB, then GPU
+    cv::cuda::GpuMat depthImageDoubleG(cv::Size(depthImage.cols,depthImage.rows),CV_32F);
+      depthImageDoubleG.upload(depthImageDouble);
+    cv::cuda::GpuMat loadedFilterG(loadedFilter);
+    cv::cuda::GpuMat loadedMaskG(loadedMask);
+    cv::cuda::GpuMat imageRoiG;
+    cv::cuda::GpuMat responseTempG;
+    cv::cuda::GpuMat subResultG;
+    cv::cuda::GpuMat filteredImageG;
+
+    for(int i = offset; i < depthImageDouble.rows-(offset);i++){
+        for(int j = offset; j < depthImageDouble.cols-(offset);j++){
+
+            cv::Rect regionOfInterest = cv::Rect(j-offset, i-offset,filterSize,filterSize);
+            imageRoiG = depthImageDoubleG(regionOfInterest);
+            double middleValue = *(imageRoiG.data + imageRoiG.step * offset + offset*sizeof(float));
+            cv::subtract(imageRoiG,cv::Scalar(middleValue),subResultG,loadedMaskG);
+            cv::absdiff(subResultG,loadedFilterG,responseTempG);
+            double s = cv::sum(responseTempG)[0];
+            if (s > 0.8) s = 0;
+            //relation to number of active elements in the filter + scaling to get rid of problems with small floating point values
+            else s *=(10000/numActive);
+            //filteredImageG.at<double>(i-offset,j-offset) = s;
+        }
+    }
+    filteredImageG.download(filteredImage);
     imageRoi.release();
     subResult.release();
     responseTemp.release();
