@@ -147,7 +147,7 @@ private:
     GLuint createCloudList(hop3d::PointCloud& pointCloud);
 
     /// Create point cloud List
-    GLuint createPartList(hop3d::ViewDependentPart& part);
+    GLuint createPartList(hop3d::ViewDependentPart& part, int layerNo);
 
     /// Create clusters List
     GLuint createClustersList(hop3d::ViewDependentPart& part);
