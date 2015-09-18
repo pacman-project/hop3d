@@ -29,3 +29,13 @@ int hop3d::Writer::writePlyToFile(std::string fileName, const hop3d::PointCloud&
     return 0;
 
 }
+
+
+int hop3d::Writer::matrixToTxtFile(const cv::Mat &m, std::string filename){
+    std::ofstream myFile;
+    myFile.open (filename);
+    myFile << "M (default) = " << std::endl <<     m       << std::endl << std::endl;
+    myFile.close();
+
+    return 0;
+}

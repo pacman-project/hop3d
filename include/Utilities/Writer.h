@@ -16,7 +16,7 @@ public:
     /// Pointer
     typedef std::unique_ptr<Writer> Ptr;
     int writePlyToFile(std::string fileName, const hop3d::PointCloud& inputPointCloud, const std::vector<Eigen::Vector4i> &inputFaces);
-
+    int matrixToTxtFile(const cv::Mat &m, std::string filename);
 protected:
 
 private:
