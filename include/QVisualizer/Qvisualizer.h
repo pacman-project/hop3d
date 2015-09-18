@@ -54,6 +54,14 @@ public:
             model->FirstChildElement( "layer2layer" )->QueryDoubleAttribute("width", &layer2LayerWidth);
             layer2LayerColor.setRedF(rgba[0]); layer2LayerColor.setGreenF(rgba[1]);
             layer2LayerColor.setBlueF(rgba[2]); layer2LayerColor.setAlphaF(rgba[3]);
+
+            model->FirstChildElement( "clusters" )->QueryBoolAttribute("drawClusters", &drawClusters);
+            model->FirstChildElement( "clusters" )->QueryDoubleAttribute("red", &rgba[0]);
+            model->FirstChildElement( "clusters" )->QueryDoubleAttribute("green", &rgba[1]);
+            model->FirstChildElement( "clusters" )->QueryDoubleAttribute("blue", &rgba[2]);
+            model->FirstChildElement( "clusters" )->QueryDoubleAttribute("alpha", &rgba[3]);
+            clustersColor.setRedF(rgba[0]); clustersColor.setGreenF(rgba[1]);
+            clustersColor.setBlueF(rgba[2]); clustersColor.setAlphaF(rgba[3]);
         }
         public:
         /// Background color
@@ -72,6 +80,10 @@ public:
         QColor layer2LayerColor;
         /// layer2layer link width
         double layer2LayerWidth;
+        /// Draw clusters
+        bool drawClusters;
+        /// Cluster color
+        QColor clustersColor;
     };
 
     /// Construction
@@ -107,6 +119,9 @@ private:
     /// layer2layer list
     std::vector< GLuint > linksLists;
 
+    /// clusters list
+    std::vector< GLuint > clustersList;
+
     /// draw objects
     void draw();
 
@@ -125,11 +140,17 @@ private:
     /// Draw point clouds
     void drawPointClouds(void);
 
+    /// Draw clusters
+    void drawClusters(void);
+
     /// Create point cloud List
     GLuint createCloudList(hop3d::PointCloud& pointCloud);
 
     /// Create point cloud List
-    GLuint createCloudList(hop3d::ViewDependentPart& part);
+    GLuint createPartList(hop3d::ViewDependentPart& part);
+
+    /// Create clusters List
+    GLuint createClustersList(hop3d::ViewDependentPart& part);
 
     /// Create layer 2 layer List
     GLuint createLinksList(void);

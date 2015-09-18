@@ -169,9 +169,12 @@ void QGLVisualizer::updateHierarchy(){
             cloudsListLayers[0].push_back(createCloudList(cloud));
         }
         for (auto it = hierarchy->viewDependentLayers[0].begin(); it!=hierarchy->viewDependentLayers[0].end(); it++){
-            cloudsListLayers[1].push_back(createCloudList(*it));
+            cloudsListLayers[1].push_back(createPartList(*it));
         }
         linksLists.push_back(createLinksList());
+        for (auto it = hierarchy->viewDependentLayers[0].begin(); it!=hierarchy->viewDependentLayers[0].end(); it++){
+            clustersList.push_back(createClustersList(*it));
+        }
         mtxHierarchy.unlock();
     }
 }
@@ -182,6 +185,7 @@ void QGLVisualizer::drawPointClouds(void){
     for (size_t i = 0;i<cloudsListLayers[0].size();i++){
         double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.layer1dist*double(i)-((double)cloudsListLayers[0].size()/2)*config.layer1dist), 0, 0.1, 1};
         glPushMatrix();
+            glColor3ub(200,200,200);
             glMultMatrixd(GLmat);
             glPointSize((float)config.cloudPointSize);
             glCallList(cloudsListLayers[0][i]);
@@ -190,6 +194,7 @@ void QGLVisualizer::drawPointClouds(void){
     for (size_t i = 0;i<cloudsListLayers[1].size();i++){
         double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)((7*config.layer1dist)*double(i)-((double)cloudsListLayers[1].size()/2)*(7*config.layer1dist)), 0, 0.3, 1};
         glPushMatrix();
+            glColor3ub(200,200,200);
             glMultMatrixd(GLmat);
             glCallList(cloudsListLayers[1][i]);
         glPopMatrix();
@@ -197,8 +202,21 @@ void QGLVisualizer::drawPointClouds(void){
     //mtxPointClouds.unlock();
 }
 
+/// Draw clusters
+void QGLVisualizer::drawClusters(void){
+    //mtxPointClouds.lock();
+    for (size_t i = 0;i<clustersList.size();i++){
+        double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)((7*config.layer1dist)*double(i)-((double)cloudsListLayers[1].size()/2)*(7*config.layer1dist)), 0, 0.3, 1};
+        glPushMatrix();
+            glMultMatrixd(GLmat);
+            glCallList(clustersList[i]);
+        glPopMatrix();
+    }
+    //mtxPointClouds.unlock();
+}
+
 /// Create point cloud List
-GLuint QGLVisualizer::createCloudList(ViewDependentPart& part){
+GLuint QGLVisualizer::createPartList(ViewDependentPart& part){
     // create one display list
     GLuint index = glGenLists(1);
     // compile the display list, store a triangle in it
@@ -219,6 +237,32 @@ GLuint QGLVisualizer::createCloudList(ViewDependentPart& part){
     return index;
 }
 
+/// Create clusters List
+GLuint QGLVisualizer::createClustersList(ViewDependentPart& part){
+    // create one display list
+    GLuint index = glGenLists(1);
+    glNewList(index, GL_COMPILE);
+    glPushMatrix();
+    int componentNo=0;
+    for (auto itComp = part.group.begin(); itComp!=part.group.end();itComp++){
+        for (size_t n = 0; n < itComp->partIds.size(); n++){
+            for (size_t m = 0; m < itComp->partIds[n].size(); m++){
+                Vec3 pos(config.pixelSize*itComp->gaussians[n][m].mean(0), config.pixelSize*itComp->gaussians[n][m].mean(1), itComp->gaussians[n][m].mean(2));
+                double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1)-(double)((7*config.layer1dist)*double(componentNo+1)), pos(2), 1};
+                glPushMatrix();
+                    glMultMatrixd(GLmat);
+                    glColor4d(config.clustersColor.red(), config.clustersColor.green(), config.clustersColor.blue(), config.clustersColor.alpha());
+                    glCallList(cloudsListLayers[0][itComp->partIds[n][m]]);
+                glPopMatrix();
+            }
+        }
+        componentNo++;
+    }
+    glPopMatrix();
+    glEndList();
+    return index;
+}
+
 /// Create point cloud List
 GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud){
     // create one display list
@@ -227,7 +271,6 @@ GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud){
     glNewList(index, GL_COMPILE);
         glBegin(GL_POINTS);
         for (size_t n = 0; n < pointCloud.pointCloudNormal.size(); n++){
-            glColor3ub(200,200,200);
             //glColor3ub(pointCloud.second.pointCloudNormal[n].r, pointCloud.second.pointCloudNormal[n].g, pointCloud.second.pointCloudNormal[n].b);
             glVertex3d(pointCloud.pointCloudNormal[n].position(0),
                       pointCloud.pointCloudNormal[n].position(1),
@@ -286,6 +329,8 @@ void QGLVisualizer::draw(){
     //drawEllipsoid(Vec3(0,0,0),Mat33::Identity());
     if (config.drawLayer2Layer)
         drawLayer2Layer();
+    if (config.drawClusters)
+        drawClusters();
     drawPointClouds();
     updateHierarchy();
 }
