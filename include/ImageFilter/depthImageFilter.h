@@ -60,6 +60,10 @@ public:
         public:
             // number of filters
             int filtersNo;
+            // displaying variables and images for debugging
+            bool verbose;
+            //overlap of octet Receptive Fields
+            int overlapRf;
     };
 
 private:

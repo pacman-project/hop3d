@@ -26,9 +26,13 @@ DepthImageFilter::Config::Config(std::string configFilename){
         std::cout << "unable to load depth filter config file.\n";
     tinyxml2::XMLElement * model = config.FirstChildElement( "Filterer" );
     model->FirstChildElement( "parameters" )->QueryIntAttribute("filtersNo", &filtersNo);
+    model->FirstChildElement( "parameters" )->QueryBoolAttribute("verbose", &verbose);
+    model->FirstChildElement( "parameters" )->QueryIntAttribute("overlapRf", &overlapRf);
     std::cout << "Load filter parameters...\n";
     std::cout << "Filters no.: " << filtersNo << "\n";
-}
+    std::cout<< "Verbose: " << verbose << std::endl;
+    std::cout<< "Overlap of octets receptive fields: " << overlapRf << std::endl;
+ }
 
 const std::string& DepthImageFilter::getName() const {
     return name;
@@ -39,7 +43,6 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
     octets.clear();
 
     int filterSize = filters[0].patch.cols;
-    int overlapRf = 1; //overlap of the receptive fields in octets
     int offset = int(filterSize/2); //casting discards fractional part
 
 //filters.size()
@@ -71,14 +74,16 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
 
         nonMaximaSuppression(filteredImages,responseImage,idImage);
         // displaying the results
+        if(config.verbose){
         displayer.displayDepthImage(responseImage);
         displayer.displayDepthImage(idImage);
+        }
 
 //filling in octets
-         int octetSize = (filterSize-overlapRf)*2+filterSize;
+         int octetSize = (filterSize-config.overlapRf)*2+filterSize;
          int octetOffset = int(octetSize/2);
-         for(int i = octetOffset; i < responseImage.rows-(octetOffset-2*overlapRf);i+=(octetSize-overlapRf)){
-            for(int j = octetOffset; j < responseImage.cols-(octetOffset-2*overlapRf);j+=(octetSize-overlapRf)){
+         for(int i = octetOffset; i < responseImage.rows-(octetOffset);i+=(octetSize)){
+            for(int j = octetOffset; j < responseImage.cols-(octetOffset);j+=(octetSize)){
                 cv::Mat imageRoi(octetSize,octetSize, cv::DataType<double>::type);
                 cv::Mat idRoi(octetSize,octetSize, cv::DataType<int>::type);
                 cv::Rect regionOfInterest = cv::Rect(j-octetOffset, i-octetOffset,octetSize,octetSize);
@@ -88,8 +93,8 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                 idRoi = idImage(regionOfInterest).clone();
                 hop3d::Octet octetTemp;
                 int octetIter = 0;
-                for(int k = offset; k < imageRoi.rows-(offset);k+=(filterSize-overlapRf)){
-                    for(int l = offset; l < imageRoi.cols-(offset);l+=(filterSize-overlapRf)){
+                for(int k = offset; k < imageRoi.rows-(offset);k+=(filterSize-config.overlapRf)){
+                    for(int l = offset; l < imageRoi.cols-(offset);l+=(filterSize-config.overlapRf)){
                         cv::Mat octetRoi(filterSize,filterSize, cv::DataType<double>::type);
                         cv::Mat octetIdRoi(filterSize,filterSize, cv::DataType<int>::type);
                         cv::Rect subRegion = cv::Rect(l-offset, k-offset,filterSize,filterSize);
@@ -124,7 +129,18 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                     octetTemp.filterPos[posIter/3][posIter%3].u -= uVal;
                     octetTemp.filterPos[posIter/3][posIter%3].v -= vVal;
                     octetTemp.filterPos[posIter/3][posIter%3].depth -= depthVal;
+
                 }
+
+
+                if(config.verbose){
+                    for(int posIter = 0; posIter < octetIter; posIter++){
+                        if (posIter == 4) continue;
+                        std::cout << "(u,v,depth) neighbour [" << (posIter/3)-1  << ", " << (posIter%3)-1 << "]: ("<< octetTemp.filterPos[posIter/3][posIter%3].u << ", "<< octetTemp.filterPos[posIter/3][posIter%3].v << ", "<< octetTemp.filterPos[posIter/3][posIter%3].depth << ")\t";
+                    }
+                    std::cout << std::endl << "(u,v,depth) central: ("<< octetTemp.filterPos[1][1].u << ", "<< octetTemp.filterPos[1][1].v << ", "<< octetTemp.filterPos[1][1].depth << ")" << std::endl;
+                }
+
               octets.push_back(octetTemp);
               imageRoi.release();
               idRoi.release();

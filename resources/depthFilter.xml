@@ -3,5 +3,5 @@
   <!-- filter configuration -->
   <Filterer>
     <name>DepthFilter</name>
-    <parameters filtersNo="100"></parameters>
+    <parameters filtersNo="100" verbose="true" overlapRf="1"></parameters>
   </Filterer>
