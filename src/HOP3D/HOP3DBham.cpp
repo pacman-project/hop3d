@@ -107,7 +107,7 @@ void HOP3DBham::learn(){
         }
         for (size_t i=0;i<it.filterPos.size();i++){
             for (size_t j=0;j<it.filterPos[i].size();j++){
-                hop3d::ImageCoordsDepth coords(double(j*(4*filterSize-1))-double(4*filterSize-1)+distributionUV(generator), double(i*(4*filterSize-1))-double(4*filterSize-1)+distributionUV(generator), distributionDepth(generator));
+                hop3d::ImageCoordsDepth coords(double(j*(3*filterSize-1))-double(3*filterSize-1)+distributionUV(generator), double(i*(3*filterSize-1))-double(3*filterSize-1)+distributionUV(generator), distributionDepth(generator));
                 if ((i==(it.filterPos.size()/2))&&(j==(it.filterPos.size()/2))){
                     coords.u=0; coords.v=0; coords.depth=0;
                 }

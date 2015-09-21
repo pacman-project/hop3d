@@ -126,7 +126,7 @@ private:
     std::vector< std::vector<GLuint> > cloudsListLayers;
 
     /// layer2layer list
-    std::vector< GLuint > linksLists;
+    std::vector< std::vector< GLuint > > linksLists;
 
     /// clusters list
     std::vector< std::vector< GLuint > > clustersList;
@@ -162,7 +162,7 @@ private:
     GLuint createClustersList(hop3d::ViewDependentPart& part, int layerNo);
 
     /// Create layer 2 layer List
-    GLuint createLinksList(void);
+    GLuint createLinksList(int destLayerNo);
 
     /// Draw layer 2 layer links
     void drawLayer2Layer(void);
