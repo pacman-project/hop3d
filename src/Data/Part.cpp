@@ -36,8 +36,7 @@ double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDep
     double sum=0;
     for (size_t i=0; i<partA.partIds.size();i++)
         for (size_t j=0; j<partA.partIds.size();j++)
-            if (partA.layerId==2)
-                sum+=Filter::distance(filters[partA.partIds[i][j]], filters[partB.partIds[i][j]]);
+            sum+=Filter::distance(filters[partA.partIds[i][j]], filters[partB.partIds[i][j]]);
     return sum;
 }
 
@@ -48,8 +47,9 @@ double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDep
     double sum=0;
     for (size_t i=0; i<partA.partIds.size();i++)
         for (size_t j=0; j<partA.partIds.size();j++)
-            if (partA.layerId==3)
+            if (partA.layerId==3){
                 sum+=distance(layer2vocabulary[partA.partIds[i][j]], layer2vocabulary[partB.partIds[i][j]], filters);
+            }
     return sum;
 }
 

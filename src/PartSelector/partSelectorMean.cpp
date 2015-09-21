@@ -53,7 +53,11 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy
     }
     std::vector<ViewDependentPart::Seq> clusters(clustersNo);
     for (int i=0;i<config.maxIter;i++){
-        //std::cout << "iter:  " << i << "\n";
+        if (config.verbose==1){
+            if ((config.maxIter>10)&&i%((config.maxIter+1)/10)==0){
+                std::cout << "Iteration: " << i+1 << "/" << config.maxIter << "\n";
+            }
+        }
         if (config.verbose==2){
             std::cout << "centroids: ";
             for (size_t j=0;j<centroids.size();j++){

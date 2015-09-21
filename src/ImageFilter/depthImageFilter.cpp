@@ -75,8 +75,8 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
         nonMaximaSuppression(filteredImages,responseImage,idImage);
         // displaying the results
         if(config.verbose){
-        displayer.displayDepthImage(responseImage);
-        displayer.displayDepthImage(idImage);
+            displayer.displayDepthImage(responseImage);
+            displayer.displayDepthImage(idImage);
         }
 
 //filling in octets

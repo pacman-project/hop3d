@@ -2,7 +2,13 @@
   <!-- Visualizer configuration -->
   <VisualizerConfig>
   	<name>QGLVisualizer</name>
-	<hierarchy pixelSize="0.001" layer1dist="0.01"></hierarchy>
+	<hierarchy pixelSize="0.001"></hierarchy>
+	<layer1 dist="0.012" posZ="0.1"></layer1>
+	<layer2 dist="0.07" posZ="0.4"></layer2>
+	<layer3 dist="0.18" posZ="0.7"></layer3>
+	<layer4 dist="1.210" posZ="1.2"></layer4>
+	<layer5 dist="5.42" posZ="1.5"></layer5>
+	<layer6 dist="6.821" posZ="1.8"></layer6>
 	<background red="0.2" green="0.2" blue="0.2" alpha="1.0"></background>
 	<pointCloud drawPointClouds="true" cloudPointSize="3"></pointCloud>
 	<layer2layer drawLayer2Layer="true" red="0.0" green="0.0" blue="0.8" alpha="0.1" width="0.5"></layer2layer>

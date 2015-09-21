@@ -44,9 +44,16 @@ public:
             model->FirstChildElement( "pointCloud" )->QueryDoubleAttribute("cloudPointSize", &cloudPointSize);
 
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("pixelSize", &pixelSize);
-            model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("layer1dist", &layer1dist);
+            int layersNo=6;
+            partDist.resize(layersNo);
+            posZ.resize(layersNo);
+            for (int i=0;i<layersNo;i++){
+                std::string layerName = "layer" + std::to_string (i+1);
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("dist", &partDist[i]);
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posZ", &posZ[i]);
+            }
 
-            model->FirstChildElement( "layer2layer" )->QueryBoolAttribute("drawLinks", &drawLayer2Layer);
+            model->FirstChildElement( "layer2layer" )->QueryBoolAttribute("drawLayer2Layer", &drawLayer2Layer);
             model->FirstChildElement( "layer2layer" )->QueryDoubleAttribute("red", &rgba[0]);
             model->FirstChildElement( "layer2layer" )->QueryDoubleAttribute("green", &rgba[1]);
             model->FirstChildElement( "layer2layer" )->QueryDoubleAttribute("blue", &rgba[2]);
@@ -72,8 +79,10 @@ public:
         double cloudPointSize;
         /// hierarchy pixel size in patch
         double pixelSize;
-        /// distance between filters
-        double layer1dist;
+        /// distance between parts in i-th layers
+        std::vector<double> partDist;
+        /// "z" coordinate of the i-t hierarchy layer
+        std::vector<double> posZ;
         /// Draw layer 2 layer link
         bool drawLayer2Layer;
         /// link color color
@@ -120,7 +129,7 @@ private:
     std::vector< GLuint > linksLists;
 
     /// clusters list
-    std::vector< GLuint > clustersList;
+    std::vector< std::vector< GLuint > > clustersList;
 
     /// draw objects
     void draw();
@@ -150,7 +159,7 @@ private:
     GLuint createPartList(hop3d::ViewDependentPart& part, int layerNo);
 
     /// Create clusters List
-    GLuint createClustersList(hop3d::ViewDependentPart& part);
+    GLuint createClustersList(hop3d::ViewDependentPart& part, int layerNo);
 
     /// Create layer 2 layer List
     GLuint createLinksList(void);
