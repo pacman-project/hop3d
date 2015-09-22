@@ -9,6 +9,7 @@
 
 #include "ObjectComposition/objectComposition.h"
 #include "../../external/tinyXML/tinyxml2.h"
+#include "octree.h"
 
 namespace hop3d {
     /// create a single part selector
@@ -51,6 +52,8 @@ private:
 private:
     ///Configuration of the module
     Config config;
+    /// Octree
+    std::unique_ptr< Octree<double>> octree;
 };
 }
 #endif // OBJECT_COMPOSITION_OCTREE_H_INCLUDED

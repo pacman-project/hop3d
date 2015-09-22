@@ -47,6 +47,7 @@ HOP3DBham::Config::Config(std::string configFilename){
     statsConfig = (config.FirstChildElement( "StatisticsBuilder" )->Attribute( "configFilename" ));
     selectorConfig = (config.FirstChildElement( "PartSelector" )->Attribute( "configFilename" ));
     filtererConfig = (config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
+    compositionConfig = (config.FirstChildElement( "ObjectComposition" )->Attribute( "configFilename" ));
 }
 
 /// learining from the dataset
@@ -139,7 +140,7 @@ void HOP3DBham::learn(){
                 //imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[1],octets, categoryNo, objectNo, imageNo, cameraPose);
                 //move octets into 3D space and update octree representation of the object
                 std::cout << "Create object composition\n";
-                objects.push_back(createObjectCompositionOctree());
+                objects.push_back(createObjectCompositionOctree(config.compositionConfig));
                 //objects[categoryNo+dataset.categories.size()*objectNo].update(octets, cameraPose);
             }
         }

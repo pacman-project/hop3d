@@ -67,6 +67,8 @@ public:
             std::string selectorConfig;
             /// image filterer config filename
             std::string filtererConfig;
+            /// object composition config filename
+            std::string compositionConfig;
     };
 
 private:
