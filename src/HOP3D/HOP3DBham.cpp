@@ -51,15 +51,15 @@ HOP3DBham::Config::Config(std::string configFilename){
 
 /// learining from the dataset
 void HOP3DBham::learn(){
-    std::vector<hop3d::Octet> octets;
+    std::vector<hop3d::Octet> octets2layer;
     std::default_random_engine generator(time(0));
     std::uniform_int_distribution<int> distribution(0,3); // filters ids distribution
     int filterSize = 7;
     std::normal_distribution<double> distributionUV(0, filterSize/27.0); // filters ids distribution
     std::normal_distribution<double> distributionDepth(0,0.003);
     int octetsNo = 10000;
-    octets.resize(octetsNo);
-    for (auto& it: octets){
+    octets2layer.resize(octetsNo);
+    for (auto& it: octets2layer){
         //randomly select filter ids
         for (size_t i=0;i<it.filterIds.size();i++){
             for (size_t j=0;j<it.filterIds[i].size();j++){
@@ -77,28 +77,12 @@ void HOP3DBham::learn(){
         }
     }
 
-    imageFilterer->getFilters(hierarchy.get()->firstLayer);
-    hop3d::ViewDependentPart::Seq dictionary;
-
-    ///2nd layer
-    std::vector<cv::Mat> vecImages;
-    hop3d::Reader reader;
-    reader.readMultipleImages("../../resources/depthImages",vecImages);
-    //imageFilterer->computeOctets(vecImages[0],octets);
-    std::cout << "Compute statistics for " << octets.size() << " octets (2nd layer)\n";
-    int startId = (int)hierarchy.get()->firstLayer.size();
-    statsBuilder->computeStatistics(octets, 2, startId, dictionary);
-    std::cout << "Dictionary size (2nd layer): " << dictionary.size() << "\n";
-    partSelector->selectParts(dictionary, *hierarchy, 2);
-    std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
-    hierarchy.get()->viewDependentLayers[0]=dictionary;
-
     ///3rd layer
     std::uniform_int_distribution<int> distribution3rd(0,49); // filters ids distribution
+    std::vector<hop3d::Octet> octets3layer;
     octetsNo = 200;
-    octets.clear();
-    octets.resize(octetsNo);
-    for (auto& it: octets){
+    octets3layer.resize(octetsNo);
+    for (auto& it: octets3layer){
         //randomly select filter ids
         for (size_t i=0;i<it.filterIds.size();i++){
             for (size_t j=0;j<it.filterIds[i].size();j++){
@@ -115,18 +99,53 @@ void HOP3DBham::learn(){
             }
         }
     }
-    //imageFilterer->getOctets(dictionary,octates);
-    std::cout << "Compute statistics for " << octets.size() << " octets (3rd layer)\n";
-    startId = int(hierarchy.get()->firstLayer.size()+10000);
-    dictionary.clear();
-    statsBuilder->computeStatistics(octets, 3, startId, dictionary);
-    std::cout << "Dictionary size (3rd layer): " << dictionary.size() << "\n";
-    partSelector->selectParts(dictionary, *hierarchy, 3);
-    std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
-    hierarchy.get()->viewDependentLayers[1]=dictionary;
 
+    imageFilterer->getFilters(hierarchy.get()->firstLayer);
+    hop3d::ViewDependentPart::Seq dictionary;
+
+    ///2nd layer
+    std::vector<cv::Mat> vecImages;
+    hop3d::Reader reader;
+    reader.readMultipleImages("../../resources/depthImages",vecImages);
+    std::vector<hop3d::Octet> octets;
+    int startId = (int)hierarchy.get()->firstLayer.size();
+    for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
+        if (layerNo==0){
+            //imageFilterer->computeOctets(vecImages[0],octets);
+            octets=octets2layer;
+        }
+        else if (layerNo==1){
+            startId = int(hierarchy.get()->firstLayer.size()+10000);
+            //imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[layerNo-1],octets);
+            octets=octets3layer;
+        }
+        std::cout << "Compute statistics for " << octets.size() << " octets (" << layerNo+2 << "-th layer)\n";
+        statsBuilder->computeStatistics(octets, layerNo+2, startId, dictionary);
+        std::cout << "Dictionary size (" << layerNo+2 << "-th layer): " << dictionary.size() << "\n";
+        partSelector->selectParts(dictionary, *hierarchy, layerNo+2);
+        std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
+        hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
+    }
     notify(*hierarchy);
-    //dictionary[0].print();
+
+    //represent all images in parts from 3rd layer
+    //imageFilterer->computeImages3rdLayer();
+    Dataset dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
+    for (size_t categoryNo=0;categoryNo<dataset.categories.size();categoryNo++){//for each category
+        for (size_t objectNo=0;objectNo<dataset.categories[categoryNo].objects.size();objectNo++){//for each object
+            for (size_t imageNo=0;imageNo<dataset.categories[categoryNo].objects[objectNo].imagesNo;imageNo++){//for each depth image
+                //Mat34 cameraPose(Mat34::Identity());
+                //get octets of the 3rd layers
+                //imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[1],octets, categoryNo, objectNo, imageNo, cameraPose);
+                //move octets into 3D space and update octree representation of the object
+                std::cout << "Create object composition\n";
+                objects.push_back(createObjectCompositionOctree());
+                //objects[categoryNo+dataset.categories.size()*objectNo].update(octets, cameraPose);
+            }
+        }
+    }
+    ///select part for 4th layer
+    //partSelector->selectParts(objects, dictionary, *hierarchy,4)
 
     std::cout << "Finished\n";
 }

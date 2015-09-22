@@ -59,6 +59,7 @@ void UnbiasedStatsBuilder::groupOctets(const std::vector<Octet>& octets, std::ve
 
 /// compute statistics for the set of octets
 void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, int layerNo, int startId, ViewDependentPart::Seq& dictionary){
+    dictionary.clear();
     std::vector<Octet::Seq> groups;
     groupOctets(octets, groups);
     if (config.verbose==1){

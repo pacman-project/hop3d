@@ -13,6 +13,7 @@
 #include "Data/Graph.h"
 #include "PartSelector/partSelectorMean.h"
 #include "ImageFilter/depthImageFilter.h"
+#include "ObjectComposition/objectCompositionOctree.h"
 #ifdef QVisualizerBuild
 #include "QVisualizer/Qvisualizer.h"
 #endif
@@ -83,6 +84,9 @@ private:
 
     ///structure to store hierarchy
     std::unique_ptr<Hierarchy> hierarchy;
+
+    ///vector of objects compositions
+    std::vector<ObjectComposition *> objects;
 };
 }
 #endif // HOP3DBHAM_H_INCLUDED

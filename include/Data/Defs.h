@@ -154,6 +154,47 @@ public:
     Gaussian3D(){};
 };
 
+/// Set of images
+class ImagesDataset{
+public:
+    /// number of images
+    size_t imagesNo;
+    /// prefix
+    std::string prefix;
+
+    ImagesDataset(void){}
+
+    ImagesDataset(int _imagesNo) : imagesNo(_imagesNo){}
+};
+
+/// Set of objects
+class ObjectsDataset{
+public:
+    /// set of images per objects
+    std::vector<ImagesDataset> objects;
+
+    ObjectsDataset(void){}
+
+    ObjectsDataset(int objectsNo){
+        objects.resize(objectsNo);
+    }
+};
+
+/// Dataset
+class Dataset{
+public:
+    /// set of Datasets
+    typedef std::vector<Dataset> Seq;
+
+    /// set of objects per category
+    std::vector<ObjectsDataset> categories;
+
+    Dataset(void){}
+
+    Dataset(int categoriesNo) {
+        categories.resize(categoriesNo);
+    };
+};
 }
 #endif /* DATA_DEFS_H */
 
