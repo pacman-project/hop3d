@@ -26,12 +26,27 @@ DepthImageFilter::Config::Config(std::string configFilename){
         std::cout << "unable to load depth filter config file.\n";
     tinyxml2::XMLElement * model = config.FirstChildElement( "Filterer" );
     model->FirstChildElement( "parameters" )->QueryIntAttribute("filtersNo", &filtersNo);
+    model->FirstChildElement( "parameters" )->QueryIntAttribute("filterSize", &filterSize);
     model->FirstChildElement( "parameters" )->QueryBoolAttribute("verbose", &verbose);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("overlapRf", &overlapRf);
+    model->FirstChildElement( "parameters" )->QueryIntAttribute("maxDepthValue", &maxDepthValue);
+    model->FirstChildElement( "parameters" )->QueryDoubleAttribute("scalingToMeters", &scalingToMeters);
+    model->FirstChildElement( "parameters" )->QueryIntAttribute("backgroundOverlap", &backgroundOverlap);
+    model->FirstChildElement( "parameters" )->QueryDoubleAttribute("boundaryResponseLevel", &boundaryResponseLevel);
+
+    backgroundValue = double((filterSize*filterSize)-backgroundOverlap)*double(maxDepthValue/scalingToMeters)*0.98;
+
     std::cout << "Load filter parameters...\n";
     std::cout << "Filters no.: " << filtersNo << "\n";
+    std::cout<< "Filter size in pixels: " << filterSize << std::endl;
     std::cout<< "Verbose: " << verbose << std::endl;
     std::cout<< "Overlap of octets receptive fields: " << overlapRf << std::endl;
+    std::cout<< "Maximum value of depth for the sensor when not hitting the object: " << maxDepthValue << std::endl;
+    std::cout<< "Scaling of raw int16 depth values into meters: " << scalingToMeters << std::endl;
+    std::cout<< "How many pixels in filtered patch belong to object to treat it as a background: " << backgroundOverlap << std::endl;
+    std::cout<< "Response level on the edges which qualify it to an edge: " << boundaryResponseLevel << std::endl;
+    std::cout<< "Sum of the data in a patch which surpassed makes a background: " << backgroundValue << std::endl;
+
  }
 
 const std::string& DepthImageFilter::getName() const {
@@ -112,7 +127,7 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                         //searching within image
                         maxLoc.x +=(l+(j-octetOffset)+offset);
                         maxLoc.y +=(k+(i-octetOffset)+offset);
-                        double  depthPoint = (double(depthImage.at<unsigned short>(maxLoc))/3000);
+                        double  depthPoint = (double(depthImage.at<unsigned short>(maxLoc))/config.scalingToMeters);
                         octetTemp.filterPos[octetIter/3][octetIter%3] = hop3d::ImageCoordsDepth(maxLoc.x,maxLoc.y,depthPoint);
                         octetIter++;
                         octetRoi.release();
@@ -185,7 +200,7 @@ int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, F
     //depth image represented as double giving it geometrical relation
     cv::Mat depthImageDouble(depthImage.cols,depthImage.rows, cv::DataType<double>::type);
     depthImage.convertTo(depthImageDouble,CV_64F);
-    depthImageDouble =  depthImageDouble/3000;
+    depthImageDouble =  depthImageDouble/config.scalingToMeters;
 
     cv::Mat loadedFilter;
     cv::Mat loadedMask;
@@ -205,14 +220,15 @@ int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, F
             cv::Rect regionOfInterest = cv::Rect(j-offset, i-offset,filterSize,filterSize);
             imageRoi = depthImageDouble(regionOfInterest);
             double sumValue = cv::sum(imageRoi)[0];
+
             double s = 0;
-            if (sumValue > (49*21,845*0.98)) s = -1;
+            if (sumValue > config.backgroundValue) s = -1;
             else{
                 double middleValue = imageRoi.at<double>(offset,offset);
                 cv::subtract(imageRoi,cv::Scalar(middleValue),subResult,loadedMask);
                 cv::absdiff(subResult,loadedFilter,responseTemp);
                 s = cv::sum(responseTemp)[0];
-                if (s > 0.8) s = -1;
+                if (s > config.boundaryResponseLevel) s = -2;
                 //relation to number of active elements in the filter + scaling to get rid of problems with small floating point values
                 else s *=(10000/numActive);
             }

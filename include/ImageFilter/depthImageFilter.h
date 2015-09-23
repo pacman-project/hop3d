@@ -62,10 +62,23 @@ public:
         public:
             // number of filters
             int filtersNo;
+            // filter size in pixels
+            int filterSize;
             // displaying variables and images for debugging
             bool verbose;
             //overlap of octet Receptive Fields
             int overlapRf;
+            //maximum value of depth for the sensor when not hitting the object
+            int maxDepthValue;
+            //scaling of raw int16 depth values into meters
+            double scalingToMeters;
+            //how many pixels in filtered window belong to object to treat it as a background
+            int backgroundOverlap;
+            //Response level on the edges which qualify it to an edge
+            double boundaryResponseLevel;
+            //Sum of the data in a patch which surpassed makes a background
+            double backgroundValue;
+
     };
 
 private:
