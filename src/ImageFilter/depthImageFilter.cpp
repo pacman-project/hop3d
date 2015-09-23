@@ -48,12 +48,12 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
 //filters.size()
 
     hop3d::ImagesDisplay displayer;
-    std::vector<cv::Mat> filteredImages(filters.size());
+    std::vector<cv::Mat> filteredImages(1);
     //applying all the filters to an image
     unsigned long int e1 = cv::getTickCount();
 
 //#pragma omp parallel for
-    for(unsigned int iterF = 0 ; iterF < filters.size(); iterF++)
+    for(unsigned int iterF = 0 ; iterF < 1; iterF++)
     {
         cv::Mat filteredImage(depthImage.rows-(offset),depthImage.cols-(offset), cv::DataType<double>::type,cv::Scalar(0));
         filterSingleImageSingleFilter(depthImage,filters[iterF],filteredImage);
@@ -204,16 +204,22 @@ int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, F
 
             cv::Rect regionOfInterest = cv::Rect(j-offset, i-offset,filterSize,filterSize);
             imageRoi = depthImageDouble(regionOfInterest);
-            double middleValue = imageRoi.at<double>(offset,offset);
-            cv::subtract(imageRoi,cv::Scalar(middleValue),subResult,loadedMask);
-            cv::absdiff(subResult,loadedFilter,responseTemp);
-            double s = cv::sum(responseTemp)[0];
-            if (s > 0.8) s = 0;
-            //relation to number of active elements in the filter + scaling to get rid of problems with small floating point values
-            else s *=(10000/numActive);
+            double sumValue = cv::sum(imageRoi)[0];
+            double s = 0;
+            if (sumValue > (49*21,845*0.98)) s = -1;
+            else{
+                double middleValue = imageRoi.at<double>(offset,offset);
+                cv::subtract(imageRoi,cv::Scalar(middleValue),subResult,loadedMask);
+                cv::absdiff(subResult,loadedFilter,responseTemp);
+                s = cv::sum(responseTemp)[0];
+                if (s > 0.8) s = -1;
+                //relation to number of active elements in the filter + scaling to get rid of problems with small floating point values
+                else s *=(10000/numActive);
+            }
             filteredImage.at<double>(i-offset,j-offset) = s;
         }
     }
+    writer.matrixToTxtFile(filteredImage,"filteredImage.txt");
     imageRoi.release();
     subResult.release();
     responseTemp.release();

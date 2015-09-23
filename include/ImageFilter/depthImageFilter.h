@@ -9,6 +9,8 @@
 
 #include "imageFilter.h"
 #include "Utilities/Reader.h"
+#include "Utilities/Writer.h"
+
 #include "Utilities/ImagesDisplay.h"
 #include <algorithm>    // std::min_element, std::max_element
 
@@ -73,6 +75,7 @@ private:
     hop3d::Filter::Seq filters;
     int filterSingleImageSingleFilter(const cv::Mat& depthImage, hop3d::Filter& filter, cv::Mat& filteredImage);
     int nonMaximaSuppression(const std::vector<cv::Mat>, cv::Mat& maxResponsesImage, cv::Mat& maxResponsesIdsImage);
+    hop3d::Writer writer;
 };
 
 }
