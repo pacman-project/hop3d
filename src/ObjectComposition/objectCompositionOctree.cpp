@@ -12,12 +12,12 @@ ObjectCompositionOctree::ObjectCompositionOctree(void) : ObjectComposition("Octr
 /// Construction
 ObjectCompositionOctree::ObjectCompositionOctree(std::string _config) :
         ObjectComposition("Octree Object Composition", COMPOSITION_OCTREE), config(_config) {
-    octree.reset(new Octree<double>(config.voxelsNo));
+    octree.reset(new Octree<PartVoxel>(config.voxelsNo));
 }
 
 /// Destruction
 ObjectCompositionOctree::~ObjectCompositionOctree(void) {
-    octree.reset(new Octree<double>(2));
+    octree.reset(new Octree<PartVoxel>(2));
 }
 
 ///config class constructor
@@ -34,25 +34,38 @@ ObjectCompositionOctree::Config::Config(std::string configFilename){
     }
     group->FirstChildElement( "parameters" )->QueryDoubleAttribute("voxelSize", &voxelSize);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("voxelsNo", &voxelsNo);
+    std::cout << voxelSize << "\n";
+    std::cout << voxelsNo << "\n";
+    getchar();
 }
 
 /// update composition from octets (words from last view-independent layer's vocabulary)
 void ObjectCompositionOctree::update(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy){
     for (auto & part : parts){
         Mat34 partPosition(Mat34::Identity());
-        //ViewDependentPart.gaussians[1][1].mean;
         Vec3 pos3d;
+        std::cout << "part.gaussians[1][1].mean: " << part.gaussians[1][1].mean << "\n";
         camModel.getPoint(part.gaussians[1][1].mean, pos3d);
         Vec3 normal; hierarchy.getNormal(part, normal);
         Mat33 rot; normal2rot(normal, rot);
         Mat34 part3D;
-        part3D.translation() = pos3d;
-        for (int i=0;i<3;i++){
-            for (int j=0;j<3;j++){
+        part3D.translation() = pos3d;//set position of the part
+        for (int i=0;i<3;i++)//and orientation
+            for (int j=0;j<3;j++)
                 part3D(i,j) = rot(i,j);
-            }
-        }
         partPosition = cameraPose * part3D;//global position of the part
+        int x = int(partPosition(0,3)/config.voxelSize);
+        int y = int(partPosition(1,3)/config.voxelSize);
+        int z = int(partPosition(2,3)/config.voxelSize);
+        std::cout << "partPosition(0,3) " << partPosition(0,3) << "\n";
+        std::cout << "config.voxelSize " << config.voxelSize << "\n";
+        std::cout << "pos " << x << ", " << y << ", " << z << "): \n";
+        std::cout << "partPosition.matrix():\n" << partPosition.matrix() << "\n";
+        (*octree)(x,y,z).poses.push_back(partPosition);
+        (*octree)(x,y,z).partIds.push_back(part.id);
+        std::cout << "octree(" << x << ", " << y << ", " << z << "): " << (*octree)(x,y,z).poses.size() << "\n";
+        std::cout << "octree(" << x << ", " << y << ", " << z << "): " << (*octree)(x,y,z).partIds.back() << "\n";
+        getchar();
     }
 }
 

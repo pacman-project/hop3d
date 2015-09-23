@@ -55,10 +55,9 @@ class DepthSensorModel {
         Config(std::string configFilename){
             tinyxml2::XMLDocument config;
             std::string filename = "../../resources/" + configFilename;
-            std::cout<<"CONFIG FILENAME: " << configFilename << std::endl;
             config.LoadFile(filename.c_str());
             if (config.ErrorID())
-                std::cout << "unable to load sensor config file: error = " << config.ErrorID() << std::endl;;
+                std::cout << "unable to load sensor config file (" << filename <<"): error = " << config.ErrorID() << std::endl;;
 
             tinyxml2::XMLElement * model = config.FirstChildElement( "Model" );
             model->FirstChildElement( "focalLength" )->QueryDoubleAttribute("fu", &focalLength[0]);
@@ -71,14 +70,6 @@ class DepthSensorModel {
             model->FirstChildElement( "varianceDepth" )->QueryDoubleAttribute("c2", &distVarCoefs[1]);
             model->FirstChildElement( "imageSize" )->QueryIntAttribute("sizeU", &imageSize[0]);
             model->FirstChildElement( "imageSize" )->QueryIntAttribute("sizeV", &imageSize[1]);
-            model->FirstChildElement( "alternateModel" )->QueryDoubleAttribute("scaleUncertaintyNormal", &scaleUncertaintyNormal);
-            model->FirstChildElement( "alternateModel" )->QueryDoubleAttribute("scaleUncertaintyGradient", &scaleUncertaintyGradient);
-            tinyxml2::XMLElement * posXML = config.FirstChildElement( "pose" );
-            double query[4];
-            posXML->QueryDoubleAttribute("qw", &query[0]); posXML->QueryDoubleAttribute("qx", &query[1]); posXML->QueryDoubleAttribute("qy", &query[2]); posXML->QueryDoubleAttribute("qz", &query[3]);
-            double queryPos[4];
-            posXML->QueryDoubleAttribute("x", &queryPos[0]); posXML->QueryDoubleAttribute("y", &queryPos[1]); posXML->QueryDoubleAttribute("z", &queryPos[2]);
-            //pose = hop3d::Quaternion (query[0], query[1], query[2], query[3])*hop3d::Vec3(queryPos[0], queryPos[1], queryPos[2]);
         }
         public:
             double focalLength[2];
@@ -86,9 +77,6 @@ class DepthSensorModel {
             double varU, varV;// variance u,v
             double distVarCoefs[4];
             int imageSize[2];//[sizeU, sizeV]
-            hop3d::Mat34 pose; // kinect pose in robot's coordination frame
-            double scaleUncertaintyNormal;
-            double scaleUncertaintyGradient;
     };
 
     Config config;

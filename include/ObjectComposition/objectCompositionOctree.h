@@ -17,6 +17,15 @@ namespace hop3d {
     /// create a single part selector
     ObjectComposition* createObjectCompositionOctree(std::string config);
 
+class PartVoxel{
+public:
+    std::vector<Mat34> poses;
+    std::vector<int> partIds;
+
+    PartVoxel(){}
+    PartVoxel(int size){size=size-1;};// required by octree
+};
+
 /// Object Composition implementation
 class ObjectCompositionOctree: public ObjectComposition {
 public:
@@ -54,7 +63,7 @@ private:
     ///Configuration of the module
     Config config;
     /// Octree
-    std::unique_ptr< Octree<double>> octree;
+    std::unique_ptr< Octree<PartVoxel> > octree;
 
     /// compute rotation matrix from normal vector ('y' axis is vetical)
     void normal2rot(const Vec3& normal, Mat33& rot);

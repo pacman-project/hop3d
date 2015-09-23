@@ -142,6 +142,8 @@ void HOP3DBham::learn(){
                 Mat34 cameraPose(Mat34::Identity());
                 //int layerNo=3;
                 std::vector<ViewDependentPart> parts;
+                parts.push_back(hierarchy.get()->viewDependentLayers[1].back());
+                hierarchy.get()->viewDependentLayers[1].back().print();
                 //get octets of the 3rd layers
                 //imageFilterer->getParts(hierarchy.get()->viewDependentLayers[1],layerNo, parts, categoryNo, objectNo, imageNo, cameraPose);
                 //move octets into 3D space and update octree representation of the object
