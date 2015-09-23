@@ -29,6 +29,9 @@ public:
     /// Construction
     ObjectCompositionOctree(std::string config);
 
+    /// update composition from octets (words from last view-independent layer's vocabulary)
+    void update(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy);
+
     /// Destruction
     ~ObjectCompositionOctree(void);
 
@@ -48,12 +51,13 @@ public:
     };
 
 private:
-
-private:
     ///Configuration of the module
     Config config;
     /// Octree
     std::unique_ptr< Octree<double>> octree;
+
+    /// compute rotation matrix from normal vector ('y' axis is vetical)
+    void normal2rot(const Vec3& normal, Mat33& rot);
 };
 }
 #endif // OBJECT_COMPOSITION_OCTREE_H_INCLUDED

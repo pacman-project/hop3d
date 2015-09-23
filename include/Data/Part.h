@@ -63,8 +63,8 @@ public:
     inline ViewDependentPart(){};
 
     /// Construction
-    inline ViewDependentPart(int _id, int _layerId, Type _type, ImageCoords _location) :
-        Part(_id, _layerId, _type), location(_location){
+    inline ViewDependentPart(int _id, int _layerId, ImageCoords _location) :
+        Part(_id, _layerId, PART_VIEW_DEP), location(_location){
     }
 
     /// compute distance between view dependent parts
@@ -86,9 +86,12 @@ public:
     /// Pose of the part in 3D space
     Mat34 pose;
 
+    /// Gaussians related to positions of neighbouring parts
+    std::array<std::array<Gaussian3D,3>,3> gaussians;
+
     /// Construction
-    inline ViewIndependentPart(int _id, int _layerId, Type _type, Mat34 _pose) :
-        Part(_id, _layerId, _type), pose(_pose){
+    inline ViewIndependentPart(int _id, int _layerId, Mat34 _pose) :
+        Part(_id, _layerId, PART_VIEW_INDEP), pose(_pose){
     }
 };
 

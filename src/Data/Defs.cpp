@@ -42,4 +42,50 @@ namespace hop3d {
             }
         return sum;
     }
+
+    /// normalize quaternion
+    Eigen::Quaterniond& GaussianSE3::normalize(Eigen::Quaterniond& q){
+      q.normalize();
+      if (q.w()<0) {
+        q.coeffs() *= -1;
+      }
+      return q;
+    }
+
+    /// rotation matrix SO(3) to vector3
+    Vec3 GaussianSE3::toCompactQuaternion(const Mat33& R) {
+      Eigen::Quaterniond q(R);
+      normalize(q);
+      // return (x,y,z) of the quaternion
+      return q.coeffs().head<3>();
+    }
+
+    /// rotation matrix from compact quaternion
+    Mat33 GaussianSE3::fromCompactQuaternion(const Vec3& v) {
+      double w = 1-v.squaredNorm();
+      if (w<0)
+        return Mat33::Identity();
+      else
+        w=sqrt(w);
+      return Eigen::Quaterniond(w, v[0], v[1], v[2]).toRotationMatrix();
+    }
+
+    /// functions to handle the toVector of the whole transformations
+    Vec6 GaussianSE3::toVector(const Mat34& t){
+        Vec6 out;
+        out.block<3,1>(3,0) = toCompactQuaternion(t.rotation());
+        out.block<3,1>(0,0) = t.translation();
+        return out;
+    }
+
+    /// function which creates se3 homogenous transformation from vector
+    Mat34 GaussianSE3::fromVector(const Vec6& v){
+        Mat34 out;
+        Mat33 rot(fromCompactQuaternion(v.block<3,1>(3,0)));
+        for (int i=0;i<3;i++)
+            for (int j=0;j<3;j++)
+                out(i,j)=rot(i,j);
+        out.translation() = v.block<3,1>(0,0);
+        return out;
+    }
 }

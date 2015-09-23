@@ -20,6 +20,10 @@
 <!--  3D object composition configuration -->
   <ObjectComposition configFilename="objectComposition.xml">
   </ObjectComposition>
+
+<!--  depth camera model -->
+  <CameraModel configFilename="KinectModel.xml">
+  </CameraModel>
   
 <!--   QVisualizer configuration -->
   <QVisualizer configFilename="qvisualizerConfig.xml">

@@ -16,6 +16,7 @@ HOP3DBham::HOP3DBham(std::string _config) :
     partSelector = hop3d::createPartSelectorMean(config.selectorConfig);
     imageFilterer = hop3d::createDepthImageFilter(config.filtererConfig);
     imageFilterer->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
+    depthCameraModel.reset(new DepthSensorModel(config.cameraConfig));
 }
 
 #ifdef QVisualizerBuild
@@ -48,6 +49,7 @@ HOP3DBham::Config::Config(std::string configFilename){
     selectorConfig = (config.FirstChildElement( "PartSelector" )->Attribute( "configFilename" ));
     filtererConfig = (config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
     compositionConfig = (config.FirstChildElement( "ObjectComposition" )->Attribute( "configFilename" ));
+    cameraConfig = (config.FirstChildElement( "CameraModel" )->Attribute( "configFilename" ));
 }
 
 /// learining from the dataset
@@ -134,14 +136,16 @@ void HOP3DBham::learn(){
     Dataset dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
     for (size_t categoryNo=0;categoryNo<dataset.categories.size();categoryNo++){//for each category
         for (size_t objectNo=0;objectNo<dataset.categories[categoryNo].objects.size();objectNo++){//for each object
+            std::cout << "Create object composition\n";
+            objects.push_back(createObjectCompositionOctree(config.compositionConfig));
             for (size_t imageNo=0;imageNo<dataset.categories[categoryNo].objects[objectNo].imagesNo;imageNo++){//for each depth image
-                //Mat34 cameraPose(Mat34::Identity());
+                Mat34 cameraPose(Mat34::Identity());
+                //int layerNo=3;
+                std::vector<ViewDependentPart> parts;
                 //get octets of the 3rd layers
-                //imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[1],octets, categoryNo, objectNo, imageNo, cameraPose);
+                //imageFilterer->getParts(hierarchy.get()->viewDependentLayers[1],layerNo, parts, categoryNo, objectNo, imageNo, cameraPose);
                 //move octets into 3D space and update octree representation of the object
-                std::cout << "Create object composition\n";
-                objects.push_back(createObjectCompositionOctree(config.compositionConfig));
-                //objects[categoryNo+dataset.categories.size()*objectNo].update(octets, cameraPose);
+                objects.back()->update(parts, cameraPose, *depthCameraModel, *hierarchy);
             }
         }
     }

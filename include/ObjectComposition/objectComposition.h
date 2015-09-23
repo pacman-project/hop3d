@@ -10,6 +10,7 @@
 #include "Data/Defs.h"
 #include "Data/Vocabulary.h"
 #include "Data/Graph.h"
+#include "Utilities/depthSensorModel.h"
 
 namespace hop3d {
 
@@ -31,6 +32,8 @@ public:
     /// Name of the part composition
     virtual const std::string& getName() const {return name;};
 
+    /// update composition from octets (words from last view-independent layer's vocabulary)
+    virtual void update(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy) = 0;
 
     /// Virtual descrutor
     virtual ~ObjectComposition() {
