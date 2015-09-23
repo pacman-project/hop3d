@@ -172,8 +172,8 @@ void QGLVisualizer::updateHierarchy(){
             }
             cloudsListLayers[0].push_back(createCloudList(cloud));
         }
-        std::cout << "size: " << cloudsListLayers[0].size() << "\n";
         for (int i=0;i<2;i++){
+            std::cout << "layer "<< i+1 << " size: " << cloudsListLayers[0].size() << "\n";
             for (auto it = hierarchy->viewDependentLayers[i].begin(); it!=hierarchy->viewDependentLayers[i].end(); it++){
                 cloudsListLayers[i+1].push_back(createPartList(*it, i+1));
                 clustersList[i+1].push_back(createClustersList(*it, i+1));

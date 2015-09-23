@@ -5,5 +5,5 @@
     <name>ObjectComposition</name>
 <!--    verbose : 0 -> no debug
 		  1 -> show debug output -->
-    <parameters verbose="1" voxelSize="0.01" voxelsNo="512"></parameters>
+    <parameters verbose="1" voxelSize="0.01" voxelsNo="512" maxAngle="1.57"></parameters>
   </ObjectComposition>

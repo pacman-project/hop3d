@@ -34,9 +34,7 @@ ObjectCompositionOctree::Config::Config(std::string configFilename){
     }
     group->FirstChildElement( "parameters" )->QueryDoubleAttribute("voxelSize", &voxelSize);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("voxelsNo", &voxelsNo);
-    std::cout << voxelSize << "\n";
-    std::cout << voxelsNo << "\n";
-    getchar();
+    group->FirstChildElement( "parameters" )->QueryDoubleAttribute("maxAngle", &maxAngle);
 }
 
 /// update composition from octets (words from last view-independent layer's vocabulary)
@@ -44,7 +42,7 @@ void ObjectCompositionOctree::update(const std::vector<ViewDependentPart>& parts
     for (auto & part : parts){
         Mat34 partPosition(Mat34::Identity());
         Vec3 pos3d;
-        std::cout << "part.gaussians[1][1].mean: " << part.gaussians[1][1].mean << "\n";
+        std::cout << "part.id: " << part.id << "\n";
         camModel.getPoint(part.gaussians[1][1].mean, pos3d);
         Vec3 normal; hierarchy.getNormal(part, normal);
         Mat33 rot; normal2rot(normal, rot);
@@ -57,15 +55,43 @@ void ObjectCompositionOctree::update(const std::vector<ViewDependentPart>& parts
         int x = int(partPosition(0,3)/config.voxelSize);
         int y = int(partPosition(1,3)/config.voxelSize);
         int z = int(partPosition(2,3)/config.voxelSize);
-        std::cout << "partPosition(0,3) " << partPosition(0,3) << "\n";
-        std::cout << "config.voxelSize " << config.voxelSize << "\n";
-        std::cout << "pos " << x << ", " << y << ", " << z << "): \n";
-        std::cout << "partPosition.matrix():\n" << partPosition.matrix() << "\n";
         (*octree)(x,y,z).poses.push_back(partPosition);
         (*octree)(x,y,z).partIds.push_back(part.id);
-        std::cout << "octree(" << x << ", " << y << ", " << z << "): " << (*octree)(x,y,z).poses.size() << "\n";
-        std::cout << "octree(" << x << ", " << y << ", " << z << "): " << (*octree)(x,y,z).partIds.back() << "\n";
-        getchar();
+    }
+}
+
+/// get clusters of parts id stored in octree (one cluster per voxel)
+void ObjectCompositionOctree::getClusters(std::vector< std::set<int>>& clusters){
+    for (int idX=0; idX<config.voxelsNo; idX++){///to do z-slicing
+        for (int idY=0; idY<config.voxelsNo; idY++){
+            for (int idZ=0; idZ<config.voxelsNo; idZ++){;
+                if ((*octree).at(idX,idY,idZ).partIds.size()>0){
+                    std::set<int> partIds1, partIds2;
+                    int iterNo=0;
+                    Vec3 norm1;
+                    for (auto & ids : (*octree)(idX,idY,idZ).partIds){
+                        if (iterNo>0){
+                            Vec3 norm2 = (*octree).at(idX,idY,idZ).poses[iterNo].matrix().block(0,2,3,1);
+                            //compute angle between angles
+                            double dp = norm1.adjoint()*norm2;
+                            if (fabs(acos(dp))>config.maxAngle)// if angle between normals is bigger than threshold add to another cluster
+                                partIds2.insert(ids);
+                            else
+                                partIds1.insert(ids);
+                        }
+                        else {
+                            partIds1.insert(ids);
+                            norm1=(*octree).at(idX,idY,idZ).poses[iterNo].matrix().block(0,2,3,1);
+                        }
+                        iterNo++;
+                    }
+                    if (partIds1.size()>0)
+                        clusters.push_back(partIds1);
+                    if (partIds2.size()>0)
+                        clusters.push_back(partIds2);
+                }
+            }
+        }
     }
 }
 

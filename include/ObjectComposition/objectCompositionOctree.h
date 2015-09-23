@@ -41,6 +41,9 @@ public:
     /// update composition from octets (words from last view-independent layer's vocabulary)
     void update(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy);
 
+    /// get clusters of parts id stored in octree (one cluster per voxel)
+    void getClusters(std::vector< std::set<int>>& clusters);
+
     /// Destruction
     ~ObjectCompositionOctree(void);
 
@@ -57,6 +60,8 @@ public:
             double voxelSize;
             /// Clusters no -- second layer
             int voxelsNo;
+            /// max angle between two parts (normals), if current angle is bigger than max second cluster is created
+            double maxAngle;
     };
 
 private:
