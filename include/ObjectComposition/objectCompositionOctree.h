@@ -17,6 +17,15 @@ namespace hop3d {
     /// create a single part selector
     ObjectComposition* createObjectCompositionOctree(std::string config);
 
+class PartVoxel{
+public:
+    std::vector<Mat34> poses;
+    std::vector<int> partIds;
+
+    PartVoxel(){}
+    PartVoxel(int size){size=size-1;};// required by octree
+};
+
 /// Object Composition implementation
 class ObjectCompositionOctree: public ObjectComposition {
 public:
@@ -28,6 +37,12 @@ public:
 
     /// Construction
     ObjectCompositionOctree(std::string config);
+
+    /// update composition from octets (words from last view-independent layer's vocabulary)
+    void update(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy);
+
+    /// get clusters of parts id stored in octree (one cluster per voxel)
+    void getClusters(std::vector< std::set<int>>& clusters);
 
     /// Destruction
     ~ObjectCompositionOctree(void);
@@ -45,15 +60,18 @@ public:
             double voxelSize;
             /// Clusters no -- second layer
             int voxelsNo;
+            /// max angle between two parts (normals), if current angle is bigger than max second cluster is created
+            double maxAngle;
     };
-
-private:
 
 private:
     ///Configuration of the module
     Config config;
     /// Octree
-    std::unique_ptr< Octree<double>> octree;
+    std::unique_ptr< Octree<PartVoxel> > octree;
+
+    /// compute rotation matrix from normal vector ('y' axis is vetical)
+    void normal2rot(const Vec3& normal, Mat33& rot);
 };
 }
 #endif // OBJECT_COMPOSITION_OCTREE_H_INCLUDED

@@ -53,10 +53,16 @@ typedef double					F64;
 typedef Eigen::Vector2d Vec2;
 /// 3 element vector class
 typedef Eigen::Vector3d Vec3;
+/// 6 element vector class
+typedef Eigen::Matrix<double, 6, 1, Eigen::ColMajor> Vec6;
 /// Matrix representation of SO(2) group of rotations or other 2D matrices
 typedef Eigen::Matrix<double, 2, 2> Mat22;
 /// Matrix representation of SO(3) group of rotations or other 3D matrices
 typedef Eigen::Matrix<double, 3, 3> Mat33;
+/// Quaternion representation of SO(3) group of rotations
+typedef Eigen::Quaternion<double> Quaternion;
+/// 6x6 matrix representation
+typedef Eigen::Matrix<double, 6, 6> Mat66;
 /// Homogeneous representation of SE(3) rigid body transformations
 typedef Eigen::Transform<double, 3, Eigen::Affine> Mat34;
 
@@ -139,10 +145,10 @@ public:
     void print() const;
 };
 
-/// 2D Gaussian
+/// 3D Gaussian
 class Gaussian3D{
 public:
-    /// set of 2d Gaussians
+    /// set of 3d Gaussians
     typedef std::vector<Gaussian3D> Seq;
 
     /// position
@@ -152,6 +158,35 @@ public:
 
     /// Construction
     Gaussian3D(){};
+};
+
+/// 3D Gaussian (SE3)
+class GaussianSE3{
+public:
+    /// set of SE3 Gaussians
+    typedef std::vector<GaussianSE3> Seq;
+
+    /// position
+    Vec6 mean;
+    /// covariance matrix
+    Mat66 covariance;
+
+    /// functions to handle the toVector of the whole transformations
+    Vec6 toVector(const Mat34& t);
+
+    /// function which creates se3 homogenous transformation from vector
+    Mat34 fromVector(const Vec6& v);
+
+    /// Construction
+    GaussianSE3(){};
+
+protected:
+    /// normalize quaternion
+    Eigen::Quaterniond& normalize(Eigen::Quaterniond& q);
+    /// rotation matrix SO(3) to vector3
+    Vec3 toCompactQuaternion(const Mat33& R);
+    /// rotation matrix from compact quaternion
+    Mat33 fromCompactQuaternion(const Vec3& v);
 };
 
 /// Set of images

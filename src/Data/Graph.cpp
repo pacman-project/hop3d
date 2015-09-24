@@ -20,4 +20,17 @@ Hierarchy::Hierarchy(std::string configFilename) {
     this->viewIndependentLayers.resize(VIndLayersNo);
 }
 
+/// get normal vector related to the part
+void Hierarchy::getNormal(const ViewDependentPart& part, Vec3& normal) const{
+    int layerId = part.layerId;
+    if (layerId==2) {
+        int filterId = part.partIds[1][1];
+        normal = firstLayer[filterId].normal;
+    }
+    else if (layerId==3) {
+        int filterId = viewDependentLayers[0][part.partIds[1][1]].partIds[1][1];
+        normal = firstLayer[filterId].normal;
+    }
+}
+
 }

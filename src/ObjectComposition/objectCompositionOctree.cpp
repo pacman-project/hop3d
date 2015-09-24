@@ -12,14 +12,12 @@ ObjectCompositionOctree::ObjectCompositionOctree(void) : ObjectComposition("Octr
 /// Construction
 ObjectCompositionOctree::ObjectCompositionOctree(std::string _config) :
         ObjectComposition("Octree Object Composition", COMPOSITION_OCTREE), config(_config) {
-    octree.reset(new Octree<double>(config.voxelsNo));
+    octree.reset(new Octree<PartVoxel>(config.voxelsNo));
 }
 
 /// Destruction
 ObjectCompositionOctree::~ObjectCompositionOctree(void) {
-    octree.reset(new Octree<double>(2));
-    (*octree)(1,2,3) = 0.1;
-    octree->erase(1,2,3);
+    octree.reset(new Octree<PartVoxel>(2));
 }
 
 ///config class constructor
@@ -36,6 +34,78 @@ ObjectCompositionOctree::Config::Config(std::string configFilename){
     }
     group->FirstChildElement( "parameters" )->QueryDoubleAttribute("voxelSize", &voxelSize);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("voxelsNo", &voxelsNo);
+    group->FirstChildElement( "parameters" )->QueryDoubleAttribute("maxAngle", &maxAngle);
+}
+
+/// update composition from octets (words from last view-independent layer's vocabulary)
+void ObjectCompositionOctree::update(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy){
+    for (auto & part : parts){
+        Mat34 partPosition(Mat34::Identity());
+        Vec3 pos3d;
+        std::cout << "part.id: " << part.id << "\n";
+        camModel.getPoint(part.gaussians[1][1].mean, pos3d);
+        Vec3 normal; hierarchy.getNormal(part, normal);
+        Mat33 rot; normal2rot(normal, rot);
+        Mat34 part3D;
+        part3D.translation() = pos3d;//set position of the part
+        for (int i=0;i<3;i++)//and orientation
+            for (int j=0;j<3;j++)
+                part3D(i,j) = rot(i,j);
+        partPosition = cameraPose * part3D;//global position of the part
+        int x = int(partPosition(0,3)/config.voxelSize);
+        int y = int(partPosition(1,3)/config.voxelSize);
+        int z = int(partPosition(2,3)/config.voxelSize);
+        (*octree)(x,y,z).poses.push_back(partPosition);
+        (*octree)(x,y,z).partIds.push_back(part.id);
+    }
+}
+
+/// get clusters of parts id stored in octree (one cluster per voxel)
+void ObjectCompositionOctree::getClusters(std::vector< std::set<int>>& clusters){
+    for (int idX=0; idX<config.voxelsNo; idX++){///to do z-slicing
+        for (int idY=0; idY<config.voxelsNo; idY++){
+            for (int idZ=0; idZ<config.voxelsNo; idZ++){;
+                if ((*octree).at(idX,idY,idZ).partIds.size()>0){
+                    std::set<int> partIds1, partIds2;
+                    int iterNo=0;
+                    Vec3 norm1;
+                    for (auto & ids : (*octree)(idX,idY,idZ).partIds){
+                        if (iterNo>0){
+                            Vec3 norm2 = (*octree).at(idX,idY,idZ).poses[iterNo].matrix().block(0,2,3,1);
+                            //compute angle between angles
+                            double dp = norm1.adjoint()*norm2;
+                            if (fabs(acos(dp))>config.maxAngle)// if angle between normals is bigger than threshold add to another cluster
+                                partIds2.insert(ids);
+                            else
+                                partIds1.insert(ids);
+                        }
+                        else {
+                            partIds1.insert(ids);
+                            norm1=(*octree).at(idX,idY,idZ).poses[iterNo].matrix().block(0,2,3,1);
+                        }
+                        iterNo++;
+                    }
+                    if (partIds1.size()>0)
+                        clusters.push_back(partIds1);
+                    if (partIds2.size()>0)
+                        clusters.push_back(partIds2);
+                }
+            }
+        }
+    }
+}
+
+/// compute rotation matrix from normal vector ('y' axis is vetical)
+void ObjectCompositionOctree::normal2rot(const Vec3& normal, Mat33& rot){
+    Vec3 y(0,1,0); Vec3 x;
+    Vec3 _normal(normal);
+    x = _normal.cross(y);
+    DepthSensorModel::normalizeVector(_normal);
+    y = y.cross(_normal);
+    DepthSensorModel::normalizeVector(x);
+    rot.block(0,0,3,1) = x;
+    rot.block(0,1,3,1) = y;
+    rot.block(0,2,3,1) = _normal;
 }
 
 hop3d::ObjectComposition* hop3d::createObjectCompositionOctree(void) {

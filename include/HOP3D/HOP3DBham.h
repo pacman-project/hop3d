@@ -13,6 +13,7 @@
 #include "Data/Graph.h"
 #include "PartSelector/partSelectorMean.h"
 #include "ImageFilter/depthImageFilter.h"
+#include "Utilities/depthSensorModel.h"
 #include "ObjectComposition/objectCompositionOctree.h"
 #ifdef QVisualizerBuild
 #include "QVisualizer/Qvisualizer.h"
@@ -69,6 +70,8 @@ public:
             std::string filtererConfig;
             /// object composition config filename
             std::string compositionConfig;
+            /// camera config filename
+            std::string cameraConfig;
     };
 
 private:
@@ -86,6 +89,9 @@ private:
 
     ///structure to store hierarchy
     std::unique_ptr<Hierarchy> hierarchy;
+
+    ///depth camera model
+    std::unique_ptr<DepthSensorModel> depthCameraModel;
 
     ///vector of objects compositions
     std::vector<ObjectComposition *> objects;

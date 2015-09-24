@@ -16,6 +16,7 @@ HOP3DBham::HOP3DBham(std::string _config) :
     partSelector = hop3d::createPartSelectorMean(config.selectorConfig);
     imageFilterer = hop3d::createDepthImageFilter(config.filtererConfig);
     imageFilterer->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
+    depthCameraModel.reset(new DepthSensorModel(config.cameraConfig));
 }
 
 #ifdef QVisualizerBuild
@@ -48,6 +49,7 @@ HOP3DBham::Config::Config(std::string configFilename){
     selectorConfig = (config.FirstChildElement( "PartSelector" )->Attribute( "configFilename" ));
     filtererConfig = (config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
     compositionConfig = (config.FirstChildElement( "ObjectComposition" )->Attribute( "configFilename" ));
+    cameraConfig = (config.FirstChildElement( "CameraModel" )->Attribute( "configFilename" ));
 }
 
 /// learining from the dataset
@@ -127,26 +129,48 @@ void HOP3DBham::learn(){
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
-    notify(*hierarchy);
 
     //represent all images in parts from 3rd layer
     //imageFilterer->computeImages3rdLayer();
     Dataset dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
+    std::vector< std::set<int>> clusters;
     for (size_t categoryNo=0;categoryNo<dataset.categories.size();categoryNo++){//for each category
         for (size_t objectNo=0;objectNo<dataset.categories[categoryNo].objects.size();objectNo++){//for each object
+            std::cout << "Create object composition\n";
+            objects.push_back(createObjectCompositionOctree(config.compositionConfig));
             for (size_t imageNo=0;imageNo<dataset.categories[categoryNo].objects[objectNo].imagesNo;imageNo++){//for each depth image
-                //Mat34 cameraPose(Mat34::Identity());
-                //get octets of the 3rd layers
-                //imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[1],octets, categoryNo, objectNo, imageNo, cameraPose);
+                Mat34 cameraPose(Mat34::Identity());
+                //int layerNo=3;
+                std::vector<ViewDependentPart> parts;
+                //get parts of the 3rd layers
+                //imageFilterer->getParts(hierarchy.get()->viewDependentLayers[1],layerNo, parts, categoryNo, objectNo, imageNo, cameraPose);
+                parts.push_back(hierarchy.get()->viewDependentLayers[1][2]);
+                parts.push_back(hierarchy.get()->viewDependentLayers[1][0]);
+                parts.push_back(hierarchy.get()->viewDependentLayers[1][1]);
+                hierarchy.get()->viewDependentLayers[1].back().print();
                 //move octets into 3D space and update octree representation of the object
-                std::cout << "Create object composition\n";
-                objects.push_back(createObjectCompositionOctree(config.compositionConfig));
-                //objects[categoryNo+dataset.categories.size()*objectNo].update(octets, cameraPose);
+                objects.back()->update(parts, cameraPose, *depthCameraModel, *hierarchy);
             }
+            std::vector< std::set<int>> clustersTmp;
+            objects.back()->getClusters(clustersTmp);
+            clusters.reserve( clusters.size() + clustersTmp.size() ); // preallocate memory
+            clusters.insert( clusters.end(), clustersTmp.begin(), clustersTmp.end() );
         }
+    }
+    std::cout << "clusters size: " << clusters.size() << "\n";
+    int clusterNo=0;
+    for (auto & cluster : clusters){
+        std::cout << "cluster " << clusterNo << " size " << cluster.size() << ": ";
+        for (auto & id : cluster){
+            std::cout << id << ", ";
+        }
+        std::cout << "\n";
+        clusterNo++;
     }
     ///select part for 4th layer
     //partSelector->selectParts(objects, dictionary, *hierarchy,4)
+
+    notify(*hierarchy);
 
     std::cout << "Finished\n";
 }

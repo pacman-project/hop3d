@@ -32,8 +32,10 @@ int main(int argc, char** argv)
 
         QGLVisualizer::Config configVis(configFile);//something is wrong with QApplication when Qapplication
         //object is created. libTinyxml can read only ints from xml file
+        // found: Qt changes locale settings use
 
         QApplication application(argc,argv);
+        setlocale(LC_NUMERIC,"C");
         glutInit(&argc, argv);
 
         QGLVisualizer visu(configVis);
