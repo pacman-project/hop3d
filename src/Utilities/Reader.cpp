@@ -267,5 +267,6 @@ int hop3d::Reader::readMultipleImages(boost::filesystem::path directoryPath, std
     {
         std::cout << ex.what() << '\n';
     }
+    return 0;
 }
 
