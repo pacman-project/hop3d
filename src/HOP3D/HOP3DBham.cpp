@@ -129,7 +129,7 @@ void HOP3DBham::learn(){
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
-
+/*
     //represent all images in parts from 3rd layer
     //imageFilterer->computeImages3rdLayer();
     Dataset dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
@@ -175,7 +175,7 @@ void HOP3DBham::learn(){
     }
     ///select part for 4th layer
     //partSelector->selectParts(objects, dictionary, *hierarchy,4)
-
+*/
     notify(*hierarchy);
 
     std::cout << "Finished\n";

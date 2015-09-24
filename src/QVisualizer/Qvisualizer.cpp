@@ -174,7 +174,8 @@ void QGLVisualizer::updateHierarchy(){
             }
             cloudsListLayers[0].push_back(createCloudList(cloud));
         }
-        for (int i=0;i<2;i++){
+        std::cout << "fd\n";
+        for (int i=0;i<1;i++){
             if (config.verbose==1){
                 std::cout << "layer "<< i+1 << " size: " << cloudsListLayers[0].size() << "\n";
             }
@@ -184,6 +185,7 @@ void QGLVisualizer::updateHierarchy(){
             }
             linksLists[i+1].push_back(createLinksList(i+1));
         }
+        std::cout << "fd1\n";
         mtxHierarchy.unlock();
     }
 }
@@ -233,7 +235,14 @@ GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
-                glCallList(cloudsListLayers[layerNo-1][part.partIds[n][m]]);
+                int id = part.partIds[n][m];
+                if ((layerNo==1)&&(part.partIds[n][m]==-1)){
+                    glColor3ub(100,100,100);
+                    id = 0;
+                }
+                else
+                    glColor3ub(200,200,200);
+                glCallList(cloudsListLayers[layerNo-1][id]);
             glPopMatrix();
         }
     }
@@ -257,7 +266,10 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                 glPushMatrix();
                     glMultMatrixd(GLmat);
                     glColor4d(config.clustersColor.red(), config.clustersColor.green(), config.clustersColor.blue(), config.clustersColor.alpha());
-                    glCallList(cloudsListLayers[layerNo-1][itComp->partIds[n][m]]);
+                    int id = itComp->partIds[n][m];
+                    if ((layerNo==1)&&(itComp->partIds[n][m]==-1))
+                        id = 0;
+                    glCallList(cloudsListLayers[layerNo-1][id]);
                 glPopMatrix();
             }
         }
