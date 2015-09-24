@@ -34,7 +34,7 @@ DepthImageFilter::Config::Config(std::string configFilename){
     model->FirstChildElement( "parameters" )->QueryIntAttribute("backgroundOverlap", &backgroundOverlap);
     model->FirstChildElement( "parameters" )->QueryDoubleAttribute("boundaryResponseLevel", &boundaryResponseLevel);
 
-    backgroundValue = double((filterSize*filterSize)-backgroundOverlap)*double(maxDepthValue/scalingToMeters)*0.98;
+    backgroundValue = double(maxDepthValue/scalingToMeters)*0.97;
 
     std::cout << "Load filter parameters...\n";
     std::cout << "Filters no.: " << filtersNo << "\n";
@@ -63,17 +63,15 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
 //filters.size()
 
     hop3d::ImagesDisplay displayer;
-    std::vector<cv::Mat> filteredImages(1);
+    std::vector<cv::Mat> filteredImages(filters.size());
     //applying all the filters to an image
     unsigned long int e1 = cv::getTickCount();
 
 //#pragma omp parallel for
-    for(unsigned int iterF = 0 ; iterF < 1; iterF++)
+    for(unsigned int iterF = 0 ; iterF < filters.size(); iterF++)
     {
-        cv::Mat filteredImage(depthImage.rows-(offset),depthImage.cols-(offset), cv::DataType<double>::type,cv::Scalar(0));
+        cv::Mat filteredImage(depthImage.rows-(offset),depthImage.cols-(offset), cv::DataType<double>::type,cv::Scalar(-1));
         filterSingleImageSingleFilter(depthImage,filters[iterF],filteredImage);
-
-        //filteredImages.push_back(filteredImage.clone());
         filteredImages[iterF] = filteredImage.clone();
         filteredImage.release();
 
@@ -84,8 +82,8 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
 
 //Non-maxima suppression
         //displayer.displayDepthImage(filterImages[iterI]);
-        cv::Mat responseImage(depthImage.rows-(offset),depthImage.cols-(offset), cv::DataType<double>::type,cv::Scalar(0));
-        cv::Mat idImage(depthImage.rows-(offset),depthImage.cols-(offset), cv::DataType<int>::type,cv::Scalar(0));
+        cv::Mat responseImage(depthImage.cols-(offset),depthImage.rows-(offset), cv::DataType<double>::type,cv::Scalar(0));
+        cv::Mat idImage(depthImage.cols-(offset),depthImage.rows-(offset), cv::DataType<int>::type,cv::Scalar(0));
 
         nonMaximaSuppression(filteredImages,responseImage,idImage);
         // displaying the results
@@ -151,9 +149,10 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                 if(config.verbose){
                     for(int posIter = 0; posIter < octetIter; posIter++){
                         if (posIter == 4) continue;
-                        std::cout << "(u,v,depth) neighbour [" << (posIter/3)-1  << ", " << (posIter%3)-1 << "]: ("<< octetTemp.filterPos[posIter/3][posIter%3].u << ", "<< octetTemp.filterPos[posIter/3][posIter%3].v << ", "<< octetTemp.filterPos[posIter/3][posIter%3].depth << ")\t";
+                        std::cout << "(u,v,d) neigh. [" << (posIter/3)-1  << ", " << (posIter%3)-1 << "]: ("<< octetTemp.filterPos[posIter/3][posIter%3].u << ", "<< octetTemp.filterPos[posIter/3][posIter%3].v << ", "<< octetTemp.filterPos[posIter/3][posIter%3].depth << ")  ";
+                        std::cout << "(id,activ.) neigh. [" << (posIter/3)-1  << ", " << (posIter%3)-1 << "]: ("<< octetTemp.filterIds[posIter/3][posIter%3] << ", "<< octetTemp.responses [posIter/3][posIter%3] << ")  ";
                     }
-                    std::cout << std::endl << "(u,v,depth) central: ("<< octetTemp.filterPos[1][1].u << ", "<< octetTemp.filterPos[1][1].v << ", "<< octetTemp.filterPos[1][1].depth << ")" << std::endl;
+                    std::cout << std::endl << "(u,v,d) central: ("<< octetTemp.filterPos[1][1].u << ", "<< octetTemp.filterPos[1][1].v << ", "<< octetTemp.filterPos[1][1].depth << ")" << std::endl;
                 }
 
               octets.push_back(octetTemp);
@@ -198,7 +197,7 @@ int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, F
     int offset = int(filterSize/2);     //casting discards fractional part
     //if (depthImage.depth() == CV_16U) std::cout << "CV_16U == unsigned short " << sizeof(unsigned short) << std::endl;
     //depth image represented as double giving it geometrical relation
-    cv::Mat depthImageDouble(depthImage.cols,depthImage.rows, cv::DataType<double>::type);
+    cv::Mat depthImageDouble(depthImage.rows,depthImage.cols, cv::DataType<double>::type);
     depthImage.convertTo(depthImageDouble,CV_64F);
     depthImageDouble =  depthImageDouble/config.scalingToMeters;
 
@@ -213,29 +212,23 @@ int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, F
     cv::Mat imageRoi(filterSize,filterSize, cv::DataType<double>::type);
     cv::Mat responseTemp(filterSize,filterSize, cv::DataType<double>::type);
     cv::Mat subResult(filterSize,filterSize, cv::DataType<double>::type);
-    //first approach with TBB, then GPU
-    for(int i = offset; i < depthImageDouble.rows-(offset);i++){
-        for(int j = offset; j < depthImageDouble.cols-(offset);j++){
-
-            cv::Rect regionOfInterest = cv::Rect(j-offset, i-offset,filterSize,filterSize);
-            imageRoi = depthImageDouble(regionOfInterest);
-            double sumValue = cv::sum(imageRoi)[0];
-
-            double s = 0;
-            if (sumValue > config.backgroundValue) s = -1;
-            else{
+    //first approach with TBB, then GPU    
+    for(int i = offset; i < depthImageDouble.cols-(offset);i++){
+        for(int j = offset; j < depthImageDouble.rows-(offset);j++){
+                cv::Rect regionOfInterest = cv::Rect(i-offset, j-offset,filterSize,filterSize);
+                imageRoi = depthImageDouble(regionOfInterest);
                 double middleValue = imageRoi.at<double>(offset,offset);
                 cv::subtract(imageRoi,cv::Scalar(middleValue),subResult,loadedMask);
+                if(middleValue > config.backgroundValue) continue;
                 cv::absdiff(subResult,loadedFilter,responseTemp);
-                s = cv::sum(responseTemp)[0];
+                double s = cv::sum(responseTemp)[0];
                 if (s > config.boundaryResponseLevel) s = -2;
                 //relation to number of active elements in the filter + scaling to get rid of problems with small floating point values
                 else s *=(10000/numActive);
-            }
-            filteredImage.at<double>(i-offset,j-offset) = s;
+                filteredImage.at<double>(j-offset,i-offset) = s;
         }
     }
-    writer.matrixToTxtFile(filteredImage,"filteredImage.txt");
+  //  writer.matrixToTxtFile(filteredImage,"filteredImage.txt");
     imageRoi.release();
     subResult.release();
     responseTemp.release();
@@ -250,17 +243,25 @@ int DepthImageFilter::nonMaximaSuppression(const std::vector<cv::Mat> responsesI
     cv::Mat maxResponsesImageTemp(responsesImages[0].rows,responsesImages[0].cols, cv::DataType<double>::type,cv::Scalar(0));
     cv::Mat maxResponsesIdsImageTemp(responsesImages[0].rows,responsesImages[0].cols, cv::DataType<int>::type,cv::Scalar(0));
     std::vector<double> maxResponses;
-    for(int i = 0; i < maxResponsesImageTemp.rows;i++){
-        for(int j = 0; j < maxResponsesImageTemp.cols;j++){
+    for(int i = 0; i < maxResponsesImageTemp.cols;i++){
+        for(int j = 0; j < maxResponsesImageTemp.rows;j++){
             std::vector<double> minResponses;
-            for(unsigned int iterI = 0 ; iterI < responsesImages.size(); iterI++){
-                    minResponses.push_back(responsesImages[iterI].at<double>(j,i));
+            if(responsesImages[0].at<double>(j,i) < 0 ) {
+                maxResponses.push_back(0);
+                maxResponsesImageTemp.at<double>(j,i) = 0;
+                maxResponsesIdsImageTemp.at<int>(j,i) = -1;
+
             }
-            auto itMin = std::min_element(minResponses.begin(),minResponses.end());
-            auto itMax = std::max_element(minResponses.begin(),minResponses.end());
-            maxResponses.push_back(*itMax);
-            maxResponsesImageTemp.at<double>(j,i) = *itMin;
-            maxResponsesIdsImageTemp.at<int>(j,i) = int(itMin - minResponses.begin());
+            else{
+                for(unsigned int iterI = 0 ; iterI < responsesImages.size(); iterI++){
+                        minResponses.push_back(responsesImages[iterI].at<double>(j,i));
+                }
+                auto itMin = std::min_element(minResponses.begin(),minResponses.end());
+                auto itMax = std::max_element(minResponses.begin(),minResponses.end());
+                maxResponses.push_back(*itMax);
+                maxResponsesImageTemp.at<double>(j,i) = *itMin;
+                maxResponsesIdsImageTemp.at<int>(j,i) = int(itMin - minResponses.begin());
+            }
         }
 
      }
