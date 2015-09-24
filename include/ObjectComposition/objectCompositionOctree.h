@@ -44,6 +44,9 @@ public:
     /// get clusters of parts id stored in octree (one cluster per voxel)
     void getClusters(std::vector< std::set<int>>& clusters);
 
+    /// get clusters of parts id stored in octree (one cluster per voxel)
+    void createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary);
+
     /// Destruction
     ~ObjectCompositionOctree(void);
 
@@ -72,6 +75,9 @@ private:
 
     /// compute rotation matrix from normal vector ('y' axis is vetical)
     void normal2rot(const Vec3& normal, Mat33& rot);
+
+    /// get clusters of parts id stored in octree (one cluster per voxel)
+    bool isInOctets(std::vector< std::set<int>>& clusters, int id, std::vector< std::set<int>>::iterator& iter);
 };
 }
 #endif // OBJECT_COMPOSITION_OCTREE_H_INCLUDED

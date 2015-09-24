@@ -2,6 +2,7 @@
   <!-- Visualizer configuration -->
   <VisualizerConfig>
   	<name>QGLVisualizer</name>
+	<parameters verbose="0"></parameters>
 	<hierarchy pixelSize="0.001"></hierarchy>
 	<layer1 dist="0.012" posZ="0.1"></layer1>
 	<layer2 dist="0.07" posZ="0.4"></layer2>

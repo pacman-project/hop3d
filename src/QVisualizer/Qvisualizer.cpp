@@ -140,15 +140,17 @@ void QGLVisualizer::drawEllipsoid(const Vec3& pos, const Mat33& covariance) cons
 void QGLVisualizer::update(hop3d::Hierarchy& _hierarchy) {
     mtxHierarchy.lock();
     *hierarchy = _hierarchy;
-    std::cout << "First layer size: " << hierarchy->firstLayer.size() << "\n";
-    std::cout << "View depent layers no: " << hierarchy->viewDependentLayers.size() << "\n";
-    for (size_t i=0; i<hierarchy->viewDependentLayers.size(); i++){
-        std::cout << "Layer " << i+2 << " size: " << hierarchy->viewDependentLayers[i].size() << "\n";
-        std::cout << "Ids in the group: ";
-        for (size_t j=0; j<hierarchy->viewDependentLayers[i].size(); j++){
-            std::cout << hierarchy->viewDependentLayers[i][j].id << ", ";
+    if (config.verbose==1){
+        std::cout << "First layer size: " << hierarchy->firstLayer.size() << "\n";
+        std::cout << "View depent layers no: " << hierarchy->viewDependentLayers.size() << "\n";
+        for (size_t i=0; i<hierarchy->viewDependentLayers.size(); i++){
+            std::cout << "Layer " << i+2 << " size: " << hierarchy->viewDependentLayers[i].size() << "\n";
+            std::cout << "Ids in the group: ";
+            for (size_t j=0; j<hierarchy->viewDependentLayers[i].size(); j++){
+                std::cout << hierarchy->viewDependentLayers[i][j].id << ", ";
+            }
+            std::cout << "\n";
         }
-        std::cout << "\n";
     }
     mtxHierarchy.unlock();
     updateHierarchyFlag = true;
@@ -173,7 +175,9 @@ void QGLVisualizer::updateHierarchy(){
             cloudsListLayers[0].push_back(createCloudList(cloud));
         }
         for (int i=0;i<2;i++){
-            std::cout << "layer "<< i+1 << " size: " << cloudsListLayers[0].size() << "\n";
+            if (config.verbose==1){
+                std::cout << "layer "<< i+1 << " size: " << cloudsListLayers[0].size() << "\n";
+            }
             for (auto it = hierarchy->viewDependentLayers[i].begin(); it!=hierarchy->viewDependentLayers[i].end(); it++){
                 cloudsListLayers[i+1].push_back(createPartList(*it, i+1));
                 clustersList[i+1].push_back(createClustersList(*it, i+1));

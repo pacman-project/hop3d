@@ -86,13 +86,21 @@ public:
     /// Pose of the part in 3D space
     Mat34 pose;
 
+    /// id of parts from last view-dependent layer which create current part
+    std::vector<int> group;
+
     /// Gaussians related to positions of neighbouring parts
     std::array<std::array<Gaussian3D,3>,3> gaussians;
+
+    /// Construction
+    inline ViewIndependentPart(){};
 
     /// Construction
     inline ViewIndependentPart(int _id, int _layerId, Mat34 _pose) :
         Part(_id, _layerId, PART_VIEW_INDEP), pose(_pose){
     }
+    /// Print
+    void print() const;
 };
 
 }

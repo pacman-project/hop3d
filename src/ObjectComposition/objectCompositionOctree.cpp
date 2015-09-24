@@ -72,7 +72,7 @@ void ObjectCompositionOctree::getClusters(std::vector< std::set<int>>& clusters)
                     for (auto & ids : (*octree)(idX,idY,idZ).partIds){
                         if (iterNo>0){
                             Vec3 norm2 = (*octree).at(idX,idY,idZ).poses[iterNo].matrix().block(0,2,3,1);
-                            //compute angle between angles
+                            //compute angle between normals
                             double dp = norm1.adjoint()*norm2;
                             if (fabs(acos(dp))>config.maxAngle)// if angle between normals is bigger than threshold add to another cluster
                                 partIds2.insert(ids);
@@ -93,6 +93,53 @@ void ObjectCompositionOctree::getClusters(std::vector< std::set<int>>& clusters)
             }
         }
     }
+}
+
+/// get clusters of parts id stored in octree (one cluster per voxel)
+void ObjectCompositionOctree::createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary){
+    vocabulary.clear();
+    std::vector< std::set<int>> newClusters;
+    for (auto & cluster : clusters){
+        bool isInClusters(false);
+        std::vector< std::set<int>>::iterator iter;
+        for (auto & partId : cluster){
+            //check if part is in vocabulary
+            if (isInOctets(newClusters, partId, iter)){
+                isInClusters = true;
+                break;
+            }
+        }
+        if (isInClusters){//if part is in vocabulary, update existing cluster
+            for (auto & partId : cluster)
+                (*iter).insert(partId);
+        }
+        else //else create new cluster
+            newClusters.push_back(cluster);
+    }
+    //update vocabulary
+    int idNo=0;
+    for (auto & cluster : newClusters){
+        ViewIndependentPart part;
+        part.layerId=4;
+        part.id = idNo;
+        for (auto & partId : cluster){
+            part.group.push_back(partId);
+        }
+        idNo++;
+    }
+}
+
+/// get clusters of parts id stored in octree (one cluster per voxel)
+bool ObjectCompositionOctree::isInOctets(std::vector< std::set<int>>& clusters, int id, std::vector< std::set<int>>::iterator& iter){
+    for (std::vector< std::set<int>>::iterator cluster = clusters.begin(); cluster!=clusters.end(); cluster++){
+        for (std::set<int>::iterator partId = (*cluster).begin(); partId!=(*cluster).end();cluster++){
+            if (*partId==id){
+                iter = cluster;
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 /// compute rotation matrix from normal vector ('y' axis is vetical)

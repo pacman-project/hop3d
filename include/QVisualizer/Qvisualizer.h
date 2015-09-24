@@ -33,6 +33,7 @@ public:
             if (config.ErrorID())
                 std::cout << "unable to load Visualizer config file.\n";
             tinyxml2::XMLElement * model = config.FirstChildElement( "VisualizerConfig" );
+            model->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
             double rgba[4]={0,0,0,0};
             model->FirstChildElement( "background" )->QueryDoubleAttribute("red", &rgba[0]);
             model->FirstChildElement( "background" )->QueryDoubleAttribute("green", &rgba[1]);
@@ -93,6 +94,8 @@ public:
         bool drawClusters;
         /// Cluster color
         QColor clustersColor;
+        /// verbose
+        int verbose;
     };
 
     /// Construction
