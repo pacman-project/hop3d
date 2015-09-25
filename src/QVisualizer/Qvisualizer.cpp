@@ -174,7 +174,6 @@ void QGLVisualizer::updateHierarchy(){
             }
             cloudsListLayers[0].push_back(createCloudList(cloud));
         }
-        std::cout << "fd\n";
         for (int i=0;i<1;i++){
             if (config.verbose==1){
                 std::cout << "layer "<< i+1 << " size: " << cloudsListLayers[0].size() << "\n";
@@ -185,7 +184,6 @@ void QGLVisualizer::updateHierarchy(){
             }
             linksLists[i+1].push_back(createLinksList(i+1));
         }
-        std::cout << "fd1\n";
         mtxHierarchy.unlock();
     }
 }

@@ -51,6 +51,9 @@ int main(void){
         hop3d::Hierarchy hierarchy("configGlobal.xml");
         hop3d::ImageFilter* imageFilterer = hop3d::createDepthImageFilter(filtererConfig);
         imageFilterer->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
+        std::vector<hop3d::Octet> octets3layer;
+            octetsNo = 200;
+            octets3layer.resize(octetsNo);
         imageFilterer->getFilters(hierarchy.firstLayer);
         std::cout << hierarchy.firstLayer[0].normal << "\n";
         std::cout << hierarchy.firstLayer[1].normal << "\n";
@@ -61,6 +64,8 @@ int main(void){
         hop3d::Reader reader;
         reader.readMultipleImages("../../resources/depthImages",vecImages);
         imageFilterer->computeOctets(vecImages[0],octets);
+        std::cout << "stats builders oddddd d sd sag sdgg\n";
+        std:: cout << " size: " << octets.size() << "\n";
 
         hop3d::ViewDependentPart::Seq dictionary;
         statsBuilder->computeStatistics(octets, 2, (int)hierarchy.firstLayer.size(), dictionary);

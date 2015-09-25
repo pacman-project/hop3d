@@ -82,7 +82,7 @@ void HOP3DBham::learn(){
 
     ///3rd layer
     std::uniform_int_distribution<int> distribution3rd(0,49); // filters ids distribution
-    std::vector<hop3d::Octet> octets3layer;
+    /*std::vector<hop3d::Octet> octets3layer;
     octetsNo = 200;
     octets3layer.resize(octetsNo);
     for (auto& it: octets3layer){
@@ -101,7 +101,7 @@ void HOP3DBham::learn(){
                 it.filterPos[i][j]=coords;
             }
         }
-    }
+    }*/
 
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
     hop3d::ViewDependentPart::Seq dictionary;
@@ -115,16 +115,16 @@ void HOP3DBham::learn(){
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
         if (layerNo==0){
             imageFilterer->computeOctets(vecImages[0],octets);
-            for (auto & octet : octets){
+            /*for (auto & octet : octets){
                 octet.print();
                 getchar();
-            }
+            }*/
             //octets=octets2layer;
         }
         else if (layerNo==1){
             startId = int(hierarchy.get()->firstLayer.size()+10000);
             //imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[layerNo-1],octets);
-            octets=octets3layer;
+            //octets=octets3layer;
         }
         std::cout << "Compute statistics for " << octets.size() << " octets (" << layerNo+2 << "-th layer)\n";
         statsBuilder->computeStatistics(octets, layerNo+2, startId, dictionary);
