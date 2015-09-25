@@ -155,7 +155,8 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                     std::cout << std::endl << "(u,v,d) central: ("<< octetTemp.filterPos[1][1].u << ", "<< octetTemp.filterPos[1][1].v << ", "<< octetTemp.filterPos[1][1].depth << ")" << std::endl;
                 }
 
-              octets.push_back(octetTemp);
+              if (octetTemp.filterIds[1][1]!=-1)
+                octets.push_back(octetTemp);
               imageRoi.release();
               idRoi.release();
              }

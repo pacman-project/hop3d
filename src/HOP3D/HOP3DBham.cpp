@@ -114,8 +114,12 @@ void HOP3DBham::learn(){
     int startId = (int)hierarchy.get()->firstLayer.size();
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
         if (layerNo==0){
-            //imageFilterer->computeOctets(vecImages[0],octets);
-            octets=octets2layer;
+            imageFilterer->computeOctets(vecImages[0],octets);
+            for (auto & octet : octets){
+                octet.print();
+                getchar();
+            }
+            //octets=octets2layer;
         }
         else if (layerNo==1){
             startId = int(hierarchy.get()->firstLayer.size()+10000);
@@ -129,10 +133,10 @@ void HOP3DBham::learn(){
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
-/*
+
     //represent all images in parts from 3rd layer
     //imageFilterer->computeImages3rdLayer();
-    Dataset dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
+/*    Dataset dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
     std::vector< std::set<int>> clusters;
     for (size_t categoryNo=0;categoryNo<dataset.categories.size();categoryNo++){//for each category
         for (size_t objectNo=0;objectNo<dataset.categories[categoryNo].objects.size();objectNo++){//for each object
