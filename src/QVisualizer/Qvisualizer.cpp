@@ -230,6 +230,9 @@ GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
     for (size_t n = 0; n < part.partIds.size(); n++){
         for (size_t m = 0; m < part.partIds[n].size(); m++){
             Vec3 pos(config.pixelSize*part.gaussians[n][m].mean(0), config.pixelSize*part.gaussians[n][m].mean(1), part.gaussians[n][m].mean(2));
+            if ((n==1)&&(m==1)){
+                pos(0)=0; pos(1)=0; pos(2)=0;
+            }
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
@@ -260,6 +263,9 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
         for (size_t n = 0; n < itComp->partIds.size(); n++){
             for (size_t m = 0; m < itComp->partIds[n].size(); m++){
                 Vec3 pos(config.pixelSize*itComp->gaussians[n][m].mean(0), config.pixelSize*itComp->gaussians[n][m].mean(1), itComp->gaussians[n][m].mean(2));
+                if ((n==1)&&(m==1)){
+                    pos(0)=0; pos(1)=0; pos(2)=0;
+                }
                 double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1)-(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
                 glPushMatrix();
                     glMultMatrixd(GLmat);

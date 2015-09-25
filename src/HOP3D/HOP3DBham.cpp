@@ -115,10 +115,10 @@ void HOP3DBham::learn(){
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
         if (layerNo==0){
             imageFilterer->computeOctets(vecImages[0],octets);
-            /*for (auto & octet : octets){
+            for (auto & octet : octets){
                 octet.print();
                 getchar();
-            }*/
+            }
             //octets=octets2layer;
         }
         else if (layerNo==1){
