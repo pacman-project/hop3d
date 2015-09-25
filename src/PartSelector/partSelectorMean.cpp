@@ -155,6 +155,55 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
     }
 }
 
+/// get clusters of parts id stored in octree (one cluster per voxel)
+void PartSelectorMean::createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary){
+    vocabulary.clear();
+    std::vector< std::set<int>> newClusters;
+    for (auto & cluster : clusters){
+        bool isInClusters(false);
+        std::vector< std::set<int>>::iterator iter;
+        for (auto & partId : cluster){
+            //check if part is in vocabulary
+            if (isInOctets(newClusters, partId, iter)){
+                isInClusters = true;
+                break;
+            }
+        }
+        if (isInClusters){//if part is in vocabulary, update existing cluster
+            for (auto & partId : cluster)
+                (*iter).insert(partId);
+        }
+        else //else create new cluster
+            newClusters.push_back(cluster);
+    }
+    //update vocabulary
+    int idNo=0;
+    for (auto & cluster : newClusters){
+        ViewIndependentPart part;
+        part.layerId=4;
+        part.id = idNo;
+        for (auto & partId : cluster){
+            part.group.push_back(partId);
+        }
+        vocabulary.push_back(part);
+        idNo++;
+    }
+}
+
+/// get clusters of parts id stored in octree (one cluster per voxel)
+bool PartSelectorMean::isInOctets(std::vector< std::set<int>>& clusters, int id, std::vector< std::set<int>>::iterator& iter){
+    for (std::vector< std::set<int>>::iterator cluster = clusters.begin(); cluster!=clusters.end(); cluster++){
+        for (std::set<int>::iterator partId = (*cluster).begin(); partId!=(*cluster).end();cluster++){
+            if (*partId==id){
+                iter = cluster;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
 hop3d::PartSelector* hop3d::createPartSelectorMean(void) {
     selector.reset(new PartSelectorMean());
     return selector.get();

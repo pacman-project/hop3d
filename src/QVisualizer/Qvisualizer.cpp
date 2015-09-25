@@ -174,7 +174,7 @@ void QGLVisualizer::updateHierarchy(){
             }
             cloudsListLayers[0].push_back(createCloudList(cloud));
         }
-        for (int i=0;i<1;i++){
+        for (int i=0;i<2;i++){
             if (config.verbose==1){
                 std::cout << "layer "<< i+1 << " size: " << cloudsListLayers[0].size() << "\n";
             }
@@ -233,12 +233,15 @@ GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
             if ((n==1)&&(m==1)){
                 pos(0)=0; pos(1)=0; pos(2)=0;
             }
+            if ((part.partIds[n][m]==-1)){
+                pos(0)=config.pixelSize*5.0*double(n-1); pos(1)=config.pixelSize*5.0*double(m-1); pos(2)=0;
+            }
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
                 int id = part.partIds[n][m];
-                if ((layerNo==1)&&(part.partIds[n][m]==-1)){
-                    glColor3ub(100,100,100);
+                if ((part.partIds[n][m]==-1)){
+                    glColor3ub(100,50,50);
                     id = 0;
                 }
                 else
@@ -265,6 +268,9 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                 Vec3 pos(config.pixelSize*itComp->gaussians[n][m].mean(0), config.pixelSize*itComp->gaussians[n][m].mean(1), itComp->gaussians[n][m].mean(2));
                 if ((n==1)&&(m==1)){
                     pos(0)=0; pos(1)=0; pos(2)=0;
+                }
+                if ((itComp->partIds[n][m]==-1)){
+                    pos(0)=config.pixelSize*5.0*double(n-1); pos(1)=config.pixelSize*5.0*double(m-1); pos(2)=0;
                 }
                 double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1)-(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
                 glPushMatrix();

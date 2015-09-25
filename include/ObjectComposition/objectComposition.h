@@ -39,9 +39,6 @@ public:
     /// get clusters of parts id stored in octree (one cluster per voxel)
     virtual void getClusters(std::vector< std::set<int>>& clusters) = 0;
 
-    /// get clusters of parts id stored in octree (one cluster per voxel)
-    virtual void createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary) = 0;
-
     /// Virtual descrutor
     virtual ~ObjectComposition() {
     }
