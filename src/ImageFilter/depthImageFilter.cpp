@@ -146,14 +146,14 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                 }
 
 
-                if(config.verbose){
-                    for(int posIter = 0; posIter < octetIter; posIter++){
-                        if (posIter == 4) continue;
-                        std::cout << "(u,v,d) neigh. [" << (posIter/3)-1  << ", " << (posIter%3)-1 << "]: ("<< octetTemp.filterPos[posIter/3][posIter%3].u << ", "<< octetTemp.filterPos[posIter/3][posIter%3].v << ", "<< octetTemp.filterPos[posIter/3][posIter%3].depth << ")  ";
-                        std::cout << "(id,activ.) neigh. [" << (posIter/3)-1  << ", " << (posIter%3)-1 << "]: ("<< octetTemp.filterIds[posIter/3][posIter%3] << ", "<< octetTemp.responses [posIter/3][posIter%3] << ")  ";
-                    }
-                    std::cout << std::endl << "(u,v,d) central: ("<< octetTemp.filterPos[1][1].u << ", "<< octetTemp.filterPos[1][1].v << ", "<< octetTemp.filterPos[1][1].depth << ")" << std::endl;
-                }
+//                if(config.verbose){
+//                    for(int posIter = 0; posIter < octetIter; posIter++){
+//                        if (posIter == 4) continue;
+//                        std::cout << "(u,v,d) neigh. [" << (posIter/3)-1  << ", " << (posIter%3)-1 << "]: ("<< octetTemp.filterPos[posIter/3][posIter%3].u << ", "<< octetTemp.filterPos[posIter/3][posIter%3].v << ", "<< octetTemp.filterPos[posIter/3][posIter%3].depth << ")  ";
+//                        std::cout << "(id,activ.) neigh. [" << (posIter/3)-1  << ", " << (posIter%3)-1 << "]: ("<< octetTemp.filterIds[posIter/3][posIter%3] << ", "<< octetTemp.responses [posIter/3][posIter%3] << ")  ";
+//                    }
+//                    std::cout << std::endl << "(u,v,d) central: ("<< octetTemp.filterPos[1][1].u << ", "<< octetTemp.filterPos[1][1].v << ", "<< octetTemp.filterPos[1][1].depth << ")" << std::endl;
+//                }
 
                 for (int n=0;n<3;n++)
                     for (int m=0;m<3;m++){
@@ -161,9 +161,17 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Se
                             octetTemp.filterPos[n][m].depth=0;
                         }
                     }
-              if (octetTemp.filterIds[1][1]!=-1)
-                octets.push_back(octetTemp);
-
+              if (octetTemp.filterPos[1][1].depth <  21 && octetTemp.filterIds[0][0]!=-1 && octetTemp.filterIds[0][1]!=-1 && octetTemp.filterIds[0][2]!=-1 && octetTemp.filterIds[1][0]!=-1 && octetTemp.filterIds[1][1]!=-1 && octetTemp.filterIds[1][2]!=-1 && octetTemp.filterIds[2][0]!=-1 && octetTemp.filterIds[2][1]!=-1 && octetTemp.filterIds[2][2]!=-1){
+                  if(config.verbose){
+                      for(int posIter = 0; posIter < octetIter; posIter++){
+                          if (posIter == 4) continue;
+                          std::cout << "neigh. [" << (posIter/3)-1  << ", " << (posIter%3)-1 << "] (u,v,d): ("<< octetTemp.filterPos[posIter/3][posIter%3].u << ", "<< octetTemp.filterPos[posIter/3][posIter%3].v << ", "<< octetTemp.filterPos[posIter/3][posIter%3].depth << ")  ";
+                          std::cout << " (id,activ.): ("<< octetTemp.filterIds[posIter/3][posIter%3] << ", "<< octetTemp.responses [posIter/3][posIter%3] << ")  ";
+                      }
+                      std::cout << std::endl << "(u,v,d) central: ("<< octetTemp.filterPos[1][1].u << ", "<< octetTemp.filterPos[1][1].v << ", "<< octetTemp.filterPos[1][1].depth << ")" << std::endl;
+                  }
+                   octets.push_back(octetTemp);
+            }
 
               imageRoi.release();
               idRoi.release();

@@ -1,5 +1,4 @@
-# cmake requirements
-cmake_minimum_required(VERSION 2.8)
+# cmake requirementscmake_minimum_required(VERSION 2.8)
 
 # Build options have to be before PROJECT(...)
 SET(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE PATH "Configuration types")
@@ -13,7 +12,7 @@ SET( PROJ_NAME      "HOP3D" )
 SET( PROJ_PATH      ${CMAKE_SOURCE_DIR} )
 SET( PROJ_OUT_PATH  ${CMAKE_BINARY_DIR} )
 
-SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread")
+SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread -O0")
 
 option(BUILD_HOP3D "Build HOP3D libraries" ON)
 option(BUILD_HOP3D_UTILITIES "Build HOP3D Utilities library" ON)
