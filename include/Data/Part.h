@@ -76,29 +76,37 @@ public:
     void print() const;
 };
 
-class ViewIndependentPart : public Part{
+class ViewIndependentPart{
 public:
-    /// Sequence
-    typedef std::vector<ViewIndependentPart> Seq;
-    /// Pointer
-    typedef std::unique_ptr<ViewIndependentPart> Ptr;
+    class Part3D{
+    public:
+        /// pose of the part
+        Mat34 pose;
+        /// id of the part
+        int id;
 
-    /// Pose of the part in 3D space
-    Mat34 pose;
+        Part3D(void){};
+        Part3D(Mat34& _pose, int _id) : pose(_pose), id(_id){};
+    };
 
-    /// id of parts from last view-dependent layer which create current part
+    /// part composition
+    std::vector<Part3D> parts;
+
+    /// Part id
+    int id;
+    /// Layer id
+    int layerId;
+    /// part aggregated from the same level vocabulary
     std::vector<int> group;
 
-    /// Gaussians related to positions of neighbouring parts
-    std::array<std::array<GaussianSE3,3>,3> gaussians;
+    /// id of neighbouring parts
+    std::array<std::array<std::array<int,3>,3>,3> partIds;
 
-    /// Construction
-    inline ViewIndependentPart(){};
+    /// relative positions of neighbouring parts
+    std::array<std::array<std::array<Mat34,3>,3>,3> neighbourPoses;
 
-    /// Construction
-    inline ViewIndependentPart(int _id, int _layerId, Mat34 _pose) :
-        Part(_id, _layerId, PART_VIEW_INDEP), pose(_pose){
-    }
+    ViewIndependentPart(){id=-1;};
+    ViewIndependentPart(int size){size=size-1; id=-1;};// required by octree
     /// Print
     void print() const;
 };

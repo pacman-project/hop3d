@@ -13,17 +13,17 @@ ObjectCompositionOctree::ObjectCompositionOctree(void) : ObjectComposition("Octr
 ObjectCompositionOctree::ObjectCompositionOctree(std::string _config) :
         ObjectComposition("Octree Object Composition", COMPOSITION_OCTREE), config(_config) {
     octrees.resize(3);
-    octrees[0].reset(new Octree<PartVoxel>(config.voxelsNo)); // cellSize0
-    octrees[1].reset(new Octree<PartVoxel>(config.voxelsNo/2)); // cellSize1=cellSize0*3;
-    octrees[2].reset(new Octree<PartVoxel>(config.voxelsNo/4)); // cellSize2=cellSize1*3=cellSize0*9;
+    octrees[0].reset(new Octree<ViewIndependentPart>(config.voxelsNo)); // cellSize0
+    octrees[1].reset(new Octree<ViewIndependentPart>(config.voxelsNo/2)); // cellSize1=cellSize0*3;
+    octrees[2].reset(new Octree<ViewIndependentPart>(config.voxelsNo/4)); // cellSize2=cellSize1*3=cellSize0*9;
 }
 
 /// Destruction
 ObjectCompositionOctree::~ObjectCompositionOctree(void) {
     octrees.resize(3);
-    octrees[0].reset(new Octree<PartVoxel>(8)); // cellSize0
-    octrees[1].reset(new Octree<PartVoxel>(4)); // cellSize1=cellSize0*3;
-    octrees[2].reset(new Octree<PartVoxel>(2)); // cellSize2=cellSize1*3=cellSize0*9;
+    octrees[0].reset(new Octree<ViewIndependentPart>(8)); // cellSize0
+    octrees[1].reset(new Octree<ViewIndependentPart>(4)); // cellSize1=cellSize0*3;
+    octrees[2].reset(new Octree<ViewIndependentPart>(2)); // cellSize2=cellSize1*3=cellSize0*9;
 }
 
 ///config class constructor
@@ -48,7 +48,9 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
     for (auto & part : parts){
         Mat34 partPosition(Mat34::Identity());
         Vec3 pos3d;
-        std::cout << "part.id: " << part.id << "\n";
+        if (config.verbose==1){
+            std::cout << "Update octree, part.id: " << part.id << "\n";
+        }
         camModel.getPoint(part.gaussians[1][1].mean, pos3d);
         Vec3 normal; hierarchy.getNormal(part, normal);
         Mat33 rot; normal2rot(normal, rot);
@@ -61,8 +63,11 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         int x = int(partPosition(0,3)/config.voxelSize);
         int y = int(partPosition(1,3)/config.voxelSize);
         int z = int(partPosition(2,3)/config.voxelSize);
-        PartVoxel::Part3D partVoxel(partPosition, part.id);
-        (*octrees[layerNo])(x,y,z).parts.push_back(partVoxel);
+        if (config.verbose==1){
+            std::cout << "Update octree, xyz: " << x << ", " << y << ", " << z << "\n";
+        }
+        ViewIndependentPart::Part3D ViewIndependentPart(partPosition, part.id);
+        (*octrees[layerNo])(x,y,z).parts.push_back(ViewIndependentPart);
     }
 }
 
@@ -115,7 +120,8 @@ void ObjectCompositionOctree::normal2rot(const Vec3& normal, Mat33& rot){
 }
 
 /// create next layer vocabulary
-void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, std::vector<ViewIndependentPart>& vocabulary){
+void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const Hierarchy& hierarchy, std::vector<ViewIndependentPart>& vocabulary){
+    vocabulary.clear();
     //for no reason take the middle part. In the feature it should be max, or weighted combination
     int iterx=0;
     for (int idX=1; idX<(*octrees[destLayerNo-1]).size(); idX+=3){///to do z-slicing
@@ -123,17 +129,47 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, std::ve
         for (int idY=1; idY<(*octrees[destLayerNo-1]).size(); idY+=3){
             int iterz=0;
             for (int idZ=1; idZ<(*octrees[destLayerNo-1]).size(); idZ+=3){
-                if ((*octrees[destLayerNo-1]).at(idX,idY,idZ).partIds.size()>0){
-                    PartVoxel newPart;
-                    //newPart.
-                    newPart.id = (*octrees[destLayerNo-1]).at(idX, idY, idZ).id;
-                    (*octrees[destLayerNo])(iterx,itery,iterz) = newPart;
+                if ((*octrees[destLayerNo-1]).at(idX,idY,idZ).parts.size()>0){
+                    std::cout << "is part\n";
+                    ViewIndependentPart newPart;
+                    newPart.layerId=4;
+                    if ((*octrees[destLayerNo-1]).at(idX, idY, idZ).id!=-1)
+                        newPart.id = hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
+                    else
+                        newPart.id = -1;
+                    // add neighbouring parts into structure
+                    assignPartNeighbours(newPart, hierarchy, destLayerNo-1, idX, idY, idZ);
+                    (*octrees[destLayerNo])(iterx,itery,iterz) = newPart;//update octree
+                    vocabulary.push_back(newPart);
                 }
                 iterz++;
             }
             itery++;
         }
         iterx++;
+    }
+}
+
+/// assign neighbouring parts to new part
+void ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z){
+    Mat34 partPoseInv((*octrees[layerNo]).at(x,y,z).parts[0].pose.inverse());
+    for (int i=-1; i<1;i++){
+        for (int j=-1; j<1;j++){
+            for (int k=-1; k<1;k++){
+                //assign neighbouring ids
+                if ((*octrees[layerNo]).at(x+i,y+j,z+k).id!=-1)
+                    partVoxel.partIds[i+1][j+1][k+1] = hierarchy.interpreter.at((*octrees[layerNo]).at(x+i,y+j,z+k).id);
+                else
+                    partVoxel.partIds[i+1][j+1][k+1] = -1;
+                // assign spatial relation
+                if ((*octrees[layerNo]).at(x+i,y+j,z+k).id!=-1){
+                    if (i==0&&j==0&&k==0)
+                        partVoxel.neighbourPoses[i+1][j+1][k+1] = (*octrees[layerNo]).at(x,y,z).parts[0].pose;//set global pose
+                    else
+                        partVoxel.neighbourPoses[i+1][j+1][k+1] = partPoseInv*(*octrees[layerNo]).at(x+i,y+j,z+z).parts[0].pose;//set relative pose
+                }
+            }
+        }
     }
 }
 

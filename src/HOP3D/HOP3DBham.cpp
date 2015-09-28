@@ -148,13 +148,14 @@ void HOP3DBham::learn(){
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][0]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][1]);
                 //move octets into 3D space and update octree representation of the object
+                cameraPose(0,3)=0.015; cameraPose(1,3)=0.015; cameraPose(2,3)=0.015;
                 objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
-                cameraPose(0,3)=0.5;
+                cameraPose(0,3)=0.015; cameraPose(1,3)=0.015; cameraPose(2,3)=0.015;
                 objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
                 parts.clear();
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][3]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][4]);
-                cameraPose(0,3)=0.2;
+                cameraPose(0,3)=0.225; cameraPose(1,3)=0.225; cameraPose(2,3)=0.225;
                 objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
             }
             std::vector< std::set<int>> clustersTmp;
@@ -183,6 +184,16 @@ void HOP3DBham::learn(){
         word.print();
     }
     ///select part for 4th layer
+    vocabulary.clear();
+    for (auto & object : objects){
+        std::vector<ViewIndependentPart> vocab;
+        object->createNextLayerVocabulary(1, *hierarchy, vocab);
+        vocabulary.insert(vocabulary.end(),vocab.begin(), vocab.end());
+    }
+    std::cout << "4th layer vacabulary size: " << vocabulary.size() << "\n";
+    for (auto & part : vocabulary){
+        part.print();
+    }
     //partSelector->selectParts(objects, dictionary, *hierarchy,4)
 
     notify(*hierarchy);

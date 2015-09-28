@@ -33,11 +33,13 @@ void ViewDependentPart::print() const{
 void ViewIndependentPart::print() const{
     std::cout << "Id: " << id << "\n";
     std::cout << "Layer id: " << layerId << "\n";
-    std::cout << "Group size: " << group.size() << "\n";
+    //std::cout << "Group size: " << group.size() << "\n";
     std::cout << "ids: ";
     for (int i =0; i<3; i++){
         for (int j =0; j<3; j++){
-            std::cout << this->partIds[i][j] << ", ";
+            for (int k =0; k<3; k++){
+                std::cout << this->partIds[i][j][k] << ", ";
+            }
         }
     }
     std::cout << "\nParts in group: ";
