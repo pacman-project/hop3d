@@ -3,5 +3,5 @@
   <!-- filter configuration -->
   <Filterer>
     <name>DepthFilter</name>
-    <parameters filtersNo="100"  filterSize="7" verbose="0" overlapRf="1" maxDepthValue="65535" scalingToMeters="3000" backgroundOverlap="0" boundaryResponseLevel="1.8"></parameters>
+    <parameters filtersNo="100"  filterSize="7" verbose="0" overlapRf="1" maxDepthValue="65535" scalingToMeters="10000" backgroundOverlap="0" boundaryResponseLevel="1.8"></parameters>
   </Filterer>

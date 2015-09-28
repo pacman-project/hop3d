@@ -12,12 +12,18 @@ ObjectCompositionOctree::ObjectCompositionOctree(void) : ObjectComposition("Octr
 /// Construction
 ObjectCompositionOctree::ObjectCompositionOctree(std::string _config) :
         ObjectComposition("Octree Object Composition", COMPOSITION_OCTREE), config(_config) {
-    octree.reset(new Octree<PartVoxel>(config.voxelsNo));
+    octrees.resize(3);
+    octrees[0].reset(new Octree<PartVoxel>(config.voxelsNo)); // cellSize0
+    octrees[1].reset(new Octree<PartVoxel>(config.voxelsNo/2)); // cellSize1=cellSize0*3;
+    octrees[2].reset(new Octree<PartVoxel>(config.voxelsNo/4)); // cellSize2=cellSize1*3=cellSize0*9;
 }
 
 /// Destruction
 ObjectCompositionOctree::~ObjectCompositionOctree(void) {
-    octree.reset(new Octree<PartVoxel>(2));
+    octrees.resize(3);
+    octrees[0].reset(new Octree<PartVoxel>(8)); // cellSize0
+    octrees[1].reset(new Octree<PartVoxel>(4)); // cellSize1=cellSize0*3;
+    octrees[2].reset(new Octree<PartVoxel>(2)); // cellSize2=cellSize1*3=cellSize0*9;
 }
 
 ///config class constructor
@@ -38,7 +44,7 @@ ObjectCompositionOctree::Config::Config(std::string configFilename){
 }
 
 /// update composition from octets (words from last view-independent layer's vocabulary)
-void ObjectCompositionOctree::update(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy){
+void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy){
     for (auto & part : parts){
         Mat34 partPosition(Mat34::Identity());
         Vec3 pos3d;
@@ -55,33 +61,33 @@ void ObjectCompositionOctree::update(const std::vector<ViewDependentPart>& parts
         int x = int(partPosition(0,3)/config.voxelSize);
         int y = int(partPosition(1,3)/config.voxelSize);
         int z = int(partPosition(2,3)/config.voxelSize);
-        (*octree)(x,y,z).poses.push_back(partPosition);
-        (*octree)(x,y,z).partIds.push_back(part.id);
+        PartVoxel::Part3D partVoxel(partPosition, part.id);
+        (*octrees[layerNo])(x,y,z).parts.push_back(partVoxel);
     }
 }
 
 /// get clusters of parts id stored in octree (one cluster per voxel)
-void ObjectCompositionOctree::getClusters(std::vector< std::set<int>>& clusters){
-    for (int idX=0; idX<config.voxelsNo; idX++){///to do z-slicing
-        for (int idY=0; idY<config.voxelsNo; idY++){
-            for (int idZ=0; idZ<config.voxelsNo; idZ++){;
-                if ((*octree).at(idX,idY,idZ).partIds.size()>0){
+void ObjectCompositionOctree::getClusters(int layerNo, std::vector< std::set<int>>& clusters){
+    for (int idX=0; idX<(*octrees[layerNo]).size(); idX++){///to do z-slicing
+        for (int idY=0; idY<(*octrees[layerNo]).size(); idY++){
+            for (int idZ=0; idZ<(*octrees[layerNo]).size(); idZ++){
+                if ((*octrees[layerNo]).at(idX,idY,idZ).parts.size()>0){
                     std::set<int> partIds1, partIds2;
                     int iterNo=0;
                     Vec3 norm1;
-                    for (auto & ids : (*octree)(idX,idY,idZ).partIds){
+                    for (auto & part : (*octrees[layerNo])(idX,idY,idZ).parts){
                         if (iterNo>0){
-                            Vec3 norm2 = (*octree).at(idX,idY,idZ).poses[iterNo].matrix().block(0,2,3,1);
+                            Vec3 norm2 = part.pose.matrix().block(0,2,3,1);
                             //compute angle between normals
                             double dp = norm1.adjoint()*norm2;
                             if (fabs(acos(dp))>config.maxAngle)// if angle between normals is bigger than threshold add to another cluster
-                                partIds2.insert(ids);
+                                partIds2.insert(part.id);
                             else
-                                partIds1.insert(ids);
+                                partIds1.insert(part.id);
                         }
                         else {
-                            partIds1.insert(ids);
-                            norm1=(*octree).at(idX,idY,idZ).poses[iterNo].matrix().block(0,2,3,1);
+                            partIds1.insert(part.id);
+                            norm1=part.pose.matrix().block(0,2,3,1);
                         }
                         iterNo++;
                     }
@@ -95,53 +101,6 @@ void ObjectCompositionOctree::getClusters(std::vector< std::set<int>>& clusters)
     }
 }
 
-/// get clusters of parts id stored in octree (one cluster per voxel)
-void ObjectCompositionOctree::createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary){
-    vocabulary.clear();
-    std::vector< std::set<int>> newClusters;
-    for (auto & cluster : clusters){
-        bool isInClusters(false);
-        std::vector< std::set<int>>::iterator iter;
-        for (auto & partId : cluster){
-            //check if part is in vocabulary
-            if (isInOctets(newClusters, partId, iter)){
-                isInClusters = true;
-                break;
-            }
-        }
-        if (isInClusters){//if part is in vocabulary, update existing cluster
-            for (auto & partId : cluster)
-                (*iter).insert(partId);
-        }
-        else //else create new cluster
-            newClusters.push_back(cluster);
-    }
-    //update vocabulary
-    int idNo=0;
-    for (auto & cluster : newClusters){
-        ViewIndependentPart part;
-        part.layerId=4;
-        part.id = idNo;
-        for (auto & partId : cluster){
-            part.group.push_back(partId);
-        }
-        idNo++;
-    }
-}
-
-/// get clusters of parts id stored in octree (one cluster per voxel)
-bool ObjectCompositionOctree::isInOctets(std::vector< std::set<int>>& clusters, int id, std::vector< std::set<int>>::iterator& iter){
-    for (std::vector< std::set<int>>::iterator cluster = clusters.begin(); cluster!=clusters.end(); cluster++){
-        for (std::set<int>::iterator partId = (*cluster).begin(); partId!=(*cluster).end();cluster++){
-            if (*partId==id){
-                iter = cluster;
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 /// compute rotation matrix from normal vector ('y' axis is vetical)
 void ObjectCompositionOctree::normal2rot(const Vec3& normal, Mat33& rot){
     Vec3 y(0,1,0); Vec3 x;
@@ -153,6 +112,29 @@ void ObjectCompositionOctree::normal2rot(const Vec3& normal, Mat33& rot){
     rot.block(0,0,3,1) = x;
     rot.block(0,1,3,1) = y;
     rot.block(0,2,3,1) = _normal;
+}
+
+/// create next layer vocabulary
+void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, std::vector<ViewIndependentPart>& vocabulary){
+    //for no reason take the middle part. In the feature it should be max, or weighted combination
+    int iterx=0;
+    for (int idX=1; idX<(*octrees[destLayerNo-1]).size(); idX+=3){///to do z-slicing
+        int itery=0;
+        for (int idY=1; idY<(*octrees[destLayerNo-1]).size(); idY+=3){
+            int iterz=0;
+            for (int idZ=1; idZ<(*octrees[destLayerNo-1]).size(); idZ+=3){
+                if ((*octrees[destLayerNo-1]).at(idX,idY,idZ).partIds.size()>0){
+                    PartVoxel newPart;
+                    //newPart.
+                    newPart.id = (*octrees[destLayerNo-1]).at(idX, idY, idZ).id;
+                    (*octrees[destLayerNo])(iterx,itery,iterz) = newPart;
+                }
+                iterz++;
+            }
+            itery++;
+        }
+        iterx++;
+    }
 }
 
 hop3d::ObjectComposition* hop3d::createObjectCompositionOctree(void) {

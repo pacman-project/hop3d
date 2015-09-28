@@ -82,7 +82,7 @@ void HOP3DBham::learn(){
 
     ///3rd layer
     std::uniform_int_distribution<int> distribution3rd(0,49); // filters ids distribution
-    /*std::vector<hop3d::Octet> octets3layer;
+    std::vector<hop3d::Octet> octets3layer;
     octetsNo = 200;
     octets3layer.resize(octetsNo);
     for (auto& it: octets3layer){
@@ -101,7 +101,7 @@ void HOP3DBham::learn(){
                 it.filterPos[i][j]=coords;
             }
         }
-    }*/
+    }
 
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
     hop3d::ViewDependentPart::Seq dictionary;
@@ -114,17 +114,13 @@ void HOP3DBham::learn(){
     int startId = (int)hierarchy.get()->firstLayer.size();
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
         if (layerNo==0){
-            imageFilterer->computeOctets(vecImages[0],octets);
-            for (auto & octet : octets){
-                octet.print();
-                getchar();
-            }
-            //octets=octets2layer;
+            //imageFilterer->computeOctets(vecImages[0],octets);
+            octets=octets2layer;
         }
         else if (layerNo==1){
             startId = int(hierarchy.get()->firstLayer.size()+10000);
             //imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[layerNo-1],octets);
-            //octets=octets3layer;
+            octets=octets3layer;
         }
         std::cout << "Compute statistics for " << octets.size() << " octets (" << layerNo+2 << "-th layer)\n";
         statsBuilder->computeStatistics(octets, layerNo+2, startId, dictionary);
@@ -136,7 +132,7 @@ void HOP3DBham::learn(){
 
     //represent all images in parts from 3rd layer
     //imageFilterer->computeImages3rdLayer();
-/*    Dataset dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
+    Dataset dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
     std::vector< std::set<int>> clusters;
     for (size_t categoryNo=0;categoryNo<dataset.categories.size();categoryNo++){//for each category
         for (size_t objectNo=0;objectNo<dataset.categories[categoryNo].objects.size();objectNo++){//for each object
@@ -151,12 +147,20 @@ void HOP3DBham::learn(){
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][2]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][0]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][1]);
-                hierarchy.get()->viewDependentLayers[1].back().print();
                 //move octets into 3D space and update octree representation of the object
-                objects.back()->update(parts, cameraPose, *depthCameraModel, *hierarchy);
+                objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
+                cameraPose(0,3)=0.5;
+                objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
+                parts.clear();
+                parts.push_back(hierarchy.get()->viewDependentLayers[1][3]);
+                parts.push_back(hierarchy.get()->viewDependentLayers[1][4]);
+                cameraPose(0,3)=0.2;
+                objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
             }
             std::vector< std::set<int>> clustersTmp;
-            objects.back()->getClusters(clustersTmp);
+            std::cout << "get clusters\n";
+            objects.back()->getClusters(0,clustersTmp);
+            std::cout << "finish get clusters\n";
             clusters.reserve( clusters.size() + clustersTmp.size() ); // preallocate memory
             clusters.insert( clusters.end(), clustersTmp.begin(), clustersTmp.end() );
         }
@@ -172,14 +176,15 @@ void HOP3DBham::learn(){
         clusterNo++;
     }
     std::vector<ViewIndependentPart> vocabulary;
-    objects.back()->createUniqueClusters(clusters, vocabulary);
+    std::cout << "create unique clusters:\n";
+    partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
     std::cout << "new vocabulary:\n";
     for (auto & word : vocabulary){
         word.print();
     }
     ///select part for 4th layer
     //partSelector->selectParts(objects, dictionary, *hierarchy,4)
-*/
+
     notify(*hierarchy);
 
     std::cout << "Finished\n";
