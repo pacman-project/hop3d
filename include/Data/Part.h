@@ -90,7 +90,7 @@ public:
     std::vector<int> group;
 
     /// Gaussians related to positions of neighbouring parts
-    std::array<std::array<Gaussian3D,3>,3> gaussians;
+    std::array<std::array<GaussianSE3,3>,3> gaussians;
 
     /// Construction
     inline ViewIndependentPart(){};

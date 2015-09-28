@@ -36,7 +36,7 @@ public:
     virtual void selectParts(ViewDependentPart::Seq& dictionary, Hierarchy& hierarchy, int layerNo) = 0;
 
     /// get clusters of parts id stored in octree (one cluster per voxel)
-    virtual void createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary) = 0;
+    virtual void createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy) = 0;
 
     /// Virtual descrutor
     virtual ~PartSelector() {

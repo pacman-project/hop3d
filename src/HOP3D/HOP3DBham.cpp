@@ -148,17 +148,19 @@ void HOP3DBham::learn(){
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][0]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][1]);
                 //move octets into 3D space and update octree representation of the object
-                objects.back()->update(parts, cameraPose, *depthCameraModel, *hierarchy);
+                objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
                 cameraPose(0,3)=0.5;
-                objects.back()->update(parts, cameraPose, *depthCameraModel, *hierarchy);
+                objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
                 parts.clear();
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][3]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][4]);
                 cameraPose(0,3)=0.2;
-                objects.back()->update(parts, cameraPose, *depthCameraModel, *hierarchy);
+                objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
             }
             std::vector< std::set<int>> clustersTmp;
-            objects.back()->getClusters(clustersTmp);
+            std::cout << "get clusters\n";
+            objects.back()->getClusters(0,clustersTmp);
+            std::cout << "finish get clusters\n";
             clusters.reserve( clusters.size() + clustersTmp.size() ); // preallocate memory
             clusters.insert( clusters.end(), clustersTmp.begin(), clustersTmp.end() );
         }
@@ -174,7 +176,8 @@ void HOP3DBham::learn(){
         clusterNo++;
     }
     std::vector<ViewIndependentPart> vocabulary;
-    partSelector->createUniqueClusters(clusters, vocabulary);
+    std::cout << "create unique clusters:\n";
+    partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
     std::cout << "new vocabulary:\n";
     for (auto & word : vocabulary){
         word.print();

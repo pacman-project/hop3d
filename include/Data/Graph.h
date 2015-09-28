@@ -21,6 +21,9 @@ public:
         viewDependentLayers(_viewDepLayersNo), viewIndependentLayers(_viewIndepLayersNo){
     }
 
+    /// relation between parts from last view dependent vocabulary and first view-independent
+    std::map<int,int> interpreter;
+
     /// get normal vector related to the part
     void getNormal(const ViewDependentPart& part, Vec3& normal) const;
 

@@ -33,7 +33,7 @@ public:
     void selectParts(ViewDependentPart::Seq& dictionary, Hierarchy& hierarchy, int layerNo);
 
     /// get clusters of parts id stored in octree (one cluster per voxel)
-    void createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary);
+    void createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy);
 
     /// Destruction
     ~PartSelectorMean(void);

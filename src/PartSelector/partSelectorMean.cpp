@@ -156,7 +156,7 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
 }
 
 /// get clusters of parts id stored in octree (one cluster per voxel)
-void PartSelectorMean::createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary){
+void PartSelectorMean::createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy){
     vocabulary.clear();
     std::vector< std::set<int>> newClusters;
     for (auto & cluster : clusters){
@@ -184,6 +184,7 @@ void PartSelectorMean::createUniqueClusters(const std::vector< std::set<int>>& c
         part.id = idNo;
         for (auto & partId : cluster){
             part.group.push_back(partId);
+            hierarchy.interpreter[partId]=idNo;
         }
         vocabulary.push_back(part);
         idNo++;

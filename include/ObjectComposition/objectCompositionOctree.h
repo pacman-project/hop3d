@@ -19,10 +19,32 @@ namespace hop3d {
 
 class PartVoxel{
 public:
-    std::vector<Mat34> poses;
-    std::vector<int> partIds;
+    class Part3D{
+    public:
+        /// pose of the part
+        Mat34 pose;
+        /// id of the part
+        int id;
 
-    PartVoxel(){}
+        Part3D(void){};
+        Part3D(Mat34& _pose, int _id) : pose(_pose), id(_id){};
+    };
+
+    /// part composition
+    std::vector<Part3D> parts;
+
+    /// Part id
+    int id;
+    /// Layer id
+    int layerId;
+
+    /// id of neighbouring parts
+    std::array<std::array<std::array<int,3>,3>,3> partIds;
+
+    /// Gaussians related to positions of neighbouring parts
+    std::array<std::array<std::array<GaussianSE3,3>,3>,3> gaussians;
+
+    PartVoxel(){};
     PartVoxel(int size){size=size-1;};// required by octree
 };
 
@@ -31,6 +53,7 @@ class ObjectCompositionOctree: public ObjectComposition {
 public:
     /// Pointer
     typedef std::unique_ptr<ObjectCompositionOctree> Ptr;
+    typedef std::unique_ptr< Octree<PartVoxel> > OctreePtr;
 
     /// Construction
     ObjectCompositionOctree(void);
@@ -39,10 +62,13 @@ public:
     ObjectCompositionOctree(std::string config);
 
     /// update composition from octets (words from last view-independent layer's vocabulary)
-    void update(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy);
+    void update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy);
 
     /// get clusters of parts id stored in octree (one cluster per voxel)
-    void getClusters(std::vector< std::set<int>>& clusters);
+    void getClusters(int layerNo, std::vector< std::set<int>>& clusters);
+
+    /// create next layer vocabulary
+    void createNextLayerVocabulary(int destLayerNo, std::vector<ViewIndependentPart>& vocabulary);
 
     /// Destruction
     ~ObjectCompositionOctree(void);
@@ -68,7 +94,7 @@ private:
     ///Configuration of the module
     Config config;
     /// Octree
-    std::unique_ptr< Octree<PartVoxel> > octree;
+    std::vector<OctreePtr> octrees;
 
     /// compute rotation matrix from normal vector ('y' axis is vetical)
     void normal2rot(const Vec3& normal, Mat33& rot);
