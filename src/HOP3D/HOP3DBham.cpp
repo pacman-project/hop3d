@@ -54,7 +54,7 @@ HOP3DBham::Config::Config(std::string configFilename){
 
 /// learining from the dataset
 void HOP3DBham::learn(){
-    std::vector<hop3d::Octet> octets2layer;
+    /*std::vector<hop3d::Octet> octets2layer;
     std::default_random_engine generator(time(0));
     std::uniform_int_distribution<int> distribution(0,3); // filters ids distribution
     int filterSize = 7;
@@ -101,7 +101,7 @@ void HOP3DBham::learn(){
                 it.filterPos[i][j]=coords;
             }
         }
-    }
+    }*/
 
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
     hop3d::ViewDependentPart::Seq dictionary;
@@ -114,13 +114,13 @@ void HOP3DBham::learn(){
     int startId = (int)hierarchy.get()->firstLayer.size();
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
         if (layerNo==0){
-            //imageFilterer->computeOctets(vecImages[0],octets);
-            octets=octets2layer;
+            imageFilterer->computeOctets(vecImages[0],octets);
+            //octets=octets2layer;
         }
         else if (layerNo==1){
             startId = int(hierarchy.get()->firstLayer.size()+10000);
             //imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[layerNo-1],octets);
-            octets=octets3layer;
+            //octets=octets3layer;
         }
         std::cout << "Compute statistics for " << octets.size() << " octets (" << layerNo+2 << "-th layer)\n";
         statsBuilder->computeStatistics(octets, layerNo+2, startId, dictionary);
@@ -129,7 +129,7 @@ void HOP3DBham::learn(){
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
-
+/*
     //represent all images in parts from 3rd layer
     //imageFilterer->computeImages3rdLayer();
     Dataset dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
@@ -195,7 +195,7 @@ void HOP3DBham::learn(){
         part.print();
     }
     //partSelector->selectParts(objects, dictionary, *hierarchy,4)
-
+*/
     notify(*hierarchy);
 
     std::cout << "Finished\n";

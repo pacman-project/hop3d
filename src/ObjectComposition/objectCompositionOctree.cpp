@@ -130,7 +130,6 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
             int iterz=0;
             for (int idZ=1; idZ<(*octrees[destLayerNo-1]).size(); idZ+=3){
                 if ((*octrees[destLayerNo-1]).at(idX,idY,idZ).parts.size()>0){
-                    std::cout << "is part\n";
                     ViewIndependentPart newPart;
                     newPart.layerId=4;
                     if ((*octrees[destLayerNo-1]).at(idX, idY, idZ).id!=-1)

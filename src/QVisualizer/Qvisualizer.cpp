@@ -174,15 +174,15 @@ void QGLVisualizer::updateHierarchy(){
             }
             cloudsListLayers[0].push_back(createCloudList(cloud));
         }
-        for (int i=0;i<2;i++){
+        for (size_t i=0;i<hierarchy->viewDependentLayers.size();i++){
             if (config.verbose==1){
                 std::cout << "layer "<< i+1 << " size: " << cloudsListLayers[0].size() << "\n";
             }
             for (auto it = hierarchy->viewDependentLayers[i].begin(); it!=hierarchy->viewDependentLayers[i].end(); it++){
-                cloudsListLayers[i+1].push_back(createPartList(*it, i+1));
-                clustersList[i+1].push_back(createClustersList(*it, i+1));
+                cloudsListLayers[i+1].push_back(createPartList(*it, int(i+1)));
+                clustersList[i+1].push_back(createClustersList(*it, int(i+1)));
             }
-            linksLists[i+1].push_back(createLinksList(i+1));
+            linksLists[i+1].push_back(createLinksList(int(i+1)));
         }
         mtxHierarchy.unlock();
     }
@@ -208,7 +208,7 @@ void QGLVisualizer::drawPointClouds(void){
 /// Draw clusters
 void QGLVisualizer::drawClusters(void){
     //mtxPointClouds.lock();
-    for (int layerNo=0;layerNo<2;layerNo++){
+    for (size_t layerNo=0;layerNo<hierarchy->viewDependentLayers.size();layerNo++){
         for (size_t i = 0;i<clustersList[layerNo+1].size();i++){
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.partDist[layerNo+1]*double(i)-((double)cloudsListLayers[layerNo+1].size()/2)*config.partDist[layerNo+1]), 0, config.posZ[layerNo+1], 1};
             glPushMatrix();
@@ -233,9 +233,9 @@ GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
             if ((n==1)&&(m==1)){
                 pos(0)=0; pos(1)=0; pos(2)=0;
             }
-            if ((part.partIds[n][m]==-1)){
+            /*if ((part.partIds[n][m]==-1)){
                 pos(0)=config.pixelSize*5.0*double(n-1); pos(1)=config.pixelSize*5.0*double(m-1); pos(2)=0;
-            }
+            }*/
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
@@ -269,9 +269,9 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                 if ((n==1)&&(m==1)){
                     pos(0)=0; pos(1)=0; pos(2)=0;
                 }
-                if ((itComp->partIds[n][m]==-1)){
+                /*if ((itComp->partIds[n][m]==-1)){
                     pos(0)=config.pixelSize*5.0*double(n-1); pos(1)=config.pixelSize*5.0*double(m-1); pos(2)=0;
-                }
+                }*/
                 double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1)-(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
                 glPushMatrix();
                     glMultMatrixd(GLmat);
