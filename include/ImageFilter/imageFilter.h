@@ -18,8 +18,10 @@ public:
 
     /// Image filter type
     enum Type {
-        /// depth image filter
+        /// depth image filter (patches)
         FILTER_DEPTH,
+        /// depth image filter (normals)
+        FILTER_NORMAL,
     };
 
     /// overloaded constructor

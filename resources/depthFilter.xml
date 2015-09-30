@@ -9,5 +9,7 @@
   <!-- normal filter configuration -->
   <NormalFilterer>
     <name>NormalDepthFilter</name>
-    <parameters ringsNo="13"  filterSize="5" verbose="0" scalingToMeters="10000"></parameters>
+<!-- parameters:
+    background threshold - compute response if points no in filter window is bigger than threshold-->    
+    <parameters ringsNo="6"  filterSize="5" verbose="1" scalingToMeters="0.0001" backgroundThreshold="13"></parameters>
   </NormalFilterer>

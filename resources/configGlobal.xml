@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
   <!-- filter configuration -->
-  <Filterer configFilename="depthFilter.xml">
+  <!--type:
+	0 - depth patch
+	1 - normal vector-->
+  <Filterer filterType="1" configFilename="depthFilter.xml">
   </Filterer>
   
   <!-- Stats builder configuration -->
