@@ -65,6 +65,7 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::S
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     /// compute point cloud, keep order
     std::vector< std::vector<hop3d::PointNormal> > cloudOrd(depthImage.rows, std::vector<hop3d::PointNormal> (depthImage.cols));
+    /// response: id, response value
     std::vector< std::vector<Response> > responseImage(depthImage.rows, std::vector<Response>(depthImage.cols,std::make_pair<int, double>(-1,-1.0)));
     for (int i=0;i<depthImage.rows;i++){
         for (int j=0;j<depthImage.cols;j++){
@@ -81,25 +82,98 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::S
                     responseImage[i][j].first = toId(cloudOrd[i][j].normal);
                     //compute response (dot product)
                     responseImage[i][j].second = cloudOrd[i][j].normal.adjoint()*filters[responseImage[i][j].first].normal;
-                    //std::cout << "normal " << cloudOrd[i][j].normal.transpose() << "\n";
-                    //std::cout << "filter normal " << filters[responseImage[i][j].first].normal.transpose() << "\n";
-                    //std::cout << responseImage[i][j].first << " -> " << responseImage[i][j].second << "\n";
-                    //getchar();
-                    if (config.verbose)
+                    /*std::cout << "normal " << cloudOrd[i][j].normal.transpose() << "\n";
+                    std::cout << "filter normal " << filters[responseImage[i][j].first].normal.transpose() << "\n";
+                    std::cout << "[" << i << ", " << j << "] " << responseImage[i][j].first << " -> " << responseImage[i][j].second << "\n";
+                    getchar();*/
+                    if (config.verbose==2)
                         idsImage.at<uchar>(i,j)=(uchar)(toId(cloudOrd[i][j].normal)*2);
                 }
             }
         }
     }
+    /*for (size_t i=0;i<responseImage.size();i++){
+        for (size_t j=0;j<responseImage[i].size();j++){
+            if (responseImage[i][j].first!=-1){
+                std::cout << "[" << i << ", " << j << "] " << responseImage[i][j].first << " -> " << responseImage[i][j].second << "\n";
+                std::cout << cloudOrd[i][j].position(2) << "\n";
+                getchar();
+            }
+        }
+    }*/
+    extractOctets(responseImage, cloudOrd, octets);
     if (config.verbose>0){
         std::chrono::steady_clock::time_point end=std::chrono::steady_clock::now();
         std::cout << "Octets extraction takes " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
     }
-    if (config.verbose){
-        hop3d::ImagesDisplay displayer;
+    if (config.verbose==2){
         namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
         imshow( "Display window", idsImage );
         cv::waitKey(0);
+    }
+}
+
+///extract octets from response image
+void NormalImageFilter::extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets) const{
+    int u=0;
+    std::vector< std::vector<Octet> > octetsImage(responseImg.size()/(config.filterSize*3), std::vector<Octet> (responseImg.size()/(config.filterSize*3)));
+    for (size_t i=config.filterSize+config.filterSize/2;i<responseImg.size()-config.filterSize-(config.filterSize/2);i=i+3*config.filterSize){
+        int v=0;
+        for (size_t j=config.filterSize+config.filterSize/2;j<responseImg.size()-config.filterSize-(config.filterSize/2);j=j+3*config.filterSize){
+            Octet octet;
+            computeOctet(responseImg, cloudOrd, int(i), int(j), octet);
+            if (octet.filterIds[1][1]!=-1){
+                octetsImage[u][v]=octet;
+                octets.push_back(octet);
+                /*octet.print();
+                getchar();*/
+            }
+            v++;
+        }
+        u++;
+    }
+}
+
+/// compute otet for given location on response image
+void NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u,  int v, Octet& octet) const{
+    for (int i=-1;i<2;i++){//for neighbouring blocks
+        for (int j=-1;j<2;j++){
+            findMaxResponse(responseImg, cloudOrd, u+i*config.filterSize, v+j*config.filterSize, octet, i+1, j+1);
+        }
+    }
+    if (octet.filterIds[1][1]!=-1){//set relative position for octets
+        for (int i=0;i<3;i++){//for neighbouring blocks
+            for (int j=0;j<3;j++){
+                if (!((i==1)&&(j==1))){
+                    if (octet.filterIds[i][j]==-1){
+                        octet.filterPos[i][j].u=(i-1)*config.filterSize;
+                        octet.filterPos[i][j].v=(j-1)*config.filterSize;
+                        octet.filterPos[i][j].depth=0;
+                    }
+                    else {
+                        octet.filterPos[i][j].u-=octet.filterPos[1][1].u;
+                        octet.filterPos[i][j].v-=octet.filterPos[1][1].v;
+                        octet.filterPos[i][j].depth-=octet.filterPos[1][1].depth;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// compute max response in vindow
+void NormalImageFilter::findMaxResponse(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Octet& octet, int idx, int idy) const{
+    octet.responses[idx][idy]=-1;    octet.filterIds[idx][idy]=-1;
+    for (int i=-config.filterSize/2;i<1+config.filterSize/2;i++){
+        for (int j=-config.filterSize/2;j<1+config.filterSize/2;j++){
+            if (responseImg[u+i][v+j].second>octet.responses[idx][idy]){
+                octet.responses[idx][idy] = responseImg[u+i][v+j].second;
+                octet.filterIds[idx][idy] = responseImg[u+i][v+j].first;
+                ImageCoordsDepth coord;
+                coord.u = u+i; coord.v = v+j; coord.depth = cloudOrd[u+i][v+j].position(2);
+                octet.filterPos[idx][idy] = coord;
+            }
+        }
     }
 }
 

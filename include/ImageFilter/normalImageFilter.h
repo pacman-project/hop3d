@@ -103,6 +103,15 @@ private:
 
     /// compute coordinate system from normal vector
     Mat33 coordinateFromNormal(const Vec3& _normal);
+
+    ///extract octets from response image
+    void extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets) const;
+
+    /// compute otet for given location on response image
+    void computeOctet(const std::vector< std::vector<Response> >& responseImg,  const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u,  int v, Octet& octet) const;
+
+    /// compute max response in vindow
+    void findMaxResponse(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Octet& octet, int idx, int idy) const;
 };
 
 }

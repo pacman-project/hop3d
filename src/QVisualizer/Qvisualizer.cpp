@@ -233,8 +233,9 @@ GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
             if ((n==1)&&(m==1)){
                 pos(0)=0; pos(1)=0; pos(2)=0;
             }
-            /*if ((part.partIds[n][m]==-1)){
-                pos(0)=config.pixelSize*5.0*double(n-1); pos(1)=config.pixelSize*5.0*double(m-1); pos(2)=0;
+            /*else{
+                pos(0)=config.pixelSize*double(double(n)-1.0)*5.0;
+                pos(1)=config.pixelSize*double(double(m)-1.0)*5.0;
             }*/
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
             glPushMatrix();
@@ -269,8 +270,9 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                 if ((n==1)&&(m==1)){
                     pos(0)=0; pos(1)=0; pos(2)=0;
                 }
-                /*if ((itComp->partIds[n][m]==-1)){
-                    pos(0)=config.pixelSize*5.0*double(n-1); pos(1)=config.pixelSize*5.0*double(m-1); pos(2)=0;
+                /*else{
+                    pos(0)=config.pixelSize*double(double(n)-1.0)*5.0;
+                    pos(1)=config.pixelSize*double(double(m)-1.0)*5.0;
                 }*/
                 double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1)-(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
                 glPushMatrix();
