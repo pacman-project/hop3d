@@ -11,5 +11,5 @@
     <name>NormalDepthFilter</name>
 <!-- parameters:
     background threshold - compute response if points no in filter window is bigger than threshold-->    
-    <parameters ringsNo="6"  filterSize="5" verbose="1" scalingToMeters="0.0001" backgroundThreshold="13"></parameters>
+    <parameters ringsNo="6"  filterSize="5" verbose="0" scalingToMeters="0.0001" backgroundThreshold="13"></parameters>
   </NormalFilterer>
