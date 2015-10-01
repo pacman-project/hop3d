@@ -191,8 +191,8 @@ void DepthImageFilter::getOctets(const ViewDependentPart::Seq& dictionary, Octet
 }
 
 /// get filters
-void DepthImageFilter::getFilters(Filter::Seq& filters) const{
-    filters = this->filters;
+void DepthImageFilter::getFilters(Filter::Seq& _filters) const{
+    _filters = this->filters;
 }
 
 void DepthImageFilter::setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName)

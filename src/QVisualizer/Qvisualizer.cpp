@@ -301,7 +301,7 @@ GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud){
             //glColor3ub(pointCloud.second.pointCloudNormal[n].r, pointCloud.second.pointCloudNormal[n].g, pointCloud.second.pointCloudNormal[n].b);
             glVertex3d(pointCloud.pointCloudNormal[n].position(0),
                       pointCloud.pointCloudNormal[n].position(1),
-                      pointCloud.pointCloudNormal[n].position(2));
+                      pointCloud.pointCloudNormal[n].position(2)*config.filterDepthScale);
         }
         glEnd();
     glEndList();

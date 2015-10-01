@@ -13,6 +13,7 @@
 #include "Data/Graph.h"
 #include "PartSelector/partSelectorMean.h"
 #include "ImageFilter/depthImageFilter.h"
+#include "ImageFilter/normalImageFilter.h"
 #include "Utilities/depthSensorModel.h"
 #include "ObjectComposition/objectCompositionOctree.h"
 #ifdef QVisualizerBuild

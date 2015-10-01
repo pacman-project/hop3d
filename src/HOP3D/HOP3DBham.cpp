@@ -14,9 +14,24 @@ HOP3DBham::HOP3DBham(std::string _config) :
     statsBuilder = hop3d::createUnbiasedStatsBuilder(config.statsConfig);
     hierarchy.reset(new Hierarchy(_config));
     partSelector = hop3d::createPartSelectorMean(config.selectorConfig);
-    imageFilterer = hop3d::createDepthImageFilter(config.filtererConfig);
-    imageFilterer->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
     depthCameraModel.reset(new DepthSensorModel(config.cameraConfig));
+
+    tinyxml2::XMLDocument configXML;
+    std::string filename = "../../resources/" + _config;
+    configXML.LoadFile(filename.c_str());
+    if (configXML.ErrorID()){
+        std::cout << "unable to load global config file.\n";
+    }
+    int filterType;
+    configXML.FirstChildElement( "Filterer" )->QueryIntAttribute("filterType", &filterType);
+
+    if (filterType==hop3d::ImageFilter::FILTER_DEPTH){
+        imageFilterer = hop3d::createDepthImageFilter(config.filtererConfig);
+        imageFilterer->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
+    }
+    else if (filterType==hop3d::ImageFilter::FILTER_NORMAL){
+        imageFilterer = hop3d::createNormalImageFilter(config.filtererConfig, config.cameraConfig);
+    }
 }
 
 #ifdef QVisualizerBuild

@@ -45,6 +45,8 @@ public:
             model->FirstChildElement( "pointCloud" )->QueryDoubleAttribute("cloudPointSize", &cloudPointSize);
 
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("pixelSize", &pixelSize);
+            model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("filterDepthScale", &filterDepthScale);
+
             int layersNo=6;
             partDist.resize(layersNo);
             posZ.resize(layersNo);
@@ -96,6 +98,8 @@ public:
         QColor clustersColor;
         /// verbose
         int verbose;
+        /// scale depth of filter patches
+        double filterDepthScale;
     };
 
     /// Construction

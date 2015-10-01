@@ -42,7 +42,7 @@ public:
     virtual void getOctets(const ViewDependentPart::Seq& dictionary, Octet::Seq& octets) = 0;
 
     /// get filters
-    virtual void getFilters(Filter::Seq& filters) const = 0;
+    virtual void getFilters(Filter::Seq& _filters) const = 0;
     /// set filters
     virtual void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName) = 0;
 

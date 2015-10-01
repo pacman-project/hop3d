@@ -1,4 +1,4 @@
-# cmake requirementscmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8)
 
 # Build options have to be before PROJECT(...)
 SET(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE PATH "Configuration types")

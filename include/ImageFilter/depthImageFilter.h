@@ -51,7 +51,8 @@ public:
     void getOctets(const ViewDependentPart::Seq& dictionary, Octet::Seq& octets);
 
     /// get filters
-    void getFilters(Filter::Seq& filters) const;
+    void getFilters(Filter::Seq& _filters) const;
+
     void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName);
     class Config{
       public:
