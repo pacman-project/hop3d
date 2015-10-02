@@ -30,7 +30,7 @@ NormalImageFilter::Config::Config(std::string configFilename){
     tinyxml2::XMLElement * model = config.FirstChildElement( "NormalFilterer" );
     model->FirstChildElement( "parameters" )->QueryIntAttribute("ringsNo", &ringsNo);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("filterSize", &filterSize);
-    model->FirstChildElement( "parameters" )->QueryBoolAttribute("verbose", &verbose);
+    model->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     model->FirstChildElement( "parameters" )->QueryDoubleAttribute("scalingToMeters", &scalingToMeters);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("backgroundThreshold", &backgroundThreshold);
 
@@ -87,7 +87,7 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::S
                     std::cout << "[" << i << ", " << j << "] " << responseImage[i][j].first << " -> " << responseImage[i][j].second << "\n";
                     getchar();*/
                     if (config.verbose==2)
-                        idsImage.at<uchar>(i,j)=(uchar)(toId(cloudOrd[i][j].normal)*2);
+                        idsImage.at<uchar>(i,j)=(uchar)(toId(cloudOrd[i][j].normal)*10);
                 }
             }
         }
@@ -110,13 +110,14 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::S
         namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
         imshow( "Display window", idsImage );
         cv::waitKey(0);
+        getchar();
     }
 }
 
 ///extract octets from response image
-void NormalImageFilter::extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets) const{
+void NormalImageFilter::extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets){
     int u=0;
-    std::vector< std::vector<Octet> > octetsImage(responseImg.size()/(config.filterSize*3), std::vector<Octet> (responseImg.size()/(config.filterSize*3)));
+    OctetsImage octetsImage(responseImg.size()/(config.filterSize*3), std::vector<Octet> (responseImg.size()/(config.filterSize*3)));
     for (size_t i=config.filterSize+config.filterSize/2;i<responseImg.size()-config.filterSize-(config.filterSize/2);i=i+3*config.filterSize){
         int v=0;
         for (size_t j=config.filterSize+config.filterSize/2;j<responseImg.size()-config.filterSize-(config.filterSize/2);j=j+3*config.filterSize){
@@ -132,6 +133,7 @@ void NormalImageFilter::extractOctets(const std::vector< std::vector<Response> >
         }
         u++;
     }
+    octetsImages.push_back(octetsImage);
 }
 
 /// compute otet for given location on response image
@@ -142,19 +144,24 @@ void NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >&
         }
     }
     if (octet.filterIds[1][1]!=-1){//set relative position for octets
-        for (int i=0;i<3;i++){//for neighbouring blocks
-            for (int j=0;j<3;j++){
-                if (!((i==1)&&(j==1))){
-                    if (octet.filterIds[i][j]==-1){
-                        octet.filterPos[i][j].u=(i-1)*config.filterSize;
-                        octet.filterPos[i][j].v=(j-1)*config.filterSize;
-                        octet.filterPos[i][j].depth=0;
-                    }
-                    else {
-                        octet.filterPos[i][j].u-=octet.filterPos[1][1].u;
-                        octet.filterPos[i][j].v-=octet.filterPos[1][1].v;
-                        octet.filterPos[i][j].depth-=octet.filterPos[1][1].depth;
-                    }
+        computeRelativePositions(octet);
+    }
+}
+
+//set relative position for octets
+void NormalImageFilter::computeRelativePositions(Octet& octet) const{
+    for (int i=0;i<3;i++){//for neighbouring blocks
+        for (int j=0;j<3;j++){
+            if (!((i==1)&&(j==1))){
+                if (octet.filterIds[i][j]==-1){
+                    octet.filterPos[i][j].u=(i-1)*config.filterSize;
+                    octet.filterPos[i][j].v=(j-1)*config.filterSize;
+                    octet.filterPos[i][j].depth=0;
+                }
+                else {
+                    octet.filterPos[i][j].u-=octet.filterPos[1][1].u;
+                    octet.filterPos[i][j].v-=octet.filterPos[1][1].v;
+                    octet.filterPos[i][j].depth-=octet.filterPos[1][1].depth;
                 }
             }
         }
@@ -177,15 +184,53 @@ void NormalImageFilter::findMaxResponse(const std::vector< std::vector<Response>
     }
 }
 
-/// compute set of octets from set of the depth image
-void NormalImageFilter::getOctets(Octet::Seq& octets){
-    std::cout << octets.size();
-}
-
 /// compute set of octets from set of the ids image
 void NormalImageFilter::getOctets(const ViewDependentPart::Seq& dictionary, Octet::Seq& octets){
-    std::cout << dictionary.size();
-    std::cout << octets.size();
+    octets.clear();
+    OctetsImage octetsImage = octetsImages.back();
+    for (size_t i=1; i<octetsImage.size()-1;i=i+2){
+        for (size_t j=1; j<octetsImage.size()-1;j=j+2){
+            Octet octet;
+            if (octetsImage[i][j].filterIds[1][1]!=-1){
+                fillInOctet(octetsImage, dictionary, (int)i, (int)j, octet);
+                computeRelativePositions(octet);
+                octets.push_back(octet);
+            }
+        }
+    }
+}
+
+/// Fill in octet
+void NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDependentPart::Seq& dictionary, int u, int v, Octet& octet) const{
+    for (int i=-1; i<2;i++){
+        for (int j=-1; j<2;j++){
+            int id = findId(dictionary, octetsImage[u+i][v+j]);
+            octet.filterIds[i+1][j+1]=id;
+            octet.filterPos[i+1][j+1]=octetsImage[u+i][v+j].filterPos[1][1];
+            octet.responses[i+1][j+1]=octetsImage[u+i][v+j].responses[1][1];
+        }
+    }
+}
+
+/// determine id of the part using dictionary
+int NormalImageFilter::findId(const ViewDependentPart::Seq& dictionary, const Octet& octet) const{
+    if (octet.filterIds[1][1]==-1)//background
+        return -1;
+    int id=0;
+    for (auto & part : dictionary){
+        if (part.partIds==octet.filterIds){
+            return id;
+        }
+        for (auto & word : part.group){
+            if (word.partIds==octet.filterIds){
+                return id;
+            }
+        }
+        id++;
+    }
+    std::cout << "Part not found in the dictionary!\n";
+    getchar();
+    return -1;
 }
 
 /// get filters
@@ -313,6 +358,7 @@ void NormalImageFilter::generateFilters(void){
             u++;
         }
         cv::Mat maskTmp(config.filterSize,config.filterSize, cv::DataType<double>::type,1);
+        filters[i].id=(int)i;
         filters[i].patch = patchTmp.clone();
         filters[i].mask = maskTmp.clone();
     }

@@ -178,16 +178,10 @@ SOURCE_GROUP("Data" FILES ${DATA_SOURCES})
 
 
 SET(CORE_SOURCES
-        ${PROJECT_PATH}/src/Core/GraphBuilder.cpp
         ${PROJECT_PATH}/src/Core/LayerFilterer.cpp
-        ${PROJECT_PATH}/src/Core/LocalInhibiter.cpp
-        ${PROJECT_PATH}/src/Core/PartSelector.cpp
 )
 SET(CORE_HEADERS
-        ${PROJECT_PATH}/include/Core/GraphBuilder.h
         ${PROJECT_PATH}/include/Core/LayerFilterer.h
-        ${PROJECT_PATH}/include/Core/LocalInhibiter.h
-        ${PROJECT_PATH}/include/Core/PartSelector.h
 )
 SET(CORE_FILES
 )

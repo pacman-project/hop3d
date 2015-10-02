@@ -38,7 +38,7 @@ PartSelectorMean::Config::Config(std::string configFilename){
 /// Select parts from the initial vocabulary
 void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy& hierarchy, int layerNo){
     int clustersNo = (layerNo==2) ? config.clustersSecondLayer : config.clustersThirdLayer;
-    if (config.verbose==1){
+    if (config.verbose>0){
         std::cout << "Initial number of words in dictionary: " << dictionary.size() << "\n";
         std::cout << "Desired number of words: " << clustersNo << "\n";
     }
@@ -81,8 +81,9 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy
     for (auto it = clusters.begin(); it!=clusters.end();it++){
         if (it->size()>0){
             ViewDependentPart part = dictionary[centroids[centroidNo]];
-            for (auto itPart = it->begin(); itPart!=it->end();itPart++)
+            for (auto itPart = it->begin(); itPart!=it->end();itPart++){
                 part.group.push_back(*itPart);
+            }
             newDictionary.push_back(part);
             centroidNo++;
         }
@@ -118,6 +119,16 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
         std::cout << "Elements no in clusters: ";
         for (size_t i=0;i<clusters.size();i++){
             std::cout << clusters[i].size() << ", ";
+        }
+        std::cout << "\n";
+        std::cout << "Clusters: ";
+        for (size_t i=0;i<clusters.size();i++){
+            std::cout << "{" << i << ": ";
+            for (size_t j=0;j<clusters[i].size();j++){
+                std::cout << clusters[i][j].id;
+                std::cout << ", ";
+            }
+            std::cout << "},";
         }
         std::cout << "\n";
     }

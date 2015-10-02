@@ -61,16 +61,19 @@ double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDep
     if (partA.partIds==partB.partIds)//fast
         return 0;
     double sum=0;
-    for (size_t i=0; i<partA.partIds.size();i++)
+    for (size_t i=0; i<partA.partIds.size();i++){
         for (size_t j=0; j<partA.partIds.size();j++){
-            if ((partA.partIds[i][j]==-1)&&(partB.partIds[i][j]==-1))
+            if ((partA.partIds[i][j]==-1)&&(partB.partIds[i][j]==-1)){
                 sum+=0;
+            }
             else if ((partA.partIds[i][j]==-1)||(partB.partIds[i][j]==-1)){
                 sum+=1;
             }
-            else
+            else{
                 sum+=Filter::distance(filters[partA.partIds[i][j]], filters[partB.partIds[i][j]]);
+            }
         }
+    }
     return sum;
 }
 

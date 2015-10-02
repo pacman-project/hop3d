@@ -27,7 +27,7 @@ public:
     /// overloaded constructor
     ImageFilter(const std::string _name, Type _type) :
             name(_name), type(_type) {
-    };
+    }
 
     /// Name of the map
     virtual const std::string& getName() const = 0;
@@ -35,14 +35,12 @@ public:
     /// compute set of octets from set of the depth images
     virtual void computeOctets(const cv::Mat& depthImage, hop3d::Octet::Seq& octets) = 0;
 
-    /// compute set of octets from set of the depth image
-    virtual void getOctets(Octet::Seq& octets) = 0;
-
     /// compute set of octets from set of the ids image
     virtual void getOctets(const ViewDependentPart::Seq& dictionary, Octet::Seq& octets) = 0;
 
     /// get filters
     virtual void getFilters(Filter::Seq& _filters) const = 0;
+
     /// set filters
     virtual void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName) = 0;
 

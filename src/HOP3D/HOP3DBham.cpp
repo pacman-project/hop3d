@@ -134,7 +134,7 @@ void HOP3DBham::learn(){
         }
         else if (layerNo==1){
             startId = int(hierarchy.get()->firstLayer.size()+10000);
-            //imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[layerNo-1],octets);
+            imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[layerNo-1], octets);
             //octets=octets3layer;
         }
         std::cout << "Compute statistics for " << octets.size() << " octets (" << layerNo+2 << "-th layer)\n";

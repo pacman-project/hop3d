@@ -175,6 +175,7 @@ void QGLVisualizer::updateHierarchy(){
             cloudsListLayers[0].push_back(createCloudList(cloud));
         }
         for (size_t i=0;i<hierarchy->viewDependentLayers.size();i++){
+            backgroundList.push_back(createBackgroundList(int(i+1)));
             if (config.verbose==1){
                 std::cout << "layer "<< i+1 << " size: " << cloudsListLayers[0].size() << "\n";
             }
@@ -195,7 +196,7 @@ void QGLVisualizer::drawPointClouds(void){
         for (size_t i = 0;i<cloudsListLayers[layerNo].size();i++){
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.partDist[layerNo]*double(i)-((double)cloudsListLayers[layerNo].size()/2)*config.partDist[layerNo]), 0, config.posZ[layerNo], 1};
             glPushMatrix();
-                glColor3ub(200,200,200);
+                //glColor3ub(200,200,200);
                 glMultMatrixd(GLmat);
                 glPointSize((float)config.cloudPointSize);
                 glCallList(cloudsListLayers[layerNo][i]);
@@ -220,34 +221,56 @@ void QGLVisualizer::drawClusters(void){
     //mtxPointClouds.unlock();
 }
 
+/// Create background List
+GLuint QGLVisualizer::createBackgroundList(int layerNo){
+    // create single display list
+    GLuint index = glGenLists(1);
+    glNewList(index, GL_COMPILE);
+    glPushMatrix();
+        int patchSize = 5*(2*layerNo-1);
+        glColor3ub(100,50,50);
+        glBegin(GL_POINTS);
+        for (int n = 0; n < patchSize; n++){
+            for (int m = 0; m < patchSize; m++){
+                glVertex3d(config.pixelSize*(n-(patchSize/2)), config.pixelSize*(m-(patchSize/2)), 0);
+            }
+        }
+        glEnd();
+    glPopMatrix();
+    glEndList();
+    return index;
+}
+
 /// Create point cloud List
 GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
     // create one display list
     GLuint index = glGenLists(1);
-    // compile the display list, store a triangle in it
     glNewList(index, GL_COMPILE);
     glPushMatrix();
     for (size_t n = 0; n < part.partIds.size(); n++){
         for (size_t m = 0; m < part.partIds[n].size(); m++){
             Vec3 pos(config.pixelSize*part.gaussians[n][m].mean(0), config.pixelSize*part.gaussians[n][m].mean(1), part.gaussians[n][m].mean(2));
+            int id = part.partIds[n][m];
             if ((n==1)&&(m==1)){
                 pos(0)=0; pos(1)=0; pos(2)=0;
             }
-            /*else{
-                pos(0)=config.pixelSize*double(double(n)-1.0)*5.0;
-                pos(1)=config.pixelSize*double(double(m)-1.0)*5.0;
-            }*/
+            else if (id==-1){
+                double patchSize = 5.0*(2.0*layerNo-1.0);
+                pos(0)=config.pixelSize*double(double(n)-1.0)*(patchSize+(patchSize/2.0));
+                pos(1)=config.pixelSize*double(double(m)-1.0)*(patchSize+(patchSize/2.0));
+                pos(2)=0;
+            }
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
-                int id = part.partIds[n][m];
-                if ((part.partIds[n][m]==-1)){
-                    glColor3ub(100,50,50);
-                    id = 0;
+                if (id==-1){
+                    //glColor3ub(100,50,50);
+                    glCallList(backgroundList[layerNo-1]);
                 }
-                else
-                    glColor3ub(200,200,200);
-                glCallList(cloudsListLayers[layerNo-1][id]);
+                else{
+                    //glColor3ub(200,200,200);
+                    glCallList(cloudsListLayers[layerNo-1][id]);
+                }
             glPopMatrix();
         }
     }
@@ -277,7 +300,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                 double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1)-(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
                 glPushMatrix();
                     glMultMatrixd(GLmat);
-                    glColor4d(config.clustersColor.red(), config.clustersColor.green(), config.clustersColor.blue(), config.clustersColor.alpha());
+                    //glColor4d(config.clustersColor.red(), config.clustersColor.green(), config.clustersColor.blue(), config.clustersColor.alpha());
                     int id = itComp->partIds[n][m];
                     if ((layerNo==1)&&(itComp->partIds[n][m]==-1))
                         id = 0;
@@ -298,6 +321,7 @@ GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud){
     GLuint index = glGenLists(1);
     // compile the display list, store a triangle in it
     glNewList(index, GL_COMPILE);
+        glColor3ub(200,200,200);
         glBegin(GL_POINTS);
         for (size_t n = 0; n < pointCloud.pointCloudNormal.size(); n++){
             //glColor3ub(pointCloud.second.pointCloudNormal[n].r, pointCloud.second.pointCloudNormal[n].g, pointCloud.second.pointCloudNormal[n].b);

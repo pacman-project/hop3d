@@ -138,6 +138,9 @@ private:
     /// clusters list
     std::vector< std::vector< GLuint > > clustersList;
 
+    /// background list
+    std::vector< GLuint > backgroundList;
+
     /// draw objects
     void draw();
 
@@ -161,6 +164,9 @@ private:
 
     /// Create point cloud List
     GLuint createCloudList(hop3d::PointCloud& pointCloud);
+
+    /// Create background List
+    GLuint createBackgroundList(int layerNo);
 
     /// Create point cloud List
     GLuint createPartList(hop3d::ViewDependentPart& part, int layerNo);

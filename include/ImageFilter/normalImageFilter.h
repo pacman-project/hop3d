@@ -25,6 +25,8 @@ namespace hop3d {
 class NormalImageFilter: public ImageFilter {
     /// response: id, response value
     typedef std::pair<int,double> Response;
+    /// 2D array of octets
+    typedef std::vector< std::vector<Octet> > OctetsImage;
 public:
     /// Pointer
     typedef std::unique_ptr<NormalImageFilter> Ptr;
@@ -43,9 +45,6 @@ public:
 
     ///compute set of octets from set of the depth images
     void computeOctets(const cv::Mat& depthImage, hop3d::Octet::Seq& octets);
-
-    /// compute set of octets from set of the depth image
-    void getOctets(Octet::Seq& octets);
 
     /// compute set of octets from set of the ids image
     void getOctets(const ViewDependentPart::Seq& dictionary, Octet::Seq& octets);
@@ -66,7 +65,7 @@ public:
             // filter size in pixels
             int filterSize;
             // displaying variables and images for debugging
-            bool verbose;
+            int verbose;
             //scaling of raw int16 depth values into meters
             double scalingToMeters;
             //depth sensor model filenames
@@ -82,6 +81,8 @@ private:
     hop3d::Filter::Seq filters;
     /// sensor model
     DepthSensorModel sensorModel;
+    /// octets images
+    std::vector<OctetsImage> octetsImages;
 
     /// discretization: convert normal vector to id
     int toId(const Vec3& normal) const;
@@ -105,13 +106,22 @@ private:
     Mat33 coordinateFromNormal(const Vec3& _normal);
 
     ///extract octets from response image
-    void extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets) const;
+    void extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets);
 
     /// compute otet for given location on response image
     void computeOctet(const std::vector< std::vector<Response> >& responseImg,  const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u,  int v, Octet& octet) const;
 
     /// compute max response in vindow
     void findMaxResponse(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Octet& octet, int idx, int idy) const;
+
+    /// Fill in octet
+    void fillInOctet(const OctetsImage& octetsImage, const ViewDependentPart::Seq& dictionary, int u, int v, Octet& octet) const;
+
+    //set relative position for octets
+    void computeRelativePositions(Octet& octet) const;
+
+    /// determine id of the part using dictionary
+    int findId(const ViewDependentPart::Seq& dictionary, const Octet& octet) const;
 };
 
 }

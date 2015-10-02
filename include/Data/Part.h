@@ -33,7 +33,7 @@ public:
     std::array<std::array<int,3>,3> partIds;
 
     /// Construction
-    inline Part(){};
+    inline Part(){}
 
     /// Construction
     inline Part(int _id, int _layerId, Type _type) : id(_id), layerId(_layerId), type(_type){
