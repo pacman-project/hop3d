@@ -142,11 +142,13 @@ void HOP3DBham::learn(){
         std::cout << "Dictionary size (" << layerNo+2 << "-th layer): " << dictionary.size() << "\n";
         partSelector->selectParts(dictionary, *hierarchy, layerNo+2);
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
+        std::cout << hierarchy.get()->viewDependentLayers.size() << "\n";
+        std::cout << "layerNo " << layerNo << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
-/*
+
     //represent all images in parts from 3rd layer
-    //imageFilterer->computeImages3rdLayer();
+    imageFilterer->computeImages3rdLayer(hierarchy.get()->viewDependentLayers[config.viewDependentLayersNo-1]);
     Dataset dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
     std::vector< std::set<int>> clusters;
     for (size_t categoryNo=0;categoryNo<dataset.categories.size();categoryNo++){//for each category
@@ -158,8 +160,9 @@ void HOP3DBham::learn(){
                 //int layerNo=3;
                 std::vector<ViewDependentPart> parts;
                 //get parts of the 3rd layers
+                imageFilterer->getLastVDLayerParts(parts);
                 //imageFilterer->getParts(hierarchy.get()->viewDependentLayers[1],layerNo, parts, categoryNo, objectNo, imageNo, cameraPose);
-                parts.push_back(hierarchy.get()->viewDependentLayers[1][2]);
+                /*parts.push_back(hierarchy.get()->viewDependentLayers[1][2]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][0]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][1]);
                 //move octets into 3D space and update octree representation of the object
@@ -170,7 +173,7 @@ void HOP3DBham::learn(){
                 parts.clear();
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][3]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][4]);
-                cameraPose(0,3)=0.225; cameraPose(1,3)=0.225; cameraPose(2,3)=0.225;
+                cameraPose(0,3)=0.225; cameraPose(1,3)=0.225; cameraPose(2,3)=0.225;*/
                 objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
             }
             std::vector< std::set<int>> clustersTmp;
@@ -191,6 +194,7 @@ void HOP3DBham::learn(){
         std::cout << "\n";
         clusterNo++;
     }
+
     std::vector<ViewIndependentPart> vocabulary;
     std::cout << "create unique clusters:\n";
     partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
@@ -210,8 +214,15 @@ void HOP3DBham::learn(){
         part.print();
     }
     //partSelector->selectParts(objects, dictionary, *hierarchy,4)
-*/
+
     notify(*hierarchy);
+    for (auto & object : objects){
+        std::vector<ViewIndependentPart> objectParts;
+        //octree.
+        object->getParts(0, objectParts);
+        notify(objectParts);
+        std::cout << objectParts.size() << "\n";
+    }
 
     std::cout << "Finished\n";
 }

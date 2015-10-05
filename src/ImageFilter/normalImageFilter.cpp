@@ -188,13 +188,53 @@ void NormalImageFilter::findMaxResponse(const std::vector< std::vector<Response>
 void NormalImageFilter::getOctets(const ViewDependentPart::Seq& dictionary, Octet::Seq& octets){
     octets.clear();
     OctetsImage octetsImage = octetsImages.back();
-    for (size_t i=1; i<octetsImage.size()-1;i=i+2){
-        for (size_t j=1; j<octetsImage.size()-1;j=j+2){
+    OctetsImage nextLayerOctetsImg(octetsImage.size()/3, std::vector<Octet> (octetsImage.back().size()/3));
+    int u=0;
+    for (size_t i=1; i<octetsImage.size()-1;i=i+3){
+        int v=0;
+        for (size_t j=1; j<octetsImage.size()-1;j=j+3){
             Octet octet;
             if (octetsImage[i][j].filterIds[1][1]!=-1){
                 fillInOctet(octetsImage, dictionary, (int)i, (int)j, octet);
                 computeRelativePositions(octet);
                 octets.push_back(octet);
+                nextLayerOctetsImg[u][v]=octet;
+            }
+            v++;
+        }
+        u++;
+    }
+    octetsImages.push_back(nextLayerOctetsImg);
+}
+
+/// define 2rd layer octet images using selected words from third layer
+void NormalImageFilter::computeImages3rdLayer(const ViewDependentPart::Seq& dictionary){
+    PartsImage partsImage (octetsImages.back().size(), std::vector<ViewDependentPart> (octetsImages.back().back().size()));
+    OctetsImage octetsImage = octetsImages.back();
+    for (size_t i=0; i<octetsImage.size();i++){
+        for (size_t j=1; j<octetsImage.back().size();j++){
+            ViewDependentPart part;
+            part.id=-1;
+            if (octetsImage[i][j].filterIds[1][1]!=-1){
+                //std::cout << dictionary.size() << "\n";
+                //std::cout << "findId(dictionary,octetsImage[i][j]) " << findId(dictionary,octetsImage[i][j]) << "\n";
+                part = dictionary[findId(dictionary,octetsImage[i][j])];
+                //std::cout << "found id : " << findId(dictionary,octetsImage[i][j]) << " new id " << dictionary[findId(dictionary,octetsImage[i][j])].id << "\n";
+            }
+            partsImage[i][j]=part;
+        }
+    }
+    partsImages.push_back(partsImage);
+}
+
+/// get last view dependent layer parts from the image
+void NormalImageFilter::getLastVDLayerParts(std::vector<ViewDependentPart>& parts) const{
+    parts.clear();
+    PartsImage partsImage = partsImages.back();
+    for (size_t i=0; i<partsImage.size();i++){
+        for (size_t j=1; j<partsImage.back().size();j++){
+            if (partsImage[i][j].id!=-1){
+                parts.push_back(partsImage[i][j]);
             }
         }
     }

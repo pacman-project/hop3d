@@ -11,6 +11,7 @@ class Observer
 {
 public:
     virtual void update(hop3d::Hierarchy& hierarchy) = 0;
+    virtual void update(std::vector<hop3d::ViewIndependentPart>& objectParts) = 0;
 };
 
 class Subject
@@ -22,6 +23,7 @@ public:
     void attach(Observer *observer);
     void detach(Observer *observer);
     void notify(hop3d::Hierarchy& hierarchy);
+    void notify(std::vector<hop3d::ViewIndependentPart>& objectParts);
 };
 
 #endif // OBSERVER_H_

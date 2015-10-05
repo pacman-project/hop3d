@@ -79,6 +79,7 @@ QGLVisualizer::QGLVisualizer(void) {
     cloudsListLayers.resize(6);
     clustersList.resize(6);
     linksLists.resize(6);
+    layersOfObjects.resize(6);
 }
 
 /// Construction
@@ -87,6 +88,7 @@ QGLVisualizer::QGLVisualizer(Config _config): config(_config), updateHierarchyFl
     cloudsListLayers.resize(6);
     clustersList.resize(6);
     linksLists.resize(6);
+    layersOfObjects.resize(6);
 }
 
 /// Construction
@@ -154,6 +156,13 @@ void QGLVisualizer::update(hop3d::Hierarchy& _hierarchy) {
     }
     mtxHierarchy.unlock();
     updateHierarchyFlag = true;
+}
+
+/// Update 3D object model
+void QGLVisualizer::update(std::vector<ViewIndependentPart>& objectParts){
+    for (auto & part : objectParts){
+        std::cout << part.layerId << "\n";
+    }
 }
 
 ///update hierarchy, prepare gl lists

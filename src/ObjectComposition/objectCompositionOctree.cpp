@@ -71,6 +71,19 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
     }
 }
 
+/// get octree in layer layerNo
+void ObjectCompositionOctree::getParts(int layerNo, std::vector<ViewIndependentPart>& parts) const{
+    for (int idX=0; idX<(*octrees[layerNo]).size(); idX++){///to do z-slicing
+        for (int idY=0; idY<(*octrees[layerNo]).size(); idY++){
+            for (int idZ=0; idZ<(*octrees[layerNo]).size(); idZ++){
+                if ((*octrees[layerNo]).at(idX,idY,idZ).parts.size()>0){
+                    parts.push_back((*octrees[layerNo]).at(idX,idY,idZ));
+                }
+            }
+        }
+    }
+}
+
 /// get clusters of parts id stored in octree (one cluster per voxel)
 void ObjectCompositionOctree::getClusters(int layerNo, std::vector< std::set<int>>& clusters){
     for (int idX=0; idX<(*octrees[layerNo]).size(); idX++){///to do z-slicing

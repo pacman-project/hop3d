@@ -44,6 +44,12 @@ public:
     /// set filters
     virtual void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName) = 0;
 
+    /// define 2rd layer octet images using selected words from third layer
+    virtual void computeImages3rdLayer(const ViewDependentPart::Seq& dictionary) = 0;
+
+    /// get last view dependent layer parts from the image
+    virtual void getLastVDLayerParts(std::vector<ViewDependentPart>& parts) const = 0;
+
     /// Virtual descrutor
     virtual ~ImageFilter() {
     }

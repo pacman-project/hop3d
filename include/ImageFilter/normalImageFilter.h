@@ -27,6 +27,8 @@ class NormalImageFilter: public ImageFilter {
     typedef std::pair<int,double> Response;
     /// 2D array of octets
     typedef std::vector< std::vector<Octet> > OctetsImage;
+    /// 2D array of vocabularies
+    typedef std::vector< std::vector<ViewDependentPart> > PartsImage;
 public:
     /// Pointer
     typedef std::unique_ptr<NormalImageFilter> Ptr;
@@ -52,7 +54,15 @@ public:
     /// get filters
     void getFilters(Filter::Seq& _filters) const;
 
+    /// not used here
     void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName);
+
+    /// define 2rd layer octet images using selected words from third layer
+    void computeImages3rdLayer(const ViewDependentPart::Seq& dictionary);
+
+    /// get last view dependent layer parts from the image
+    void getLastVDLayerParts(std::vector<ViewDependentPart>& parts) const;
+
     class Config{
       public:
         Config() {
@@ -83,6 +93,8 @@ private:
     DepthSensorModel sensorModel;
     /// octets images
     std::vector<OctetsImage> octetsImages;
+    /// parts images
+    std::vector<PartsImage> partsImages;
 
     /// discretization: convert normal vector to id
     int toId(const Vec3& normal) const;

@@ -21,6 +21,10 @@ class QGLVisualizer: public QGLViewer, public Observer{
 public:
     /// Pointer
     typedef std::unique_ptr<QGLVisualizer> Ptr;
+    /// 3D object
+    typedef std::vector<hop3d::ViewIndependentPart> Object3D;
+    /// vector of 3D objects
+    typedef std::vector<Object3D> Object3DSeq;
 
     class Config{
       public:
@@ -117,6 +121,9 @@ public:
     /// Observer update
     void update(hop3d::Hierarchy& _hierarchy);
 
+    /// Update 3D object model
+    void update(std::vector<hop3d::ViewIndependentPart>& objectParts);
+
 private:
     Config config;
 
@@ -140,6 +147,9 @@ private:
 
     /// background list
     std::vector< GLuint > backgroundList;
+
+    /// objects indexed by layerNo
+    std::vector<Object3DSeq> layersOfObjects;
 
     /// draw objects
     void draw();
