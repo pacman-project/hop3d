@@ -49,16 +49,18 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         Mat34 partPosition(Mat34::Identity());
         Vec3 pos3d;
         if (config.verbose==1){
-            std::cout << "Update octree, part.id: " << part.id << "\n";
+            std::cout << "parts notree, part.id: " << part.id << "\n";
         }
-        camModel.getPoint(part.gaussians[1][1].mean, pos3d);
-        Vec3 normal; hierarchy.getNormal(part, normal);
-        Mat33 rot; normal2rot(normal, rot);
-        Mat34 part3D;
+        Vec3 position(part.location.v, part.location.u, part.location.depth);
+        camModel.getPoint(position, pos3d);
+        Mat34 part3D(Mat34::Identity());
         part3D.translation() = pos3d;//set position of the part
+        /*Vec3 normal; hierarchy.getNormal(part, normal);
+        Mat33 rot; normal2rot(normal, rot);
         for (int i=0;i<3;i++)//and orientation
             for (int j=0;j<3;j++)
                 part3D(i,j) = rot(i,j);
+        */
         partPosition = cameraPose * part3D;//global position of the part
         int x = int(partPosition(0,3)/config.voxelSize);
         int y = int(partPosition(1,3)/config.voxelSize);
@@ -66,8 +68,12 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         if (config.verbose==1){
             std::cout << "Update octree, xyz: " << x << ", " << y << ", " << z << "\n";
         }
-        ViewIndependentPart::Part3D ViewIndependentPart(partPosition, part.id);
-        (*octrees[layerNo])(x,y,z).parts.push_back(ViewIndependentPart);
+        //std::cout << "part.id " << part.id << "\n";
+        //std::cout << "partPosition: \n" << partPosition.matrix() << "\n";
+        //getchar();
+        ViewIndependentPart::Part3D viewIndependentPart(partPosition, part.id);
+        (*octrees[layerNo])(x,y,z).parts.push_back(viewIndependentPart);
+        (*octrees[layerNo])(x,y,z).layerId=4;
     }
 }
 
@@ -123,10 +129,10 @@ void ObjectCompositionOctree::getClusters(int layerNo, std::vector< std::set<int
 void ObjectCompositionOctree::normal2rot(const Vec3& normal, Mat33& rot){
     Vec3 y(0,1,0); Vec3 x;
     Vec3 _normal(normal);
-    x = _normal.cross(y);
-    DepthSensorModel::normalizeVector(_normal);
-    y = y.cross(_normal);
+    x = y.cross(_normal);
     DepthSensorModel::normalizeVector(x);
+    y = _normal.cross(x);
+    DepthSensorModel::normalizeVector(y);
     rot.block(0,0,3,1) = x;
     rot.block(0,1,3,1) = y;
     rot.block(0,2,3,1) = _normal;

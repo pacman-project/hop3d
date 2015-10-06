@@ -11,12 +11,13 @@ class Observer
 {
 public:
     virtual void update(hop3d::Hierarchy& hierarchy) = 0;
-    virtual void update(std::vector<hop3d::ViewIndependentPart>& objectParts) = 0;
+    virtual void update(const std::vector<hop3d::ViewIndependentPart>& objectParts) = 0;
+    virtual void update3Dmodels(void) = 0;
 };
 
 class Subject
 {
-    //Lets keep a track of all the shops we have observing
+    //Lets keep a track of all observed objects
     std::vector<Observer*> list;
 
 public:
@@ -24,6 +25,7 @@ public:
     void detach(Observer *observer);
     void notify(hop3d::Hierarchy& hierarchy);
     void notify(std::vector<hop3d::ViewIndependentPart>& objectParts);
+    void notify3Dmodels();
 };
 
 #endif // OBSERVER_H_

@@ -7,7 +7,7 @@ namespace hop3d {
 void ViewDependentPart::print() const{
     std::cout << "Id: " << id << "\n";
     std::cout << "Layer id: " << layerId << "\n";
-    std::cout << "Image coords: " << location.u << ", " << location.v << "\n";
+    std::cout << "Image coords: " << location.u << ", " << location.v << ", " << location.depth << "\n";
     std::cout << "Group size: " << group.size() << "\n";
     std::cout << "ids: ";
     for (int i =0; i<3; i++){

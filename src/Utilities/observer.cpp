@@ -29,3 +29,12 @@ void Subject::notify(std::vector<hop3d::ViewIndependentPart>& objectParts){
         }
     }
 }
+
+void Subject::notify3Dmodels(){
+    for(vector<Observer*>::const_iterator iter = list.begin(); iter != list.end(); ++iter)
+    {
+        if(*iter != 0) {
+            (*iter)->update3Dmodels();
+        }
+    }
+}

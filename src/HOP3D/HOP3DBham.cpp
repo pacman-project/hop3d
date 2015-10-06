@@ -148,7 +148,7 @@ void HOP3DBham::learn(){
     }
 
     //represent all images in parts from 3rd layer
-    imageFilterer->computeImages3rdLayer(hierarchy.get()->viewDependentLayers[config.viewDependentLayersNo-1]);
+    imageFilterer->computeImages3rdLayer(hierarchy.get()->viewDependentLayers.back());
     Dataset dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
     std::vector< std::set<int>> clusters;
     for (size_t categoryNo=0;categoryNo<dataset.categories.size();categoryNo++){//for each category
@@ -161,6 +161,8 @@ void HOP3DBham::learn(){
                 std::vector<ViewDependentPart> parts;
                 //get parts of the 3rd layers
                 imageFilterer->getLastVDLayerParts(parts);
+                //hierarchy.get()->printIds(parts[0]);
+                //hierarchy.get()->printIds(parts[1]);
                 //imageFilterer->getParts(hierarchy.get()->viewDependentLayers[1],layerNo, parts, categoryNo, objectNo, imageNo, cameraPose);
                 /*parts.push_back(hierarchy.get()->viewDependentLayers[1][2]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][0]);
@@ -174,55 +176,56 @@ void HOP3DBham::learn(){
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][3]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][4]);
                 cameraPose(0,3)=0.225; cameraPose(1,3)=0.225; cameraPose(2,3)=0.225;*/
-                objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
+                objects.back()->update(0, parts, cameraPose, *depthCameraModel, *hierarchy);
             }
             std::vector< std::set<int>> clustersTmp;
             std::cout << "get clusters\n";
             objects.back()->getClusters(0,clustersTmp);
+            std::cout << " clusters size: " << clustersTmp.size() << "\n";
             std::cout << "finish get clusters\n";
             clusters.reserve( clusters.size() + clustersTmp.size() ); // preallocate memory
             clusters.insert( clusters.end(), clustersTmp.begin(), clustersTmp.end() );
         }
     }
     std::cout << "clusters size: " << clusters.size() << "\n";
-    int clusterNo=0;
-    for (auto & cluster : clusters){
+    //int clusterNo=0;
+    /*for (auto & cluster : clusters){
         std::cout << "cluster " << clusterNo << " size " << cluster.size() << ": ";
         for (auto & id : cluster){
             std::cout << id << ", ";
         }
         std::cout << "\n";
         clusterNo++;
-    }
+    }*/
 
-    std::vector<ViewIndependentPart> vocabulary;
+  //  std::vector<ViewIndependentPart> vocabulary;
     std::cout << "create unique clusters:\n";
-    partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
+//    partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
     std::cout << "new vocabulary:\n";
-    for (auto & word : vocabulary){
-        word.print();
-    }
+//    for (auto & word : vocabulary){
+//        word.print();
+//    }
     ///select part for 4th layer
-    vocabulary.clear();
+/*    vocabulary.clear();
     for (auto & object : objects){
         std::vector<ViewIndependentPart> vocab;
         object->createNextLayerVocabulary(1, *hierarchy, vocab);
         vocabulary.insert(vocabulary.end(),vocab.begin(), vocab.end());
     }
     std::cout << "4th layer vacabulary size: " << vocabulary.size() << "\n";
-    for (auto & part : vocabulary){
-        part.print();
-    }
+    */
+//    for (auto & part : vocabulary){
+//        part.print();
+    //}
     //partSelector->selectParts(objects, dictionary, *hierarchy,4)
 
     notify(*hierarchy);
     for (auto & object : objects){
         std::vector<ViewIndependentPart> objectParts;
-        //octree.
         object->getParts(0, objectParts);
         notify(objectParts);
-        std::cout << objectParts.size() << "\n";
     }
+    notify3Dmodels();
 
     std::cout << "Finished\n";
 }

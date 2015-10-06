@@ -30,6 +30,9 @@ public:
     /// get normal vector related to the part
     void getNormal(const ViewDependentPart& part, Vec3& normal) const;
 
+    /// print ids
+    void printIds(const ViewDependentPart& part);
+
     /// Construction
     Hierarchy(std::string configFilename);
 };

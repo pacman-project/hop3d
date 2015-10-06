@@ -48,7 +48,7 @@ public:
     typedef std::unique_ptr<ViewDependentPart> Ptr;
 
     /// Position of the part on the image
-    ImageCoords location;
+    ImageCoordsDepth location;
 
     /// Camera pose id
     int cameraPoseId;
@@ -63,7 +63,7 @@ public:
     inline ViewDependentPart(){};
 
     /// Construction
-    inline ViewDependentPart(int _id, int _layerId, ImageCoords _location) :
+    inline ViewDependentPart(int _id, int _layerId, ImageCoordsDepth _location) :
         Part(_id, _layerId, PART_VIEW_DEP), location(_location){
     }
 
@@ -92,6 +92,8 @@ public:
     /// part composition
     std::vector<Part3D> parts;
 
+    /// pose
+    Mat34 pose;
     /// Part id
     int id;
     /// Layer id

@@ -80,6 +80,7 @@ QGLVisualizer::QGLVisualizer(void) {
     clustersList.resize(6);
     linksLists.resize(6);
     layersOfObjects.resize(6);
+    objects3Dlist.resize(6);
 }
 
 /// Construction
@@ -89,6 +90,7 @@ QGLVisualizer::QGLVisualizer(Config _config): config(_config), updateHierarchyFl
     clustersList.resize(6);
     linksLists.resize(6);
     layersOfObjects.resize(6);
+    objects3Dlist.resize(6);
 }
 
 /// Construction
@@ -159,9 +161,36 @@ void QGLVisualizer::update(hop3d::Hierarchy& _hierarchy) {
 }
 
 /// Update 3D object model
-void QGLVisualizer::update(std::vector<ViewIndependentPart>& objectParts){
+void QGLVisualizer::update(const std::vector<ViewIndependentPart>& objectParts){
+    mtxHierarchy.lock();
+    /*Object3D object;
     for (auto & part : objectParts){
-        std::cout << part.layerId << "\n";
+        ViewIndependentPart p = part;
+        int partIdNo=0;
+        for (auto & part3rd : part.parts){
+            p.parts[partIdNo].id = hierarchy->interpreter[part3rd.id];
+            partIdNo++;
+        }
+        object.push_back(p);
+    }*/
+    layersOfObjects[0].push_back(objectParts);
+    mtxHierarchy.unlock();
+}
+
+/// Update 3D object models
+void QGLVisualizer::update3Dmodels(void){
+    update3DModelsFlag = true;
+}
+
+/// Update 3D object models
+void QGLVisualizer::update3Dobjects(void){
+    if (update3DModelsFlag){
+        update3DModelsFlag = false;
+        for (auto & layer : layersOfObjects){
+            for (auto & object : layer){
+                objects3Dlist[0].push_back(createObjList(object));
+            }
+        }
     }
 }
 
@@ -170,7 +199,7 @@ void QGLVisualizer::updateHierarchy(){
     if (updateHierarchyFlag){
         updateHierarchyFlag = false;
         mtxHierarchy.lock();
-        for (size_t i=0; i<hierarchy->firstLayer.size(); i++){
+        for (size_t i=0; i<hierarchy->firstLayer.size(); i++){//filters
             hop3d::PointCloud cloud;
             int cols = hierarchy->firstLayer[i].patch.cols;
             for (int u=0;u<hierarchy->firstLayer[i].patch.cols;u++){
@@ -215,6 +244,23 @@ void QGLVisualizer::drawPointClouds(void){
     //mtxPointClouds.unlock();
 }
 
+/// Draw objects
+void QGLVisualizer::draw3Dobjects(void){
+    //mtxPointClouds.lock();
+    for (int layerNo=0;layerNo<1;layerNo++){
+        for (size_t i = 0;i<objects3Dlist[layerNo].size();i++){
+            double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.partDist[layerNo+3]*double(i)-((double)objects3Dlist[layerNo].size()/2)*config.partDist[layerNo+3]), 0, config.posZ[layerNo+3], 1};
+            glPushMatrix();
+                //glColor3ub(200,200,200);
+                glMultMatrixd(GLmat);
+                glPointSize((float)config.cloudPointSize);
+                glCallList(objects3Dlist[layerNo][i]);
+            glPopMatrix();
+        }
+    }
+    //mtxPointClouds.unlock();
+}
+
 /// Draw clusters
 void QGLVisualizer::drawClusters(void){
     //mtxPointClouds.lock();
@@ -250,12 +296,22 @@ GLuint QGLVisualizer::createBackgroundList(int layerNo){
     return index;
 }
 
+/// transpose ids matrix
+void QGLVisualizer::transposeIds(std::array<std::array<int,3>,3>& ids){
+    std::array<std::array<int,3>,3> idsNew;
+    for (int i=0;i<3;i++)
+        for (int j=0;j<3;j++)
+            idsNew[j][i] = ids[i][j];
+    ids = idsNew;
+}
+
 /// Create point cloud List
 GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
     // create one display list
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
     glPushMatrix();
+    transposeIds(part.partIds);// because it's more natural for user
     for (size_t n = 0; n < part.partIds.size(); n++){
         for (size_t m = 0; m < part.partIds[n].size(); m++){
             Vec3 pos(config.pixelSize*part.gaussians[n][m].mean(0), config.pixelSize*part.gaussians[n][m].mean(1), part.gaussians[n][m].mean(2));
@@ -288,6 +344,57 @@ GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
     return index;
 }
 
+/// Create point cloud List
+GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& parts){
+    // create one display list
+    GLuint index = glGenLists(1);
+    glNewList(index, GL_COMPILE);
+    glPushMatrix();
+    for (auto & part : parts){
+        for (auto & partL : part.parts){
+            //std::cout << "id: " << hierarchy->interpreter[partL.id] <<"\n";
+            //std::cout << "pose: " << partL.pose.matrix() <<"\n";
+            //getchar();
+            Vec3 pos(partL.pose(0,3), partL.pose(1,3), partL.pose(2,3));
+            double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
+            glPushMatrix();
+                glMultMatrixd(GLmat);
+                glCallList(cloudsListLayers[2][partL.id]);
+            glPopMatrix();
+        }
+    }
+    /*for (size_t n = 0; n < part.partIds.size(); n++){
+        for (size_t m = 0; m < part.partIds[n].size(); m++){
+            Vec3 pos(config.pixelSize*part.gaussians[n][m].mean(0), config.pixelSize*part.gaussians[n][m].mean(1), part.gaussians[n][m].mean(2));
+            int id = part.partIds[n][m];
+            if ((n==1)&&(m==1)){
+                pos(0)=0; pos(1)=0; pos(2)=0;
+            }
+            else if (id==-1){
+                double patchSize = 5.0*(2.0*layerNo-1.0);
+                pos(0)=config.pixelSize*double(double(n)-1.0)*(patchSize+(patchSize/2.0));
+                pos(1)=config.pixelSize*double(double(m)-1.0)*(patchSize+(patchSize/2.0));
+                pos(2)=0;
+            }
+            double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
+            glPushMatrix();
+                glMultMatrixd(GLmat);
+                if (id==-1){
+                    //glColor3ub(100,50,50);
+                    glCallList(backgroundList[layerNo-1]);
+                }
+                else{
+                    //glColor3ub(200,200,200);
+                    glCallList(cloudsListLayers[layerNo-1][id]);
+                }
+            glPopMatrix();
+        }
+    }*/
+    glPopMatrix();
+    glEndList();
+    return index;
+}
+
 /// Create clusters List
 GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
     // create one display list
@@ -295,6 +402,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
     glNewList(index, GL_COMPILE);
     glPushMatrix();
     int componentNo=0;
+    transposeIds(part.partIds);// because it's more natural for user
     for (auto itComp = part.group.begin(); itComp!=part.group.end();itComp++){
         for (size_t n = 0; n < itComp->partIds.size(); n++){
             for (size_t m = 0; m < itComp->partIds[n].size(); m++){
@@ -306,7 +414,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                     pos(0)=config.pixelSize*double(double(n)-1.0)*5.0;
                     pos(1)=config.pixelSize*double(double(m)-1.0)*5.0;
                 }*/
-                double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1)-(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
+                double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
                 glPushMatrix();
                     glMultMatrixd(GLmat);
                     //glColor4d(config.clustersColor.red(), config.clustersColor.green(), config.clustersColor.blue(), config.clustersColor.alpha());
@@ -395,8 +503,11 @@ void QGLVisualizer::draw(){
         drawLayer2Layer();
     if (config.drawClusters)
         drawClusters();
+    if (config.draw3Dobjects)
+        draw3Dobjects();
     drawPointClouds();
     updateHierarchy();
+    update3Dobjects();
 }
 
 /// draw objects
@@ -421,6 +532,9 @@ void QGLVisualizer::init(){
 
     camera()->setZNearCoefficient((float)0.00001);
     camera()->setZClippingCoefficient(100.0);
+
+    //qglviewer::Quaternion q(-0.5,0.5,0.5,0.5);
+    //camera()->setOrientation(q);
 
     setBackgroundColor(config.backgroundColor);
 

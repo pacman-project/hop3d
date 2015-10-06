@@ -211,18 +211,28 @@ void NormalImageFilter::getOctets(const ViewDependentPart::Seq& dictionary, Octe
 void NormalImageFilter::computeImages3rdLayer(const ViewDependentPart::Seq& dictionary){
     PartsImage partsImage (octetsImages.back().size(), std::vector<ViewDependentPart> (octetsImages.back().back().size()));
     OctetsImage octetsImage = octetsImages.back();
+    int partsNo = 0;
     for (size_t i=0; i<octetsImage.size();i++){
-        for (size_t j=1; j<octetsImage.back().size();j++){
+        for (size_t j=0; j<octetsImage.back().size();j++){
             ViewDependentPart part;
             part.id=-1;
+            //std::cout << "(" << i << "," << j << ")" << octetsImage[i][j].filterIds[1][1] << ", ";
             if (octetsImage[i][j].filterIds[1][1]!=-1){
                 //std::cout << dictionary.size() << "\n";
                 //std::cout << "findId(dictionary,octetsImage[i][j]) " << findId(dictionary,octetsImage[i][j]) << "\n";
-                part = dictionary[findId(dictionary,octetsImage[i][j])];
+                int id = findId(dictionary,octetsImage[i][j]);
+                part = dictionary[id];
+                part.id = id;
                 //std::cout << "found id : " << findId(dictionary,octetsImage[i][j]) << " new id " << dictionary[findId(dictionary,octetsImage[i][j])].id << "\n";
+                //std::cout << "parts no " << partsNo << "\n";
+                part.location = octetsImage[i][j].filterPos[1][1];
+          //      part.print();
+        //        getchar();
+                partsNo++;
             }
             partsImage[i][j]=part;
         }
+        //std::cout << "\n";
     }
     partsImages.push_back(partsImage);
 }
@@ -232,7 +242,7 @@ void NormalImageFilter::getLastVDLayerParts(std::vector<ViewDependentPart>& part
     parts.clear();
     PartsImage partsImage = partsImages.back();
     for (size_t i=0; i<partsImage.size();i++){
-        for (size_t j=1; j<partsImage.back().size();j++){
+        for (size_t j=0; j<partsImage.back().size();j++){
             if (partsImage[i][j].id!=-1){
                 parts.push_back(partsImage[i][j]);
             }

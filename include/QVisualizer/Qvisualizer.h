@@ -50,6 +50,7 @@ public:
 
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("pixelSize", &pixelSize);
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("filterDepthScale", &filterDepthScale);
+            model->FirstChildElement( "hierarchy" )->QueryBoolAttribute("draw3Dobjects", &draw3Dobjects);
 
             int layersNo=6;
             partDist.resize(layersNo);
@@ -86,6 +87,8 @@ public:
         double cloudPointSize;
         /// hierarchy pixel size in patch
         double pixelSize;
+        /// draw 3D objects
+        bool draw3Dobjects;
         /// distance between parts in i-th layers
         std::vector<double> partDist;
         /// "z" coordinate of the i-t hierarchy layer
@@ -122,7 +125,10 @@ public:
     void update(hop3d::Hierarchy& _hierarchy);
 
     /// Update 3D object model
-    void update(std::vector<hop3d::ViewIndependentPart>& objectParts);
+    void update(const std::vector<hop3d::ViewIndependentPart>& objectParts);
+
+    /// Update 3D object models
+    void update3Dmodels(void);
 
 private:
     Config config;
@@ -135,6 +141,9 @@ private:
 
     /// updateHierarchy
     bool updateHierarchyFlag;
+
+    /// update 3D models
+    bool update3DModelsFlag;
 
     /// cloud list
     std::vector< std::vector<GLuint> > cloudsListLayers;
@@ -151,6 +160,9 @@ private:
     /// objects indexed by layerNo
     std::vector<Object3DSeq> layersOfObjects;
 
+    /// clusters list
+    std::vector< std::vector< GLuint > > objects3Dlist;
+
     /// draw objects
     void draw();
 
@@ -166,11 +178,17 @@ private:
     ///update hierarchy
     void updateHierarchy();
 
+    /// Update 3D object models
+    void update3Dobjects(void);
+
     /// Draw point clouds
     void drawPointClouds(void);
 
     /// Draw clusters
     void drawClusters(void);
+
+    /// Draw objects
+    void draw3Dobjects(void);
 
     /// Create point cloud List
     GLuint createCloudList(hop3d::PointCloud& pointCloud);
@@ -181,11 +199,17 @@ private:
     /// Create point cloud List
     GLuint createPartList(hop3d::ViewDependentPart& part, int layerNo);
 
+    /// Create objects lists
+    GLuint createObjList(const std::vector<hop3d::ViewIndependentPart>& parts);
+
     /// Create clusters List
     GLuint createClustersList(hop3d::ViewDependentPart& part, int layerNo);
 
     /// Create layer 2 layer List
     GLuint createLinksList(int destLayerNo);
+
+    /// transpose ids matrix
+    void transposeIds(std::array<std::array<int,3>,3>& ids);
 
     /// Draw layer 2 layer links
     void drawLayer2Layer(void);
