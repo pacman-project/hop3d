@@ -87,7 +87,7 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::S
                     std::cout << "[" << i << ", " << j << "] " << responseImage[i][j].first << " -> " << responseImage[i][j].second << "\n";
                     getchar();*/
                     if (config.verbose==2)
-                        idsImage.at<uchar>(i,j)=(uchar)(toId(cloudOrd[i][j].normal)*10);
+                        idsImage.at<uchar>(i,j)=(uchar)(toId(cloudOrd[i][j].normal)*2);
                 }
             }
         }
@@ -378,7 +378,7 @@ void NormalImageFilter::normalPCA(std::vector<hop3d::PointNormal>& points, hop3d
     }
     else if (std::real(es.eigenvalues()(2))<std::real(es.eigenvalues()(1)))
         min=2;
-    pointNormal.normal = Vec3(std::real(es.eigenvectors()(0,min)), std::real(es.eigenvectors()(1,min)), std::real(es.eigenvectors()(2,min)));
+    pointNormal.normal = Vec3(std::real(es.eigenvectors()(1,min)), std::real(es.eigenvectors()(0,min)), std::real(es.eigenvectors()(2,min)));
     if (pointNormal.normal(2)<0)
         pointNormal.normal=-pointNormal.normal;
     //std::cout << "normal " << pointNormal.normal.transpose() << "\n";

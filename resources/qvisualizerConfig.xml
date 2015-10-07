@@ -3,8 +3,8 @@
   <VisualizerConfig>
   	<name>QGLVisualizer</name>
 	<parameters verbose="0"></parameters>
-	<hierarchy pixelSize="0.01" filterDepthScale="0.001" draw3Dobjects="true"></hierarchy>
-	<layer1 dist="0.42" posZ="0.1"></layer1>
+	<hierarchy pixelSize="0.01" filterDepthScale="0.01" draw3Dobjects="true"></hierarchy>
+	<layer1 dist="0.12" posZ="0.1"></layer1>
 	<layer2 dist="0.7" posZ="1.6"></layer2>
 	<layer3 dist="1.28" posZ="3.2"></layer3>
 	<layer4 dist="1.4" posZ="3.9"></layer4>

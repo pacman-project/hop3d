@@ -305,13 +305,41 @@ void QGLVisualizer::transposeIds(std::array<std::array<int,3>,3>& ids){
     ids = idsNew;
 }
 
+/// flip horizontal ids matrix
+void QGLVisualizer::flipIds(std::array<std::array<int,3>,3>& ids){
+    std::array<std::array<int,3>,3> idsNew;
+    for (int i=0;i<3;i++)
+        for (int j=0;j<3;j++)
+            idsNew[i][j] = ids[j][2-i];
+    ids = idsNew;
+}
+
+/// flip horizontal gaussians matrix
+void QGLVisualizer::flipGaussians(std::array<std::array<hop3d::Gaussian3D,3>,3>& gaussians){
+    std::array<std::array<hop3d::Gaussian3D,3>,3> gaussiansNew;
+    for (int i=0;i<3;i++)
+        for (int j=0;j<3;j++)
+            gaussiansNew[i][j] = gaussians[j][2-i];
+    gaussians = gaussiansNew;
+}
+
+/// transpose gaussians matrix
+void QGLVisualizer::transposeGaussians(std::array<std::array<Gaussian3D,3>,3>& gaussians){
+    std::array<std::array<Gaussian3D,3>,3> gaussiansNew;
+    for (int i=0;i<3;i++)
+        for (int j=0;j<3;j++)
+            gaussiansNew[j][i] = gaussians[i][j];
+    gaussians = gaussiansNew;
+}
+
 /// Create point cloud List
 GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
     // create one display list
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
     glPushMatrix();
-    transposeIds(part.partIds);// because it's more natural for user
+    //flipIds(part.partIds);// because it's more natural for user
+    //flipGaussians(part.gaussians);
     for (size_t n = 0; n < part.partIds.size(); n++){
         for (size_t m = 0; m < part.partIds[n].size(); m++){
             Vec3 pos(config.pixelSize*part.gaussians[n][m].mean(0), config.pixelSize*part.gaussians[n][m].mean(1), part.gaussians[n][m].mean(2));
@@ -325,7 +353,7 @@ GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
                 pos(1)=config.pixelSize*double(double(m)-1.0)*(patchSize+(patchSize/2.0));
                 pos(2)=0;
             }
-            double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
+            double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(1), pos(0), pos(2), 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
                 if (id==-1){
@@ -402,7 +430,8 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
     glNewList(index, GL_COMPILE);
     glPushMatrix();
     int componentNo=0;
-    transposeIds(part.partIds);// because it's more natural for user
+    //flipIds(part.partIds);// because it's more natural for user
+    //flipGaussians(part.gaussians);
     for (auto itComp = part.group.begin(); itComp!=part.group.end();itComp++){
         for (size_t n = 0; n < itComp->partIds.size(); n++){
             for (size_t m = 0; m < itComp->partIds[n].size(); m++){
@@ -414,7 +443,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                     pos(0)=config.pixelSize*double(double(n)-1.0)*5.0;
                     pos(1)=config.pixelSize*double(double(m)-1.0)*5.0;
                 }*/
-                double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
+                double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(1), pos(0)+(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
                 glPushMatrix();
                     glMultMatrixd(GLmat);
                     //glColor4d(config.clustersColor.red(), config.clustersColor.green(), config.clustersColor.blue(), config.clustersColor.alpha());

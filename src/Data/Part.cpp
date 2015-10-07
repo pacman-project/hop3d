@@ -19,14 +19,15 @@ void ViewDependentPart::print() const{
     for (auto it = group.begin();it!=group.end();it++)
         std::cout << it->id << ", ";
     std::cout << "\n";
-    /*for (size_t i=0; i<gaussians.size();i++){
+    std::cout << "Gaussians:\n";
+    for (size_t i=0; i<gaussians.size();i++){
         for (size_t j=0; j<gaussians.size();j++){
-            std::cout << "mean(" << i-1 << ", " << j-1 << "): ";
+            std::cout << "mean(" << i << ", " << j << "): ";
             std::cout << gaussians[i][j].mean.transpose() << "\n";
-            std::cout << "covariance(" << i-1 << ", " << j-1 << "):\n";
-            std::cout << gaussians[i][j].covariance << "\n";
+            //std::cout << "covariance(" << i-1 << ", " << j-1 << "):\n";
+            //std::cout << gaussians[i][j].covariance << "\n";
         }
-    }*/
+    }
 }
 
 /// Print
@@ -85,7 +86,15 @@ double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDep
     for (size_t i=0; i<partA.partIds.size();i++)
         for (size_t j=0; j<partA.partIds.size();j++)
             if (partA.layerId==3){
-                sum+=distance(layer2vocabulary[partA.partIds[i][j]], layer2vocabulary[partB.partIds[i][j]], filters);
+                if ((partA.partIds[i][j]==-1)&&(partB.partIds[i][j]==-1)){
+                    sum+=0;
+                }
+                else if ((partA.partIds[i][j]==-1)||(partB.partIds[i][j]==-1)){
+                    sum+=9;
+                }
+                else{
+                    sum+=distance(layer2vocabulary[partA.partIds[i][j]], layer2vocabulary[partB.partIds[i][j]], filters);
+                }
             }
     return sum;
 }

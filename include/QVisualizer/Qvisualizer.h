@@ -211,6 +211,15 @@ private:
     /// transpose ids matrix
     void transposeIds(std::array<std::array<int,3>,3>& ids);
 
+    /// transpose gaussians matrix
+    void transposeGaussians(std::array<std::array<hop3d::Gaussian3D,3>,3>& gaussians);
+
+    /// flip horizontal ids matrix
+    void flipIds(std::array<std::array<int,3>,3>& ids);
+
+    /// flip horizontal gaussians matrix
+    void flipGaussians(std::array<std::array<hop3d::Gaussian3D,3>,3>& ids);
+
     /// Draw layer 2 layer links
     void drawLayer2Layer(void);
 

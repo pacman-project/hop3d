@@ -69,55 +69,6 @@ HOP3DBham::Config::Config(std::string configFilename){
 
 /// learining from the dataset
 void HOP3DBham::learn(){
-    /*std::vector<hop3d::Octet> octets2layer;
-    std::default_random_engine generator(time(0));
-    std::uniform_int_distribution<int> distribution(0,3); // filters ids distribution
-    int filterSize = 7;
-    std::normal_distribution<double> distributionUV(0, filterSize/27.0); // filters ids distribution
-    std::normal_distribution<double> distributionDepth(0,0.003);
-    int octetsNo = 10000;
-    octets2layer.resize(octetsNo);
-    for (auto& it: octets2layer){
-        //randomly select filter ids
-        for (size_t i=0;i<it.filterIds.size();i++){
-            for (size_t j=0;j<it.filterIds[i].size();j++){
-                it.filterIds[i][j]=distribution(generator);
-            }
-        }
-        for (size_t i=0;i<it.filterPos.size();i++){
-            for (size_t j=0;j<it.filterPos[i].size();j++){
-                hop3d::ImageCoordsDepth coords(double(j*(filterSize-1))-double(filterSize-1)+distributionUV(generator), double(i*(filterSize-1))-double(filterSize-1)+distributionUV(generator), distributionDepth(generator));
-                if ((i==(it.filterPos.size()/2))&&(j==(it.filterPos.size()/2))){
-                    coords.u=0; coords.v=0; coords.depth=0;
-                }
-                it.filterPos[i][j]=coords;
-            }
-        }
-    }
-
-    ///3rd layer
-    std::uniform_int_distribution<int> distribution3rd(0,49); // filters ids distribution
-    std::vector<hop3d::Octet> octets3layer;
-    octetsNo = 200;
-    octets3layer.resize(octetsNo);
-    for (auto& it: octets3layer){
-        //randomly select filter ids
-        for (size_t i=0;i<it.filterIds.size();i++){
-            for (size_t j=0;j<it.filterIds[i].size();j++){
-                it.filterIds[i][j]=distribution3rd(generator);
-            }
-        }
-        for (size_t i=0;i<it.filterPos.size();i++){
-            for (size_t j=0;j<it.filterPos[i].size();j++){
-                hop3d::ImageCoordsDepth coords(double(j*(3*filterSize-1))-double(3*filterSize-1)+distributionUV(generator), double(i*(3*filterSize-1))-double(3*filterSize-1)+distributionUV(generator), distributionDepth(generator));
-                if ((i==(it.filterPos.size()/2))&&(j==(it.filterPos.size()/2))){
-                    coords.u=0; coords.v=0; coords.depth=0;
-                }
-                it.filterPos[i][j]=coords;
-            }
-        }
-    }*/
-
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
     hop3d::ViewDependentPart::Seq dictionary;
 
