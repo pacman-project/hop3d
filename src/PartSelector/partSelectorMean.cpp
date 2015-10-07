@@ -1,4 +1,5 @@
 #include "PartSelector/partSelectorMean.h"
+#include "ImageFilter/normalImageFilter.h"
 #include <ctime>
 
 using namespace hop3d;
@@ -194,6 +195,10 @@ void PartSelectorMean::createUniqueClusters(const std::vector< std::set<int>>& c
         ViewIndependentPart part;
         part.layerId=4;
         part.id = idNo;
+        ViewDependentPart vdp = hierarchy.viewDependentLayers.back()[*cluster.begin()];//get view dependent part related to view-independent part
+        Vec3 normal;
+        vdp.getNormal(normal,hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
+        part.pose = NormalImageFilter::coordinateFromNormal(normal);
         for (auto & partId : cluster){
             part.group.push_back(partId);
             hierarchy.interpreter[partId]=idNo;

@@ -212,7 +212,7 @@ void QGLVisualizer::updateHierarchy(){
             }
             cloudsListLayers[0].push_back(createCloudList(cloud));
         }
-        for (size_t i=0;i<hierarchy->viewDependentLayers.size();i++){
+        for (size_t i=0;i<hierarchy->viewDependentLayers.size();i++){//view-dependent layers
             backgroundList.push_back(createBackgroundList(int(i+1)));
             if (config.verbose==1){
                 std::cout << "layer "<< i+1 << " size: " << cloudsListLayers[0].size() << "\n";
@@ -223,6 +223,16 @@ void QGLVisualizer::updateHierarchy(){
             }
             linksLists[i+1].push_back(createLinksList(int(i+1)));
         }
+        for (size_t i=0;i<hierarchy->viewIndependentLayers.size();i++){//view-independent
+            if (config.verbose==1){
+                std::cout << "layer "<< i+4 << " size: " << cloudsListLayers[0].size() << "\n";
+            }
+            for (auto it = hierarchy->viewIndependentLayers[i].begin(); it!=hierarchy->viewIndependentLayers[i].end(); it++){
+                cloudsListLayers[i+3].push_back(createVIPartList(*it, int(i+4)));
+                clustersList[i+3].push_back(createVIClustersList(*it, int(i+4)));
+            }
+            linksLists[i+3].push_back(createVILinksList(int(i+4)));
+        }
         mtxHierarchy.unlock();
     }
 }
@@ -230,7 +240,7 @@ void QGLVisualizer::updateHierarchy(){
 /// Draw point clouds
 void QGLVisualizer::drawPointClouds(void){
     //mtxPointClouds.lock();
-    for (int layerNo=0;layerNo<3;layerNo++){
+    for (int layerNo=0;layerNo<4;layerNo++){
         for (size_t i = 0;i<cloudsListLayers[layerNo].size();i++){
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.partDist[layerNo]*double(i)-((double)cloudsListLayers[layerNo].size()/2)*config.partDist[layerNo]), 0, config.posZ[layerNo], 1};
             glPushMatrix();
@@ -264,7 +274,7 @@ void QGLVisualizer::draw3Dobjects(void){
 /// Draw clusters
 void QGLVisualizer::drawClusters(void){
     //mtxPointClouds.lock();
-    for (size_t layerNo=0;layerNo<hierarchy->viewDependentLayers.size();layerNo++){
+    for (size_t layerNo=0;layerNo<hierarchy->viewDependentLayers.size()+1;layerNo++){
         for (size_t i = 0;i<clustersList[layerNo+1].size();i++){
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.partDist[layerNo+1]*double(i)-((double)cloudsListLayers[layerNo+1].size()/2)*config.partDist[layerNo+1]), 0, config.posZ[layerNo+1], 1};
             glPushMatrix();
@@ -330,6 +340,64 @@ void QGLVisualizer::transposeGaussians(std::array<std::array<Gaussian3D,3>,3>& g
         for (int j=0;j<3;j++)
             gaussiansNew[j][i] = gaussians[i][j];
     gaussians = gaussiansNew;
+}
+
+/// Create view independent part list
+GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int layerNo){
+    // create one display list
+    GLuint index = glGenLists(1);
+    glNewList(index, GL_COMPILE);
+    glPushMatrix();
+    if (layerNo==4){
+        int id = *part.group.begin();
+        Mat34 pose = part.pose.inverse();
+        double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, 0, 0, 0, 1};
+        glPushMatrix();
+            glMultMatrixd(GLmat);
+            if (id==-1){
+                //glColor3ub(100,50,50);
+                glCallList(backgroundList[hierarchy->viewDependentLayers.size()]);
+            }
+            else{
+                //glColor3ub(200,200,200);
+                glCallList(cloudsListLayers[hierarchy->viewDependentLayers.size()][id]);
+            }
+        glPopMatrix();
+    }
+    else {
+        //flipIds(part.partIds);// because it's more natural for user
+        //flipGaussians(part.gaussians);
+        /*for (size_t n = 0; n < part.partIds.size(); n++){
+            for (size_t m = 0; m < part.partIds[n].size(); m++){
+                Vec3 pos(config.pixelSize*part.gaussians[n][m].mean(0), config.pixelSize*part.gaussians[n][m].mean(1), part.gaussians[n][m].mean(2));
+                int id = part.partIds[n][m];
+                if ((n==1)&&(m==1)){
+                    pos(0)=0; pos(1)=0; pos(2)=0;
+                }
+                else if (id==-1){
+                    double patchSize = 5.0*(2.0*layerNo-1.0);
+                    pos(0)=config.pixelSize*double(double(n)-1.0)*(patchSize+(patchSize/2.0));
+                    pos(1)=config.pixelSize*double(double(m)-1.0)*(patchSize+(patchSize/2.0));
+                    pos(2)=0;
+                }
+                double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(1), pos(0), pos(2), 1};
+                glPushMatrix();
+                    glMultMatrixd(GLmat);
+                    if (id==-1){
+                        //glColor3ub(100,50,50);
+                        glCallList(backgroundList[layerNo-1]);
+                    }
+                    else{
+                        //glColor3ub(200,200,200);
+                        glCallList(cloudsListLayers[layerNo-1][id]);
+                    }
+                glPopMatrix();
+            }
+        }*/
+    }
+    glPopMatrix();
+    glEndList();
+    return index;
 }
 
 /// Create point cloud List
@@ -424,6 +492,58 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
 }
 
 /// Create clusters List
+GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerNo){
+    // create one display list
+    GLuint index = glGenLists(1);
+    glNewList(index, GL_COMPILE);
+    glPushMatrix();
+    int componentNo=0;
+    if (layerNo==4){
+        for (auto & partId : part.group){
+            Mat34 pose = part.pose.inverse();
+            double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, 0, 0, 0, 1};
+            glPushMatrix();
+                glMultMatrixd(GLmat);
+                if (partId==-1){
+                    //glColor3ub(100,50,50);
+                    glCallList(backgroundList[hierarchy->viewDependentLayers.size()]);
+                }
+                else{
+                    //glColor3ub(200,200,200);
+                    glCallList(cloudsListLayers[hierarchy->viewDependentLayers.size()][partId]);
+                }
+            glPopMatrix();
+            componentNo++;
+        }
+    }
+    else {
+        /*for (auto itComp = part.group.begin(); itComp!=part.group.end();itComp++){
+            for (size_t n = 0; n < itComp->partIds.size(); n++){
+                for (size_t m = 0; m < itComp->partIds[n].size(); m++){
+                    Vec3 pos(config.pixelSize*itComp->gaussians[n][m].mean(0), config.pixelSize*itComp->gaussians[n][m].mean(1), itComp->gaussians[n][m].mean(2));
+                    if ((n==1)&&(m==1)){
+                        pos(0)=0; pos(1)=0; pos(2)=0;
+                    }
+                    double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(1), pos(0)+(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
+                    glPushMatrix();
+                        glMultMatrixd(GLmat);
+                        //glColor4d(config.clustersColor.red(), config.clustersColor.green(), config.clustersColor.blue(), config.clustersColor.alpha());
+                        int id = itComp->partIds[n][m];
+                        if ((layerNo==1)&&(itComp->partIds[n][m]==-1))
+                            id = 0;
+                        glCallList(cloudsListLayers[layerNo-1][id]);
+                    glPopMatrix();
+                }
+            }
+            componentNo++;
+        }*/
+    }
+    glPopMatrix();
+    glEndList();
+    return index;
+}
+
+/// Create clusters List
 GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
     // create one display list
     GLuint index = glGenLists(1);
@@ -481,6 +601,55 @@ GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud){
 }
 
 /// Create layer 2 layer List
+GLuint QGLVisualizer::createVILinksList(int destLayerNo){
+    // create one display list
+    GLuint index = glGenLists(1);
+    // compile the display list, store a triangle in it
+    glNewList(index, GL_COMPILE);
+        glLineWidth((float)config.layer2LayerWidth);
+        glColor4d(config.layer2LayerColor.red(), config.layer2LayerColor.green(), config.layer2LayerColor.blue(), config.layer2LayerColor.alpha());
+        glBegin(GL_LINES);
+        if (destLayerNo==4){
+            int partNo=0;
+            for (auto it = hierarchy->viewIndependentLayers[0].begin(); it!=hierarchy->viewIndependentLayers[0].end(); it++){
+                // position of the i-th filter
+                int id = *it->group.begin();
+                Vec3 filterPos((double)(config.partDist[destLayerNo-2]*double(id)-((double)cloudsListLayers[destLayerNo-2].size()/2)*config.partDist[destLayerNo-2]), 0, config.posZ[destLayerNo-2]);
+                glVertex3d(filterPos(0), filterPos(1), filterPos(2));
+                // position of the i-th part
+                Vec3 partPos((double)(config.partDist[destLayerNo-1]*double(partNo)-((double)cloudsListLayers[destLayerNo-1].size()/2)*config.partDist[destLayerNo-1]), 0, config.posZ[destLayerNo-1]);
+                glVertex3d(partPos(0), partPos(1), partPos(2));
+                partNo++;
+            }
+        }
+        else {
+            /*int partNo=0;
+            for (auto it = hierarchy->viewDependentLayers[destLayerNo-1].begin(); it!=hierarchy->viewDependentLayers[destLayerNo-1].end(); it++){
+                std::vector<int> filterIds;
+                for (size_t n = 0; n < it->partIds.size(); n++){
+                    for (size_t m = 0; m < it->partIds[n].size(); m++){
+                        filterIds.push_back(it->partIds[n][m]);
+                    }
+                }
+                auto itFilter = std::unique (filterIds.begin(), filterIds.end());
+                filterIds.resize( std::distance(filterIds.begin(),itFilter) );
+                for (size_t i=0;i<filterIds.size();i++){
+                    // position of the i-th filter
+                    Vec3 filterPos((double)(config.partDist[destLayerNo-1]*double(filterIds[i])-((double)cloudsListLayers[destLayerNo-1].size()/2)*config.partDist[destLayerNo-1]), 0, config.posZ[destLayerNo-1]);
+                    glVertex3d(filterPos(0), filterPos(1), filterPos(2));
+                    // position of the i-th part
+                    Vec3 partPos((double)(config.partDist[destLayerNo]*double(partNo)-((double)cloudsListLayers[destLayerNo].size()/2)*config.partDist[destLayerNo]), 0, config.posZ[destLayerNo]);
+                    glVertex3d(partPos(0), partPos(1), partPos(2));
+                }
+                partNo++;
+            }*/
+        }
+        glEnd();
+    glEndList();
+    return index;
+}
+
+/// Create layer 2 layer List
 GLuint QGLVisualizer::createLinksList(int destLayerNo){
     // create one display list
     GLuint index = glGenLists(1);
@@ -516,7 +685,7 @@ GLuint QGLVisualizer::createLinksList(int destLayerNo){
 
 /// Draw layer 2 layer links
 void QGLVisualizer::drawLayer2Layer(void){
-    for (int layerNo=1;layerNo<3;layerNo++){
+    for (int layerNo=1;layerNo<(int)hierarchy->viewDependentLayers.size()+2;layerNo++){
         for (size_t i = 0;i<linksLists[layerNo].size();i++){
             glCallList(linksLists[layerNo][i]);
         }

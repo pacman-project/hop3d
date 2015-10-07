@@ -17,7 +17,7 @@
   
 <!--   Hierarchy configuration -->
   <Hierarchy>
-    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="3" categoriesNo="1" objectsNo="1" imagesNo="1"></parameters>
+    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="1" categoriesNo="1" objectsNo="1" imagesNo="1"></parameters>
   </Hierarchy>
   
 <!--  3D object composition configuration -->

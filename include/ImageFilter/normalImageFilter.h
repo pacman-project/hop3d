@@ -63,6 +63,9 @@ public:
     /// get last view dependent layer parts from the image
     void getLastVDLayerParts(std::vector<ViewDependentPart>& parts) const;
 
+    /// compute coordinate system from normal vector
+    static Mat33 coordinateFromNormal(const Vec3& _normal);
+
     class Config{
       public:
         Config() {
@@ -112,10 +115,7 @@ private:
     void generateFilters(void);
 
     /// normalize vector
-    void normalizeVector(Vec3& normal) const;
-
-    /// compute coordinate system from normal vector
-    Mat33 coordinateFromNormal(const Vec3& _normal);
+    static void normalizeVector(Vec3& normal);
 
     ///extract octets from response image
     void extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets);

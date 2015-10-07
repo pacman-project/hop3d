@@ -430,7 +430,7 @@ Mat33 NormalImageFilter::coordinateFromNormal(const Vec3& _normal){
 }
 
 /// normalize vector
-void NormalImageFilter::normalizeVector(Vec3& normal) const {
+void NormalImageFilter::normalizeVector(Vec3& normal){
     double norm = normal.norm();
     normal.x() /= norm;    normal.y() /= norm;    normal.z() /= norm;
 }

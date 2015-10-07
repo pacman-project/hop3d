@@ -93,7 +93,6 @@ void HOP3DBham::learn(){
         std::cout << "Dictionary size (" << layerNo+2 << "-th layer): " << dictionary.size() << "\n";
         partSelector->selectParts(dictionary, *hierarchy, layerNo+2);
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
-        std::cout << hierarchy.get()->viewDependentLayers.size() << "\n";
         std::cout << "layerNo " << layerNo << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
@@ -149,10 +148,12 @@ void HOP3DBham::learn(){
         clusterNo++;
     }*/
 
-  //  std::vector<ViewIndependentPart> vocabulary;
+    std::vector<ViewIndependentPart> vocabulary;
     std::cout << "create unique clusters:\n";
-//    partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
-    std::cout << "new vocabulary:\n";
+    partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
+    std::cout << "new vocabulary size: " << vocabulary.size() << "\n";
+    /// First view-independent layer
+    hierarchy.get()->viewIndependentLayers[0]=vocabulary;
 //    for (auto & word : vocabulary){
 //        word.print();
 //    }

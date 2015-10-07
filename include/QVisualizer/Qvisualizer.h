@@ -196,8 +196,11 @@ private:
     /// Create background List
     GLuint createBackgroundList(int layerNo);
 
-    /// Create point cloud List
+    /// Create view independent part list
     GLuint createPartList(hop3d::ViewDependentPart& part, int layerNo);
+
+    /// Create point cloud List
+    GLuint createVIPartList(hop3d::ViewIndependentPart& part, int layerNo);
 
     /// Create objects lists
     GLuint createObjList(const std::vector<hop3d::ViewIndependentPart>& parts);
@@ -205,8 +208,14 @@ private:
     /// Create clusters List
     GLuint createClustersList(hop3d::ViewDependentPart& part, int layerNo);
 
+    /// Create clusters List
+    GLuint createVIClustersList(hop3d::ViewIndependentPart& part, int layerNo);
+
     /// Create layer 2 layer List
     GLuint createLinksList(int destLayerNo);
+
+    /// Create layer 2 layer List (View independent part)
+    GLuint createVILinksList(int destLayerNo);
 
     /// transpose ids matrix
     void transposeIds(std::array<std::array<int,3>,3>& ids);

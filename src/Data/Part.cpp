@@ -99,4 +99,14 @@ double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDep
     return sum;
 }
 
+///get normal vector related to that part
+void ViewDependentPart::getNormal(Vec3& normal, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters) const{
+    if (layerId==2){
+        normal = filters[partIds[1][1]].normal;
+    }
+    else if (layerId==3){
+        normal = filters[layer2vocabulary[partIds[1][1]].partIds[1][1]].normal;
+    }
+}
+
 }
