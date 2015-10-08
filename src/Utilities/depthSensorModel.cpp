@@ -12,8 +12,12 @@ DepthSensorModel::DepthSensorModel(std::string configFile) : config(configFile){
 
 /// compute 3D point from image coordinates
 void DepthSensorModel::getPoint(int u, int v, double depth, Eigen::Vector3d& point3D) const{
-    Eigen::Vector3d point(u, v, 1);
-    point3D = depth*PHCPModel*point;
+    if (depth>6.0||depth<0.4)//out of range
+        point3D=Eigen::Vector3d(NAN,NAN,NAN);
+    else {
+        Eigen::Vector3d point(u, v, 1);
+        point3D = depth*PHCPModel*point;
+    }
 }
 
 /// compute 3D point from image coordinates
@@ -25,8 +29,8 @@ void DepthSensorModel::getPoint(const Eigen::Vector3d& depthImageCoord, Eigen::V
 Eigen::Vector3d DepthSensorModel::inverseModel(double x, double y,
         double z) const {
     Eigen::Vector3d point(((config.focalLength[0]*x)/z)+config.focalAxis[0], ((config.focalLength[1]*y)/z)+config.focalAxis[1], z);
-    if (point(0)<0||point(0)>config.imageSize[0]||point(1)<0||point(1)>config.imageSize[1]||z<0.8||z>6.0){
-        point(0) = -1; point(1) = -1; point(2) = -1;
+    if (point(0)<0||point(0)>config.imageSize[0]||point(1)<0||point(1)>config.imageSize[1]||z<0.4||z>6.0){
+        point(0) = NAN; point(1) = NAN; point(2) = NAN;
     }
     return point;
 }

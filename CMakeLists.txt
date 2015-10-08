@@ -1,4 +1,4 @@
-# cmake requirementscmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8)
 
 # Build options have to be before PROJECT(...)
 SET(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE PATH "Configuration types")
@@ -41,6 +41,8 @@ option(BUILD_HOP3D_DEMO_VISUALIZER "Build hop3d visualizer demo" ON)
 mark_as_advanced(BUILD_HOP3D_DEMO_VISUALIZER)
 option(BUILD_HOP3D_DEMO_QVISUALIZER "Build hop3d Qt visualizer demo" ON)
 mark_as_advanced(BUILD_HOP3D_DEMO_QVISUALIZER)
+option(BUILD_HOP3D_DEMO_NORMAL_FILTERER "Build hop3d Normal Filterer demo" ON)
+mark_as_advanced(BUILD_HOP3D_DEMO_NORMAL_FILTERER)
 
 # Build options have to be before PROJECT(...)
 SET(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE PATH "Configuration types")
@@ -84,24 +86,24 @@ if (BUILD_VISUALIZATION_QT)
 endif (BUILD_VISUALIZATION_QT)
 
 #Adding flan to the project
-find_package(PkgConfig)
-pkg_check_modules(PC_FLANN flann)
-set(FLANN_DEFINITIONS ${PC_FLANN_CFLAGS_OTHER})
+#find_package(PkgConfig)
+#pkg_check_modules(PC_FLANN flann)
+#set(FLANN_DEFINITIONS ${PC_FLANN_CFLAGS_OTHER})
 
-find_path(FLANN_INCLUDE_DIR flann/flann.hpp
-    HINTS ${PC_FLANN_INCLUDEDIR} ${PC_FLANN_INCLUDE_DIRS})
+#find_path(FLANN_INCLUDE_DIR flann/flann.hpp
+#    HINTS ${PC_FLANN_INCLUDEDIR} ${PC_FLANN_INCLUDE_DIRS})
 
-find_library(FLANN_LIBRARY flann
-    HINTS ${PC_FLANN_LIBDIR} ${PC_FLANN_LIBRARY_DIRS})
+#find_library(FLANN_LIBRARY flann
+#    HINTS ${PC_FLANN_LIBDIR} ${PC_FLANN_LIBRARY_DIRS})
 
-set(FLANN_INCLUDE_DIRS ${FLANN_INCLUDE_DIR})
-set(FLANN_LIBRARIES ${FLANN_LIBRARY})
+#set(FLANN_INCLUDE_DIRS ${FLANN_INCLUDE_DIR})
+#set(FLANN_LIBRARIES ${FLANN_LIBRARY})
 
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Flann DEFAULT_MSG
-    FLANN_LIBRARY FLANN_INCLUDE_DIR)
+#include(FindPackageHandleStandardArgs)
+#find_package_handle_standard_args(Flann DEFAULT_MSG
+#    FLANN_LIBRARY FLANN_INCLUDE_DIR)
 
-mark_as_advanced(FLANN_LIBRARY FLANN_INCLUDE_DIR)
+#mark_as_advanced(FLANN_LIBRARY FLANN_INCLUDE_DIR)
 
 
 #Adding OpenMP
@@ -176,16 +178,10 @@ SOURCE_GROUP("Data" FILES ${DATA_SOURCES})
 
 
 SET(CORE_SOURCES
-        ${PROJECT_PATH}/src/Core/GraphBuilder.cpp
         ${PROJECT_PATH}/src/Core/LayerFilterer.cpp
-        ${PROJECT_PATH}/src/Core/LocalInhibiter.cpp
-        ${PROJECT_PATH}/src/Core/PartSelector.cpp
 )
 SET(CORE_HEADERS
-        ${PROJECT_PATH}/include/Core/GraphBuilder.h
         ${PROJECT_PATH}/include/Core/LayerFilterer.h
-        ${PROJECT_PATH}/include/Core/LocalInhibiter.h
-        ${PROJECT_PATH}/include/Core/PartSelector.h
 )
 SET(CORE_FILES
 )
@@ -241,7 +237,7 @@ SOURCE_GROUP("APPS" FILES ${APPS_HEADERS})
 SOURCE_GROUP("APPS" FILES ${APPS_SOURCES})
 
 
-SET( PROJ_LIBRARIES "flann" )
+#SET( PROJ_LIBRARIES "flann" )
 SET( PROJ_INCLUDES  "${PROJECT_PATH}/include/" )
 
 IF (BUILD_VISUALIZATION_MODULE)
@@ -369,7 +365,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_PART_SELECTOR)
         )
 
         ADD_LIBRARY(partSelector STATIC ${SELECTOR_SOURCES} ${SELECTOR_HEADERS})
-        TARGET_LINK_LIBRARIES(partSelector "${PROJ_NAME}_data")
+        TARGET_LINK_LIBRARIES(partSelector "${PROJ_NAME}_data" imageFilter)
         INSTALL(TARGETS partSelector RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${SELECTOR_HEADERS} DESTINATION include/hop3d/PartSelector/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_PART_SELECTOR)
@@ -469,6 +465,20 @@ if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_QVISUALIZER AND BUILD_VISUALIZATION_QT)
         INSTALL(TARGETS demoQVisualizer RUNTIME DESTINATION bin)
 endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_QVISUALIZER AND BUILD_VISUALIZATION_QT)
 
+###############################################################################
+#
+# HOP3D demo Normal filterer
+#
+###############################################################################
+
+if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_NORMAL_FILTERER)
+        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath ./")
+        SET(DEMO_SOURCES ./src/Apps/DemoNormalFilterer/demoNormalFilterer.cpp)
+        ADD_EXECUTABLE(demoNormalFilterer ${DEMO_SOURCES})
+#        add_dependencies(demoVisualizer Map)
+        TARGET_LINK_LIBRARIES(demoNormalFilterer imageFilter tinyxml2 boost_system)
+        INSTALL(TARGETS demoNormalFilterer RUNTIME DESTINATION bin)
+endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_NORMAL_FILTERER)
 
 ADD_LIBRARY("${PROJ_NAME}_data" ${DATA_HEADERS} ${DATA_SOURCES})
 ADD_LIBRARY("${PROJ_NAME}_core" ${CORE_HEADERS} ${CORE_SOURCES})

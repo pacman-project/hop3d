@@ -33,4 +33,34 @@ void Hierarchy::getNormal(const ViewDependentPart& part, Vec3& normal) const{
     }
 }
 
+/// print ids
+void Hierarchy::printIds(const ViewDependentPart& part){
+    if (part.layerId==2){
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                std::cout << part.partIds[0][0] << ", ";
+            }
+            std::cout << "\n";
+        }
+    }
+    else if (part.layerId==3){
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                for (int k=0;k<3;k++){
+                    for (int l=0;l<3;l++){
+                        if (part.partIds[i][k]==-1)
+                            std::cout << "-1, ";
+                        else
+                            std::cout << viewDependentLayers[0][part.partIds[i][k]].partIds[j][l] << ", ";
+                    }
+                }
+                std::cout << "\n";
+                //(0,0,0,0) (0,0,0,1) (0,0,0,2) (0,1,0,0) (0,1,0,1) (0,1,0,2) (0,2,0,0) (0,2,0,1) (0,2,0,2)
+                //(0,0,1,0) (0,0,1,1) (0,0,1,2) (0,1,1,0) (0,1,1,1) (0,1,1,2) (0,2,1,0) (0,2,1,1) (0,2,1,2)
+                //(0,0,2,0) (0,0,2,1) (0,0,2,2) (0,1,2,0) (0,1,2,1) (0,1,2,2) (0,2,2,0) (0,2,2,1) (0,2,2,2)
+            }
+        }
+    }
+}
+
 }

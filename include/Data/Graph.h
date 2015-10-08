@@ -24,8 +24,14 @@ public:
     /// relation between parts from last view dependent vocabulary and first view-independent
     std::map<int,int> interpreter;
 
+    /// relation between parts second view dependent vocabulary and third view-dependent layers
+    std::map<int,int> interpreter2to3;
+
     /// get normal vector related to the part
     void getNormal(const ViewDependentPart& part, Vec3& normal) const;
+
+    /// print ids
+    void printIds(const ViewDependentPart& part);
 
     /// Construction
     Hierarchy(std::string configFilename);

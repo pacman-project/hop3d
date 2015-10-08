@@ -51,8 +51,16 @@ public:
     void getOctets(const ViewDependentPart::Seq& dictionary, Octet::Seq& octets);
 
     /// get filters
-    void getFilters(Filter::Seq& filters) const;
+    void getFilters(Filter::Seq& _filters) const;
+
     void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName);
+
+    /// define 2rd layer octet images using selected words from third layer
+    void computeImages3rdLayer(const ViewDependentPart::Seq& dictionary);
+
+    /// get last view dependent layer parts from the image
+    void getLastVDLayerParts(std::vector<ViewDependentPart>& parts) const;
+
     class Config{
       public:
         Config() {

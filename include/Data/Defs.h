@@ -136,7 +136,10 @@ public:
     int poseId;
 
     /// Construction
-    Octet(){};
+    Octet(){
+        for (size_t i=0;i<filterIds.size();i++)
+            filterIds[i].fill(-1);
+    };
 
     /// compute distance between octets -- dot product for normals for each filter
     static double distance(const Octet& octetA, const Octet& octetB, const Filter::Seq& filters);

@@ -33,7 +33,7 @@ public:
     std::array<std::array<int,3>,3> partIds;
 
     /// Construction
-    inline Part(){};
+    inline Part(){}
 
     /// Construction
     inline Part(int _id, int _layerId, Type _type) : id(_id), layerId(_layerId), type(_type){
@@ -48,7 +48,7 @@ public:
     typedef std::unique_ptr<ViewDependentPart> Ptr;
 
     /// Position of the part on the image
-    ImageCoords location;
+    ImageCoordsDepth location;
 
     /// Camera pose id
     int cameraPoseId;
@@ -63,7 +63,7 @@ public:
     inline ViewDependentPart(){};
 
     /// Construction
-    inline ViewDependentPart(int _id, int _layerId, ImageCoords _location) :
+    inline ViewDependentPart(int _id, int _layerId, ImageCoordsDepth _location) :
         Part(_id, _layerId, PART_VIEW_DEP), location(_location){
     }
 
@@ -72,33 +72,47 @@ public:
 
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters);
+
+    ///get normal vector related to that part
+    void getNormal(Vec3& normal, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters) const;
+
     /// Print
     void print() const;
 };
 
-class ViewIndependentPart : public Part{
+class ViewIndependentPart{
 public:
-    /// Sequence
-    typedef std::vector<ViewIndependentPart> Seq;
-    /// Pointer
-    typedef std::unique_ptr<ViewIndependentPart> Ptr;
+    class Part3D{
+    public:
+        /// pose of the part
+        Mat34 pose;
+        /// id of the part
+        int id;
 
-    /// Pose of the part in 3D space
+        Part3D(void){};
+        Part3D(Mat34& _pose, int _id) : pose(_pose), id(_id){};
+    };
+
+    /// part composition
+    std::vector<Part3D> parts;
+
+    /// pose
     Mat34 pose;
-
-    /// id of parts from last view-dependent layer which create current part
+    /// Part id
+    int id;
+    /// Layer id
+    int layerId;
+    /// part aggregated from the same level vocabulary
     std::vector<int> group;
 
-    /// Gaussians related to positions of neighbouring parts
-    std::array<std::array<GaussianSE3,3>,3> gaussians;
+    /// id of neighbouring parts
+    std::array<std::array<std::array<int,3>,3>,3> partIds;
 
-    /// Construction
-    inline ViewIndependentPart(){};
+    /// relative positions of neighbouring parts
+    std::array<std::array<std::array<Mat34,3>,3>,3> neighbourPoses;
 
-    /// Construction
-    inline ViewIndependentPart(int _id, int _layerId, Mat34 _pose) :
-        Part(_id, _layerId, PART_VIEW_INDEP), pose(_pose){
-    }
+    ViewIndependentPart(){id=-1;};
+    ViewIndependentPart(int size){size=size-1; id=-1;};// required by octree
     /// Print
     void print() const;
 };

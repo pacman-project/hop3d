@@ -17,43 +17,12 @@ namespace hop3d {
     /// create a single part selector
     ObjectComposition* createObjectCompositionOctree(std::string config);
 
-class PartVoxel{
-public:
-    class Part3D{
-    public:
-        /// pose of the part
-        Mat34 pose;
-        /// id of the part
-        int id;
-
-        Part3D(void){};
-        Part3D(Mat34& _pose, int _id) : pose(_pose), id(_id){};
-    };
-
-    /// part composition
-    std::vector<Part3D> parts;
-
-    /// Part id
-    int id;
-    /// Layer id
-    int layerId;
-
-    /// id of neighbouring parts
-    std::array<std::array<std::array<int,3>,3>,3> partIds;
-
-    /// Gaussians related to positions of neighbouring parts
-    std::array<std::array<std::array<GaussianSE3,3>,3>,3> gaussians;
-
-    PartVoxel(){};
-    PartVoxel(int size){size=size-1;};// required by octree
-};
-
 /// Object Composition implementation
 class ObjectCompositionOctree: public ObjectComposition {
 public:
     /// Pointer
     typedef std::unique_ptr<ObjectCompositionOctree> Ptr;
-    typedef std::unique_ptr< Octree<PartVoxel> > OctreePtr;
+    typedef std::unique_ptr< Octree<ViewIndependentPart> > OctreePtr;
 
     /// Construction
     ObjectCompositionOctree(void);
@@ -68,7 +37,10 @@ public:
     void getClusters(int layerNo, std::vector< std::set<int>>& clusters);
 
     /// create next layer vocabulary
-    void createNextLayerVocabulary(int destLayerNo, std::vector<ViewIndependentPart>& vocabulary);
+    void createNextLayerVocabulary(int destLayerNo, const Hierarchy& hierarchy, std::vector<ViewIndependentPart>& vocabulary);
+
+    /// get octree in layer layerNo
+    void getParts(int layerNo, std::vector<ViewIndependentPart>& parts) const;
 
     /// Destruction
     ~ObjectCompositionOctree(void);
@@ -98,6 +70,9 @@ private:
 
     /// compute rotation matrix from normal vector ('y' axis is vetical)
     void normal2rot(const Vec3& normal, Mat33& rot);
+
+    /// assign neighbouring parts to new part
+    void assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z);
 
 };
 }

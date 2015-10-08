@@ -14,9 +14,24 @@ HOP3DBham::HOP3DBham(std::string _config) :
     statsBuilder = hop3d::createUnbiasedStatsBuilder(config.statsConfig);
     hierarchy.reset(new Hierarchy(_config));
     partSelector = hop3d::createPartSelectorMean(config.selectorConfig);
-    imageFilterer = hop3d::createDepthImageFilter(config.filtererConfig);
-    imageFilterer->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
     depthCameraModel.reset(new DepthSensorModel(config.cameraConfig));
+
+    tinyxml2::XMLDocument configXML;
+    std::string filename = "../../resources/" + _config;
+    configXML.LoadFile(filename.c_str());
+    if (configXML.ErrorID()){
+        std::cout << "unable to load global config file.\n";
+    }
+    int filterType;
+    configXML.FirstChildElement( "Filterer" )->QueryIntAttribute("filterType", &filterType);
+
+    if (filterType==hop3d::ImageFilter::FILTER_DEPTH){
+        imageFilterer = hop3d::createDepthImageFilter(config.filtererConfig);
+        imageFilterer->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
+    }
+    else if (filterType==hop3d::ImageFilter::FILTER_NORMAL){
+        imageFilterer = hop3d::createNormalImageFilter(config.filtererConfig, config.cameraConfig);
+    }
 }
 
 #ifdef QVisualizerBuild
@@ -54,55 +69,6 @@ HOP3DBham::Config::Config(std::string configFilename){
 
 /// learining from the dataset
 void HOP3DBham::learn(){
-    std::vector<hop3d::Octet> octets2layer;
-    std::default_random_engine generator(time(0));
-    std::uniform_int_distribution<int> distribution(0,3); // filters ids distribution
-    int filterSize = 7;
-    std::normal_distribution<double> distributionUV(0, filterSize/27.0); // filters ids distribution
-    std::normal_distribution<double> distributionDepth(0,0.003);
-    int octetsNo = 10000;
-    octets2layer.resize(octetsNo);
-    for (auto& it: octets2layer){
-        //randomly select filter ids
-        for (size_t i=0;i<it.filterIds.size();i++){
-            for (size_t j=0;j<it.filterIds[i].size();j++){
-                it.filterIds[i][j]=distribution(generator);
-            }
-        }
-        for (size_t i=0;i<it.filterPos.size();i++){
-            for (size_t j=0;j<it.filterPos[i].size();j++){
-                hop3d::ImageCoordsDepth coords(double(j*(filterSize-1))-double(filterSize-1)+distributionUV(generator), double(i*(filterSize-1))-double(filterSize-1)+distributionUV(generator), distributionDepth(generator));
-                if ((i==(it.filterPos.size()/2))&&(j==(it.filterPos.size()/2))){
-                    coords.u=0; coords.v=0; coords.depth=0;
-                }
-                it.filterPos[i][j]=coords;
-            }
-        }
-    }
-
-    ///3rd layer
-    std::uniform_int_distribution<int> distribution3rd(0,49); // filters ids distribution
-    std::vector<hop3d::Octet> octets3layer;
-    octetsNo = 200;
-    octets3layer.resize(octetsNo);
-    for (auto& it: octets3layer){
-        //randomly select filter ids
-        for (size_t i=0;i<it.filterIds.size();i++){
-            for (size_t j=0;j<it.filterIds[i].size();j++){
-                it.filterIds[i][j]=distribution3rd(generator);
-            }
-        }
-        for (size_t i=0;i<it.filterPos.size();i++){
-            for (size_t j=0;j<it.filterPos[i].size();j++){
-                hop3d::ImageCoordsDepth coords(double(j*(3*filterSize-1))-double(3*filterSize-1)+distributionUV(generator), double(i*(3*filterSize-1))-double(3*filterSize-1)+distributionUV(generator), distributionDepth(generator));
-                if ((i==(it.filterPos.size()/2))&&(j==(it.filterPos.size()/2))){
-                    coords.u=0; coords.v=0; coords.depth=0;
-                }
-                it.filterPos[i][j]=coords;
-            }
-        }
-    }
-
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
     hop3d::ViewDependentPart::Seq dictionary;
 
@@ -114,24 +80,25 @@ void HOP3DBham::learn(){
     int startId = (int)hierarchy.get()->firstLayer.size();
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
         if (layerNo==0){
-            //imageFilterer->computeOctets(vecImages[0],octets);
-            octets=octets2layer;
+            imageFilterer->computeOctets(vecImages[0],octets);
+            //octets=octets2layer;
         }
         else if (layerNo==1){
             startId = int(hierarchy.get()->firstLayer.size()+10000);
-            //imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[layerNo-1],octets);
-            octets=octets3layer;
+            imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[layerNo-1], octets);
+            //octets=octets3layer;
         }
         std::cout << "Compute statistics for " << octets.size() << " octets (" << layerNo+2 << "-th layer)\n";
         statsBuilder->computeStatistics(octets, layerNo+2, startId, dictionary);
         std::cout << "Dictionary size (" << layerNo+2 << "-th layer): " << dictionary.size() << "\n";
         partSelector->selectParts(dictionary, *hierarchy, layerNo+2);
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
+        std::cout << "layerNo " << layerNo << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
 
     //represent all images in parts from 3rd layer
-    //imageFilterer->computeImages3rdLayer();
+    imageFilterer->computeImages3rdLayer(hierarchy.get()->viewDependentLayers.back());
     Dataset dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
     std::vector< std::set<int>> clusters;
     for (size_t categoryNo=0;categoryNo<dataset.categories.size();categoryNo++){//for each category
@@ -143,49 +110,74 @@ void HOP3DBham::learn(){
                 //int layerNo=3;
                 std::vector<ViewDependentPart> parts;
                 //get parts of the 3rd layers
+                imageFilterer->getLastVDLayerParts(parts);
+                //hierarchy.get()->printIds(parts[0]);
+                //hierarchy.get()->printIds(parts[1]);
                 //imageFilterer->getParts(hierarchy.get()->viewDependentLayers[1],layerNo, parts, categoryNo, objectNo, imageNo, cameraPose);
-                parts.push_back(hierarchy.get()->viewDependentLayers[1][2]);
+                /*parts.push_back(hierarchy.get()->viewDependentLayers[1][2]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][0]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][1]);
                 //move octets into 3D space and update octree representation of the object
+                cameraPose(0,3)=0.015; cameraPose(1,3)=0.015; cameraPose(2,3)=0.015;
                 objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
-                cameraPose(0,3)=0.5;
+                cameraPose(0,3)=0.015; cameraPose(1,3)=0.015; cameraPose(2,3)=0.015;
                 objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
                 parts.clear();
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][3]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][4]);
-                cameraPose(0,3)=0.2;
-                objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
+                cameraPose(0,3)=0.225; cameraPose(1,3)=0.225; cameraPose(2,3)=0.225;*/
+                objects.back()->update(0, parts, cameraPose, *depthCameraModel, *hierarchy);
             }
             std::vector< std::set<int>> clustersTmp;
             std::cout << "get clusters\n";
             objects.back()->getClusters(0,clustersTmp);
+            std::cout << " clusters size: " << clustersTmp.size() << "\n";
             std::cout << "finish get clusters\n";
             clusters.reserve( clusters.size() + clustersTmp.size() ); // preallocate memory
             clusters.insert( clusters.end(), clustersTmp.begin(), clustersTmp.end() );
         }
     }
     std::cout << "clusters size: " << clusters.size() << "\n";
-    int clusterNo=0;
-    for (auto & cluster : clusters){
+    //int clusterNo=0;
+    /*for (auto & cluster : clusters){
         std::cout << "cluster " << clusterNo << " size " << cluster.size() << ": ";
         for (auto & id : cluster){
             std::cout << id << ", ";
         }
         std::cout << "\n";
         clusterNo++;
-    }
+    }*/
+
     std::vector<ViewIndependentPart> vocabulary;
     std::cout << "create unique clusters:\n";
     partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
-    std::cout << "new vocabulary:\n";
-    for (auto & word : vocabulary){
-        word.print();
-    }
+    std::cout << "new vocabulary size: " << vocabulary.size() << "\n";
+    /// First view-independent layer
+    hierarchy.get()->viewIndependentLayers[0]=vocabulary;
+//    for (auto & word : vocabulary){
+//        word.print();
+//    }
     ///select part for 4th layer
+/*    vocabulary.clear();
+    for (auto & object : objects){
+        std::vector<ViewIndependentPart> vocab;
+        object->createNextLayerVocabulary(1, *hierarchy, vocab);
+        vocabulary.insert(vocabulary.end(),vocab.begin(), vocab.end());
+    }
+    std::cout << "4th layer vacabulary size: " << vocabulary.size() << "\n";
+    */
+//    for (auto & part : vocabulary){
+//        part.print();
+    //}
     //partSelector->selectParts(objects, dictionary, *hierarchy,4)
 
     notify(*hierarchy);
+    for (auto & object : objects){
+        std::vector<ViewIndependentPart> objectParts;
+        object->getParts(0, objectParts);
+        notify(objectParts);
+    }
+    notify3Dmodels();
 
     std::cout << "Finished\n";
 }

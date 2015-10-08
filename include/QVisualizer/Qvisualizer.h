@@ -21,6 +21,10 @@ class QGLVisualizer: public QGLViewer, public Observer{
 public:
     /// Pointer
     typedef std::unique_ptr<QGLVisualizer> Ptr;
+    /// 3D object
+    typedef std::vector<hop3d::ViewIndependentPart> Object3D;
+    /// vector of 3D objects
+    typedef std::vector<Object3D> Object3DSeq;
 
     class Config{
       public:
@@ -45,6 +49,9 @@ public:
             model->FirstChildElement( "pointCloud" )->QueryDoubleAttribute("cloudPointSize", &cloudPointSize);
 
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("pixelSize", &pixelSize);
+            model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("filterDepthScale", &filterDepthScale);
+            model->FirstChildElement( "hierarchy" )->QueryBoolAttribute("draw3Dobjects", &draw3Dobjects);
+
             int layersNo=6;
             partDist.resize(layersNo);
             posZ.resize(layersNo);
@@ -80,6 +87,8 @@ public:
         double cloudPointSize;
         /// hierarchy pixel size in patch
         double pixelSize;
+        /// draw 3D objects
+        bool draw3Dobjects;
         /// distance between parts in i-th layers
         std::vector<double> partDist;
         /// "z" coordinate of the i-t hierarchy layer
@@ -96,6 +105,8 @@ public:
         QColor clustersColor;
         /// verbose
         int verbose;
+        /// scale depth of filter patches
+        double filterDepthScale;
     };
 
     /// Construction
@@ -113,6 +124,12 @@ public:
     /// Observer update
     void update(hop3d::Hierarchy& _hierarchy);
 
+    /// Update 3D object model
+    void update(const std::vector<hop3d::ViewIndependentPart>& objectParts);
+
+    /// Update 3D object models
+    void update3Dmodels(void);
+
 private:
     Config config;
 
@@ -125,6 +142,9 @@ private:
     /// updateHierarchy
     bool updateHierarchyFlag;
 
+    /// update 3D models
+    bool update3DModelsFlag;
+
     /// cloud list
     std::vector< std::vector<GLuint> > cloudsListLayers;
 
@@ -133,6 +153,15 @@ private:
 
     /// clusters list
     std::vector< std::vector< GLuint > > clustersList;
+
+    /// background list
+    std::vector< GLuint > backgroundList;
+
+    /// objects indexed by layerNo
+    std::vector<Object3DSeq> layersOfObjects;
+
+    /// clusters list
+    std::vector< std::vector< GLuint > > objects3Dlist;
 
     /// draw objects
     void draw();
@@ -149,23 +178,56 @@ private:
     ///update hierarchy
     void updateHierarchy();
 
+    /// Update 3D object models
+    void update3Dobjects(void);
+
     /// Draw point clouds
     void drawPointClouds(void);
 
     /// Draw clusters
     void drawClusters(void);
 
+    /// Draw objects
+    void draw3Dobjects(void);
+
     /// Create point cloud List
     GLuint createCloudList(hop3d::PointCloud& pointCloud);
 
-    /// Create point cloud List
+    /// Create background List
+    GLuint createBackgroundList(int layerNo);
+
+    /// Create view independent part list
     GLuint createPartList(hop3d::ViewDependentPart& part, int layerNo);
+
+    /// Create point cloud List
+    GLuint createVIPartList(hop3d::ViewIndependentPart& part, int layerNo);
+
+    /// Create objects lists
+    GLuint createObjList(const std::vector<hop3d::ViewIndependentPart>& parts);
 
     /// Create clusters List
     GLuint createClustersList(hop3d::ViewDependentPart& part, int layerNo);
 
+    /// Create clusters List
+    GLuint createVIClustersList(hop3d::ViewIndependentPart& part, int layerNo);
+
     /// Create layer 2 layer List
     GLuint createLinksList(int destLayerNo);
+
+    /// Create layer 2 layer List (View independent part)
+    GLuint createVILinksList(int destLayerNo);
+
+    /// transpose ids matrix
+    void transposeIds(std::array<std::array<int,3>,3>& ids);
+
+    /// transpose gaussians matrix
+    void transposeGaussians(std::array<std::array<hop3d::Gaussian3D,3>,3>& gaussians);
+
+    /// flip horizontal ids matrix
+    void flipIds(std::array<std::array<int,3>,3>& ids);
+
+    /// flip horizontal gaussians matrix
+    void flipGaussians(std::array<std::array<hop3d::Gaussian3D,3>,3>& ids);
 
     /// Draw layer 2 layer links
     void drawLayer2Layer(void);

@@ -20,8 +20,8 @@ int hop3d::Reader::readPlyFile(std::string fileName, PointCloud& outputPointClou
     std::cout << "Loading file: " << fileName << std::endl;
     std::string line;
     std::ifstream myfile (fileName.c_str());
-    unsigned long vertexElements;
-    unsigned long faceElements;
+    unsigned long vertexElements=0;
+    unsigned long faceElements=0;
     if (myfile.is_open()){
         while ( getline (myfile,line) ){
             std::vector<std::string> lineSeq;

@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
   <!-- filter configuration -->
-  <Filterer configFilename="depthFilter.xml">
+  <!--type:
+	0 - depth patch
+	1 - normal vector-->
+  <Filterer filterType="1" configFilename="depthFilter.xml">
   </Filterer>
   
   <!-- Stats builder configuration -->
@@ -14,7 +17,7 @@
   
 <!--   Hierarchy configuration -->
   <Hierarchy>
-    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="3" categoriesNo="1" objectsNo="1" imagesNo="1"></parameters>
+    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="1" categoriesNo="1" objectsNo="1" imagesNo="1"></parameters>
   </Hierarchy>
   
 <!--  3D object composition configuration -->

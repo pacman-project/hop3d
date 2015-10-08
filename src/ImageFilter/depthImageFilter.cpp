@@ -191,14 +191,24 @@ void DepthImageFilter::getOctets(const ViewDependentPart::Seq& dictionary, Octet
 }
 
 /// get filters
-void DepthImageFilter::getFilters(Filter::Seq& filters) const{
-    filters = this->filters;
+void DepthImageFilter::getFilters(Filter::Seq& _filters) const{
+    _filters = this->filters;
 }
 
 void DepthImageFilter::setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName)
 {
     hop3d::Reader reader;
     reader.readFilters(patchesFileName,normalsFileName,masksFileName,filters);
+}
+
+/// define 2rd layer octet images using selected words from third layer
+void DepthImageFilter::computeImages3rdLayer(const ViewDependentPart::Seq& dictionary){
+    dictionary.size();
+}
+
+/// get last view dependent layer parts from the image
+void DepthImageFilter::getLastVDLayerParts(std::vector<ViewDependentPart>& parts) const{
+    parts.clear();
 }
 
 int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, Filter &filter, cv::Mat &filteredImage)
