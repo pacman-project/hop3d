@@ -229,6 +229,7 @@ int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, F
         for(int j = offset; j < depthImageDouble.rows-(offset);j++){
                 cv::Rect regionOfInterest = cv::Rect(i-offset, j-offset,filterSize,filterSize);
                 imageRoi = depthImageDouble(regionOfInterest);
+                if(!imageRoi.isContinuous()) imageRoi = imageRoi.clone();
                 double middleValue = imageRoi.at<double>(offset,offset);
                 cv::subtract(imageRoi,cv::Scalar(middleValue),subResult,loadedMask);
                 if(middleValue > config.backgroundValue) continue;
