@@ -72,7 +72,7 @@ private:
     void normal2rot(const Vec3& normal, Mat33& rot);
 
     /// assign neighbouring parts to new part
-    void assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z);
+    int assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z, double scale);
 
 };
 }

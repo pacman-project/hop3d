@@ -111,8 +111,12 @@ public:
     /// relative positions of neighbouring parts
     std::array<std::array<std::array<Mat34,3>,3>,3> neighbourPoses;
 
-    ViewIndependentPart(){id=-1;};
-    ViewIndependentPart(int size){size=size-1; id=-1;};// required by octree
+    ViewIndependentPart(): partIds{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1} {
+        id=-1;
+    }
+    ViewIndependentPart(int size) : partIds{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}{
+        size=size-1; id=-1;
+    }// required by octree
     /// Print
     void print() const;
 };

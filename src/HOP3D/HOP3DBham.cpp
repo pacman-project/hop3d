@@ -151,24 +151,25 @@ void HOP3DBham::learn(){
     std::vector<ViewIndependentPart> vocabulary;
     std::cout << "create unique clusters:\n";
     partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
-    std::cout << "new vocabulary size: " << vocabulary.size() << "\n";
-    /// First view-independent layer
+    std::cout << "4th layer vocabulary size: " << vocabulary.size() << "\n";
+    /// First view-independent layer (three and a half layer)
     hierarchy.get()->viewIndependentLayers[0]=vocabulary;
 //    for (auto & word : vocabulary){
 //        word.print();
 //    }
-    ///select part for 4th layer
-/*    vocabulary.clear();
+    ///select part for 5th layer
+    vocabulary.clear();
     for (auto & object : objects){
         std::vector<ViewIndependentPart> vocab;
         object->createNextLayerVocabulary(1, *hierarchy, vocab);
         vocabulary.insert(vocabulary.end(),vocab.begin(), vocab.end());
     }
-    std::cout << "4th layer vacabulary size: " << vocabulary.size() << "\n";
-    */
-//    for (auto & part : vocabulary){
-//        part.print();
-    //}
+    //compute statistics
+    //select parts
+    std::cout << "5th layer vacabulary size: " << vocabulary.size() << "\n";
+    /*for (auto & part : vocabulary){
+        part.print();
+    }*/
     //partSelector->selectParts(objects, dictionary, *hierarchy,4)
 
     notify(*hierarchy);

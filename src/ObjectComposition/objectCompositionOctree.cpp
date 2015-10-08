@@ -74,6 +74,7 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         ViewIndependentPart::Part3D viewIndependentPart(partPosition, part.id);
         (*octrees[layerNo])(x,y,z).parts.push_back(viewIndependentPart);
         (*octrees[layerNo])(x,y,z).layerId=4;
+        (*octrees[layerNo])(x,y,z).id=1;//its temporary id only
     }
 }
 
@@ -143,22 +144,21 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
     vocabulary.clear();
     //for no reason take the middle part. In the feature it should be max, or weighted combination
     int iterx=0;
-    for (int idX=1; idX<(*octrees[destLayerNo-1]).size(); idX+=3){///to do z-slicing
+    int tempId=0;
+    // update next layer octree
+    for (int idX=1; idX<(*octrees[destLayerNo-1]).size()-1; idX+=3){///to do z-slicing
         int itery=0;
-        for (int idY=1; idY<(*octrees[destLayerNo-1]).size(); idY+=3){
+        for (int idY=1; idY<(*octrees[destLayerNo-1]).size()-1; idY+=3){
             int iterz=0;
-            for (int idZ=1; idZ<(*octrees[destLayerNo-1]).size(); idZ+=3){
-                if ((*octrees[destLayerNo-1]).at(idX,idY,idZ).parts.size()>0){
-                    ViewIndependentPart newPart;
-                    newPart.layerId=4;
-                    if ((*octrees[destLayerNo-1]).at(idX, idY, idZ).id!=-1)
-                        newPart.id = hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
-                    else
-                        newPart.id = -1;
-                    // add neighbouring parts into structure
-                    assignPartNeighbours(newPart, hierarchy, destLayerNo-1, idX, idY, idZ);
+            for (int idZ=1; idZ<(*octrees[destLayerNo-1]).size()-1; idZ+=3){
+                ViewIndependentPart newPart;
+                newPart.layerId=destLayerNo+4;
+                // add neighbouring parts into structure
+                if (assignPartNeighbours(newPart, hierarchy, destLayerNo-1, idX, idY, idZ, config.voxelSize/double(destLayerNo))>0){
+                    newPart.id = tempId;//hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
                     (*octrees[destLayerNo])(iterx,itery,iterz) = newPart;//update octree
                     vocabulary.push_back(newPart);
+                    tempId++;
                 }
                 iterz++;
             }
@@ -169,26 +169,42 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
 }
 
 /// assign neighbouring parts to new part
-void ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z){
-    Mat34 partPoseInv((*octrees[layerNo]).at(x,y,z).parts[0].pose.inverse());
-    for (int i=-1; i<1;i++){
-        for (int j=-1; j<1;j++){
-            for (int k=-1; k<1;k++){
-                //assign neighbouring ids
-                if ((*octrees[layerNo]).at(x+i,y+j,z+k).id!=-1)
-                    partVoxel.partIds[i+1][j+1][k+1] = hierarchy.interpreter.at((*octrees[layerNo]).at(x+i,y+j,z+k).id);
+int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z, double scale){
+    Mat34 pose(Mat34::Identity());
+    pose(0,3) = scale*x+(scale/2.0); pose(1,3) = scale*y+(scale/2.0); pose(2,3) = scale*z+(scale/2.0);
+    Mat34 partPoseInv(pose.inverse());
+    int partsNo=0;
+    for (int i=-1; i<2;i++){
+        for (int j=-1; j<2;j++){
+            for (int k=-1; k<2;k++){
+                if ((*octrees[layerNo]).at(x+i,y+j,z+k).parts.size()>0){
+                    //assign neighbouring ids
+                    partVoxel.partIds[i+1][j+1][k+1] = hierarchy.interpreter.at((*octrees[layerNo]).at(x+i,y+j,z+k).parts[0].id);
+                    // assign spatial relation
+                    if ((*octrees[layerNo]).at(x+i,y+j,z+k).id!=-1){
+                        if (i==0&&j==0&&k==0){
+                            partVoxel.neighbourPoses[i+1][j+1][k+1] = (*octrees[layerNo]).at(x,y,z).parts[0].pose;//set global pose
+                        }
+                        else {
+                            partVoxel.neighbourPoses[i+1][j+1][k+1] = partPoseInv*(*octrees[layerNo]).at(x+i,y+j,z+k).parts[0].pose;//set relative pose
+                        }
+                    }
+                    partsNo++;
+                }
                 else
                     partVoxel.partIds[i+1][j+1][k+1] = -1;
-                // assign spatial relation
-                if ((*octrees[layerNo]).at(x+i,y+j,z+k).id!=-1){
-                    if (i==0&&j==0&&k==0)
-                        partVoxel.neighbourPoses[i+1][j+1][k+1] = (*octrees[layerNo]).at(x,y,z).parts[0].pose;//set global pose
-                    else
-                        partVoxel.neighbourPoses[i+1][j+1][k+1] = partPoseInv*(*octrees[layerNo]).at(x+i,y+j,z+z).parts[0].pose;//set relative pose
-                }
             }
         }
     }
+    if(partsNo>0){ //cleaning
+        if (partVoxel.partIds[1][1][1]==-1){
+            partVoxel.pose = pose;
+        }
+        else {
+            partVoxel.pose = partVoxel.neighbourPoses[1][1][1];
+        }
+    }
+    return partsNo;
 }
 
 hop3d::ObjectComposition* hop3d::createObjectCompositionOctree(void) {

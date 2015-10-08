@@ -34,6 +34,7 @@ void ViewDependentPart::print() const{
 void ViewIndependentPart::print() const{
     std::cout << "Id: " << id << "\n";
     std::cout << "Layer id: " << layerId << "\n";
+    std::cout << "Pose: \n" << pose.matrix() << "\n";
     //std::cout << "Group size: " << group.size() << "\n";
     std::cout << "ids: ";
     for (int i =0; i<3; i++){
