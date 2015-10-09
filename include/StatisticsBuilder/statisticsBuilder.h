@@ -28,13 +28,13 @@ public:
     };
 
     /// Name of the map
-    virtual const std::string& getName() const {return name;};
+    virtual const std::string& getName() const {return name;}
 
     /// compute statistics for the set of octets
     virtual void computeStatistics(const std::vector<Octet>& octets, int layerNo, int startId, ViewDependentPart::Seq& dictionary) = 0;
 
     /// compute statistics for the set of octets
-    virtual void computeStatistics(const ViewIndependentPart::Seq& elements, int layerNo, int startId, ViewIndependentPart::Seq& dictionary) = 0;
+    virtual void computeStatistics(const std::vector<ViewIndependentPart>& elements, int layerNo, int startId, ViewIndependentPart::Seq& dictionary) = 0;
 
     /// Virtual descrutor
     virtual ~StatsBuilder() {

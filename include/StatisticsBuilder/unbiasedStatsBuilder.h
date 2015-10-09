@@ -33,7 +33,7 @@ public:
     void computeStatistics(const std::vector<Octet>& octets, int layerNo, int startId, ViewDependentPart::Seq& dictionary);
 
     /// compute statistics for the set of octets
-    void computeStatistics(const ViewIndependentPart::Seq& elements, int layerNo, int startId, ViewIndependentPart::Seq& dictionary);
+    void computeStatistics(const std::vector<ViewIndependentPart>& elements, int layerNo, int startId, ViewIndependentPart::Seq& dictionary);
 
     /// Destruction
     ~UnbiasedStatsBuilder(void);
@@ -67,14 +67,14 @@ private:
     /// compute statistics for the set of elements
     template<class T>
     void groupElements(const std::vector<T>& elements, std::vector<typename T::Seq>& groups){
-        std::vector<Octet::Seq>::iterator groupIter;
+        typename std::vector<typename T::Seq>::iterator groupIter;
         if (config.verbose==1){
             std::cout << "Start ocetes grouping (n=" << elements.size() << ")...\n";
         }
         int iterNo=1;
         for (auto it=elements.begin();it!=elements.end();it++){ // grouping
             if(!isElementInGroups(*it, groups, groupIter)){
-                Octet::Seq group; group.push_back(*it);
+                typename T::Seq group; group.push_back(*it);
                 groups.push_back(group);
             }
             else
@@ -94,8 +94,14 @@ private:
     /// Compute Gaussians for the grooup of octets
     void computeGaussians(Octet::Seq& group, ViewDependentPart& part) const;
 
+    /// Compute Gaussians for the group of view independent parts
+    void computeGaussians(ViewIndependentPart::Seq& group, ViewIndependentPart& part) const;
+
     /// compute Gaussian parameters
     void computeGaussian(const Octet::Seq& group, Gaussian3D& gauss, unsigned int u, unsigned int v) const;
+
+    /// compute Gaussian parameters
+    void computeGaussian(const ViewIndependentPart::Seq& group, GaussianSE3& gauss, unsigned int x, unsigned int y, unsigned int z) const;
 
 private:
     /// Configuration of the module

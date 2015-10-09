@@ -114,6 +114,9 @@ public:
     /// relative positions of neighbouring parts
     std::array<std::array<std::array<Mat34,3>,3>,3> neighbourPoses;
 
+    /// statistics for positions
+    std::array<std::array<std::array<GaussianSE3,3>,3>,3> gaussians;
+
     ViewIndependentPart(): partIds{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1} {
         id=-1;
     }

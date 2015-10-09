@@ -61,7 +61,7 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, i
 }
 
 /// compute statistics for the set of octets
-void UnbiasedStatsBuilder::computeStatistics(const ViewIndependentPart::Seq& elements, int layerNo, int startId, ViewIndependentPart::Seq& dictionary){
+void UnbiasedStatsBuilder::computeStatistics(const std::vector<ViewIndependentPart>& elements, int layerNo, int startId, ViewIndependentPart::Seq& dictionary){
     dictionary.clear();
     std::vector<ViewIndependentPart::Seq> groups;
     groupElements(elements, groups);
@@ -70,10 +70,10 @@ void UnbiasedStatsBuilder::computeStatistics(const ViewIndependentPart::Seq& ele
     }
     size_t partId=startId;
     int iterNo=1;
-/*    for (auto it = groups.begin(); it!=groups.end(); it++){ //compute statistics
+    for (auto it = groups.begin(); it!=groups.end(); it++){ //compute statistics
         ViewIndependentPart part;
         computeGaussians(*it, part);
-        part.partIds=it->back().filterIds;//copy octet
+        part.partIds=it->back().partIds;//copy octet
         part.layerId = layerNo;
         part.id = (int)partId;
         partId++;
@@ -83,7 +83,7 @@ void UnbiasedStatsBuilder::computeStatistics(const ViewIndependentPart::Seq& ele
                 std::cout << "Iteration: " << iterNo << "/" << groups.size() << "\n";
             }
         }
-    }*/
+    }
     if (config.verbose==1){
         std::cout << "done.\n";
     }
@@ -101,6 +101,22 @@ void UnbiasedStatsBuilder::computeGaussians(Octet::Seq& group, ViewDependentPart
     }
 }
 
+/// Compute Gaussians for the group of view independent parts
+void UnbiasedStatsBuilder::computeGaussians(ViewIndependentPart::Seq& group, ViewIndependentPart& part) const{
+    for (size_t i = 0; i<part.gaussians.size(); i++){
+        for (size_t j = 0; j<part.gaussians[i].size(); j++){
+            for (size_t k = 0; k<part.gaussians[i][j].size(); k++){
+                if (group.back().partIds[i][j][k]!=-1){
+                    GaussianSE3 gauss;
+                    computeGaussian(group, gauss, (unsigned int)i, (unsigned int)j, (unsigned int)k);
+                    part.gaussians[i][j][k].mean = gauss.mean;
+                    part.gaussians[i][j][k].covariance = gauss.covariance;
+                }
+            }
+        }
+    }
+}
+
 /// compute Gaussian parameters
 void UnbiasedStatsBuilder::computeGaussian(const Octet::Seq& group, Gaussian3D& gauss, unsigned int u, unsigned int v) const{
     Vec3 mean(0,0,0);
@@ -113,6 +129,24 @@ void UnbiasedStatsBuilder::computeGaussian(const Octet::Seq& group, Gaussian3D& 
     Mat33 cov; cov.setZero();
     for (auto it = group.begin(); it!=group.end(); it++){
         Vec3 pos(it->filterPos[u][v].u, it->filterPos[u][v].v, it->filterPos[u][v].depth);
+        cov+=(pos-gauss.mean)*(pos-gauss.mean).transpose();
+    }
+    gauss.covariance = cov*(1.0/double(group.size()));
+}
+
+/// compute Gaussian parameters
+void UnbiasedStatsBuilder::computeGaussian(const ViewIndependentPart::Seq& group, GaussianSE3& gauss, unsigned int x, unsigned int y, unsigned int z) const{
+    Vec6 mean(Vec6::Zero());
+    for (auto it = group.begin(); it!=group.end(); it++){
+        Vec6 tmp = gauss.toVector(it->neighbourPoses[x][y][z]);//compute vec6 representation of SE3 transformation
+        for (int i=0;i<mean.rows();i++){
+            mean(i)+=tmp(i);
+        }
+    }
+    gauss.mean = mean*(1.0/double(group.size()));
+    Mat66 cov; cov.setZero();
+    for (auto it = group.begin(); it!=group.end(); it++){
+        Vec6 pos = gauss.toVector(it->neighbourPoses[x][y][z]);//compute vec6 representation of SE3 transformation
         cov+=(pos-gauss.mean)*(pos-gauss.mean).transpose();
     }
     gauss.covariance = cov*(1.0/double(group.size()));

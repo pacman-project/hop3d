@@ -171,7 +171,10 @@ void HOP3DBham::learn(){
         part.print();
     }*/
     //partSelector->selectParts(objects, dictionary, *hierarchy,4)
-
+    std::cout << "Compute statistics for " << vocabulary.size() << " octets (5-th layer)\n";
+    ViewIndependentPart::Seq newVocabulary;
+    statsBuilder->computeStatistics(vocabulary, 5, 0, newVocabulary);
+    std::cout << "Dictionary size (5-th layer): " << newVocabulary.size() << "\n";
     notify(*hierarchy);
     for (auto & object : objects){
         std::vector<ViewIndependentPart> objectParts;
