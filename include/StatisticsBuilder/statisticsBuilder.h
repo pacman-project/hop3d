@@ -33,6 +33,9 @@ public:
     /// compute statistics for the set of octets
     virtual void computeStatistics(const std::vector<Octet>& octets, int layerNo, int startId, ViewDependentPart::Seq& dictionary) = 0;
 
+    /// compute statistics for the set of octets
+    virtual void computeStatistics(const ViewIndependentPart::Seq& elements, int layerNo, int startId, ViewIndependentPart::Seq& dictionary) = 0;
+
     /// Virtual descrutor
     virtual ~StatsBuilder() {
     }

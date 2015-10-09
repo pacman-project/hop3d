@@ -82,6 +82,9 @@ public:
 
 class ViewIndependentPart{
 public:
+    /// Sequence
+    typedef std::vector<ViewIndependentPart> Seq;
+
     class Part3D{
     public:
         /// pose of the part

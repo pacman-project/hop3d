@@ -32,6 +32,9 @@ public:
     /// compute statistics for the set of octets
     void computeStatistics(const std::vector<Octet>& octets, int layerNo, int startId, ViewDependentPart::Seq& dictionary);
 
+    /// compute statistics for the set of octets
+    void computeStatistics(const ViewIndependentPart::Seq& elements, int layerNo, int startId, ViewIndependentPart::Seq& dictionary);
+
     /// Destruction
     ~UnbiasedStatsBuilder(void);
 
@@ -48,10 +51,45 @@ public:
 
 private:
     /// Is octet in vector
-    bool isOctetInGroups(const Octet& octet, std::vector<Octet::Seq>& groups, std::vector<Octet::Seq>::iterator& groupIt) const;
+    //bool isOctetInGroups(const Octet& octet, std::vector<Octet::Seq>& groups, std::vector<Octet::Seq>::iterator& groupIt) const;
+    /// is word in vector
+    template<class T>
+    bool isElementInGroups(const T& element, std::vector<typename T::Seq>& groups, typename std::vector<std::vector<T>>::iterator& groupIt) const{
+        for (typename std::vector<std::vector<T>>::iterator it = groups.begin(); it!=groups.end(); it++){
+            if (element.partIds==it->back().partIds){
+                groupIt = it;
+                return true;
+            }
+        }
+        return false;
+    }
 
-    /// compute statistics for the set of octets
-    void groupOctets(const std::vector<Octet>& octets, std::vector<Octet::Seq>& groups);
+    /// compute statistics for the set of elements
+    template<class T>
+    void groupElements(const std::vector<T>& elements, std::vector<typename T::Seq>& groups){
+        std::vector<Octet::Seq>::iterator groupIter;
+        if (config.verbose==1){
+            std::cout << "Start ocetes grouping (n=" << elements.size() << ")...\n";
+        }
+        int iterNo=1;
+        for (auto it=elements.begin();it!=elements.end();it++){ // grouping
+            if(!isElementInGroups(*it, groups, groupIter)){
+                Octet::Seq group; group.push_back(*it);
+                groups.push_back(group);
+            }
+            else
+                (*groupIter).push_back(*it);
+            if (config.verbose==1){
+                if ((elements.size()>10)&&iterNo%int(elements.size()/10)==0){
+                    std::cout << "Iteration: " << iterNo << "/" << elements.size() << "\n";
+                }
+            }
+            iterNo++;
+        }
+        if (config.verbose==1){
+            std::cout << "done.\n";
+        }
+    }
 
     /// Compute Gaussians for the grooup of octets
     void computeGaussians(Octet::Seq& group, ViewDependentPart& part) const;

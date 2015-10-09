@@ -127,7 +127,7 @@ public:
     typedef std::vector<Octet> Seq;
 
     /// id of the filter
-    std::array<std::array<int,3>,3> filterIds;
+    std::array<std::array<int,3>,3> partIds;
     /// filter response
     std::array<std::array<double,3>,3> responses;
     /// mask of the filter
@@ -137,9 +137,9 @@ public:
 
     /// Construction
     Octet(){
-        for (size_t i=0;i<filterIds.size();i++)
-            filterIds[i].fill(-1);
-    };
+        for (size_t i=0;i<partIds.size();i++)
+            partIds[i].fill(-1);
+    }
 
     /// compute distance between octets -- dot product for normals for each filter
     static double distance(const Octet& octetA, const Octet& octetB, const Filter::Seq& filters);

@@ -44,7 +44,7 @@ ObjectCompositionOctree::Config::Config(std::string configFilename){
 }
 
 /// update composition from octets (words from last view-independent layer's vocabulary)
-void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy){
+void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel){
     for (auto & part : parts){
         Mat34 partPosition(Mat34::Identity());
         Vec3 pos3d;

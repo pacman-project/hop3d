@@ -31,7 +31,7 @@ public:
     ObjectCompositionOctree(std::string config);
 
     /// update composition from octets (words from last view-independent layer's vocabulary)
-    void update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy);
+    void update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel);
 
     /// get clusters of parts id stored in octree (one cluster per voxel)
     void getClusters(int layerNo, std::vector< std::set<int>>& clusters);

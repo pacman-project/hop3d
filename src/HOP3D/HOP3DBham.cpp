@@ -126,7 +126,7 @@ void HOP3DBham::learn(){
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][3]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][4]);
                 cameraPose(0,3)=0.225; cameraPose(1,3)=0.225; cameraPose(2,3)=0.225;*/
-                objects.back()->update(0, parts, cameraPose, *depthCameraModel, *hierarchy);
+                objects.back()->update(0, parts, cameraPose, *depthCameraModel);
             }
             std::vector< std::set<int>> clustersTmp;
             std::cout << "get clusters\n";

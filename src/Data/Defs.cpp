@@ -11,9 +11,9 @@ namespace hop3d {
     void Octet::print() const{
         std::cout << "Camera pose id:" << poseId << "\n";
         std::cout << "Filter ids:\n";
-        for (size_t i=0;i<filterIds.size();i++){
-            for (size_t j=0;j<filterIds[i].size();j++){
-                std::cout << filterIds[i][j] << ", ";
+        for (size_t i=0;i<partIds.size();i++){
+            for (size_t j=0;j<partIds[i].size();j++){
+                std::cout << partIds[i][j] << ", ";
             }
             std::cout << "\n";
         }
@@ -32,13 +32,13 @@ namespace hop3d {
             std::cout << "Empty filters set!\n"; getchar();
             return std::numeric_limits<double>::max();
         }
-        if (octetA.filterIds==octetB.filterIds){//fast
+        if (octetA.partIds==octetB.partIds){//fast
             return 0;
         }
         double sum=0;
-        for (size_t i=0; i<octetA.filterIds.size();i++)
-            for (size_t j=0; j<octetA.filterIds.size();j++){
-                sum+=Filter::distance(filters[octetA.filterIds[i][j]], filters[octetB.filterIds[i][j]]);
+        for (size_t i=0; i<octetA.partIds.size();i++)
+            for (size_t j=0; j<octetA.partIds.size();j++){
+                sum+=Filter::distance(filters[octetA.partIds[i][j]], filters[octetB.partIds[i][j]]);
             }
         return sum;
     }

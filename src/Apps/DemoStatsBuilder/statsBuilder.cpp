@@ -33,9 +33,9 @@ int main(void){
         octets.resize(octetsNo);
         for (auto& it: octets){
             //randomly select filter ids
-            for (size_t i=0;i<it.filterIds.size();i++){
-                for (size_t j=0;j<it.filterIds[i].size();j++){
-                    it.filterIds[i][j]=distribution(generator);
+            for (size_t i=0;i<it.partIds.size();i++){
+                for (size_t j=0;j<it.partIds[i].size();j++){
+                    it.partIds[i][j]=distribution(generator);
                 }
             }
             for (size_t i=0;i<it.filterPos.size();i++){

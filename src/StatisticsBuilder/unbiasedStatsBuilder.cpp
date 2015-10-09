@@ -32,36 +32,10 @@ UnbiasedStatsBuilder::Config::Config(std::string configFilename){
 }
 
 /// compute statistics for the set of octets
-void UnbiasedStatsBuilder::groupOctets(const std::vector<Octet>& octets, std::vector<Octet::Seq>& groups){
-    std::vector<Octet::Seq>::iterator groupIter;
-    if (config.verbose==1){
-        std::cout << "Start ocetes grouping (n=" << octets.size() << ")...\n";
-    }
-    int iterNo=1;
-    for (auto it=octets.begin();it!=octets.end();it++){ // grouping
-        if(!isOctetInGroups(*it, groups, groupIter)){
-            Octet::Seq group; group.push_back(*it);
-            groups.push_back(group);
-        }
-        else
-            (*groupIter).push_back(*it);
-        if (config.verbose==1){
-            if ((octets.size()>10)&&iterNo%int(octets.size()/10)==0){
-                std::cout << "Iteration: " << iterNo << "/" << octets.size() << "\n";
-            }
-        }
-        iterNo++;
-    }
-    if (config.verbose==1){
-        std::cout << "done.\n";
-    }
-}
-
-/// compute statistics for the set of octets
 void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, int layerNo, int startId, ViewDependentPart::Seq& dictionary){
     dictionary.clear();
     std::vector<Octet::Seq> groups;
-    groupOctets(octets, groups);
+    groupElements(octets, groups);
     if (config.verbose==1){
         std::cout << "Compute Gaussians for " << groups.size() << " groups...\n";
     }
@@ -69,6 +43,35 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, i
     int iterNo=1;
     for (auto it = groups.begin(); it!=groups.end(); it++){ //compute statistics
         ViewDependentPart part;
+        computeGaussians(*it, part);
+        part.partIds=it->back().partIds;//copy octet
+        part.layerId = layerNo;
+        part.id = (int)partId;
+        partId++;
+        dictionary.push_back(part);
+        if (config.verbose==1){
+            if ((groups.size()>10)&&iterNo%(groups.size()/10)==0){
+                std::cout << "Iteration: " << iterNo << "/" << groups.size() << "\n";
+            }
+        }
+    }
+    if (config.verbose==1){
+        std::cout << "done.\n";
+    }
+}
+
+/// compute statistics for the set of octets
+void UnbiasedStatsBuilder::computeStatistics(const ViewIndependentPart::Seq& elements, int layerNo, int startId, ViewIndependentPart::Seq& dictionary){
+    dictionary.clear();
+    std::vector<ViewIndependentPart::Seq> groups;
+    groupElements(elements, groups);
+    if (config.verbose==1){
+        std::cout << "Compute Gaussians for " << groups.size() << " groups...\n";
+    }
+    size_t partId=startId;
+    int iterNo=1;
+/*    for (auto it = groups.begin(); it!=groups.end(); it++){ //compute statistics
+        ViewIndependentPart part;
         computeGaussians(*it, part);
         part.partIds=it->back().filterIds;//copy octet
         part.layerId = layerNo;
@@ -80,7 +83,7 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, i
                 std::cout << "Iteration: " << iterNo << "/" << groups.size() << "\n";
             }
         }
-    }
+    }*/
     if (config.verbose==1){
         std::cout << "done.\n";
     }
@@ -113,17 +116,6 @@ void UnbiasedStatsBuilder::computeGaussian(const Octet::Seq& group, Gaussian3D& 
         cov+=(pos-gauss.mean)*(pos-gauss.mean).transpose();
     }
     gauss.covariance = cov*(1.0/double(group.size()));
-}
-
-/// is octet in vector
-bool UnbiasedStatsBuilder::isOctetInGroups(const Octet& octet, std::vector<Octet::Seq>& groups, std::vector<Octet::Seq>::iterator& groupIt) const{
-    for (std::vector<Octet::Seq>::iterator it = groups.begin(); it!=groups.end(); it++){
-        if (octet.filterIds==it->back().filterIds){
-            groupIt = it;
-            return true;
-        }
-    }
-    return false;
 }
 
 hop3d::StatsBuilder* hop3d::createUnbiasedStatsBuilder(void) {
