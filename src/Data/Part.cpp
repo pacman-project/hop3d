@@ -46,16 +46,20 @@ void ViewIndependentPart::print() const{
     }
     std::cout << "\nParts in group: ";
     for (auto it = group.begin();it!=group.end();it++)
-        std::cout << *it << ", ";
+        std::cout << it->id << ", ";
     std::cout << "\n";
-    /*for (size_t i=0; i<gaussians.size();i++){
+    for (size_t i=0; i<gaussians.size();i++){
         for (size_t j=0; j<gaussians.size();j++){
-            std::cout << "mean(" << i-1 << ", " << j-1 << "): ";
-            std::cout << gaussians[i][j].mean.transpose() << "\n";
-            std::cout << "covariance(" << i-1 << ", " << j-1 << "):\n";
-            std::cout << gaussians[i][j].covariance << "\n";
+            for (size_t k=0; k<gaussians.size();k++){
+                if (partIds[i][j][k]!=-1){
+                    std::cout << "mean(" << i << ", " << j << "): ";
+                    std::cout << gaussians[i][j][k].mean.transpose() << "\n";
+                    std::cout << "covariance(" << i << ", " << j << "):\n";
+                    std::cout << gaussians[i][j][k].covariance << "\n";
+                }
+            }
         }
-    }*/
+    }
 }
 
 /// compute distance between view dependent parts

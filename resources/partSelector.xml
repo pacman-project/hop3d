@@ -5,5 +5,5 @@
     <name>PartSelector</name>
 <!--    verbose : 0 -> no debug
 		  1 -> show debug output -->
-    <parameters verbose="1" clustersSecondLayer="20" clustersThirdLayer="25" maxIter="100"></parameters>
+    <parameters verbose="1" clustersSecondLayer="20" clustersThirdLayer="25" clustersFifthLayer="5" clustersSixthLayer="5" maxIter="100"></parameters>
   </PartSelector>

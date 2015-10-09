@@ -60,7 +60,7 @@ public:
     std::vector<ViewDependentPart> group;
 
     /// Construction
-    inline ViewDependentPart(){};
+    inline ViewDependentPart(){}
 
     /// Construction
     inline ViewDependentPart(int _id, int _layerId, ImageCoordsDepth _location) :
@@ -92,8 +92,8 @@ public:
         /// id of the part
         int id;
 
-        Part3D(void){};
-        Part3D(Mat34& _pose, int _id) : pose(_pose), id(_id){};
+        Part3D(void){}
+        Part3D(Mat34& _pose, int _id) : pose(_pose), id(_id){}
     };
 
     /// part composition
@@ -106,7 +106,7 @@ public:
     /// Layer id
     int layerId;
     /// part aggregated from the same level vocabulary
-    std::vector<int> group;
+    std::vector<ViewIndependentPart> group;
 
     /// id of neighbouring parts
     std::array<std::array<std::array<int,3>,3>,3> partIds;

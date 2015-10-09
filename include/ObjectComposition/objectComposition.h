@@ -34,7 +34,7 @@ public:
     virtual const std::string& getName() const {return name;}
 
     /// update composition from octets (words from last view-independent layer's vocabulary)
-    virtual void update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel) = 0;
+    virtual void update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, Hierarchy& hierarchy) = 0;
 
     /// get clusters of parts id stored in octree (one cluster per voxel)
     virtual void getClusters(int layerNo, std::vector< std::set<int>>& clusters) = 0;

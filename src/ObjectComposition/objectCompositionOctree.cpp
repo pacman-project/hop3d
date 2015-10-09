@@ -44,7 +44,7 @@ ObjectCompositionOctree::Config::Config(std::string configFilename){
 }
 
 /// update composition from octets (words from last view-independent layer's vocabulary)
-void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel){
+void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, Hierarchy& hierarchy){
     for (auto & part : parts){
         Mat34 partPosition(Mat34::Identity());
         Vec3 pos3d;
@@ -55,12 +55,11 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         camModel.getPoint(position, pos3d);
         Mat34 part3D(Mat34::Identity());
         part3D.translation() = pos3d;//set position of the part
-        /*Vec3 normal; hierarchy.getNormal(part, normal);
+        Vec3 normal; hierarchy.getNormal(part, normal);
         Mat33 rot; normal2rot(normal, rot);
         for (int i=0;i<3;i++)//and orientation
             for (int j=0;j<3;j++)
                 part3D(i,j) = rot(i,j);
-        */
         partPosition = cameraPose * part3D;//global position of the part
         int x = int(partPosition(0,3)/config.voxelSize);
         int y = int(partPosition(1,3)/config.voxelSize);
@@ -172,6 +171,11 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
 int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z, double scale){
     Mat34 pose(Mat34::Identity());
     pose(0,3) = scale*x+(scale/2.0); pose(1,3) = scale*y+(scale/2.0); pose(2,3) = scale*z+(scale/2.0);
+    if ((*octrees[layerNo]).at(x,y,z).id!=-1){
+        partVoxel.pose = (*octrees[layerNo]).at(x,y,z).parts[0].pose;
+    }
+    else
+        partVoxel.pose = pose;
     Mat34 partPoseInv(pose.inverse());
     int partsNo=0;
     for (int i=-1; i<2;i++){
@@ -187,6 +191,10 @@ int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel
                         }
                         else {
                             partVoxel.neighbourPoses[i+1][j+1][k+1] = partPoseInv*(*octrees[layerNo]).at(x+i,y+j,z+k).parts[0].pose;//set relative pose
+                            //std::cout << "partPoseInv \n" << partPoseInv.matrix()<< "\n";
+                            //std::cout << "(*octrees[layerNo]).at(x+i,y+j,z+k).parts[0].pose\n" << (*octrees[layerNo]).at(x+i,y+j,z+k).parts[0].pose.matrix() <<"\n";
+                            //std::cout << "partVoxel.neighbourPoses[i+1][j+1][k+1]\n" << partVoxel.neighbourPoses[i+1][j+1][k+1].matrix() << "\n";
+                            //getchar();
                         }
                     }
                     partsNo++;
@@ -194,14 +202,6 @@ int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel
                 else
                     partVoxel.partIds[i+1][j+1][k+1] = -1;
             }
-        }
-    }
-    if(partsNo>0){ //cleaning
-        if (partVoxel.partIds[1][1][1]==-1){
-            partVoxel.pose = pose;
-        }
-        else {
-            partVoxel.pose = partVoxel.neighbourPoses[1][1][1];
         }
     }
     return partsNo;

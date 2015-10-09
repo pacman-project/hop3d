@@ -126,7 +126,7 @@ void HOP3DBham::learn(){
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][3]);
                 parts.push_back(hierarchy.get()->viewDependentLayers[1][4]);
                 cameraPose(0,3)=0.225; cameraPose(1,3)=0.225; cameraPose(2,3)=0.225;*/
-                objects.back()->update(0, parts, cameraPose, *depthCameraModel);
+                objects.back()->update(0, parts, cameraPose, *depthCameraModel, *hierarchy);
             }
             std::vector< std::set<int>> clustersTmp;
             std::cout << "get clusters\n";
@@ -170,11 +170,14 @@ void HOP3DBham::learn(){
     /*for (auto & part : vocabulary){
         part.print();
     }*/
-    //partSelector->selectParts(objects, dictionary, *hierarchy,4)
     std::cout << "Compute statistics for " << vocabulary.size() << " octets (5-th layer)\n";
     ViewIndependentPart::Seq newVocabulary;
     statsBuilder->computeStatistics(vocabulary, 5, 0, newVocabulary);
+    /*for (auto & part : newVocabulary){
+        part.print();
+    }*/
     std::cout << "Dictionary size (5-th layer): " << newVocabulary.size() << "\n";
+    partSelector->selectParts(newVocabulary, *hierarchy, 5);
     notify(*hierarchy);
     for (auto & object : objects){
         std::vector<ViewIndependentPart> objectParts;

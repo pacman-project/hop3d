@@ -33,7 +33,65 @@ PartSelectorMean::Config::Config(std::string configFilename){
     }
     group->FirstChildElement( "parameters" )->QueryIntAttribute("clustersSecondLayer", &clustersSecondLayer);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("clustersThirdLayer", &clustersThirdLayer);
+    group->FirstChildElement( "parameters" )->QueryIntAttribute("clustersFifthLayer", &clustersFifthLayer);
+    group->FirstChildElement( "parameters" )->QueryIntAttribute("clustersSixthLayer", &clustersSixthLayer);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("maxIter", &maxIter);
+}
+
+/// Select parts from the initial vocabulary
+void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, Hierarchy& hierarchy, int layerNo){
+    int clustersNo = (layerNo==5) ? config.clustersFifthLayer : config.clustersSixthLayer;
+    if (config.verbose>0){
+        std::cout << "Initial number of words in dictionary: " << dictionary.size() << "\n";
+        std::cout << "Desired number of words: " << clustersNo << "\n";
+    }
+    std::vector<int> centroids(clustersNo);//index in dictionary of part assigned to the centroid;
+    std::srand ( unsigned ( std::time(0) ) );
+    std::vector<int> partsIds(dictionary.size(), 0);
+    for (size_t i=0;i<dictionary.size();i++)
+        partsIds[i]=(int)i;
+    std::random_shuffle( partsIds.begin(), partsIds.end() );
+    for (size_t i=0;i<centroids.size();i++){//assign random centers of centroid
+        centroids[i] = partsIds[i];
+    }
+    std::vector<ViewIndependentPart::Seq> clusters(clustersNo);
+    for (int i=0;i<config.maxIter;i++){
+        if (config.verbose==1){
+            if ((config.maxIter>10)&&i%((config.maxIter+1)/10)==0){
+                std::cout << "Iteration: " << i+1 << "/" << config.maxIter << "\n";
+            }
+        }
+        if (config.verbose==2){
+            std::cout << "centroids: ";
+            for (size_t j=0;j<centroids.size();j++){
+                std::cout << dictionary[centroids[j]].id << ", ";
+            }
+            std::cout << "\n";
+        }
+        fit2clusters(centroids, dictionary, hierarchy, clusters);
+        computeCentroids(clusters, centroids, dictionary, hierarchy);
+        if (config.verbose==2){
+            std::cout << "centroids new: ";
+            for (size_t j=0;j<centroids.size();j++){
+                std::cout << dictionary[centroids[j]].id << ", ";
+            }
+            std::cout << "\n";
+        }
+    }
+    ViewIndependentPart::Seq newDictionary;
+    dictionary.clear();
+    int centroidNo=0;
+    /*for (auto it = clusters.begin(); it!=clusters.end();it++){
+        if (it->size()>0){
+            ViewIndependentPart part = dictionary[centroids[centroidNo]];
+            for (auto itPart = it->begin(); itPart!=it->end();itPart++){
+                part.group.push_back(*itPart);
+            }
+            newDictionary.push_back(part);
+            centroidNo++;
+        }
+    }*/
+    dictionary = newDictionary;
 }
 
 /// Select parts from the initial vocabulary
@@ -93,6 +151,11 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy
 }
 
 /// assign parts to clusters according to given cetroid
+void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewIndependentPart::Seq>& clusters){
+
+}
+
+/// assign parts to clusters according to given cetroid
 void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewDependentPart::Seq>& clusters){
     for (size_t i=0;i<clusters.size();i++)
         clusters[i].clear();
@@ -133,6 +196,11 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
         }
         std::cout << "\n";
     }
+}
+
+/// compute centroids for give clusters
+void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy){
+
 }
 
 /// compute centroids for give clusters
@@ -200,7 +268,9 @@ void PartSelectorMean::createUniqueClusters(const std::vector< std::set<int>>& c
         vdp.getNormal(normal,hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
         part.pose = NormalImageFilter::coordinateFromNormal(normal);
         for (auto & partId : cluster){
-            part.group.push_back(partId);
+            ViewIndependentPart partTmp;
+            partTmp.id = partId;
+            part.group.push_back(partTmp);
             hierarchy.interpreter[partId]=idNo;
         }
         vocabulary.push_back(part);

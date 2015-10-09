@@ -349,7 +349,7 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
     glNewList(index, GL_COMPILE);
     glPushMatrix();
     if (layerNo==4){
-        int id = *part.group.begin();
+        int id = part.group.begin()->id;
         Mat34 pose = part.pose.inverse();
         double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, 0, 0, 0, 1};
         glPushMatrix();
@@ -504,13 +504,13 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
             double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, 0, 0, 0, 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
-                if (partId==-1){
+                if (partId.id==-1){
                     //glColor3ub(100,50,50);
                     glCallList(backgroundList[hierarchy->viewDependentLayers.size()]);
                 }
                 else{
                     //glColor3ub(200,200,200);
-                    glCallList(cloudsListLayers[hierarchy->viewDependentLayers.size()][partId]);
+                    glCallList(cloudsListLayers[hierarchy->viewDependentLayers.size()][partId.id]);
                 }
             glPopMatrix();
             componentNo++;
@@ -613,7 +613,7 @@ GLuint QGLVisualizer::createVILinksList(int destLayerNo){
             int partNo=0;
             for (auto it = hierarchy->viewIndependentLayers[0].begin(); it!=hierarchy->viewIndependentLayers[0].end(); it++){
                 // position of the i-th filter
-                int id = *it->group.begin();
+                int id = it->group.begin()->id;
                 Vec3 filterPos((double)(config.partDist[destLayerNo-2]*double(id)-((double)cloudsListLayers[destLayerNo-2].size()/2)*config.partDist[destLayerNo-2]), 0, config.posZ[destLayerNo-2]);
                 glVertex3d(filterPos(0), filterPos(1), filterPos(2));
                 // position of the i-th part
