@@ -215,7 +215,7 @@ void QGLVisualizer::updateHierarchy(){
         for (size_t i=0;i<hierarchy->viewDependentLayers.size();i++){//view-dependent layers
             backgroundList.push_back(createBackgroundList(int(i+1)));
             if (config.verbose==1){
-                std::cout << "layer "<< i+1 << " size: " << cloudsListLayers[0].size() << "\n";
+                std::cout << "layer "<< i+2 << " size: " << hierarchy->viewDependentLayers[i].size() << "\n";
             }
             for (auto it = hierarchy->viewDependentLayers[i].begin(); it!=hierarchy->viewDependentLayers[i].end(); it++){
                 cloudsListLayers[i+1].push_back(createPartList(*it, int(i+1)));
@@ -225,7 +225,7 @@ void QGLVisualizer::updateHierarchy(){
         }
         for (size_t i=0;i<hierarchy->viewIndependentLayers.size();i++){//view-independent
             if (config.verbose==1){
-                std::cout << "layer "<< i+4 << " size: " << cloudsListLayers[0].size() << "\n";
+                std::cout << "layer "<< i+4 << " size: " << hierarchy->viewIndependentLayers[i].size() << "\n";
             }
             for (auto it = hierarchy->viewIndependentLayers[i].begin(); it!=hierarchy->viewIndependentLayers[i].end(); it++){
                 cloudsListLayers[i+3].push_back(createVIPartList(*it, int(i+4)));
@@ -240,7 +240,7 @@ void QGLVisualizer::updateHierarchy(){
 /// Draw point clouds
 void QGLVisualizer::drawPointClouds(void){
     //mtxPointClouds.lock();
-    for (int layerNo=0;layerNo<4;layerNo++){
+    for (int layerNo=0;layerNo<5;layerNo++){
         for (size_t i = 0;i<cloudsListLayers[layerNo].size();i++){
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.partDist[layerNo]*double(i)-((double)cloudsListLayers[layerNo].size()/2)*config.partDist[layerNo]), 0, config.posZ[layerNo], 1};
             glPushMatrix();
@@ -365,35 +365,58 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
         glPopMatrix();
     }
     else {
-        //flipIds(part.partIds);// because it's more natural for user
-        //flipGaussians(part.gaussians);
-        /*for (size_t n = 0; n < part.partIds.size(); n++){
+        for (size_t n = 0; n < part.partIds.size(); n++){
             for (size_t m = 0; m < part.partIds[n].size(); m++){
-                Vec3 pos(config.pixelSize*part.gaussians[n][m].mean(0), config.pixelSize*part.gaussians[n][m].mean(1), part.gaussians[n][m].mean(2));
-                int id = part.partIds[n][m];
-                if ((n==1)&&(m==1)){
-                    pos(0)=0; pos(1)=0; pos(2)=0;
-                }
-                else if (id==-1){
-                    double patchSize = 5.0*(2.0*layerNo-1.0);
-                    pos(0)=config.pixelSize*double(double(n)-1.0)*(patchSize+(patchSize/2.0));
-                    pos(1)=config.pixelSize*double(double(m)-1.0)*(patchSize+(patchSize/2.0));
-                    pos(2)=0;
-                }
-                double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(1), pos(0), pos(2), 1};
-                glPushMatrix();
-                    glMultMatrixd(GLmat);
+                for (size_t l = 0; l < part.partIds[l].size(); l++){
+                    Vec3 pos(part.neighbourPoses[n][m][l](0,3), part.neighbourPoses[n][m][l](1,3), part.neighbourPoses[n][m][l](2,3));
+                    int id = part.partIds[n][m][l];
+                    if ((n==1)&&(m==1)&&(l==1)){
+                        pos(0)=0; pos(1)=0; pos(2)=0;
+                    }
+                    else if (id==-1){
+                        pos(0)=0.3*double(double(n)-1.0);
+                        pos(1)=0.3*double(double(m)-1.0);
+                        pos(2)=0.3*double(double(l)-1.0);
+                    }
+                    double GLmatrot[16]={part.neighbourPoses[n][m][l](0,1), part.neighbourPoses[n][m][l](1,1), part.neighbourPoses[n][m][l](2,1), 0,
+                                      part.neighbourPoses[n][m][l](0,0), part.neighbourPoses[n][m][l](1,0), part.neighbourPoses[n][m][l](2,0), 0,
+                                      part.neighbourPoses[n][m][l](0,2), part.neighbourPoses[n][m][l](1,2), part.neighbourPoses[n][m][l](2,2), 0,
+                                      0,0,0, 1};
+                    double GLmat[16]={1,0,0, 0,
+                                      0,1,0, 0,
+                                      0,0,1, 0,
+                                      pos(1), pos(0), pos(2), 1};
                     if (id==-1){
-                        //glColor3ub(100,50,50);
-                        glCallList(backgroundList[layerNo-1]);
+                        GLmatrot[0]=1; GLmatrot[1]=0; GLmatrot[2]=0;
+                        GLmatrot[4]=0; GLmatrot[5]=1; GLmatrot[6]=0;
+                        GLmatrot[8]=0; GLmatrot[9]=0; GLmatrot[10]=1;
                     }
-                    else{
-                        //glColor3ub(200,200,200);
-                        glCallList(cloudsListLayers[layerNo-1][id]);
-                    }
-                glPopMatrix();
+                    /*double GLmat[16]={1,0,0, 0,
+                                      0,1,0, 0,
+                                      0,0,1, 0,
+                                      pos(1), pos(0), pos(2), 1};*/
+                    glPushMatrix();
+                        //glMultMatrixd(GLmatrot);
+                        glMultMatrixd(GLmat);
+                        if (id==-1){
+                            //glColor3ub(100,50,50);
+                            glBegin(GL_POINTS);
+                                glVertex3d(pos(1), pos(0), pos(2));
+                            glEnd();
+                            //glCallList(backgroundList[layerNo-3]);
+                        }
+                        else{
+                            //std::cout << "id " << id << "\n";
+                            //std::cout << n << " " << m << " " << l << "\n";
+                            //std::cout << part.neighbourPoses[n][m][l].matrix() << "\n";
+                            //getchar();
+                            //glColor3ub(200,200,200);
+                            glCallList(cloudsListLayers[layerNo-2][id]);
+                        }
+                    glPopMatrix();
+                }
             }
-        }*/
+        }
     }
     glPopMatrix();
     glEndList();
