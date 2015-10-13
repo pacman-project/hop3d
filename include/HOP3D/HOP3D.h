@@ -29,7 +29,7 @@ public:
     };
 
     /// Name of the hop3d
-    virtual const std::string& getName() const {return name;};
+    virtual const std::string& getName() const {return name;}
 
     /// learining from the dataset
     virtual void learn(void) = 0;

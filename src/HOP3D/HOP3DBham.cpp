@@ -81,12 +81,10 @@ void HOP3DBham::learn(){
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
         if (layerNo==0){
             imageFilterer->computeOctets(vecImages[0],octets);
-            //octets=octets2layer;
         }
         else if (layerNo==1){
             startId = int(hierarchy.get()->firstLayer.size()+10000);
             imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[layerNo-1], octets);
-            //octets=octets3layer;
         }
         std::cout << "Compute statistics for " << octets.size() << " octets (" << layerNo+2 << "-th layer)\n";
         statsBuilder->computeStatistics(octets, layerNo+2, startId, dictionary);
@@ -173,11 +171,13 @@ void HOP3DBham::learn(){
     std::cout << "Compute statistics for " << vocabulary.size() << " octets (5-th layer)\n";
     ViewIndependentPart::Seq newVocabulary;
     statsBuilder->computeStatistics(vocabulary, 5, 0, newVocabulary);
-    /*for (auto & part : newVocabulary){
-        part.print();
-    }*/
-    std::cout << "Dictionary size (5-th layer): " << newVocabulary.size() << "\n";
     partSelector->selectParts(newVocabulary, *hierarchy, 5);
+    std::cout << "Dictionary size (5-th layer): " << newVocabulary.size() << "\n";
+    hierarchy.get()->viewIndependentLayers[1]=newVocabulary;
+    /*for (auto & part : newVocabulary){
+            part.print();
+    }*/
+    //visualization
     notify(*hierarchy);
     for (auto & object : objects){
         std::vector<ViewIndependentPart> objectParts;

@@ -81,7 +81,7 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, Hierarc
     ViewIndependentPart::Seq newDictionary;
     dictionary.clear();
     int centroidNo=0;
-    /*for (auto it = clusters.begin(); it!=clusters.end();it++){
+    for (auto it = clusters.begin(); it!=clusters.end();it++){
         if (it->size()>0){
             ViewIndependentPart part = dictionary[centroids[centroidNo]];
             for (auto itPart = it->begin(); itPart!=it->end();itPart++){
@@ -90,7 +90,7 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, Hierarc
             newDictionary.push_back(part);
             centroidNo++;
         }
-    }*/
+    }
     dictionary = newDictionary;
 }
 
@@ -152,7 +152,45 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy
 
 /// assign parts to clusters according to given cetroid
 void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewIndependentPart::Seq>& clusters){
-
+    for (size_t i=0;i<clusters.size();i++)
+        clusters[i].clear();
+    for (auto it = dictionary.begin();it!=dictionary.end();it++){// for each part
+        double minDist= std::numeric_limits<double>::max();
+        int clusterNo = 0;
+        int centroidId = 0;
+        for (auto itCentr = centroids.begin();itCentr!=centroids.end();itCentr++){//for each cluster
+            double dist = 0;
+            if (it->layerId==5){//compute distance from centroid
+                dist = ViewIndependentPart::distance(*it, dictionary[*itCentr]);
+            }
+            /*else if (it->layerId==3){//compute distance from centroid
+                dist = ViewDependentPart::distance(*it,dictionary[*itCentr], dictionary, hierarchy.firstLayer);
+            }*/
+            if (dist<minDist){
+                minDist = dist;
+                centroidId = clusterNo;
+            }
+            clusterNo++;
+        }
+        clusters[centroidId].push_back(*it);
+    }
+    if (config.verbose==2){
+        std::cout << "Elements no in clusters: ";
+        for (size_t i=0;i<clusters.size();i++){
+            std::cout << clusters[i].size() << ", ";
+        }
+        std::cout << "\n";
+        std::cout << "Clusters: ";
+        for (size_t i=0;i<clusters.size();i++){
+            std::cout << "{" << i << ": ";
+            for (size_t j=0;j<clusters[i].size();j++){
+                std::cout << clusters[i][j].id;
+                std::cout << ", ";
+            }
+            std::cout << "},";
+        }
+        std::cout << "\n";
+    }
 }
 
 /// assign parts to clusters according to given cetroid
@@ -200,7 +238,34 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
 
 /// compute centroids for give clusters
 void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy){
-
+    int clusterNo=0;
+    for (auto itClust = clusters.begin(); itClust!=clusters.end();itClust++){ //for each cluster
+        double distMin = std::numeric_limits<double>::max();
+        int centerId=0;
+        for (auto itPart = itClust->begin(); itPart!=itClust->end();itPart++){//for each part in cluster
+            double distSum = 0; //compute new centroid
+            for (auto itPart2 = itClust->begin(); itPart2!=itClust->end();itPart2++){//compute mean dist for each part as a centroid
+                if (itPart->layerId==5){//compute distance from centroid
+                    distSum+= ViewIndependentPart::distance(*itPart, *itPart2);
+                }
+                /*else if (itPart->layerId==3){
+                    distSum+=ViewDependentPart::distance(*itPart,*itPart2, dictionary, hierarchy.firstLayer);
+                }*/
+            }
+            if (distSum<distMin){
+                distMin=distSum;
+                centerId=itPart->id;
+            }
+        }
+        //find part in vocabulary
+        for (size_t i=0;i<dictionary.size();i++){
+            if (dictionary[i].id==centerId){
+                centroids[clusterNo]=(int)i;
+                break;
+            }
+        }
+        clusterNo++;
+    }
 }
 
 /// compute centroids for give clusters

@@ -125,6 +125,20 @@ public:
     }// required by octree
     /// Print
     void print() const;
+
+    /// compute distance between view-independent parts
+    static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB);
+
+    /// normalize vector
+    static inline void normalizeVector(Vec3& normal){
+        double norm = normal.norm();
+        normal.x() /= norm;    normal.y() /= norm;    normal.z() /= norm;
+    }
+
+    /// compute coordinate system from normal vector
+    static Mat33 coordinateFromNormal(const Vec3& _normal);
+    /// compute the min distance to the set of parts
+    static double nearestNeighbour(Mat34 pose, std::vector<std::pair<Mat34, int>> parts);
 };
 
 }
