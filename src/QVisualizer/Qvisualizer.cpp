@@ -378,9 +378,9 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
                         pos(1)=0.3*double(double(m)-1.0);
                         pos(2)=0.3*double(double(l)-1.0);
                     }
-                    double GLmatrot[16]={part.neighbourPoses[n][m][l](0,1), part.neighbourPoses[n][m][l](1,1), part.neighbourPoses[n][m][l](2,1), 0,
-                                      part.neighbourPoses[n][m][l](0,0), part.neighbourPoses[n][m][l](1,0), part.neighbourPoses[n][m][l](2,0), 0,
-                                      part.neighbourPoses[n][m][l](0,2), part.neighbourPoses[n][m][l](1,2), part.neighbourPoses[n][m][l](2,2), 0,
+                    double GLmatrot[16]={part.neighbourPoses[n][m][l](1,1), part.neighbourPoses[n][m][l](0,1), part.neighbourPoses[n][m][l](2,1), 0,
+                                      part.neighbourPoses[n][m][l](1,0), part.neighbourPoses[n][m][l](0,0), part.neighbourPoses[n][m][l](2,0), 0,
+                                      part.neighbourPoses[n][m][l](1,2), part.neighbourPoses[n][m][l](0,2), part.neighbourPoses[n][m][l](2,2), 0,
                                       0,0,0, 1};
                     double GLmat[16]={1,0,0, 0,
                                       0,1,0, 0,
@@ -396,7 +396,7 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
                                       0,0,1, 0,
                                       pos(1), pos(0), pos(2), 1};*/
                     glPushMatrix();
-                        //glMultMatrixd(GLmatrot);
+                        glMultMatrixd(GLmatrot);
                         glMultMatrixd(GLmat);
                         if (id==-1){
                             //glColor3ub(100,50,50);
