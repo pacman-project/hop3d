@@ -210,7 +210,7 @@ void QGLVisualizer::updateHierarchy(){
                     }
                 }
             }
-            cloudsListLayers[0].push_back(createCloudList(cloud));
+            cloudsListLayers[0].push_back(createCloudList(cloud, hierarchy->firstLayer[i].normal));
         }
         for (size_t i=0;i<hierarchy->viewDependentLayers.size();i++){//view-dependent layers
             backgroundList.push_back(createBackgroundList(int(i+1)));
@@ -374,18 +374,18 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
                         pos(0)=0; pos(1)=0; pos(2)=0;
                     }
                     else if (id==-1){
-                        pos(0)=0.3*double(double(n)-1.0);
-                        pos(1)=0.3*double(double(m)-1.0);
+                        pos(0)=0.3*double(double(m)-1.0);
+                        pos(1)=0.3*double(double(n)-1.0);
                         pos(2)=0.3*double(double(l)-1.0);
                     }
-                    double GLmatrot[16]={part.neighbourPoses[n][m][l](1,1), part.neighbourPoses[n][m][l](0,1), part.neighbourPoses[n][m][l](2,1), 0,
-                                      part.neighbourPoses[n][m][l](1,0), part.neighbourPoses[n][m][l](0,0), part.neighbourPoses[n][m][l](2,0), 0,
-                                      part.neighbourPoses[n][m][l](1,2), part.neighbourPoses[n][m][l](0,2), part.neighbourPoses[n][m][l](2,2), 0,
+                    double GLmatrot[16]={part.neighbourPoses[n][m][l](0,0), part.neighbourPoses[n][m][l](1,0), part.neighbourPoses[n][m][l](2,0), 0,
+                                      part.neighbourPoses[n][m][l](0,1), part.neighbourPoses[n][m][l](1,1), part.neighbourPoses[n][m][l](2,1), 0,
+                                      part.neighbourPoses[n][m][l](0,2), part.neighbourPoses[n][m][l](1,2), part.neighbourPoses[n][m][l](2,2), 0,
                                       0,0,0, 1};
                     double GLmat[16]={1,0,0, 0,
                                       0,1,0, 0,
                                       0,0,1, 0,
-                                      pos(1), pos(0), pos(2), 1};
+                                      pos(0), pos(1), pos(2), 1};
                     if (id==-1){
                         GLmatrot[0]=1; GLmatrot[1]=0; GLmatrot[2]=0;
                         GLmatrot[4]=0; GLmatrot[5]=1; GLmatrot[6]=0;
@@ -401,7 +401,7 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
                         if (id==-1){
                             //glColor3ub(100,50,50);
                             glBegin(GL_POINTS);
-                                glVertex3d(pos(1), pos(0), pos(2));
+                                glVertex3d(pos(0), pos(1), pos(2));
                             glEnd();
                             //glCallList(backgroundList[layerNo-3]);
                         }
@@ -438,13 +438,14 @@ GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
             if ((n==1)&&(m==1)){
                 pos(0)=0; pos(1)=0; pos(2)=0;
             }
-            else if (id==-1){
+            /*else if (id==-1){
                 double patchSize = 5.0*(2.0*layerNo-1.0);
-                pos(0)=config.pixelSize*double(double(n)-1.0)*(patchSize+(patchSize/2.0));
-                pos(1)=config.pixelSize*double(double(m)-1.0)*(patchSize+(patchSize/2.0));
+                pos(0)=config.pixelSize*double(double(m)-1.0)*(patchSize+(patchSize/2.0));
+                pos(1)=config.pixelSize*double(double(n)-1.0)*(patchSize+(patchSize/2.0));
                 pos(2)=0;
-            }
-            double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(1), pos(0), pos(2), 1};
+            }*/
+            double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
+            //std::cout << id << " pos " << pos.transpose() << "\n";
             glPushMatrix();
                 glMultMatrixd(GLmat);
                 if (id==-1){
@@ -586,7 +587,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                     pos(0)=config.pixelSize*double(double(n)-1.0)*5.0;
                     pos(1)=config.pixelSize*double(double(m)-1.0)*5.0;
                 }*/
-                double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(1), pos(0)+(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
+                double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
                 glPushMatrix();
                     glMultMatrixd(GLmat);
                     //glColor4d(config.clustersColor.red(), config.clustersColor.green(), config.clustersColor.blue(), config.clustersColor.alpha());
@@ -605,7 +606,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
 }
 
 /// Create point cloud List
-GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud){
+GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud, Vec3& normal){
     // create one display list
     GLuint index = glGenLists(1);
     // compile the display list, store a triangle in it
@@ -619,6 +620,12 @@ GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud){
                       pointCloud.pointCloudNormal[n].position(2)*config.filterDepthScale);
         }
         glEnd();
+        if (config.drawNormals){
+            glBegin(GL_LINES);
+                glVertex3d(0.0, 0.0, 0.0);
+                glVertex3d(-normal(0)*config.normalsScale, -normal(1)*config.normalsScale, -normal(2)*config.normalsScale);
+            glEnd();
+        }
     glEndList();
     return index;
 }
@@ -756,6 +763,8 @@ void QGLVisualizer::init(){
 
     //qglviewer::Quaternion q(-0.5,0.5,0.5,0.5);
     //camera()->setOrientation(q);
+
+    glDepthRange(1,0);
 
     setBackgroundColor(config.backgroundColor);
 

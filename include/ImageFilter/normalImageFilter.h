@@ -130,7 +130,7 @@ private:
     void fillInOctet(const OctetsImage& octetsImage, const ViewDependentPart::Seq& dictionary, int u, int v, Octet& octet) const;
 
     //set relative position for octets
-    void computeRelativePositions(Octet& octet) const;
+    void computeRelativePositions(Octet& octet, int layerNo) const;
 
     /// determine id of the part using dictionary
     int findId(const ViewDependentPart::Seq& dictionary, const Octet& octet) const;

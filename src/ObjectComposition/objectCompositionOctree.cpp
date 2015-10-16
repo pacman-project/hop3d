@@ -51,7 +51,7 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         if (config.verbose==1){
             std::cout << "parts notree, part.id: " << part.id << "\n";
         }
-        Vec3 position(part.location.v, part.location.u, part.location.depth);
+        Vec3 position(part.location.u, part.location.v, part.location.depth);
         camModel.getPoint(position, pos3d);
         Mat34 part3D(Mat34::Identity());
         part3D.translation() = pos3d;//set position of the part

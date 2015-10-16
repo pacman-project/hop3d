@@ -77,6 +77,15 @@ public:
             model->FirstChildElement( "clusters" )->QueryDoubleAttribute("alpha", &rgba[3]);
             clustersColor.setRedF(rgba[0]); clustersColor.setGreenF(rgba[1]);
             clustersColor.setBlueF(rgba[2]); clustersColor.setAlphaF(rgba[3]);
+
+            model->FirstChildElement( "normals" )->QueryBoolAttribute("drawNormals", &drawNormals);
+            model->FirstChildElement( "normals" )->QueryDoubleAttribute("red", &rgba[0]);
+            model->FirstChildElement( "normals" )->QueryDoubleAttribute("green", &rgba[1]);
+            model->FirstChildElement( "normals" )->QueryDoubleAttribute("blue", &rgba[2]);
+            model->FirstChildElement( "normals" )->QueryDoubleAttribute("alpha", &rgba[3]);
+            model->FirstChildElement( "normals" )->QueryDoubleAttribute("scale", &normalsScale);
+            normalsColor.setRedF(rgba[0]); normalsColor.setGreenF(rgba[1]);
+            normalsColor.setBlueF(rgba[2]); normalsColor.setAlphaF(rgba[3]);
         }
         public:
         /// Background color
@@ -107,6 +116,12 @@ public:
         int verbose;
         /// scale depth of filter patches
         double filterDepthScale;
+        /// draw normals
+        bool drawNormals;
+        /// normals color
+        QColor normalsColor;
+        /// scale normal vector
+        double normalsScale;
     };
 
     /// Construction
@@ -191,7 +206,7 @@ private:
     void draw3Dobjects(void);
 
     /// Create point cloud List
-    GLuint createCloudList(hop3d::PointCloud& pointCloud);
+    GLuint createCloudList(hop3d::PointCloud& pointCloud, hop3d::Vec3& normal);
 
     /// Create background List
     GLuint createBackgroundList(int layerNo);

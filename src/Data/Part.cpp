@@ -14,6 +14,7 @@ void ViewDependentPart::print() const{
         for (int j =0; j<3; j++){
             std::cout << this->partIds[i][j] << ", ";
         }
+        std::cout << "\n";
     }
     std::cout << "\nParts in group: ";
     for (auto it = group.begin();it!=group.end();it++)

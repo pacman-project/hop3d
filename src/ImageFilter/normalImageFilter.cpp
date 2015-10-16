@@ -117,10 +117,10 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::S
 ///extract octets from response image
 void NormalImageFilter::extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets){
     int u=0;
-    OctetsImage octetsImage(responseImg.size()/(config.filterSize*3), std::vector<Octet> (responseImg.size()/(config.filterSize*3)));
+    OctetsImage octetsImage(responseImg.size()/(config.filterSize*3), std::vector<Octet> (responseImg[0].size()/(config.filterSize*3)));
     for (size_t i=config.filterSize+config.filterSize/2;i<responseImg.size()-config.filterSize-(config.filterSize/2);i=i+3*config.filterSize){
         int v=0;
-        for (size_t j=config.filterSize+config.filterSize/2;j<responseImg.size()-config.filterSize-(config.filterSize/2);j=j+3*config.filterSize){
+        for (size_t j=config.filterSize+config.filterSize/2;j<responseImg[0].size()-config.filterSize-(config.filterSize/2);j=j+3*config.filterSize){
             Octet octet;
             computeOctet(responseImg, cloudOrd, int(i), int(j), octet);
             if (octet.partIds[1][1]!=-1){
@@ -138,24 +138,24 @@ void NormalImageFilter::extractOctets(const std::vector< std::vector<Response> >
 
 /// compute otet for given location on response image
 void NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u,  int v, Octet& octet) const{
-    for (int i=-1;i<2;i++){//for neighbouring blocks
+    for (int i=-1;i<2;i++){//for neighbouring blocks in octet
         for (int j=-1;j<2;j++){
             findMaxResponse(responseImg, cloudOrd, u+i*config.filterSize, v+j*config.filterSize, octet, i+1, j+1);
         }
     }
     if (octet.partIds[1][1]!=-1){//set relative position for octets
-        computeRelativePositions(octet);
+        computeRelativePositions(octet, 1);
     }
 }
 
 //set relative position for octets
-void NormalImageFilter::computeRelativePositions(Octet& octet) const{
+void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) const{
     for (int i=0;i<3;i++){//for neighbouring blocks
         for (int j=0;j<3;j++){
             if (!((i==1)&&(j==1))){
                 if (octet.partIds[i][j]==-1){
-                    octet.filterPos[i][j].u=(i-1)*config.filterSize;
-                    octet.filterPos[i][j].v=(j-1)*config.filterSize;
+                    octet.filterPos[i][j].u=(j-1)*layerNo*(config.filterSize+config.filterSize/2.0);
+                    octet.filterPos[i][j].v=(i-1)*layerNo*(config.filterSize+config.filterSize/2.0);
                     octet.filterPos[i][j].depth=0;
                 }
                 else {
@@ -177,7 +177,7 @@ void NormalImageFilter::findMaxResponse(const std::vector< std::vector<Response>
                 octet.responses[idx][idy] = responseImg[u+i][v+j].second;
                 octet.partIds[idx][idy] = responseImg[u+i][v+j].first;
                 ImageCoordsDepth coord;
-                coord.u = u+i; coord.v = v+j; coord.depth = cloudOrd[u+i][v+j].position(2);
+                coord.u = v+j; coord.v = u+i; coord.depth = cloudOrd[u+i][v+j].position(2);
                 octet.filterPos[idx][idy] = coord;
             }
         }
@@ -192,11 +192,11 @@ void NormalImageFilter::getOctets(const ViewDependentPart::Seq& dictionary, Octe
     int u=0;
     for (size_t i=1; i<octetsImage.size()-1;i=i+3){
         int v=0;
-        for (size_t j=1; j<octetsImage.size()-1;j=j+3){
+        for (size_t j=1; j<octetsImage[0].size()-1;j=j+3){
             Octet octet;
             if (octetsImage[i][j].partIds[1][1]!=-1){
                 fillInOctet(octetsImage, dictionary, (int)i, (int)j, octet);
-                computeRelativePositions(octet);
+                computeRelativePositions(octet,2);
                 octets.push_back(octet);
                 nextLayerOctetsImg[u][v]=octet;
             }
@@ -226,8 +226,7 @@ void NormalImageFilter::computeImages3rdLayer(const ViewDependentPart::Seq& dict
                 //std::cout << "found id : " << findId(dictionary,octetsImage[i][j]) << " new id " << dictionary[findId(dictionary,octetsImage[i][j])].id << "\n";
                 //std::cout << "parts no " << partsNo << "\n";
                 part.location = octetsImage[i][j].filterPos[1][1];
-          //      part.print();
-        //        getchar();
+                part.gaussians[1][1].mean=Vec3(octetsImage[i][j].filterPos[1][1].u, octetsImage[i][j].filterPos[1][1].v, octetsImage[i][j].filterPos[1][1].depth);
                 partsNo++;
             }
             partsImage[i][j]=part;
@@ -279,6 +278,7 @@ int NormalImageFilter::findId(const ViewDependentPart::Seq& dictionary, const Oc
         id++;
     }
     std::cout << "Part not found in the dictionary!\n";
+    octet.print();
     getchar();
     return -1;
 }
