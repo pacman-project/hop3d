@@ -4,7 +4,7 @@ namespace hop3d {
 
     /// compute distance between filters -- dot product for normals
     double Filter::distance (const Filter& filterA, const Filter& filterB){
-        return (filterA.id==filterB.id) ? 0 : (double)(1.0-filterA.normal.adjoint()*filterB.normal);
+        return (filterA.id==filterB.id) ? 0 : (double)(1.0-filterA.normal.adjoint()*filterB.normal)/2.0;
     }
 
     /// Print octet

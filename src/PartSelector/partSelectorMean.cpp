@@ -193,7 +193,7 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
     }
 }
 
-/// assign parts to clusters according to given cetroid
+/// assign parts to clusters according to given centroid
 void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewDependentPart::Seq>& clusters){
     for (size_t i=0;i<clusters.size();i++)
         clusters[i].clear();
@@ -207,7 +207,7 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
                 dist = ViewDependentPart::distance(*it,dictionary[*itCentr],hierarchy.firstLayer);
             }
             else if (it->layerId==3){//compute distance from centroid
-                dist = ViewDependentPart::distance(*it,dictionary[*itCentr], dictionary, hierarchy.firstLayer);
+                dist = ViewDependentPart::distance(*it,dictionary[*itCentr], hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
             }
             if (dist<minDist){
                 minDist = dist;
@@ -277,12 +277,14 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
         for (auto itPart = itClust->begin(); itPart!=itClust->end();itPart++){//for each part in cluster
             double distSum = 0; //compute new centroid
             for (auto itPart2 = itClust->begin(); itPart2!=itClust->end();itPart2++){//compute mean dist for each part as a centroid
+                double dist=0;
                 if (itPart->layerId==2){
-                    distSum+=ViewDependentPart::distance(*itPart,*itPart2,hierarchy.firstLayer);
+                    dist=ViewDependentPart::distance(*itPart,*itPart2,hierarchy.firstLayer);
                 }
                 else if (itPart->layerId==3){
-                    distSum+=ViewDependentPart::distance(*itPart,*itPart2, dictionary, hierarchy.firstLayer);
+                    dist=ViewDependentPart::distance(*itPart,*itPart2, hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
                 }
+                distSum+=dist;
             }
             if (distSum<distMin){
                 distMin=distSum;
@@ -294,6 +296,9 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
             if (dictionary[i].id==centerId){
                 centroids[clusterNo]=(int)i;
                 break;
+            }
+            if (i==dictionary.size()-1){
+                std::cout << "Something is wrong with ids in clusterization\n";
             }
         }
         clusterNo++;

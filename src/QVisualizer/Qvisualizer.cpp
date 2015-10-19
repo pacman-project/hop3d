@@ -592,9 +592,14 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                     glMultMatrixd(GLmat);
                     //glColor4d(config.clustersColor.red(), config.clustersColor.green(), config.clustersColor.blue(), config.clustersColor.alpha());
                     int id = itComp->partIds[n][m];
-                    if ((layerNo==1)&&(itComp->partIds[n][m]==-1))
-                        id = 0;
-                    glCallList(cloudsListLayers[layerNo-1][id]);
+                    if (id==-1){
+                        //glColor3ub(100,50,50);
+                        glCallList(backgroundList[layerNo-1]);
+                    }
+                    else{
+                        //glColor3ub(200,200,200);
+                        glCallList(cloudsListLayers[layerNo-1][id]);
+                    }
                 glPopMatrix();
             }
         }

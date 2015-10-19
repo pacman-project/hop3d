@@ -85,7 +85,7 @@ public:
     static double distance(const Filter& filterA, const Filter& filterB);
 
     ///Construction
-    Filter(){};
+    Filter(){}
 };
 
 /// 2D image coordinates
