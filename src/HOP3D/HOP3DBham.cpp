@@ -136,16 +136,6 @@ void HOP3DBham::learn(){
         }
     }
     std::cout << "clusters size: " << clusters.size() << "\n";
-    //int clusterNo=0;
-    /*for (auto & cluster : clusters){
-        std::cout << "cluster " << clusterNo << " size " << cluster.size() << ": ";
-        for (auto & id : cluster){
-            std::cout << id << ", ";
-        }
-        std::cout << "\n";
-        clusterNo++;
-    }*/
-
     std::vector<ViewIndependentPart> vocabulary;
     std::cout << "create unique clusters:\n";
     partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
@@ -164,16 +154,21 @@ void HOP3DBham::learn(){
     }
     //compute statistics
     //select parts
-    std::cout << "5th layer vacabulary size: " << vocabulary.size() << "\n";
-    /*for (auto & part : vocabulary){
-        part.print();
-    }*/
+    std::cout << "initial 5th layer vacabulary size: " << vocabulary.size() << "\n";
     std::cout << "Compute statistics for " << vocabulary.size() << " octets (5-th layer)\n";
     ViewIndependentPart::Seq newVocabulary;
     statsBuilder->computeStatistics(vocabulary, 5, 0, newVocabulary);
-    //partSelector->selectParts(newVocabulary, *hierarchy, 5);
+    std::cout << "vocabulary size after statistics: " << newVocabulary.size() << "\n";
+    partSelector->selectParts(newVocabulary, *hierarchy, 5);
+    /*for (auto & part : vocabulary){
+        part.print();
+        getchar();
+    }*/
     std::cout << "Dictionary size (5-th layer): " << newVocabulary.size() << "\n";
     hierarchy.get()->viewIndependentLayers[1]=newVocabulary;
+    for (auto & object : objects){
+        object->updateIds(1, hierarchy.get()->viewIndependentLayers[1]);
+    }
     /*for (auto & part : newVocabulary){
             part.print();
     }*/
@@ -181,8 +176,11 @@ void HOP3DBham::learn(){
     notify(*hierarchy);
     for (auto & object : objects){
         std::vector<ViewIndependentPart> objectParts;
-        object->getParts(0, objectParts);
-        notify(objectParts);
+        int viewIndLayers = 2;
+        for (int i=0;i<viewIndLayers;i++){
+            object->getParts(i, objectParts);
+            notify(objectParts, i);
+        }
     }
     notify3Dmodels();
 

@@ -127,7 +127,7 @@ public:
     void print() const;
 
     /// compute distance between view-independent parts
-    static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB);
+    static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const std::map<int,int>& interpreter);
 
     /// normalize vector
     static inline void normalizeVector(Vec3& normal){
@@ -138,7 +138,7 @@ public:
     /// compute coordinate system from normal vector
     static Mat33 coordinateFromNormal(const Vec3& _normal);
     /// compute the min distance to the set of parts
-    static double nearestNeighbour(Mat34 pose, std::vector<std::pair<Mat34, int>> parts);
+    static double nearestNeighbour(Mat34 pose, std::vector<std::pair<Mat34, int>> parts, int& neighbourId);
 };
 
 }

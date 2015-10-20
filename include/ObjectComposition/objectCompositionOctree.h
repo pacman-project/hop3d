@@ -42,6 +42,9 @@ public:
     /// get octree in layer layerNo
     void getParts(int layerNo, std::vector<ViewIndependentPart>& parts) const;
 
+    /// update ids in the octree using new vocabulary
+    void updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary);
+
     /// Destruction
     ~ObjectCompositionOctree(void);
 
@@ -69,10 +72,13 @@ private:
     std::vector<OctreePtr> octrees;
 
     /// compute rotation matrix from normal vector ('y' axis is vetical)
-    void normal2rot(const Vec3& normal, Mat33& rot);
+    //void normal2rot(const Vec3& normal, Mat33& rot);
 
     /// assign neighbouring parts to new part
     int assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z, double scale);
+
+    /// find part in the vocabulary and return new id
+    int findIdInVocabulary(const ViewIndependentPart& part, const std::vector<ViewIndependentPart>& vocabulary);
 
 };
 }

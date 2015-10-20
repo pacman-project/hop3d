@@ -1,5 +1,6 @@
 #include "ObjectComposition/objectCompositionOctree.h"
 #include <ctime>
+#include "ImageFilter/normalImageFilter.h"
 
 using namespace hop3d;
 
@@ -51,15 +52,17 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         if (config.verbose==1){
             std::cout << "parts notree, part.id: " << part.id << "\n";
         }
+        Mat34 part3D(Mat34::Identity());
+        Vec3 normal; hierarchy.getNormal(part, normal);
+        part3D = NormalImageFilter::coordinateFromNormal(normal);
         Vec3 position(part.location.u, part.location.v, part.location.depth);
         camModel.getPoint(position, pos3d);
-        Mat34 part3D(Mat34::Identity());
         part3D.translation() = pos3d;//set position of the part
-        Vec3 normal; hierarchy.getNormal(part, normal);
-        Mat33 rot; normal2rot(normal, rot);
+        /*Mat33 rot; normal2rot(normal, rot);
         for (int i=0;i<3;i++)//and orientation
             for (int j=0;j<3;j++)
                 part3D(i,j) = rot(i,j);
+                */
         partPosition = cameraPose * part3D;//global position of the part
         int x = int(partPosition(0,3)/config.voxelSize);
         int y = int(partPosition(1,3)/config.voxelSize);
@@ -71,18 +74,48 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         //std::cout << "partPosition: \n" << partPosition.matrix() << "\n";
         //getchar();
         ViewIndependentPart::Part3D viewIndependentPart(partPosition, part.id);
+        (*octrees[layerNo])(x,y,z).pose = partPosition;
         (*octrees[layerNo])(x,y,z).parts.push_back(viewIndependentPart);
         (*octrees[layerNo])(x,y,z).layerId=4;
-        (*octrees[layerNo])(x,y,z).id=1;//its temporary id only
+        (*octrees[layerNo])(x,y,z).id=part.id;//its temporary id only
     }
+}
+
+/// update ids in the octree using new vocabulary
+void ObjectCompositionOctree::updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary){
+    for (int idX=0; idX<(*octrees[layerNo]).size(); idX++){///to do z-slicing
+        for (int idY=0; idY<(*octrees[layerNo]).size(); idY++){
+            for (int idZ=0; idZ<(*octrees[layerNo]).size(); idZ++){
+                if ((*octrees[layerNo]).at(idX,idY,idZ).id>=0){
+                    //find part in the vocabulary
+                    (*octrees[layerNo])(idX,idY,idZ).id = findIdInVocabulary((*octrees[layerNo]).at(idX,idY,idZ), vocabulary);
+                }
+            }
+        }
+    }
+}
+
+/// find part in the vocabulary and return new id
+int ObjectCompositionOctree::findIdInVocabulary(const ViewIndependentPart& part, const std::vector<ViewIndependentPart>& vocabulary){
+    for (auto & vpart : vocabulary){
+        for (auto & gpart : vpart.group){
+            if (part.partIds == gpart.partIds){
+                return vpart.id;
+            }
+        }
+    }
+    std::cout << "Could not find part in the vocabulary!\n";
+    getchar();
+    return -1;
 }
 
 /// get octree in layer layerNo
 void ObjectCompositionOctree::getParts(int layerNo, std::vector<ViewIndependentPart>& parts) const{
+    parts.clear();
     for (int idX=0; idX<(*octrees[layerNo]).size(); idX++){///to do z-slicing
         for (int idY=0; idY<(*octrees[layerNo]).size(); idY++){
             for (int idZ=0; idZ<(*octrees[layerNo]).size(); idZ++){
-                if ((*octrees[layerNo]).at(idX,idY,idZ).parts.size()>0){
+                if ((*octrees[layerNo]).at(idX,idY,idZ).id>=0){
                     parts.push_back((*octrees[layerNo]).at(idX,idY,idZ));
                 }
             }
@@ -126,7 +159,7 @@ void ObjectCompositionOctree::getClusters(int layerNo, std::vector< std::set<int
 }
 
 /// compute rotation matrix from normal vector ('y' axis is vetical)
-void ObjectCompositionOctree::normal2rot(const Vec3& normal, Mat33& rot){
+/*void ObjectCompositionOctree::normal2rot(const Vec3& normal, Mat33& rot){
     Vec3 y(0,1,0); Vec3 x;
     Vec3 _normal(normal);
     x = y.cross(_normal);
@@ -136,7 +169,7 @@ void ObjectCompositionOctree::normal2rot(const Vec3& normal, Mat33& rot){
     rot.block(0,0,3,1) = x;
     rot.block(0,1,3,1) = y;
     rot.block(0,2,3,1) = _normal;
-}
+}*/
 
 /// create next layer vocabulary
 void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const Hierarchy& hierarchy, std::vector<ViewIndependentPart>& vocabulary){
@@ -172,7 +205,7 @@ int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel
     Mat34 pose(Mat34::Identity());
     pose(0,3) = scale*x+(scale/2.0); pose(1,3) = scale*y+(scale/2.0); pose(2,3) = scale*z+(scale/2.0);
     if ((*octrees[layerNo]).at(x,y,z).id!=-1){
-        partVoxel.pose = (*octrees[layerNo]).at(x,y,z).parts[0].pose;
+        partVoxel.pose = (*octrees[layerNo]).at(x,y,z).pose;
     }
     else
         partVoxel.pose = pose;
@@ -181,16 +214,16 @@ int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel
     for (int i=-1; i<2;i++){
         for (int j=-1; j<2;j++){
             for (int k=-1; k<2;k++){
-                if ((*octrees[layerNo]).at(x+i,y+j,z+k).parts.size()>0){
+                if ((*octrees[layerNo]).at(x+i,y+j,z+k).id>=0){
                     //assign neighbouring ids
-                    partVoxel.partIds[i+1][j+1][k+1] = hierarchy.interpreter.at((*octrees[layerNo]).at(x+i,y+j,z+k).parts[0].id);
+                    partVoxel.partIds[i+1][j+1][k+1] = hierarchy.interpreter.at((*octrees[layerNo]).at(x+i,y+j,z+k).id);
                     // assign spatial relation
                     if ((*octrees[layerNo]).at(x+i,y+j,z+k).id!=-1){
                         if (i==0&&j==0&&k==0){
-                            partVoxel.neighbourPoses[i+1][j+1][k+1] = (*octrees[layerNo]).at(x,y,z).parts[0].pose;//set global pose
+                            partVoxel.neighbourPoses[i+1][j+1][k+1] = (*octrees[layerNo]).at(x,y,z).pose;//set global pose
                         }
                         else {
-                            partVoxel.neighbourPoses[i+1][j+1][k+1] = partPoseInv*(*octrees[layerNo]).at(x+i,y+j,z+k).parts[0].pose;//set relative pose
+                            partVoxel.neighbourPoses[i+1][j+1][k+1] = partPoseInv*(*octrees[layerNo]).at(x+i,y+j,z+k).pose;//set relative pose
                             //std::cout << "partPoseInv \n" << partPoseInv.matrix()<< "\n";
                             //std::cout << "(*octrees[layerNo]).at(x+i,y+j,z+k).parts[0].pose\n" << (*octrees[layerNo]).at(x+i,y+j,z+k).parts[0].pose.matrix() <<"\n";
                             //std::cout << "partVoxel.neighbourPoses[i+1][j+1][k+1]\n" << partVoxel.neighbourPoses[i+1][j+1][k+1].matrix() << "\n";

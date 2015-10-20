@@ -36,7 +36,6 @@ void ViewIndependentPart::print() const{
     std::cout << "Id: " << id << "\n";
     std::cout << "Layer id: " << layerId << "\n";
     std::cout << "Pose: \n" << pose.matrix() << "\n";
-    //std::cout << "Group size: " << group.size() << "\n";
     std::cout << "ids: ";
     for (int i =0; i<3; i++){
         for (int j =0; j<3; j++){
@@ -45,11 +44,12 @@ void ViewIndependentPart::print() const{
             }
         }
     }
-    std::cout << "\nParts in group: ";
+    std::cout << "\nGroup size: " << group.size() << "\n";
+    std::cout << "Parts in group: ";
     for (auto it = group.begin();it!=group.end();it++)
         std::cout << it->id << ", ";
     std::cout << "\n";
-    for (size_t i=0; i<gaussians.size();i++){
+    /*for (size_t i=0; i<gaussians.size();i++){
         for (size_t j=0; j<gaussians.size();j++){
             for (size_t k=0; k<gaussians.size();k++){
                 if (partIds[i][j][k]!=-1){
@@ -60,11 +60,13 @@ void ViewIndependentPart::print() const{
                 }
             }
         }
-    }
+    }*/
 }
 
 /// compute distance between view-independent parts
-double ViewIndependentPart::distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB){
+double ViewIndependentPart::distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const std::map<int,int>& interpreter){
+    if (partA.partIds==partB.partIds)
+        return 0;
     //find relative position between part A and B
     Mat34 relA2B = partA.pose.inverse()*partB.pose;
     relA2B(0,3)=0; relA2B(1,3)=0; relA2B(2,3)=0;
@@ -88,7 +90,7 @@ double ViewIndependentPart::distance(const ViewIndependentPart& partA, const Vie
                     normB+=partB.neighbourPoses[i][j][k].matrix().block<3,1>(0,2);
         //            meanB+=partB.neighbourPoses[i][j][k].matrix().block<3,1>(0,3);
                     partBElementsNo++;
-                    partBSeq.push_back(std::make_pair(partB.neighbourPoses[i][j][k],partA.partIds[i][j][k]));
+                    partBSeq.push_back(std::make_pair(partB.neighbourPoses[i][j][k],partB.partIds[i][j][k]));
                 }
             }
         }
@@ -100,25 +102,22 @@ double ViewIndependentPart::distance(const ViewIndependentPart& partA, const Vie
     Mat34 partApose(coordPartA*Eigen::Translation<double,3>(0,0,0));
     Mat34 partBpose(coordPartB*Eigen::Translation<double,3>(0,0,0));
     Mat34 transform = partApose.inverse()*partBpose;
-    /*std::cout << "setA:\n";
-    for (auto & part : partASeq){
-        std::cout << "(" << part.first(0,3) << ", " << part.first(1,3) << ", " << part.first(2,3) << "), ";
-    }
-    std::cout << "\nsetB:\n";
-    for (auto & part : partBSeq){
-        std::cout << "(" << part.first(0,3) << ", " << part.first(1,3) << ", " << part.first(2,3) << "), ";
-    }*/
+
     if (partASeq.size()<partBSeq.size()){
         for (auto & part : partASeq){
-            sum+=nearestNeighbour(part.first*transform,partBSeq);
-            //std::cout << "sumB : " << sum << "\n";
+            int neighbourId=0;
+            sum+=nearestNeighbour(part.first*transform,partBSeq, neighbourId);
+            if (part.second!=partBSeq[neighbourId].second)
+                sum+=1;
         }
         sum/=double(partASeq.size());//divide by the number of matched elements
     }
     else{
         for (auto & part : partBSeq){
-            sum+=nearestNeighbour(part.first*(transform.inverse()),partASeq);
-            //std::cout << "sumA : "<< sum << "\n";
+            int neighbourId=0;
+            sum+=nearestNeighbour(part.first*(transform.inverse()),partASeq, neighbourId);
+            if (part.second!=partASeq[neighbourId].second)
+                sum+=1;
         }
         sum/=double(partBSeq.size());//divide by the number of matched elements
     }
@@ -126,12 +125,16 @@ double ViewIndependentPart::distance(const ViewIndependentPart& partA, const Vie
 }
 
 /// compute the min distance to the set of parts
-double ViewIndependentPart::nearestNeighbour(Mat34 pose, std::vector<std::pair<Mat34, int>> parts){
+double ViewIndependentPart::nearestNeighbour(Mat34 pose, std::vector<std::pair<Mat34, int>> parts, int& neighbourId){
     double minDist=std::numeric_limits<double>::max();
+    int partId=0;
     for (auto part : parts){
         double distance = sqrt(pow(pose(0,3)-part.first(0,3),2.0)+pow(pose(1,3)-part.first(1,3),2.0)+pow(pose(2,3)-part.first(2,3),2.0));
-        if (distance<minDist)
+        if (distance<minDist){
             minDist = distance;
+            neighbourId = partId;
+        }
+        partId++;
     }
     return minDist;
 }

@@ -61,6 +61,17 @@ public:
                 model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posZ", &posZ[i]);
             }
 
+            layersNo=2;
+            objectsDist.resize(layersNo);
+            objectsPosY.resize(layersNo);
+            objectsPosZ.resize(layersNo);
+            for (int i=0;i<layersNo;i++){
+                std::string layerName = "objectsLayer" + std::to_string (i+1);
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("dist", &objectsDist[i]);
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posY", &objectsPosY[i]);
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posZ", &objectsPosZ[i]);
+            }
+
             model->FirstChildElement( "layer2layer" )->QueryBoolAttribute("drawLayer2Layer", &drawLayer2Layer);
             model->FirstChildElement( "layer2layer" )->QueryDoubleAttribute("red", &rgba[0]);
             model->FirstChildElement( "layer2layer" )->QueryDoubleAttribute("green", &rgba[1]);
@@ -122,6 +133,12 @@ public:
         QColor normalsColor;
         /// scale normal vector
         double normalsScale;
+        /// distance between objects in i-th layers (x coordinate)
+        std::vector<double> objectsDist;
+        /// "z" coordinate of the objects at i-th hierarchy layer
+        std::vector<double> objectsPosZ;
+        /// "y" coordinate of the objects at i-th hierarchy layer
+        std::vector<double> objectsPosY;
     };
 
     /// Construction
@@ -140,7 +157,7 @@ public:
     void update(hop3d::Hierarchy& _hierarchy);
 
     /// Update 3D object model
-    void update(const std::vector<hop3d::ViewIndependentPart>& objectParts);
+    void update(const std::vector<hop3d::ViewIndependentPart>& objectParts, int objLayerId);
 
     /// Update 3D object models
     void update3Dmodels(void);
@@ -218,7 +235,7 @@ private:
     GLuint createVIPartList(hop3d::ViewIndependentPart& part, int layerNo);
 
     /// Create objects lists
-    GLuint createObjList(const std::vector<hop3d::ViewIndependentPart>& parts);
+    GLuint createObjList(const std::vector<hop3d::ViewIndependentPart>& parts, int layerNo);
 
     /// Create clusters List
     GLuint createClustersList(hop3d::ViewDependentPart& part, int layerNo);
