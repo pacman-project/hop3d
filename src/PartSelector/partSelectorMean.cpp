@@ -337,11 +337,16 @@ void PartSelectorMean::createUniqueClusters(const std::vector< std::set<int>>& c
         Vec3 normal;
         vdp.getNormal(normal,hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
         part.pose = NormalImageFilter::coordinateFromNormal(normal);
+        int groupId=0;
         for (auto & partId : cluster){
             ViewIndependentPart partTmp;
+            vdp = hierarchy.viewDependentLayers.back()[partId];//get view dependent part related to view-independent part
+            vdp.getNormal(normal, hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
+            partTmp.pose = NormalImageFilter::coordinateFromNormal(normal);
             partTmp.id = partId;
             part.group.push_back(partTmp);
             hierarchy.interpreter[partId]=idNo;
+            groupId++;
         }
         vocabulary.push_back(part);
         idNo++;

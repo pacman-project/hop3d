@@ -274,7 +274,7 @@ void QGLVisualizer::draw3Dobjects(void){
 /// Draw clusters
 void QGLVisualizer::drawClusters(void){
     //mtxPointClouds.lock();
-    for (size_t layerNo=0;layerNo<hierarchy->viewDependentLayers.size()+1;layerNo++){
+    for (size_t layerNo=0;layerNo<hierarchy->viewDependentLayers.size()+2;layerNo++){
         for (size_t i = 0;i<clustersList[layerNo+1].size();i++){
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.partDist[layerNo+1]*double(i)-((double)cloudsListLayers[layerNo+1].size()/2)*config.partDist[layerNo+1]), 0, config.posZ[layerNo+1], 1};
             glPushMatrix();
@@ -524,8 +524,8 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
     int componentNo=0;
     if (layerNo==4){
         for (auto & partId : part.group){
-            Mat34 pose = part.pose.inverse();
-            double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, 0, 0, 0, 1};
+            Mat34 pose = partId.pose.inverse();
+            double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, 0, (double)(config.partDist[layerNo-1]*double(componentNo+1)), 0, 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
                 if (partId.id==-1){
@@ -534,6 +534,7 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
                 }
                 else{
                     //glColor3ub(200,200,200);
+                    //glCallList(backgroundList[hierarchy->viewDependentLayers.size()-1]);
                     glCallList(cloudsListLayers[hierarchy->viewDependentLayers.size()][partId.id]);
                 }
             glPopMatrix();

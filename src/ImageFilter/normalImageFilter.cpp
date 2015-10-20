@@ -252,7 +252,7 @@ void NormalImageFilter::getLastVDLayerParts(std::vector<ViewDependentPart>& part
 /// Fill in octet
 void NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDependentPart::Seq& dictionary, int u, int v, Octet& octet) const{
     for (int i=-1; i<2;i++){
-        for (int j=-1; j<2;j++){
+        for (int j=-1;j<2;j++){
             int id = findId(dictionary, octetsImage[u+i][v+j]);
             octet.partIds[i+1][j+1]=id;
             octet.filterPos[i+1][j+1]=octetsImage[u+i][v+j].filterPos[1][1];
