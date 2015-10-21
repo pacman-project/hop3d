@@ -103,6 +103,9 @@ private:
     /// compute Gaussian parameters
     void computeGaussian(const ViewIndependentPart::Seq& group, GaussianSE3& gauss, unsigned int x, unsigned int y, unsigned int z) const;
 
+    /// compute mean SE3 transformations from gaussians
+    void computeNeigbourPoses(ViewIndependentPart& part) const;
+
 private:
     /// Configuration of the module
     Config config;

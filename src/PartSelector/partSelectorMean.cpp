@@ -81,7 +81,7 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, Hierarc
         }
     }
     ViewIndependentPart::Seq newDictionary;
-    dictionary.clear();
+    //dictionary.clear();
     int centroidNo=0;
     for (auto it = clusters.begin(); it!=clusters.end();it++){
         if (it->size()>0){
@@ -139,7 +139,7 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy
         }
     }
     ViewDependentPart::Seq newDictionary;
-    dictionary.clear();
+    //dictionary.clear();
     int centroidNo=0;
     for (auto it = clusters.begin(); it!=clusters.end();it++){
         if (it->size()>0){
@@ -339,12 +339,14 @@ void PartSelectorMean::createUniqueClusters(const std::vector< std::set<int>>& c
         part.id = idNo;
         ViewDependentPart vdp = hierarchy.viewDependentLayers.back()[*cluster.begin()];//get view dependent part related to view-independent part
         Vec3 normal;
-        vdp.getNormal(normal,hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
+        hierarchy.getNormal(vdp,normal);
+        //vdp.getNormal(normal,hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
         part.pose = NormalImageFilter::coordinateFromNormal(normal);
         for (auto & partId : cluster){
             ViewIndependentPart partTmp;
             vdp = hierarchy.viewDependentLayers.back()[partId];//get view dependent part related to view-independent part
-            vdp.getNormal(normal, hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
+            //vdp.getNormal(normal, hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
+            hierarchy.getNormal(vdp,normal);
             partTmp.pose = NormalImageFilter::coordinateFromNormal(normal);
             partTmp.id = partId;
             part.group.push_back(partTmp);

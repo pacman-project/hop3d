@@ -48,19 +48,30 @@ void ViewIndependentPart::print() const{
     std::cout << "Parts in group: ";
     for (auto it = group.begin();it!=group.end();it++)
         std::cout << it->id << ", ";
-    std::cout << "\n";
-    /*for (size_t i=0; i<gaussians.size();i++){
+    std::cout << "\n Gaussians:\n";
+    for (size_t i=0; i<gaussians.size();i++){
         for (size_t j=0; j<gaussians.size();j++){
             for (size_t k=0; k<gaussians.size();k++){
                 if (partIds[i][j][k]!=-1){
-                    std::cout << "mean(" << i << ", " << j << "): ";
-                    std::cout << gaussians[i][j][k].mean.transpose() << "\n";
-                    std::cout << "covariance(" << i << ", " << j << "):\n";
+                    std::cout << "mean(" << i << ", " << j << ", " << k << "): ";
+                    std::cout << gaussians[i][j][k].mean.transpose() << ", ";
+                    std::cout << "covariance(" << i << ", " << j << ", " << k << "): ";
                     std::cout << gaussians[i][j][k].covariance << "\n";
                 }
             }
         }
-    }*/
+    }
+    std::cout << "\n neighbour pose\n";
+    for (size_t i=0; i<neighbourPoses.size();i++){
+        for (size_t j=0; j<neighbourPoses.size();j++){
+            for (size_t k=0; k<neighbourPoses.size();k++){
+                if (partIds[i][j][k]!=-1){
+                    std::cout << "neigbour pose(" << i << ", " << j << ", " << k << "): ";
+                    std::cout << neighbourPoses[i][j][k].matrix() << "\n";
+                }
+            }
+        }
+    }
 }
 
 /// compute distance between view-independent parts

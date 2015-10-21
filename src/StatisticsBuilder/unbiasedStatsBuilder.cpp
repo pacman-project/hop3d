@@ -72,10 +72,12 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<ViewIndependentPa
     int iterNo=1;
     for (auto it = groups.begin(); it!=groups.end(); it++){ //compute statistics
         ViewIndependentPart part;
+        part.pose = Mat34::Identity();
         computeGaussians(*it, part);
         part.partIds=it->back().partIds;//copy octet
         part.layerId = layerNo;
         part.id = (int)partId;
+        computeNeigbourPoses(part);
         partId++;
         dictionary.push_back(part);
         if (config.verbose==1){
@@ -89,6 +91,17 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<ViewIndependentPa
     }
 }
 
+/// compute mean SE3 transformations from gaussians
+void UnbiasedStatsBuilder::computeNeigbourPoses(ViewIndependentPart& part) const{
+    for (size_t i = 0; i<part.gaussians.size(); i++){
+        for (size_t j = 0; j<part.gaussians[i].size(); j++){
+            for (size_t k = 0; k<part.gaussians[i][j].size(); k++){
+                GaussianSE3 gauss;
+                part.neighbourPoses[i][j][k]=gauss.fromVector(part.gaussians[i][j][k].mean);
+            }
+        }
+    }
+}
 /// Compute Gaussians for the group of octets
 void UnbiasedStatsBuilder::computeGaussians(Octet::Seq& group, ViewDependentPart& part) const{
     for (size_t i = 0; i<part.gaussians.size(); i++){
@@ -143,13 +156,13 @@ void UnbiasedStatsBuilder::computeGaussian(const ViewIndependentPart::Seq& group
             mean(i)+=tmp(i);
         }
     }
-    gauss.mean = mean*(1.0/double(group.size()));
+    gauss.mean = mean/double(group.size());
     Mat66 cov; cov.setZero();
     for (auto it = group.begin(); it!=group.end(); it++){
         Vec6 pos = gauss.toVector(it->neighbourPoses[x][y][z]);//compute vec6 representation of SE3 transformation
         cov+=(pos-gauss.mean)*(pos-gauss.mean).transpose();
     }
-    gauss.covariance = cov*(1.0/double(group.size()));
+    gauss.covariance = cov/double(group.size());
 }
 
 hop3d::StatsBuilder* hop3d::createUnbiasedStatsBuilder(void) {

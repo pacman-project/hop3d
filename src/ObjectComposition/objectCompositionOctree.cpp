@@ -54,7 +54,7 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         }
         Mat34 part3D(Mat34::Identity());
         Vec3 normal; hierarchy.getNormal(part, normal);
-        part3D = NormalImageFilter::coordinateFromNormal(normal);
+        //part3D = NormalImageFilter::coordinateFromNormal(normal);
         Vec3 position(part.location.u, part.location.v, part.location.depth);
         camModel.getPoint(position, pos3d);
         part3D.translation() = pos3d;//set position of the part
@@ -97,12 +97,14 @@ void ObjectCompositionOctree::updateIds(int layerNo, const std::vector<ViewIndep
 
 /// find part in the vocabulary and return new id
 int ObjectCompositionOctree::findIdInVocabulary(const ViewIndependentPart& part, const std::vector<ViewIndependentPart>& vocabulary){
+    int partId=0;
     for (auto & vpart : vocabulary){
         for (auto & gpart : vpart.group){
             if (part.partIds == gpart.partIds){
-                return vpart.id;
+                return partId;
             }
         }
+        partId++;
     }
     std::cout << "Could not find part in the vocabulary!\n";
     getchar();
@@ -204,10 +206,10 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
 int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z, double scale){
     Mat34 pose(Mat34::Identity());
     pose(0,3) = scale*x+(scale/2.0); pose(1,3) = scale*y+(scale/2.0); pose(2,3) = scale*z+(scale/2.0);
-    if ((*octrees[layerNo]).at(x,y,z).id!=-1){
-        partVoxel.pose = (*octrees[layerNo]).at(x,y,z).pose;
-    }
-    else
+//    if ((*octrees[layerNo]).at(x,y,z).id!=-1){
+//        partVoxel.pose = (*octrees[layerNo]).at(x,y,z).pose;
+    //}
+    //else
         partVoxel.pose = pose;
     Mat34 partPoseInv(pose.inverse());
     int partsNo=0;
@@ -216,19 +218,19 @@ int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel
             for (int k=-1; k<2;k++){
                 if ((*octrees[layerNo]).at(x+i,y+j,z+k).id>=0){
                     //assign neighbouring ids
-                    partVoxel.partIds[i+1][j+1][k+1] = hierarchy.interpreter.at((*octrees[layerNo]).at(x+i,y+j,z+k).id);
+                    partVoxel.partIds[i+1][j+1][k+1] = (*octrees[layerNo]).at(x+i,y+j,z+k).id;//hierarchy.interpreter.at((*octrees[layerNo]).at(x+i,y+j,z+k).id);
                     // assign spatial relation
                     if ((*octrees[layerNo]).at(x+i,y+j,z+k).id!=-1){
-                        if (i==0&&j==0&&k==0){
-                            partVoxel.neighbourPoses[i+1][j+1][k+1] = (*octrees[layerNo]).at(x,y,z).pose;//set global pose
-                        }
-                        else {
+                        //if (i==0&&j==0&&k==0){
+                        //    partVoxel.neighbourPoses[i+1][j+1][k+1] = (*octrees[layerNo]).at(x,y,z).pose;//set global pose
+                        //}
+                        //else {
                             partVoxel.neighbourPoses[i+1][j+1][k+1] = partPoseInv*(*octrees[layerNo]).at(x+i,y+j,z+k).pose;//set relative pose
                             //std::cout << "partPoseInv \n" << partPoseInv.matrix()<< "\n";
                             //std::cout << "(*octrees[layerNo]).at(x+i,y+j,z+k).parts[0].pose\n" << (*octrees[layerNo]).at(x+i,y+j,z+k).parts[0].pose.matrix() <<"\n";
                             //std::cout << "partVoxel.neighbourPoses[i+1][j+1][k+1]\n" << partVoxel.neighbourPoses[i+1][j+1][k+1].matrix() << "\n";
                             //getchar();
-                        }
+                        //}
                     }
                     partsNo++;
                 }

@@ -372,16 +372,18 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
         for (size_t n = 0; n < part.partIds.size(); n++){
             for (size_t m = 0; m < part.partIds[n].size(); m++){
                 for (size_t l = 0; l < part.partIds[l].size(); l++){
-                    Mat34 rotonly(part.pose);
-                    rotonly(0,3)=0; rotonly(1,3)=0; rotonly(2,3)=0;
-                    Mat34 partPose = rotonly * part.neighbourPoses[n][m][l];
-                    Vec3 pos(partPose(0,3), partPose(1,3), partPose(2,3));
                     int id = part.partIds[n][m][l];
-                    if ((n==1)&&(m==1)&&(l==1)){
+                    Mat34 l4partPose = hierarchy.get()->viewIndependentLayers[0][id].pose;
+                    l4partPose(0,3)=0; l4partPose(1,3)=0; l4partPose(2,3)=0;
+                    //Mat34 rotonly(part.pose);
+                    //rotonly(0,3)=0; rotonly(1,3)=0; rotonly(2,3)=0;
+                    Mat34 partPose = part.neighbourPoses[n][m][l];
+                    Vec3 pos(partPose(0,3), partPose(1,3), partPose(2,3));
+                    /*if ((n==1)&&(m==1)&&(l==1)){
                         partPose = rotonly;
                         pos(0)=0; pos(1)=0; pos(2)=0;
                     }
-                    else if (id==-1){
+                    else */if (id==-1){
                         pos(0)=0.3*double(double(m)-1.0);
                         pos(1)=0.3*double(double(n)-1.0);
                         pos(2)=0.3*double(double(l)-1.0);
@@ -389,7 +391,7 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
                     double GLmatrot[16]={partPose(0,0), partPose(1,0), partPose(2,0), 0,
                                       partPose(0,1), partPose(1,1), partPose(2,1), 0,
                                       partPose(0,2), partPose(1,2), partPose(2,2), 0,
-                                      pos(0),pos(1),pos(2), 1};
+                                      partPose(0,3), partPose(1,3), partPose(2,3), 1};
                     if (id==-1){
                         GLmatrot[0]=1; GLmatrot[1]=0; GLmatrot[2]=0;
                         GLmatrot[4]=0; GLmatrot[5]=1; GLmatrot[6]=0;
@@ -411,7 +413,7 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
                             //std::cout << part.neighbourPoses[n][m][l].matrix() << "\n";
                             //getchar();
                             //glColor3ub(200,200,200);
-                            glCallList(cloudsListLayers[layerNo-2][id]);
+                            glCallList(cloudsListLayers[layerNo-3][id]);
                         }
                     glPopMatrix();
                 }
