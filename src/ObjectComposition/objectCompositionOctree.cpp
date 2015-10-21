@@ -54,14 +54,12 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         }
         Mat34 part3D(Mat34::Identity());
         Vec3 normal; hierarchy.getNormal(part, normal);
-        //part3D = NormalImageFilter::coordinateFromNormal(normal);
+        part3D = NormalImageFilter::coordinateFromNormal(normal);
         Vec3 position(part.location.u, part.location.v, part.location.depth);
         camModel.getPoint(position, pos3d);
         part3D.translation() = pos3d;//set position of the part
         /*Mat33 rot; normal2rot(normal, rot);
-        for (int i=0;i<3;i++)//and orientation
-            for (int j=0;j<3;j++)
-                part3D(i,j) = rot(i,j);
+
                 */
         partPosition = cameraPose * part3D;//global position of the part
         int x = int(partPosition(0,3)/config.voxelSize);
@@ -218,7 +216,7 @@ int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel
             for (int k=-1; k<2;k++){
                 if ((*octrees[layerNo]).at(x+i,y+j,z+k).id>=0){
                     //assign neighbouring ids
-                    partVoxel.partIds[i+1][j+1][k+1] = (*octrees[layerNo]).at(x+i,y+j,z+k).id;//hierarchy.interpreter.at((*octrees[layerNo]).at(x+i,y+j,z+k).id);
+                    partVoxel.partIds[i+1][j+1][k+1] = hierarchy.interpreter.at((*octrees[layerNo]).at(x+i,y+j,z+k).id);
                     // assign spatial relation
                     if ((*octrees[layerNo]).at(x+i,y+j,z+k).id!=-1){
                         //if (i==0&&j==0&&k==0){

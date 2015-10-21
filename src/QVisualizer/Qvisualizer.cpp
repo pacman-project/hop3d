@@ -373,17 +373,9 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
             for (size_t m = 0; m < part.partIds[n].size(); m++){
                 for (size_t l = 0; l < part.partIds[l].size(); l++){
                     int id = part.partIds[n][m][l];
-                    Mat34 l4partPose = hierarchy.get()->viewIndependentLayers[0][id].pose;
-                    l4partPose(0,3)=0; l4partPose(1,3)=0; l4partPose(2,3)=0;
-                    //Mat34 rotonly(part.pose);
-                    //rotonly(0,3)=0; rotonly(1,3)=0; rotonly(2,3)=0;
                     Mat34 partPose = part.neighbourPoses[n][m][l];
                     Vec3 pos(partPose(0,3), partPose(1,3), partPose(2,3));
-                    /*if ((n==1)&&(m==1)&&(l==1)){
-                        partPose = rotonly;
-                        pos(0)=0; pos(1)=0; pos(2)=0;
-                    }
-                    else */if (id==-1){
+                    if (id==-1){
                         pos(0)=0.3*double(double(m)-1.0);
                         pos(1)=0.3*double(double(n)-1.0);
                         pos(2)=0.3*double(double(l)-1.0);
@@ -401,19 +393,14 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
                     glPushMatrix();
                         glMultMatrixd(GLmatrot);
                         if (id==-1){
-                            //glColor3ub(100,50,50);
+                            glColor3ub(200,200,200);
                             glBegin(GL_POINTS);
                                 glVertex3d(pos(0), pos(1), pos(2));
                             glEnd();
-                            //glCallList(backgroundList[layerNo-3]);
                         }
                         else{
-                            //std::cout << "id " << id << "\n";
-                            //std::cout << n << " " << m << " " << l << "\n";
-                            //std::cout << part.neighbourPoses[n][m][l].matrix() << "\n";
-                            //getchar();
                             //glColor3ub(200,200,200);
-                            glCallList(cloudsListLayers[layerNo-3][id]);
+                            glCallList(cloudsListLayers[layerNo-2][id]);
                         }
                     glPopMatrix();
                 }
@@ -570,26 +557,46 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
         }
     }
     else {
-        /*for (auto itComp = part.group.begin(); itComp!=part.group.end();itComp++){
-            for (size_t n = 0; n < itComp->partIds.size(); n++){
-                for (size_t m = 0; m < itComp->partIds[n].size(); m++){
-                    Vec3 pos(config.pixelSize*itComp->gaussians[n][m].mean(0), config.pixelSize*itComp->gaussians[n][m].mean(1), itComp->gaussians[n][m].mean(2));
-                    if ((n==1)&&(m==1)){
-                        pos(0)=0; pos(1)=0; pos(2)=0;
+        for (auto itComp = part.group.begin(); itComp!=part.group.end();itComp++){
+            for (size_t n = 0; n < part.partIds.size(); n++){
+                for (size_t m = 0; m < part.partIds[n].size(); m++){
+                    for (size_t l = 0; l < part.partIds[l].size(); l++){
+                        int id = itComp->partIds[n][m][l];
+                        Mat34 partPose = itComp->neighbourPoses[n][m][l];
+                        Vec3 pos(partPose(0,3), partPose(1,3), partPose(2,3));
+                        if (id==-1){
+                            pos(0)=0.3*double(double(m)-1.0);
+                            pos(1)=0.3*double(double(n)-1.0);
+                            pos(2)=0.3*double(double(l)-1.0);
+                        }
+                        double GLmatrot[16]={partPose(0,0), partPose(1,0), partPose(2,0), 0,
+                                          partPose(0,1), partPose(1,1), partPose(2,1), 0,
+                                          partPose(0,2), partPose(1,2), partPose(2,2), 0,
+                                          partPose(0,3), partPose(1,3)+(double)(config.partDist[layerNo-1]*double(componentNo+1)), partPose(2,3), 1};
+                        if (id==-1){
+                            GLmatrot[0]=1; GLmatrot[1]=0; GLmatrot[2]=0;
+                            GLmatrot[4]=0; GLmatrot[5]=1; GLmatrot[6]=0;
+                            GLmatrot[8]=0; GLmatrot[9]=0; GLmatrot[10]=1;
+                            GLmatrot[12]=0; GLmatrot[13]=0; GLmatrot[14]=0;
+                        }
+                        glPushMatrix();
+                            glMultMatrixd(GLmatrot);
+                            if (id==-1){
+                                glColor3ub(200,200,200);
+                                glBegin(GL_POINTS);
+                                    glVertex3d(pos(0), pos(1)+(double)(config.partDist[layerNo-1]*double(componentNo+1)), pos(2));
+                                glEnd();
+                            }
+                            else{
+                                //glColor3ub(200,200,200);
+                                glCallList(cloudsListLayers[layerNo-2][id]);
+                            }
+                        glPopMatrix();
                     }
-                    double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(1), pos(0)+(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
-                    glPushMatrix();
-                        glMultMatrixd(GLmat);
-                        //glColor4d(config.clustersColor.red(), config.clustersColor.green(), config.clustersColor.blue(), config.clustersColor.alpha());
-                        int id = itComp->partIds[n][m];
-                        if ((layerNo==1)&&(itComp->partIds[n][m]==-1))
-                            id = 0;
-                        glCallList(cloudsListLayers[layerNo-1][id]);
-                    glPopMatrix();
                 }
             }
             componentNo++;
-        }*/
+        }
     }
     glPopMatrix();
     glEndList();
