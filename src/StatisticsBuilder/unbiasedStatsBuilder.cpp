@@ -106,10 +106,16 @@ void UnbiasedStatsBuilder::computeNeigbourPoses(ViewIndependentPart& part) const
 void UnbiasedStatsBuilder::computeGaussians(Octet::Seq& group, ViewDependentPart& part) const{
     for (size_t i = 0; i<part.gaussians.size(); i++){
         for (size_t j = 0; j<part.gaussians[i].size(); j++){
-            Gaussian3D gauss;
-            computeGaussian(group, gauss, (unsigned int)i, (unsigned int)j);
-            part.gaussians[i][j].mean = gauss.mean;
-            part.gaussians[i][j].covariance = gauss.covariance;
+            if (i==0&&j==0){
+                part.gaussians[i][j].mean = Vec3(0,0,0);
+                part.gaussians[i][j].covariance = Mat33::Identity();
+            }
+            else{
+                Gaussian3D gauss;
+                computeGaussian(group, gauss, (unsigned int)i, (unsigned int)j);
+                part.gaussians[i][j].mean = gauss.mean;
+                part.gaussians[i][j].covariance = gauss.covariance;
+            }
         }
     }
 }

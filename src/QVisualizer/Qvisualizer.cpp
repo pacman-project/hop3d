@@ -694,26 +694,29 @@ GLuint QGLVisualizer::createVILinksList(int destLayerNo){
             }
         }
         else {
-            /*int partNo=0;
-            for (auto it = hierarchy->viewDependentLayers[destLayerNo-1].begin(); it!=hierarchy->viewDependentLayers[destLayerNo-1].end(); it++){
-                std::vector<int> filterIds;
+            int partNo=0;
+            for (auto it = hierarchy->viewIndependentLayers[destLayerNo-4].begin(); it!=hierarchy->viewIndependentLayers[destLayerNo-4].end(); it++){
+                std::vector<int> prevPartIds;
                 for (size_t n = 0; n < it->partIds.size(); n++){
                     for (size_t m = 0; m < it->partIds[n].size(); m++){
-                        filterIds.push_back(it->partIds[n][m]);
+                        for (size_t l = 0; l < it->partIds[n][m].size(); l++){
+                            if (it->partIds[n][m][l]!=-1)
+                                prevPartIds.push_back(it->partIds[n][m][l]);
+                        }
                     }
                 }
-                auto itFilter = std::unique (filterIds.begin(), filterIds.end());
-                filterIds.resize( std::distance(filterIds.begin(),itFilter) );
-                for (size_t i=0;i<filterIds.size();i++){
-                    // position of the i-th filter
-                    Vec3 filterPos((double)(config.partDist[destLayerNo-1]*double(filterIds[i])-((double)cloudsListLayers[destLayerNo-1].size()/2)*config.partDist[destLayerNo-1]), 0, config.posZ[destLayerNo-1]);
-                    glVertex3d(filterPos(0), filterPos(1), filterPos(2));
+                auto itPrevPart = std::unique (prevPartIds.begin(), prevPartIds.end());
+                prevPartIds.resize( std::distance(prevPartIds.begin(),itPrevPart) );
+                for (size_t i=0;i<prevPartIds.size();i++){
+                    // position of the i-th l-1 layer part
+                    Vec3 prevPartPos((double)(config.partDist[destLayerNo-2]*double(prevPartIds[i])-((double)cloudsListLayers[destLayerNo-2].size()/2)*config.partDist[destLayerNo-2]), 0, config.posZ[destLayerNo-2]);
+                    glVertex3d(prevPartPos(0), prevPartPos(1), prevPartPos(2));
                     // position of the i-th part
-                    Vec3 partPos((double)(config.partDist[destLayerNo]*double(partNo)-((double)cloudsListLayers[destLayerNo].size()/2)*config.partDist[destLayerNo]), 0, config.posZ[destLayerNo]);
+                    Vec3 partPos((double)(config.partDist[destLayerNo-1]*double(partNo)-((double)cloudsListLayers[destLayerNo-1].size()/2)*config.partDist[destLayerNo-1]), 0, config.posZ[destLayerNo-1]);
                     glVertex3d(partPos(0), partPos(1), partPos(2));
                 }
                 partNo++;
-            }*/
+            }
         }
         glEnd();
     glEndList();
@@ -756,7 +759,7 @@ GLuint QGLVisualizer::createLinksList(int destLayerNo){
 
 /// Draw layer 2 layer links
 void QGLVisualizer::drawLayer2Layer(void){
-    for (int layerNo=1;layerNo<(int)hierarchy->viewDependentLayers.size()+2;layerNo++){
+    for (int layerNo=1;layerNo<(int)hierarchy->viewDependentLayers.size()+3;layerNo++){
         for (size_t i = 0;i<linksLists[layerNo].size();i++){
             glCallList(linksLists[layerNo][i]);
         }
