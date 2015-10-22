@@ -68,10 +68,10 @@ public:
     }
 
     /// compute distance between view dependent parts
-    static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters);
+    static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters, int distanceMetric);
 
     /// compute distance between view dependent parts
-    static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters);
+    static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters, int distanceMetric);
 
     ///get normal vector related to that part
     void getNormal(Vec3& normal, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters) const;

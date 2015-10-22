@@ -36,6 +36,7 @@ PartSelectorMean::Config::Config(std::string configFilename){
     group->FirstChildElement( "parameters" )->QueryIntAttribute("clustersFifthLayer", &clustersFifthLayer);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("clustersSixthLayer", &clustersSixthLayer);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("maxIter", &maxIter);
+    group->FirstChildElement( "parameters" )->QueryIntAttribute("distanceMetric", &distanceMetric);
 }
 
 /// Select parts from the initial vocabulary
@@ -208,10 +209,10 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
         for (auto itCentr = centroids.begin();itCentr!=centroids.end();itCentr++){//for each cluster
             double dist = 0;
             if (it->layerId==2){//compute distance from centroid
-                dist = ViewDependentPart::distance(*it,dictionary[*itCentr],hierarchy.firstLayer);
+                dist = ViewDependentPart::distance(*it,dictionary[*itCentr],hierarchy.firstLayer, config.distanceMetric);
             }
             else if (it->layerId==3){//compute distance from centroid
-                dist = ViewDependentPart::distance(*it,dictionary[*itCentr], hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
+                dist = ViewDependentPart::distance(*it,dictionary[*itCentr], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
             }
             if (dist<minDist){
                 minDist = dist;
@@ -283,10 +284,10 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
             for (auto itPart2 = itClust->begin(); itPart2!=itClust->end();itPart2++){//compute mean dist for each part as a centroid
                 double dist=0;
                 if (itPart->layerId==2){
-                    dist=ViewDependentPart::distance(*itPart,*itPart2,hierarchy.firstLayer);
+                    dist=ViewDependentPart::distance(*itPart,*itPart2,hierarchy.firstLayer, config.distanceMetric);
                 }
                 else if (itPart->layerId==3){
-                    dist=ViewDependentPart::distance(*itPart,*itPart2, hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
+                    dist=ViewDependentPart::distance(*itPart,*itPart2, hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
                 }
                 distSum+=dist;
             }

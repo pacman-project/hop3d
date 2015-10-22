@@ -111,19 +111,7 @@ void HOP3DBham::learn(){
                 imageFilterer->getLastVDLayerParts(parts);
                 //hierarchy.get()->printIds(parts[0]);
                 //hierarchy.get()->printIds(parts[1]);
-                //imageFilterer->getParts(hierarchy.get()->viewDependentLayers[1],layerNo, parts, categoryNo, objectNo, imageNo, cameraPose);
-                /*parts.push_back(hierarchy.get()->viewDependentLayers[1][2]);
-                parts.push_back(hierarchy.get()->viewDependentLayers[1][0]);
-                parts.push_back(hierarchy.get()->viewDependentLayers[1][1]);
                 //move octets into 3D space and update octree representation of the object
-                cameraPose(0,3)=0.015; cameraPose(1,3)=0.015; cameraPose(2,3)=0.015;
-                objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
-                cameraPose(0,3)=0.015; cameraPose(1,3)=0.015; cameraPose(2,3)=0.015;
-                objects.back()->update(0,parts, cameraPose, *depthCameraModel, *hierarchy);
-                parts.clear();
-                parts.push_back(hierarchy.get()->viewDependentLayers[1][3]);
-                parts.push_back(hierarchy.get()->viewDependentLayers[1][4]);
-                cameraPose(0,3)=0.225; cameraPose(1,3)=0.225; cameraPose(2,3)=0.225;*/
                 objects.back()->update(0, parts, cameraPose, *depthCameraModel, *hierarchy);
             }
             std::vector< std::set<int>> clustersTmp;

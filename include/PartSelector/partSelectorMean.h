@@ -60,6 +60,8 @@ public:
             int clustersSixthLayer;
             /// Clustering -- max number of iterations
             int maxIter;
+            /// Dictance measure
+            int distanceMetric;
     };
 
 private:

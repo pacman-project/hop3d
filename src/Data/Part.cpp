@@ -166,28 +166,64 @@ Mat33 ViewIndependentPart::coordinateFromNormal(const Vec3& _normal){
 }
 
 /// compute distance between view dependent parts
-double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters){
+double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters, int distanceMetric){
     if (partA.partIds==partB.partIds)//fast
         return 0;
     double sum=0;
     for (size_t i=0; i<partA.partIds.size();i++){
         for (size_t j=0; j<partA.partIds.size();j++){
+            double dotprod=0;
             if ((partA.partIds[i][j]==-1)&&(partB.partIds[i][j]==-1)){
-                sum+=0;
+                dotprod=0;
             }
             else if ((partA.partIds[i][j]==-1)||(partB.partIds[i][j]==-1)){
-                sum+=1;
+                dotprod=1;
             }
             else{
-                sum+=Filter::distance(filters[partA.partIds[i][j]], filters[partB.partIds[i][j]]);
+                dotprod=Filter::distance(filters[partA.partIds[i][j]], filters[partB.partIds[i][j]]);
             }
+            ///compute mahalanobis distance
+            if (i!=1&&j!=1){
+                if (distanceMetric==0){//dotproduct
+                    sum+=dotprod;
+                }
+                else {
+                    double mahalanobisDist;
+                    double euclDist;
+                    if (partA.gaussians[i][j].covariance(0,0)>0&&partB.gaussians[i][j].covariance(0,0)>0){
+                        // compute Mahalanobis distance
+                        mahalanobisDist = sqrt((partA.gaussians[i][j].mean-partB.gaussians[i][j].mean).transpose()*((partA.gaussians[i][j].covariance+partB.gaussians[i][j].covariance)/2.0).inverse()*(partA.gaussians[i][j].mean-partB.gaussians[i][j].mean));
+                        if (distanceMetric==2){//mahalanobis
+                            sum+=dotprod*mahalanobisDist;
+                        }
+                    }
+                    else {// compute Euclidean distance
+                        euclDist = sqrt((partA.gaussians[i][j].mean-partB.gaussians[i][j].mean).transpose()*(partA.gaussians[i][j].mean-partB.gaussians[i][j].mean));
+                        if (distanceMetric==1||distanceMetric==2){// Euclidean or Mahalanobis
+                            sum+=dotprod*euclDist;
+                        }
+                    }
+                }
+                /*if (partA.gaussians[i][j].covariance(0,0)>0&&partB.gaussians[i][j].covariance(0,0)>0){
+                                std::cout << "meanA: " << partA.gaussians[i][j].mean.transpose() << "\n";
+                                std::cout << "meanB: " << partB.gaussians[i][j].mean.transpose() << "\n";
+                                std::cout << "covA: " << partA.gaussians[i][j].covariance << "\n";
+                                std::cout << "covB: " << partB.gaussians[i][j].covariance << "\n";
+                                double mahalanobisDist = sqrt((partA.gaussians[i][j].mean-partB.gaussians[i][j].mean).transpose()*((partA.gaussians[i][j].covariance+partB.gaussians[i][j].covariance)/2.0).inverse()*(partA.gaussians[i][j].mean-partB.gaussians[i][j].mean));
+                                std::cout << "mahalanobisDist " << mahalanobisDist << "\n";
+                                std::cout << "dist " << sqrt(pow(partA.gaussians[i][j].mean(0)-partB.gaussians[i][j].mean(0),2.0)+pow(partA.gaussians[i][j].mean(1)-partB.gaussians[i][j].mean(1),2.0)+pow(partA.gaussians[i][j].mean(2)-partB.gaussians[i][j].mean(2),2.0)) << "\n";
+                                getchar();
+                            }*/
+            }
+            else
+                sum+=dotprod;
         }
     }
     return sum;
 }
 
 /// compute distance between view dependent parts
-double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters){
+double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters, int distanceMetric){
     if (partA.partIds==partB.partIds)//fast
         return 0;
     double sum=0;
@@ -201,7 +237,7 @@ double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDep
                     sum+=9;
                 }
                 else{
-                    sum+=distance(layer2vocabulary[partA.partIds[i][j]], layer2vocabulary[partB.partIds[i][j]], filters);
+                    sum+=distance(layer2vocabulary[partA.partIds[i][j]], layer2vocabulary[partB.partIds[i][j]], filters, distanceMetric);
                 }
             }
     return sum;
