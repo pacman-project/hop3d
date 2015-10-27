@@ -43,7 +43,7 @@ public:
     void getParts(int layerNo, std::vector<ViewIndependentPart>& parts) const;
 
     /// update ids in the octree using new vocabulary
-    void updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary);
+    void updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy);
 
     /// Destruction
     ~ObjectCompositionOctree(void);

@@ -158,7 +158,7 @@ void HOP3DBham::learn(){
     std::cout << "Dictionary size (5-th layer): " << newVocabulary.size() << "\n";
     hierarchy.get()->viewIndependentLayers[1]=newVocabulary;
     for (auto & object : objects){
-        object->updateIds(1, hierarchy.get()->viewIndependentLayers[1]);
+        object->updateIds(1, hierarchy.get()->viewIndependentLayers[1], *hierarchy);
     }
     //visualization
     notify(*hierarchy);

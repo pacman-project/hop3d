@@ -46,7 +46,7 @@ public:
     virtual void getParts(int layerNo, std::vector<ViewIndependentPart>& parts) const = 0;
 
     /// update ids in the octree using new vocabulary
-    virtual void updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary) = 0;
+    virtual void updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy) = 0;
 
     /// Virtual descrutor
     virtual ~ObjectComposition() {

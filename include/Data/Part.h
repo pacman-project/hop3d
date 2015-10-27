@@ -101,6 +101,8 @@ public:
 
     /// pose
     Mat34 pose;
+    /// offset for part realization (needed for reconstruction)
+    Mat34 offset;
     /// Part id
     int id;
     /// Layer id
@@ -127,7 +129,7 @@ public:
     void print() const;
 
     /// compute distance between view-independent parts
-    static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const std::map<int,int>& interpreter);
+    static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const std::map<int,int>& interpreter, Mat34& offset, int verbose);
 
     /// normalize vector
     static inline void normalizeVector(Vec3& normal){

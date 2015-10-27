@@ -80,13 +80,23 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
 }
 
 /// update ids in the octree using new vocabulary
-void ObjectCompositionOctree::updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary){
+void ObjectCompositionOctree::updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy){
     for (int idX=0; idX<(*octrees[layerNo]).size(); idX++){///to do z-slicing
         for (int idY=0; idY<(*octrees[layerNo]).size(); idY++){
             for (int idZ=0; idZ<(*octrees[layerNo]).size(); idZ++){
                 if ((*octrees[layerNo]).at(idX,idY,idZ).id>=0){
                     //find part in the vocabulary
+                    int idOld = (*octrees[layerNo])(idX,idY,idZ).id;
                     (*octrees[layerNo])(idX,idY,idZ).id = findIdInVocabulary((*octrees[layerNo]).at(idX,idY,idZ), vocabulary);
+                    if ((*octrees[layerNo])(idX,idY,idZ).layerId==5){//compute distance from centroid
+                        Mat34 off;
+                        ViewIndependentPart::distance(hierarchy.viewIndependentLayers[1][(*octrees[layerNo])(idX,idY,idZ).id], (*octrees[layerNo])(idX,idY,idZ), hierarchy.interpreter, off, 0);
+                        (*octrees[layerNo])(idX,idY,idZ).offset = off;
+                        //std::cout << "old id " << idOld << ", new id " << (*octrees[layerNo])(idX,idY,idZ).id << "\n";
+                        //std::cout << "offset \n" << (*octrees[layerNo])(idX,idY,idZ).offset.matrix() << "\n";
+                        //(*octrees[layerNo])(idX,idY,idZ).offset=Mat34::Identity();
+                        //getchar();
+                    }
                 }
             }
         }

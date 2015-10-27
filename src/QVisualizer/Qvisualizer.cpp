@@ -399,9 +399,12 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
                             glEnd();
                         }
                         else{
+                            //this->drawAxis(0.5);
                             //glColor3ub(200,200,200);
                             glCallList(cloudsListLayers[layerNo-2][id]);
                         }
+                        if (n==1&&m==1&&l==1)
+                            this->drawAxis(0.5);
                     glPopMatrix();
                 }
             }
@@ -487,10 +490,13 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
         for (auto & part : parts){
             /*std::cout << "part no " << partNo <<"\n";
             std::cout << "part id " << part.id <<"\n";
-            std::cout << "part pose \n" << part.pose.matrix() <<"\n";*/
+            //std::cout << "part pose \n" << part.pose.matrix() <<"\n";
+            std::cout << "part.offset\n" << part.offset.matrix() << "\n";*/
             partNo++;
-            Vec3 pos(part.pose(0,3), part.pose(1,3), part.pose(2,3));
-            double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0)-initPose(0), pos(1)-initPose(1), pos(2)-initPose(2), 1};
+
+            Mat34 pose = part.pose*part.offset;
+            Vec3 pos(pose(0,3), pose(1,3), pose(2,3));
+            double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(1,2), 0, pose(0,2), pose(1,2), pose(2,2), 0, pos(0)-initPose(0), pos(1)-initPose(1), pos(2)-initPose(2), 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
                 //glCallList(backgroundList[1]);
@@ -558,44 +564,45 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
     }
     else {
         for (auto itComp = part.group.begin(); itComp!=part.group.end();itComp++){
-            for (size_t n = 0; n < part.partIds.size(); n++){
-                for (size_t m = 0; m < part.partIds[n].size(); m++){
-                    for (size_t l = 0; l < part.partIds[l].size(); l++){
-                        int id = itComp->partIds[n][m][l];
-                        Mat34 partPose = itComp->neighbourPoses[n][m][l];
-                        Vec3 pos(partPose(0,3), partPose(1,3), partPose(2,3));
-                        if (id==-1){
-                            pos(0)=0.3*double(double(m)-1.0);
-                            pos(1)=0.3*double(double(n)-1.0);
-                            pos(2)=0.3*double(double(l)-1.0);
-                        }
-                        double GLmatrot[16]={partPose(0,0), partPose(1,0), partPose(2,0), 0,
-                                          partPose(0,1), partPose(1,1), partPose(2,1), 0,
-                                          partPose(0,2), partPose(1,2), partPose(2,2), 0,
-                                          partPose(0,3), partPose(1,3)+(double)(config.partDist[layerNo-1]*double(componentNo+1)), partPose(2,3), 1};
-                        if (id==-1){
-                            GLmatrot[0]=1; GLmatrot[1]=0; GLmatrot[2]=0;
-                            GLmatrot[4]=0; GLmatrot[5]=1; GLmatrot[6]=0;
-                            GLmatrot[8]=0; GLmatrot[9]=0; GLmatrot[10]=1;
-                            GLmatrot[12]=0; GLmatrot[13]=0; GLmatrot[14]=0;
-                        }
-                        glPushMatrix();
-                            glMultMatrixd(GLmatrot);
+                for (size_t n = 0; n < part.partIds.size(); n++){
+                    for (size_t m = 0; m < part.partIds[n].size(); m++){
+                        for (size_t l = 0; l < part.partIds[l].size(); l++){
+                            int id = itComp->partIds[n][m][l];
+                            Mat34 partPose = itComp->neighbourPoses[n][m][l];
+                            Vec3 pos(partPose(0,3), partPose(1,3), partPose(2,3));
                             if (id==-1){
-                                glColor3ub(200,200,200);
-                                glBegin(GL_POINTS);
-                                    glVertex3d(pos(0), pos(1)+(double)(config.partDist[layerNo-1]*double(componentNo+1)), pos(2));
-                                glEnd();
+                                pos(0)=0.3*double(double(m)-1.0);
+                                pos(1)=0.3*double(double(n)-1.0);
+                                pos(2)=0.3*double(double(l)-1.0);
                             }
-                            else{
-                                //glColor3ub(200,200,200);
-                                glCallList(cloudsListLayers[layerNo-2][id]);
+                            double GLmatrot[16]={partPose(0,0), partPose(1,0), partPose(2,0), 0,
+                                              partPose(0,1), partPose(1,1), partPose(2,1), 0,
+                                              partPose(0,2), partPose(1,2), partPose(2,2), 0,
+                                              partPose(0,3), partPose(1,3)+(double)(config.partDist[layerNo-1]*double(componentNo+1)), partPose(2,3), 1};
+                            if (id==-1){
+                                GLmatrot[0]=1; GLmatrot[1]=0; GLmatrot[2]=0;
+                                GLmatrot[4]=0; GLmatrot[5]=1; GLmatrot[6]=0;
+                                GLmatrot[8]=0; GLmatrot[9]=0; GLmatrot[10]=1;
+                                GLmatrot[12]=0; GLmatrot[13]=0; GLmatrot[14]=0;
                             }
-                        glPopMatrix();
+                            glPushMatrix();
+                                glMultMatrixd(GLmatrot);
+                                if (id==-1){
+                                    glColor3ub(200,200,200);
+                                    glBegin(GL_POINTS);
+                                        glVertex3d(pos(0), pos(1)+(double)(config.partDist[layerNo-1]*double(componentNo+1)), pos(2));
+                                    glEnd();
+                                }
+                                else{
+                                    //this->drawAxis(0.5);
+                                    //glColor3ub(200,200,200);
+                                    glCallList(cloudsListLayers[layerNo-2][id]);
+                                }
+                            glPopMatrix();
+                        }
                     }
                 }
-            }
-            componentNo++;
+                componentNo++;
         }
     }
     glPopMatrix();
