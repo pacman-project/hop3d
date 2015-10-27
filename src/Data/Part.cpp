@@ -75,7 +75,7 @@ void ViewIndependentPart::print() const{
 }
 
 /// compute distance between view-independent parts
-double ViewIndependentPart::distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const std::map<int,int>& interpreter, Mat34& offset, int verbose){
+double ViewIndependentPart::distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset, int verbose){
     if (partA.partIds==partB.partIds){
         offset = Mat34::Identity();
         return 0;
@@ -132,9 +132,9 @@ double ViewIndependentPart::distance(const ViewIndependentPart& partA, const Vie
         std::cout << "partBpose:\n" << partBpose.matrix() << "\n";
     }
     offset = partApose.inverse()*partBpose;
-//    offset(0,3) = meanPosA(0)-meanPosB(0);
-//    offset(1,3) = meanPosA(1)-meanPosB(1);
-  //  offset(2,3) = meanPosA(2)-meanPosB(2);
+    /*offset(0,3) = meanPosA(0)-meanPosB(0);
+    offset(1,3) = meanPosA(1)-meanPosB(1);
+    offset(2,3) = meanPosA(2)-meanPosB(2);*/
     if (verbose){
         std::cout << "offset:\n" << offset.matrix() << "\n";
         getchar();

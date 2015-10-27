@@ -198,7 +198,7 @@ public:
     /// number of images
     size_t imagesNo;
     /// prefix
-    std::string prefix;
+    std::string filename;
 
     ImagesDataset(void){}
 

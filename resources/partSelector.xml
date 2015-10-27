@@ -10,5 +10,5 @@
 		  1 -> dot product of normals and Euclidean distance
 		  2 -> dot product of normals and Mahalanobis distance
     -->
-    <parameters verbose="1" distanceMetric="2" clustersSecondLayer="20" clustersThirdLayer="15" clustersFifthLayer="5" clustersSixthLayer="5" maxIter="10"></parameters>
+    <parameters verbose="1" distanceMetric="2" clustersSecondLayer="20" clustersThirdLayer="15" clustersFifthLayer="7" clustersSixthLayer="5" maxIter="10"></parameters>
   </PartSelector>
