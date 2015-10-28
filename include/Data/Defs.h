@@ -219,17 +219,17 @@ public:
 };
 
 /// Dataset
-class Dataset{
+class DatasetInfo{
 public:
     /// set of Datasets
-    typedef std::vector<Dataset> Seq;
+    typedef std::vector<DatasetInfo> Seq;
 
     /// set of objects per category
     std::vector<ObjectsDataset> categories;
 
-    Dataset(void){}
+    DatasetInfo(void){}
 
-    Dataset(int categoriesNo) {
+    DatasetInfo(int categoriesNo) {
         categories.resize(categoriesNo);
     };
 };

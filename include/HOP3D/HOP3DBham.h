@@ -14,6 +14,7 @@
 #include "PartSelector/partSelectorMean.h"
 #include "ImageFilter/depthImageFilter.h"
 #include "ImageFilter/normalImageFilter.h"
+#include "Dataset/datasetBoris.h"
 #include "Utilities/depthSensorModel.h"
 #include "ObjectComposition/objectCompositionOctree.h"
 #ifdef QVisualizerBuild
@@ -69,10 +70,16 @@ public:
             std::string selectorConfig;
             /// image filterer config filename
             std::string filtererConfig;
+            /// filter type
+            int filterType;
             /// object composition config filename
             std::string compositionConfig;
             /// camera config filename
             std::string cameraConfig;
+            /// dataset config filename
+            std::string datasetConfig;
+            /// dataset type
+            int datasetType;
     };
 
 private:
@@ -87,6 +94,9 @@ private:
 
     /// Image Filterer
     ImageFilter *imageFilterer;
+
+    /// Image Filterer
+    Dataset *dataset;
 
     ///structure to store hierarchy
     std::unique_ptr<Hierarchy> hierarchy;

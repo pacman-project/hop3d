@@ -21,7 +21,7 @@ namespace hop3d {
     ImageFilter* createNormalImageFilter(std::string config, std::string sensorConfig);
 
 
-/// Map implementation
+/// Image filter implementation
 class NormalImageFilter: public ImageFilter {
     /// response: id, response value
     typedef std::pair<int,double> Response;

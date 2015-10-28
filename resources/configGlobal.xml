@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+  <!-- dataset configuration -->
+  <!--type:
+	0 - Boris dataset-->
+  <Dataset datasetType="0" configFilename="datasetBoris.xml">
+  </Dataset>
+  
   <!-- filter configuration -->
   <!--type:
 	0 - depth patch

@@ -12,7 +12,7 @@
 
 namespace hop3d {
 
-/// Map interface
+/// Image filterer interface
 class ImageFilter {
 public:
 
@@ -29,7 +29,7 @@ public:
             name(_name), type(_type) {
     }
 
-    /// Name of the map
+    /// Name of the filterer
     virtual const std::string& getName() const = 0;
 
     /// compute set of octets from set of the depth images
@@ -55,10 +55,10 @@ public:
     }
 
 protected:
-    /// Map name
+    /// Filterer name
     const std::string name;
 
-    /// Map type
+    /// Filterer type
     Type type;
 };
 }

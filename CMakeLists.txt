@@ -23,6 +23,8 @@ option(BUILD_HOP3D_STATISTICS "Build HOP3D statistics builder library" ON)
 mark_as_advanced(BUILD_HOP3D_STATISTICS)
 option(BUILD_HOP3D_PART_SELECTOR "Build HOP3D part selector library" ON)
 mark_as_advanced(BUILD_HOP3D_PART_SELECTOR)
+option(BUILD_HOP3D_DATASET "Build HOP3D dataset library" ON)
+mark_as_advanced(BUILD_HOP3D_DATASET)
 option(BUILD_HOP3D_OBJECT_COMPOSITION "Build HOP3D object composition library" ON)
 mark_as_advanced(BUILD_HOP3D_OBJECT_COMPOSITION)
 option(BUILD_VISUALIZATION_MODULE "Build HOP3D visualization OpenGL3.0" ON)
@@ -412,6 +414,25 @@ endif(BUILD_HOP3D AND BUILD_VISUALIZATION_QT)
 
 ###############################################################################
 #
+# HOP3D Dataset library
+#
+###############################################################################
+
+if(BUILD_HOP3D AND BUILD_HOP3D_DATASET)
+        file(GLOB DATASET_SOURCES
+            "${CMAKE_SOURCE_DIR}/src/Dataset/*.cpp"
+        )
+        file(GLOB DATASET_HEADERS
+            "${CMAKE_SOURCE_DIR}/include/Dataset/*.h"
+        )
+        ADD_LIBRARY(Dataset STATIC ${DATASET_SOURCES} ${DATASET_HEADERS})
+        TARGET_LINK_LIBRARIES(Dataset tinyxml2)
+        INSTALL(TARGETS Dataset RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
+        INSTALL(FILES ${DATASET_HEADERS} DESTINATION include/hop3d/Dataset/)
+endif(BUILD_HOP3D AND BUILD_HOP3D_DATASET)
+
+###############################################################################
+#
 # HOP3D library
 #
 ###############################################################################
@@ -424,7 +445,7 @@ if(BUILD_HOP3D)
             "${CMAKE_SOURCE_DIR}/include/HOP3D/*.h"
         )
         ADD_LIBRARY(LIBHOP3D STATIC ${LIBHOP3D_SOURCES} ${LIBHOP3D_HEADERS})
-        TARGET_LINK_LIBRARIES(LIBHOP3D tinyxml2 statisticsBuilder Utilities partSelector imageFilter objectComposition)
+        TARGET_LINK_LIBRARIES(LIBHOP3D tinyxml2 Dataset statisticsBuilder Utilities partSelector imageFilter objectComposition)
         INSTALL(TARGETS LIBHOP3D RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${LIBHOP3D_HEADERS} DESTINATION include/hop3D/HOP3D/)
 endif(BUILD_HOP3D)

@@ -22,15 +22,20 @@ HOP3DBham::HOP3DBham(std::string _config) :
     if (configXML.ErrorID()){
         std::cout << "unable to load global config file.\n";
     }
-    int filterType;
-    configXML.FirstChildElement( "Filterer" )->QueryIntAttribute("filterType", &filterType);
 
-    if (filterType==hop3d::ImageFilter::FILTER_DEPTH){
+    if (config.filterType==hop3d::ImageFilter::FILTER_DEPTH){
         imageFilterer = hop3d::createDepthImageFilter(config.filtererConfig);
         imageFilterer->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
     }
-    else if (filterType==hop3d::ImageFilter::FILTER_NORMAL){
+    else if (config.filterType==hop3d::ImageFilter::FILTER_NORMAL){
         imageFilterer = hop3d::createNormalImageFilter(config.filtererConfig, config.cameraConfig);
+    }
+
+    if (config.datasetType==hop3d::Dataset::DATASET_BORIS){
+        dataset = hop3d::createBorisDataset(config.datasetConfig,config.cameraConfig);
+    }
+    else {// default dataset
+        dataset = hop3d::createBorisDataset(config.datasetConfig,config.cameraConfig);
     }
 }
 
@@ -65,6 +70,10 @@ HOP3DBham::Config::Config(std::string configFilename){
     filtererConfig = (config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
     compositionConfig = (config.FirstChildElement( "ObjectComposition" )->Attribute( "configFilename" ));
     cameraConfig = (config.FirstChildElement( "CameraModel" )->Attribute( "configFilename" ));
+    datasetConfig = (config.FirstChildElement( "Dataset" )->Attribute( "configFilename" ));
+
+    config.FirstChildElement( "Filterer" )->QueryIntAttribute("filterType", &filterType);
+    config.FirstChildElement( "Dataset" )->QueryIntAttribute("datasetType", &datasetType);
 }
 
 /// learining from the dataset
@@ -97,7 +106,7 @@ void HOP3DBham::learn(){
 
     //represent all images in parts from 3rd layer
     imageFilterer->computeImages3rdLayer(hierarchy.get()->viewDependentLayers.back());
-    Dataset dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
+    DatasetInfo dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
     std::vector< std::set<int>> clusters;
     for (size_t categoryNo=0;categoryNo<dataset.categories.size();categoryNo++){//for each category
         for (size_t objectNo=0;objectNo<dataset.categories[categoryNo].objects.size();objectNo++){//for each object
