@@ -197,8 +197,11 @@ class ImagesDataset{
 public:
     /// number of images
     size_t imagesNo;
+    /// name
+    std::string name;
+
     /// prefix
-    std::string filename;
+    std::vector<std::string> images;
 
     ImagesDataset(void){}
 
@@ -210,6 +213,9 @@ class ObjectsDataset{
 public:
     /// set of images per objects
     std::vector<ImagesDataset> objects;
+
+    /// category name
+    std::string name;
 
     ObjectsDataset(void){}
 

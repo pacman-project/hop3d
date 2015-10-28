@@ -27,9 +27,9 @@ option(BUILD_HOP3D_DATASET "Build HOP3D dataset library" ON)
 mark_as_advanced(BUILD_HOP3D_DATASET)
 option(BUILD_HOP3D_OBJECT_COMPOSITION "Build HOP3D object composition library" ON)
 mark_as_advanced(BUILD_HOP3D_OBJECT_COMPOSITION)
-option(BUILD_VISUALIZATION_MODULE "Build HOP3D visualization OpenGL3.0" ON)
+option(BUILD_VISUALIZATION_MODULE "Build HOP3D visualization OpenGL3.0" OFF)
 mark_as_advanced(BUILD_VISUALIZATION_MODULE)
-option(BUILD_VISUALIZATION_QT "Build HOP3D visualization QT" OFF)
+option(BUILD_VISUALIZATION_QT "Build HOP3D visualization QT" ON)
 mark_as_advanced(BUILD_VISUALIZATION_QT)
 if (BUILD_VISUALIZATION_MODULE AND BUILD_VISUALIZATION_QT)
 message(FATAL_ERROR "Please select one visualizer: Qt or OpenGL3.0")
@@ -87,26 +87,6 @@ if (BUILD_VISUALIZATION_QT)
     link_directories(${QGLVIEWER_LIBRARY})
 endif (BUILD_VISUALIZATION_QT)
 
-#Adding flan to the project
-#find_package(PkgConfig)
-#pkg_check_modules(PC_FLANN flann)
-#set(FLANN_DEFINITIONS ${PC_FLANN_CFLAGS_OTHER})
-
-#find_path(FLANN_INCLUDE_DIR flann/flann.hpp
-#    HINTS ${PC_FLANN_INCLUDEDIR} ${PC_FLANN_INCLUDE_DIRS})
-
-#find_library(FLANN_LIBRARY flann
-#    HINTS ${PC_FLANN_LIBDIR} ${PC_FLANN_LIBRARY_DIRS})
-
-#set(FLANN_INCLUDE_DIRS ${FLANN_INCLUDE_DIR})
-#set(FLANN_LIBRARIES ${FLANN_LIBRARY})
-
-#include(FindPackageHandleStandardArgs)
-#find_package_handle_standard_args(Flann DEFAULT_MSG
-#    FLANN_LIBRARY FLANN_INCLUDE_DIR)
-
-#mark_as_advanced(FLANN_LIBRARY FLANN_INCLUDE_DIR)
-
 
 #Adding OpenMP
 IF (OPENMP_FOUND)
@@ -124,6 +104,12 @@ INCLUDE_DIRECTORIES( ${EIGEN_INCLUDE} ${PROJ_INCLUDES} )
 FIND_PACKAGE(OpenCV REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
+
+# PCL
+FIND_PACKAGE(PCL REQUIRED)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 
 find_package(GLEW REQUIRED)
 if (GLEW_FOUND)
@@ -307,7 +293,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_UTILITIES)
         )
 
         ADD_LIBRARY(Utilities STATIC ${UTILITIES_SOURCES} ${UTILITIES_HEADERS})
-        target_link_libraries(Utilities tinyxml2 opencv_core opencv_highgui opencv_contrib ${Boost_LIBRARIES})
+        target_link_libraries(Utilities tinyxml2 opencv_core opencv_highgui opencv_contrib boost_filesystem boost_system)
         INSTALL(TARGETS Utilities RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${UTILITIES_HEADERS} DESTINATION include/hop3d/Utilities/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_UTILITIES)
@@ -426,7 +412,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_DATASET)
             "${CMAKE_SOURCE_DIR}/include/Dataset/*.h"
         )
         ADD_LIBRARY(Dataset STATIC ${DATASET_SOURCES} ${DATASET_HEADERS})
-        TARGET_LINK_LIBRARIES(Dataset tinyxml2)
+        TARGET_LINK_LIBRARIES(Dataset tinyxml2 ${PCL_LIBRARIES})
         INSTALL(TARGETS Dataset RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${DATASET_HEADERS} DESTINATION include/hop3d/Dataset/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_DATASET)

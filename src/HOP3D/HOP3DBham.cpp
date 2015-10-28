@@ -37,6 +37,9 @@ HOP3DBham::HOP3DBham(std::string _config) :
     else {// default dataset
         dataset = hop3d::createBorisDataset(config.datasetConfig,config.cameraConfig);
     }
+    cv::Mat depthImage;
+    dataset->getDepthImage(0,0,0,depthImage);
+    getchar();
 }
 
 #ifdef QVisualizerBuild

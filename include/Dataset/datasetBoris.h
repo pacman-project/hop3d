@@ -50,6 +50,10 @@ public:
             DatasetInfo dataset;
             // verbose
             int verbose;
+            // dataset type
+            std::string type;
+            // dataset path
+            std::string path;
     };
 
 private:
@@ -58,6 +62,9 @@ private:
 
     /// sensor model
     DepthSensorModel sensorModel;
+
+    /// read depth image from dataset
+    void readDepthImage(int categoryNo, int objectNo, int imageNo, cv::Mat& depthImage) const;
 };
 
 }
