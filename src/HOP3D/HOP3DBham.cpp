@@ -30,16 +30,12 @@ HOP3DBham::HOP3DBham(std::string _config) :
     else if (config.filterType==hop3d::ImageFilter::FILTER_NORMAL){
         imageFilterer = hop3d::createNormalImageFilter(config.filtererConfig, config.cameraConfig);
     }
-
     if (config.datasetType==hop3d::Dataset::DATASET_BORIS){
         dataset = hop3d::createBorisDataset(config.datasetConfig,config.cameraConfig);
     }
     else {// default dataset
         dataset = hop3d::createBorisDataset(config.datasetConfig,config.cameraConfig);
     }
-    cv::Mat depthImage;
-    dataset->getDepthImage(0,0,0,depthImage);
-    getchar();
 }
 
 #ifdef QVisualizerBuild
@@ -88,6 +84,7 @@ void HOP3DBham::learn(){
     std::vector<cv::Mat> vecImages;
     hop3d::Reader reader;
     reader.readMultipleImages("../../resources/depthImages",vecImages);
+    dataset->getDepthImage(0,0,1,vecImages[0]);
     std::vector<hop3d::Octet> octets;
     int startId = (int)hierarchy.get()->firstLayer.size();
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){

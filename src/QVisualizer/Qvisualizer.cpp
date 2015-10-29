@@ -376,9 +376,9 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
                     Mat34 partPose = part.neighbourPoses[n][m][l];
                     Vec3 pos(partPose(0,3), partPose(1,3), partPose(2,3));
                     if (id==-1){
-                        pos(0)=0.3*double(double(m)-1.0);
-                        pos(1)=0.3*double(double(n)-1.0);
-                        pos(2)=0.3*double(double(l)-1.0);
+                        pos(0)=config.voxelSize*double(double(m)-1.0);
+                        pos(1)=config.voxelSize*double(double(n)-1.0);
+                        pos(2)=config.voxelSize*double(double(l)-1.0);
                     }
                     double GLmatrot[16]={partPose(0,0), partPose(1,0), partPose(2,0), 0,
                                       partPose(0,1), partPose(1,1), partPose(2,1), 0,
@@ -403,8 +403,8 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
                             //glColor3ub(200,200,200);
                             glCallList(cloudsListLayers[layerNo-2][id]);
                         }
-                        if (n==1&&m==1&&l==1)
-                            this->drawAxis(0.5);
+                        //if (n==1&&m==1&&l==1)
+                            //this->drawAxis(0.5);
                     glPopMatrix();
                 }
             }
@@ -571,9 +571,9 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
                             Mat34 partPose = itComp->neighbourPoses[n][m][l];
                             Vec3 pos(partPose(0,3), partPose(1,3), partPose(2,3));
                             if (id==-1){
-                                pos(0)=0.3*double(double(m)-1.0);
-                                pos(1)=0.3*double(double(n)-1.0);
-                                pos(2)=0.3*double(double(l)-1.0);
+                                pos(0)=config.voxelSize*double(double(m)-1.0);
+                                pos(1)=config.voxelSize*double(double(n)-1.0);
+                                pos(2)=config.voxelSize*double(double(l)-1.0);
                             }
                             double GLmatrot[16]={partPose(0,0), partPose(1,0), partPose(2,0), 0,
                                               partPose(0,1), partPose(1,1), partPose(2,1), 0,

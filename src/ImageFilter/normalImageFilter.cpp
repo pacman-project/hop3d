@@ -31,7 +31,7 @@ NormalImageFilter::Config::Config(std::string configFilename){
     model->FirstChildElement( "parameters" )->QueryIntAttribute("ringsNo", &ringsNo);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("filterSize", &filterSize);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
-    model->FirstChildElement( "parameters" )->QueryDoubleAttribute("scalingToMeters", &scalingToMeters);
+    //model->FirstChildElement( "parameters" )->QueryDoubleAttribute("scalingToMeters", &scalingToMeters);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("backgroundThreshold", &backgroundThreshold);
 
     if (verbose>0){
@@ -39,7 +39,7 @@ NormalImageFilter::Config::Config(std::string configFilename){
         std::cout << "Rings no.: " << ringsNo << "\n";
         std::cout<< "Filter size in pixels: " << filterSize << std::endl;
         std::cout<< "Verbose: " << verbose << std::endl;
-        std::cout<< "Scaling of raw int16 depth values into meters: " << scalingToMeters << std::endl;
+        //std::cout<< "Scaling of raw int16 depth values into meters: " << scalingToMeters << std::endl;
     }
 
  }
@@ -67,9 +67,12 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::S
     std::vector< std::vector<hop3d::PointNormal> > cloudOrd(depthImage.rows, std::vector<hop3d::PointNormal> (depthImage.cols));
     /// response: id, response value
     std::vector< std::vector<Response> > responseImage(depthImage.rows, std::vector<Response>(depthImage.cols,std::make_pair<int, double>(-1,-1.0)));
+    double scale = 1/sensorModel.config.depthImageScale;
+    if (config.verbose>1)
+        imshow( "Input image", depthImage );
     for (int i=0;i<depthImage.rows;i++){
         for (int j=0;j<depthImage.cols;j++){
-            sensorModel.getPoint(i, j, depthImage.at<uint16_t>(i,j)*config.scalingToMeters, cloudOrd[i][j].position);
+            sensorModel.getPoint(i, j, depthImage.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
         }
     }
     cv::Mat idsImage(depthImage.rows,depthImage.cols, cv::DataType<uchar>::type,cv::Scalar(0));
@@ -107,8 +110,8 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::S
         std::cout << "Octets extraction takes " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
     }
     if (config.verbose==2){
-        namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-        imshow( "Display window", idsImage );
+        namedWindow( "Ids image", cv::WINDOW_AUTOSIZE );// Create a window for display.
+        imshow( "Ids image", idsImage );
         cv::waitKey(0);
         getchar();
     }

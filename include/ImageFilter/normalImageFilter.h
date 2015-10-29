@@ -79,8 +79,6 @@ public:
             int filterSize;
             // displaying variables and images for debugging
             int verbose;
-            //scaling of raw int16 depth values into meters
-            double scalingToMeters;
             //depth sensor model filenames
             std::string sensorFilename;
             // compute response if points no in filter window is bigger than threshold

@@ -31,7 +31,7 @@
   </ObjectComposition>
 
 <!--  depth camera model -->
-  <CameraModel configFilename="KinectModel.xml">
+  <CameraModel configFilename="CarmineModel.xml">
   </CameraModel>
   
 <!--   QVisualizer configuration -->

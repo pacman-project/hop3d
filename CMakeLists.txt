@@ -483,7 +483,7 @@ if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_NORMAL_FILTERER)
         SET(DEMO_SOURCES ./src/Apps/DemoNormalFilterer/demoNormalFilterer.cpp)
         ADD_EXECUTABLE(demoNormalFilterer ${DEMO_SOURCES})
 #        add_dependencies(demoVisualizer Map)
-        TARGET_LINK_LIBRARIES(demoNormalFilterer imageFilter tinyxml2 boost_system)
+        TARGET_LINK_LIBRARIES(demoNormalFilterer imageFilter Dataset tinyxml2 boost_system)
         INSTALL(TARGETS demoNormalFilterer RUNTIME DESTINATION bin)
 endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_NORMAL_FILTERER)
 

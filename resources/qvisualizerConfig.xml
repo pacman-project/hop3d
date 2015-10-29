@@ -3,18 +3,18 @@
   <VisualizerConfig>
   	<name>QGLVisualizer</name>
 	<parameters verbose="0"></parameters>
-	<hierarchy pixelSize="0.01" filterDepthScale="0.01" draw3Dobjects="true"></hierarchy>
-	<layer1 dist="0.12" posZ="0.1"></layer1>
-	<layer2 dist="0.7" posZ="1.6"></layer2>
-	<layer3 dist="1.28" posZ="3.2"></layer3>
-	<layer4 dist="1.28" posZ="4.9"></layer4>
-	<layer5 dist="2.28" posZ="7.5"></layer5>
+	<hierarchy pixelSize="0.001" filterDepthScale="0.001" draw3Dobjects="true" voxelSize="0.02"></hierarchy>
+	<layer1 dist="0.03" posZ="0.1"></layer1>
+	<layer2 dist="0.1" posZ="0.5"></layer2>
+	<layer3 dist="0.2" posZ="1.0"></layer3>
+	<layer4 dist="0.3" posZ="1.5"></layer4>
+	<layer5 dist="0.4" posZ="2.0"></layer5>
 	<layer6 dist="6.821" posZ="1.8"></layer6>
-	<objectsLayer1 dist="2.12" posY="-5.2" posZ="3.5"></objectsLayer1>
-	<objectsLayer2 dist="2.12" posY="-5.2" posZ="7.5"></objectsLayer2>
+	<objectsLayer1 dist="1.12" posY="-0.7" posZ="1.0"></objectsLayer1>
+	<objectsLayer2 dist="1.12" posY="-0.7" posZ="1.5"></objectsLayer2>
 	<background red="0.2" green="0.2" blue="0.2" alpha="1.0"></background>
 	<pointCloud drawPointClouds="true" cloudPointSize="3"></pointCloud>
 	<layer2layer drawLayer2Layer="true" red="0.0" green="0.0" blue="0.8" alpha="0.1" width="0.5"></layer2layer>
 	<clusters drawClusters="true" red="0.0" green="0.8" blue="0.0" alpha="0.1"></clusters>
-	<normals drawNormals="true" scale="0.1" red="0.9" green="0.9" blue="0.2" alpha="1.0"></normals>
+	<normals drawNormals="true" scale="0.02" red="0.9" green="0.9" blue="0.2" alpha="1.0"></normals>
   </VisualizerConfig>

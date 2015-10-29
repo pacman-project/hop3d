@@ -229,8 +229,7 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
 
 int hop3d::Reader::readMultipleImages(boost::filesystem::path directoryPath, std::vector<cv::Mat> &output)
 {
-    try
-          {
+    try {
             if (exists(directoryPath))    // does directoryPath actually exist?
             {
               if (is_regular_file(directoryPath))        // is directoryPath a regular file?
@@ -262,9 +261,7 @@ int hop3d::Reader::readMultipleImages(boost::filesystem::path directoryPath, std
             else
               std::cout << directoryPath << " does not exist\n";
           }
-
-    catch (const boost::filesystem::filesystem_error& ex)
-    {
+    catch (const boost::filesystem::filesystem_error& ex){
         std::cout << ex.what() << '\n';
     }
     return 0;

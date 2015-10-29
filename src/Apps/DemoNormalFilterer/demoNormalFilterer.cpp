@@ -5,6 +5,7 @@
 #include "Data/Cloud.h"
 #include "ImageFilter/imageFilter.h"
 #include "ImageFilter/normalImageFilter.h"
+#include "Dataset/datasetBoris.h"
 
 using namespace std;
 
@@ -20,6 +21,7 @@ int main(void)
         }
         std::string configFile(config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
         std::string sensorConfigFile(config.FirstChildElement( "CameraModel" )->Attribute( "configFilename" ));
+        std::string datasetConfigFile(config.FirstChildElement( "Dataset" )->Attribute( "configFilename" ));
 
         int filterType;
         config.FirstChildElement( "Filterer" )->QueryIntAttribute("filterType", &filterType);
@@ -37,6 +39,9 @@ int main(void)
         std::vector<cv::Mat> vecImages;
         hop3d::Reader reader;
         reader.readMultipleImages("../../resources/depthImages",vecImages);
+
+        hop3d::Dataset* dataset = hop3d::createBorisDataset(datasetConfigFile,sensorConfigFile);
+        dataset->getDepthImage(0,0,1,vecImages[0]);
 
         std::vector<hop3d::Octet> octets;
         filter->computeOctets(vecImages[0],octets);

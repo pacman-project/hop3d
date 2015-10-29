@@ -51,6 +51,7 @@ public:
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("pixelSize", &pixelSize);
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("filterDepthScale", &filterDepthScale);
             model->FirstChildElement( "hierarchy" )->QueryBoolAttribute("draw3Dobjects", &draw3Dobjects);
+            model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("voxelSize", &voxelSize);
 
             int layersNo=6;
             partDist.resize(layersNo);
@@ -109,6 +110,8 @@ public:
         double pixelSize;
         /// draw 3D objects
         bool draw3Dobjects;
+        ///voxel size
+        double voxelSize;
         /// distance between parts in i-th layers
         std::vector<double> partDist;
         /// "z" coordinate of the i-t hierarchy layer

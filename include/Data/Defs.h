@@ -99,10 +99,10 @@ public:
     double v;
 
     /// Construction
-    ImageCoords(){};
+    ImageCoords(){}
 
     /// Construction
-    ImageCoords(double _u, double _v) : u(_u), v(_v) {};
+    ImageCoords(double _u, double _v) : u(_u), v(_v) {}
 };
 
 class ImageCoordsDepth : public ImageCoords {
@@ -202,6 +202,8 @@ public:
 
     /// prefix
     std::vector<std::string> images;
+    /// camera poses
+    std::vector<Mat34> poses;
 
     ImagesDataset(void){}
 

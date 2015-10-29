@@ -65,6 +65,9 @@ private:
 
     /// read depth image from dataset
     void readDepthImage(int categoryNo, int objectNo, int imageNo, cv::Mat& depthImage) const;
+
+    /// read camera pose from file
+    static Mat34 getCameraPose(std::string& filename);
 };
 
 }

@@ -70,6 +70,7 @@ class DepthSensorModel {
             model->FirstChildElement( "varianceDepth" )->QueryDoubleAttribute("c2", &distVarCoefs[1]);
             model->FirstChildElement( "imageSize" )->QueryIntAttribute("sizeU", &imageSize[0]);
             model->FirstChildElement( "imageSize" )->QueryIntAttribute("sizeV", &imageSize[1]);
+            model->FirstChildElement( "depth" )->QueryDoubleAttribute("depthImageScale", &depthImageScale);
         }
         public:
             double focalLength[2];
@@ -77,6 +78,7 @@ class DepthSensorModel {
             double varU, varV;// variance u,v
             double distVarCoefs[4];
             int imageSize[2];//[sizeU, sizeV]
+            double depthImageScale;
     };
 
     Config config;
