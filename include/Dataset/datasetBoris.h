@@ -36,6 +36,9 @@ public:
     /// get dataset info
     void getDatasetInfo(hop3d::DatasetInfo& dataset) const;
 
+    /// read camera pose from file
+    Mat34 getCameraPose(int categoryNo, int objectNo, int imageNo) const;
+
     /// Destruction
     ~BorisDataset(void);
 
@@ -67,7 +70,7 @@ private:
     void readDepthImage(int categoryNo, int objectNo, int imageNo, cv::Mat& depthImage) const;
 
     /// read camera pose from file
-    static Mat34 getCameraPose(std::string& filename);
+    static Mat34 readCameraPose(std::string& filename);
 };
 
 }

@@ -35,6 +35,9 @@ public:
     /// get dataset info
     virtual void getDatasetInfo(hop3d::DatasetInfo& dataset) const = 0;
 
+    /// get camera pose
+    virtual Mat34 getCameraPose(int categoryNo, int objectNo, int imageNo) const = 0;
+
     /// Virtual descrutor
     virtual ~Dataset() {
     }

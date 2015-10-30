@@ -81,19 +81,39 @@ void HOP3DBham::learn(){
     hop3d::ViewDependentPart::Seq dictionary;
 
     ///2nd layer
-    std::vector<cv::Mat> vecImages;
-    hop3d::Reader reader;
-    reader.readMultipleImages("../../resources/depthImages",vecImages);
-    dataset->getDepthImage(0,0,1,vecImages[0]);
+    //std::vector<cv::Mat> vecImages;
+    //hop3d::Reader reader;
+    //reader.readMultipleImages("../../resources/depthImages",vecImages);
+    DatasetInfo datasetInfo;
+    dataset->getDatasetInfo(datasetInfo);
     std::vector<hop3d::Octet> octets;
     int startId = (int)hierarchy.get()->firstLayer.size();
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
         if (layerNo==0){
-            imageFilterer->computeOctets(vecImages[0],octets);
+            for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
+                for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
+                    for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                        cv::Mat image;
+                        dataset->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo,image);
+                        std::vector<hop3d::Octet> octetsTmp;
+                        imageFilterer->computeOctets(image, (int)categoryNo, (int)objectNo, (int)imageNo, octetsTmp);
+                        octets.insert(octets.end(), octetsTmp.begin(), octetsTmp.end());
+                    }
+                }
+            }
         }
         else if (layerNo==1){
+            octets.clear();
             startId = int(hierarchy.get()->firstLayer.size()+10000);
-            imageFilterer->getOctets(hierarchy.get()->viewDependentLayers[layerNo-1], octets);
+            for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
+                for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
+                    for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                        std::vector<hop3d::Octet> octetsTmp;
+                        imageFilterer->getOctets((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDependentLayers[layerNo-1], octetsTmp);
+                        octets.insert(octets.end(), octetsTmp.begin(), octetsTmp.end());
+                    }
+                }
+            }
         }
         std::cout << "Compute statistics for " << octets.size() << " octets (" << layerNo+2 << "-th layer)\n";
         statsBuilder->computeStatistics(octets, layerNo+2, startId, dictionary);
@@ -105,27 +125,35 @@ void HOP3DBham::learn(){
     }
 
     //represent all images in parts from 3rd layer
-    imageFilterer->computeImages3rdLayer(hierarchy.get()->viewDependentLayers.back());
-    DatasetInfo dataset(1); dataset.categories[0].objects.resize(1); dataset.categories[0].objects[0].imagesNo=1;
+    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
+        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
+            for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                imageFilterer->computeImages3rdLayer((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDependentLayers.back());
+            }
+        }
+    }
     std::vector< std::set<int>> clusters;
-    for (size_t categoryNo=0;categoryNo<dataset.categories.size();categoryNo++){//for each category
-        for (size_t objectNo=0;objectNo<dataset.categories[categoryNo].objects.size();objectNo++){//for each object
+    objects.resize(datasetInfo.categories.size());
+    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
             std::cout << "Create object composition\n";
-            objects.push_back(createObjectCompositionOctree(config.compositionConfig));
-            for (size_t imageNo=0;imageNo<dataset.categories[categoryNo].objects[objectNo].imagesNo;imageNo++){//for each depth image
-                Mat34 cameraPose(Mat34::Identity());
+            objects[categoryNo].push_back(createObjectCompositionOctree(config.compositionConfig));
+            for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
                 //int layerNo=3;
                 std::vector<ViewDependentPart> parts;
                 //get parts of the 3rd layers
-                imageFilterer->getLastVDLayerParts(parts);
+                imageFilterer->getLastVDLayerParts((int)categoryNo, (int)objectNo, (int)imageNo, parts);
+                //std::cout << "parts size: " << parts.size() << "\n\n\n\n\n";
                 //hierarchy.get()->printIds(parts[0]);
                 //hierarchy.get()->printIds(parts[1]);
                 //move octets into 3D space and update octree representation of the object
-                objects.back()->update(0, parts, cameraPose, *depthCameraModel, *hierarchy);
+                Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+                std::cout << cameraPose.matrix() << " \n";
+                objects[categoryNo][objectNo]->update(0, parts, cameraPose, *depthCameraModel, *hierarchy);
             }
             std::vector< std::set<int>> clustersTmp;
             std::cout << "get clusters\n";
-            objects.back()->getClusters(0,clustersTmp);
+            objects[categoryNo][objectNo]->getClusters(0,clustersTmp);
             std::cout << " clusters size: " << clustersTmp.size() << "\n";
             std::cout << "finish get clusters\n";
             clusters.reserve( clusters.size() + clustersTmp.size() ); // preallocate memory
@@ -144,10 +172,12 @@ void HOP3DBham::learn(){
 //    }
     ///select part for 5th layer
     vocabulary.clear();
-    for (auto & object : objects){
-        std::vector<ViewIndependentPart> vocab;
-        object->createNextLayerVocabulary(1, *hierarchy, vocab);
-        vocabulary.insert(vocabulary.end(),vocab.begin(), vocab.end());
+    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+        for (auto & object : objects[categoryNo]){
+            std::vector<ViewIndependentPart> vocab;
+            object->createNextLayerVocabulary(1, *hierarchy, vocab);
+            vocabulary.insert(vocabulary.end(),vocab.begin(), vocab.end());
+        }
     }
     //compute statistics
     //select parts
@@ -166,17 +196,21 @@ void HOP3DBham::learn(){
     partSelector->selectParts(newVocabulary, *hierarchy, 5);
     std::cout << "Dictionary size (5-th layer): " << newVocabulary.size() << "\n";
     hierarchy.get()->viewIndependentLayers[1]=newVocabulary;
-    for (auto & object : objects){
-        object->updateIds(1, hierarchy.get()->viewIndependentLayers[1], *hierarchy);
+    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+        for (auto & object : objects[categoryNo]){
+            object->updateIds(1, hierarchy.get()->viewIndependentLayers[1], *hierarchy);
+        }
     }
     //visualization
     notify(*hierarchy);
-    for (auto & object : objects){
-        std::vector<ViewIndependentPart> objectParts;
-        int viewIndLayers = 2;
-        for (int i=0;i<viewIndLayers;i++){
-            object->getParts(i, objectParts);
-            notify(objectParts, i);
+    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+        for (auto & object : objects[categoryNo]){
+            std::vector<ViewIndependentPart> objectParts;
+            int viewIndLayers = 2;
+            for (int i=0;i<viewIndLayers;i++){
+                object->getParts(i, objectParts);
+                notify(objectParts, i);
+            }
         }
     }
     notify3Dmodels();

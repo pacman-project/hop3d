@@ -28,7 +28,7 @@ int main(void){
         std::cout<< vecImages.size() << std::endl;
         hop3d::Octet::Seq  sequenceOfOctets;
 
-        imageFilter->computeOctets(vecImages[0],sequenceOfOctets);
+        imageFilter->computeOctets(vecImages[0],0,0,0,sequenceOfOctets);
     }
     catch (const std::exception& ex) {
         std::cerr << ex.what() << std::endl;

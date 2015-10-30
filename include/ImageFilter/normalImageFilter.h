@@ -46,10 +46,10 @@ public:
     const std::string& getName() const;
 
     ///compute set of octets from set of the depth images
-    void computeOctets(const cv::Mat& depthImage, hop3d::Octet::Seq& octets);
+    void computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets);
 
     /// compute set of octets from set of the ids image
-    void getOctets(const ViewDependentPart::Seq& dictionary, Octet::Seq& octets);
+    void getOctets(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, Octet::Seq& octets);
 
     /// get filters
     void getFilters(Filter::Seq& _filters) const;
@@ -58,10 +58,10 @@ public:
     void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName);
 
     /// define 2rd layer octet images using selected words from third layer
-    void computeImages3rdLayer(const ViewDependentPart::Seq& dictionary);
+    void computeImages3rdLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary);
 
     /// get last view dependent layer parts from the image
-    void getLastVDLayerParts(std::vector<ViewDependentPart>& parts) const;
+    void getLastVDLayerParts(int categoryNo, int objectNo, int imageNo, std::vector<ViewDependentPart>& parts) const;
 
     /// compute coordinate system from normal vector
     static Mat33 coordinateFromNormal(const Vec3& _normal);
@@ -93,9 +93,11 @@ private:
     /// sensor model
     DepthSensorModel sensorModel;
     /// octets images
-    std::vector<OctetsImage> octetsImages;
+    std::vector<std::vector< std::vector<OctetsImage>>> octetsImages1stLayer;
+    /// octets images -- second layer
+    std::vector<std::vector< std::vector<OctetsImage>>> octetsImages2ndLayer;
     /// parts images
-    std::vector<PartsImage> partsImages;
+    std::vector<std::vector< std::vector<PartsImage>>> partsImages;
 
     /// discretization: convert normal vector to id
     int toId(const Vec3& normal) const;
@@ -116,7 +118,7 @@ private:
     static void normalizeVector(Vec3& normal);
 
     ///extract octets from response image
-    void extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets);
+    OctetsImage extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets);
 
     /// compute otet for given location on response image
     void computeOctet(const std::vector< std::vector<Response> >& responseImg,  const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u,  int v, Octet& octet) const;
@@ -132,6 +134,15 @@ private:
 
     /// determine id of the part using dictionary
     int findId(const ViewDependentPart::Seq& dictionary, const Octet& octet) const;
+
+    /// update structure which holds octets images
+    void updateOctetsImages1stLayer(int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage);
+
+    /// update structure which holds octets images
+    void updateOctetsImages2ndLayer(int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage);
+
+    /// update structure which holds parts images
+    void updatePartsImages(int categoryNo, int objectNo, int imageNo, const PartsImage& partsImage);
 };
 
 }

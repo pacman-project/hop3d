@@ -54,7 +54,8 @@ const std::string& DepthImageFilter::getName() const {
 }
 
 ///compute set of octets from set of the depth images
-void DepthImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Seq& octets){
+void DepthImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets){
+    std::cout << "Unused parameters: " << categoryNo << " " << objectNo << " " << imageNo << "\n";
     octets.clear();
 
     int filterSize = filters[0].patch.cols;
@@ -185,7 +186,8 @@ void DepthImageFilter::getOctets(Octet::Seq& octets){
 }
 
 /// compute set of octets from set of the ids image
-void DepthImageFilter::getOctets(const ViewDependentPart::Seq& dictionary, Octet::Seq& octets){
+void DepthImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, Octet::Seq& octets){
+    std::cout << categoryNo << " " << objectNo << " " << imageNo << "\n";
     std::cout << dictionary.size();
     std::cout << octets.size();
 }
@@ -202,12 +204,14 @@ void DepthImageFilter::setFilters(std::string patchesFileName, std::string norma
 }
 
 /// define 2rd layer octet images using selected words from third layer
-void DepthImageFilter::computeImages3rdLayer(const ViewDependentPart::Seq& dictionary){
+void DepthImageFilter::computeImages3rdLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary){
+    std::cout << categoryNo << " " << objectNo << " " << imageNo << "\n";
     dictionary.size();
 }
 
 /// get last view dependent layer parts from the image
-void DepthImageFilter::getLastVDLayerParts(std::vector<ViewDependentPart>& parts) const{
+void DepthImageFilter::getLastVDLayerParts(int categoryNo, int objectNo, int imageNo, std::vector<ViewDependentPart>& parts) const{
+    std::cout << categoryNo << " " << objectNo << " " << imageNo << "\n";
     parts.clear();
 }
 

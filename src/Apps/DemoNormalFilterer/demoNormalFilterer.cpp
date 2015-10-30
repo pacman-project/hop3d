@@ -44,7 +44,7 @@ int main(void)
         dataset->getDepthImage(0,0,1,vecImages[0]);
 
         std::vector<hop3d::Octet> octets;
-        filter->computeOctets(vecImages[0],octets);
+        filter->computeOctets(vecImages[0],0,0,0,octets);
 
         return 1;
     }

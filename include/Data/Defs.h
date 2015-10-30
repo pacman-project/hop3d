@@ -195,8 +195,6 @@ protected:
 /// Set of images
 class ImagesDataset{
 public:
-    /// number of images
-    size_t imagesNo;
     /// name
     std::string name;
 
@@ -206,8 +204,6 @@ public:
     std::vector<Mat34> poses;
 
     ImagesDataset(void){}
-
-    ImagesDataset(int _imagesNo) : imagesNo(_imagesNo){}
 };
 
 /// Set of objects

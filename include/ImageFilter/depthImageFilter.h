@@ -42,13 +42,13 @@ public:
     const std::string& getName() const;
 
     ///compute set of octets from set of the depth images
-    void computeOctets(const cv::Mat& depthImage, hop3d::Octet::Seq& octets);
+    void computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets);
 
     /// compute set of octets from set of the depth image
     void getOctets(Octet::Seq& octets);
 
     /// compute set of octets from set of the ids image
-    void getOctets(const ViewDependentPart::Seq& dictionary, Octet::Seq& octets);
+    void getOctets(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, Octet::Seq& octets);
 
     /// get filters
     void getFilters(Filter::Seq& _filters) const;
@@ -56,10 +56,10 @@ public:
     void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName);
 
     /// define 2rd layer octet images using selected words from third layer
-    void computeImages3rdLayer(const ViewDependentPart::Seq& dictionary);
+    void computeImages3rdLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary);
 
     /// get last view dependent layer parts from the image
-    void getLastVDLayerParts(std::vector<ViewDependentPart>& parts) const;
+    void getLastVDLayerParts(int categoryNo, int objectNo, int imageNo, std::vector<ViewDependentPart>& parts) const;
 
     class Config{
       public:

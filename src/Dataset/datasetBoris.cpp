@@ -59,7 +59,7 @@ BorisDataset::Config::Config(std::string configFilename){
                 imageName << "Image" << imageNo;
                 dataset.categories[categoryNo].objects[objectNo].images[imageNo] = model->FirstChildElement( categoryName.str().c_str() )->FirstChildElement( objectName.str().c_str() )->FirstChildElement( imageName.str().c_str() )->Attribute( "name" );
                 std::string filePath(path + "/" + dataset.categories[categoryNo].objects[objectNo].name + "/" + dataset.categories[categoryNo].objects[objectNo].images[imageNo]);
-                dataset.categories[categoryNo].objects[objectNo].poses[imageNo] = getCameraPose(filePath);
+                dataset.categories[categoryNo].objects[objectNo].poses[imageNo] = readCameraPose(filePath);
                 if (verbose>1)
                     std::cout << dataset.categories[categoryNo].objects[objectNo].images[imageNo] <<"\n";
             }
@@ -138,7 +138,12 @@ void BorisDataset::readDepthImage(int categoryNo, int objectNo, int imageNo, cv:
 }
 
 /// read camera pose from file
-Mat34 BorisDataset::getCameraPose(std::string& filename){
+Mat34 BorisDataset::getCameraPose(int categoryNo, int objectNo, int imageNo) const{
+    return config.dataset.categories[categoryNo].objects[objectNo].poses[imageNo];
+}
+
+/// read camera pose from file
+Mat34 BorisDataset::readCameraPose(std::string& filename){
     pcl::PCLPointCloud2 cloud;    Eigen::Vector4f origin;
     Eigen::Quaternionf orientation;    int pcd_version;
     int data_type;    unsigned int data_idx;

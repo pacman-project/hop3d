@@ -49,7 +49,7 @@ const std::string& NormalImageFilter::getName() const {
 }
 
 ///compute set of octets from set of the depth images
-void NormalImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::Seq& octets){
+void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets){
     octets.clear();
     /*int filtersNo=2*int(pow(2.0,config.ringsNo)-1)-1;
     for (int i=0;i<filtersNo;i++){
@@ -104,7 +104,9 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::S
             }
         }
     }*/
-    extractOctets(responseImage, cloudOrd, octets);
+    OctetsImage octetsImage = extractOctets(responseImage, cloudOrd, octets);
+    updateOctetsImages1stLayer(categoryNo, objectNo, imageNo, octetsImage);
+
     if (config.verbose>0){
         std::chrono::steady_clock::time_point end=std::chrono::steady_clock::now();
         std::cout << "Octets extraction takes " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
@@ -117,8 +119,50 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, hop3d::Octet::S
     }
 }
 
+/// update structure which holds octets images
+void NormalImageFilter::updateOctetsImages1stLayer(int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage){
+    if((int)octetsImages1stLayer.size()<=categoryNo){
+        octetsImages1stLayer.resize(categoryNo+1);
+    }
+    if ((int)octetsImages1stLayer[categoryNo].size()<=objectNo){
+        octetsImages1stLayer[categoryNo].resize(objectNo+1);
+    }
+    if ((int)octetsImages1stLayer[categoryNo][objectNo].size()<=imageNo){
+        octetsImages1stLayer[categoryNo][objectNo].resize(imageNo+1);
+    }
+    octetsImages1stLayer[categoryNo][objectNo][imageNo] = octetsImage;
+}
+
+/// update structure which holds octets images
+void NormalImageFilter::updateOctetsImages2ndLayer(int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage){
+    if((int)octetsImages2ndLayer.size()<=categoryNo){
+        octetsImages2ndLayer.resize(categoryNo+1);
+    }
+    if ((int)octetsImages2ndLayer[categoryNo].size()<=objectNo){
+        octetsImages2ndLayer[categoryNo].resize(objectNo+1);
+    }
+    if ((int)octetsImages2ndLayer[categoryNo][objectNo].size()<=imageNo){
+        octetsImages2ndLayer[categoryNo][objectNo].resize(imageNo+1);
+    }
+    octetsImages2ndLayer[categoryNo][objectNo][imageNo] = octetsImage;
+}
+
+/// update structure which holds parts images
+void NormalImageFilter::updatePartsImages(int categoryNo, int objectNo, int imageNo, const PartsImage& partsImage){
+    if((int)partsImages.size()<=categoryNo){
+        partsImages.resize(categoryNo+1);
+    }
+    if ((int)partsImages[categoryNo].size()<=objectNo){
+        partsImages[categoryNo].resize(objectNo+1);
+    }
+    if ((int)partsImages[categoryNo][objectNo].size()<=imageNo){
+        partsImages[categoryNo][objectNo].resize(imageNo+1);
+    }
+    partsImages[categoryNo][objectNo][imageNo] = partsImage;
+}
+
 ///extract octets from response image
-void NormalImageFilter::extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets){
+NormalImageFilter::OctetsImage NormalImageFilter::extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets){
     int u=0;
     OctetsImage octetsImage(responseImg.size()/(config.filterSize*3), std::vector<Octet> (responseImg[0].size()/(config.filterSize*3)));
     for (size_t i=config.filterSize+config.filterSize/2;i<responseImg.size()-config.filterSize-(config.filterSize/2);i=i+3*config.filterSize){
@@ -136,7 +180,7 @@ void NormalImageFilter::extractOctets(const std::vector< std::vector<Response> >
         }
         u++;
     }
-    octetsImages.push_back(octetsImage);
+    return octetsImage;
 }
 
 /// compute otet for given location on response image
@@ -188,9 +232,9 @@ void NormalImageFilter::findMaxResponse(const std::vector< std::vector<Response>
 }
 
 /// compute set of octets from set of the ids image
-void NormalImageFilter::getOctets(const ViewDependentPart::Seq& dictionary, Octet::Seq& octets){
+void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, Octet::Seq& octets){
     octets.clear();
-    OctetsImage octetsImage = octetsImages.back();
+    OctetsImage octetsImage = octetsImages1stLayer[categoryNo][objectNo][imageNo];
     OctetsImage nextLayerOctetsImg(octetsImage.size()/3, std::vector<Octet> (octetsImage.back().size()/3));
     int u=0;
     for (size_t i=1; i<octetsImage.size()-1;i=i+3){
@@ -207,13 +251,13 @@ void NormalImageFilter::getOctets(const ViewDependentPart::Seq& dictionary, Octe
         }
         u++;
     }
-    octetsImages.push_back(nextLayerOctetsImg);
+    updateOctetsImages2ndLayer(categoryNo, objectNo, imageNo, nextLayerOctetsImg);
 }
 
 /// define 2rd layer octet images using selected words from third layer
-void NormalImageFilter::computeImages3rdLayer(const ViewDependentPart::Seq& dictionary){
-    PartsImage partsImage (octetsImages.back().size(), std::vector<ViewDependentPart> (octetsImages.back().back().size()));
-    OctetsImage octetsImage = octetsImages.back();
+void NormalImageFilter::computeImages3rdLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary){
+    PartsImage partsImage (octetsImages2ndLayer[categoryNo][objectNo][imageNo].size(), std::vector<ViewDependentPart> (octetsImages2ndLayer[categoryNo][objectNo][imageNo].back().size()));
+    OctetsImage octetsImage = octetsImages2ndLayer[categoryNo][objectNo][imageNo];
     int partsNo = 0;
     for (size_t i=0; i<octetsImage.size();i++){
         for (size_t j=0; j<octetsImage.back().size();j++){
@@ -236,13 +280,13 @@ void NormalImageFilter::computeImages3rdLayer(const ViewDependentPart::Seq& dict
         }
         //std::cout << "\n";
     }
-    partsImages.push_back(partsImage);
+    updatePartsImages(categoryNo, objectNo, imageNo, partsImage);
 }
 
 /// get last view dependent layer parts from the image
-void NormalImageFilter::getLastVDLayerParts(std::vector<ViewDependentPart>& parts) const{
+void NormalImageFilter::getLastVDLayerParts(int categoryNo, int objectNo, int imageNo, std::vector<ViewDependentPart>& parts) const{
     parts.clear();
-    PartsImage partsImage = partsImages.back();
+    PartsImage partsImage = partsImages[categoryNo][objectNo][imageNo];
     for (size_t i=0; i<partsImage.size();i++){
         for (size_t j=0; j<partsImage.back().size();j++){
             if (partsImage[i][j].id!=-1){

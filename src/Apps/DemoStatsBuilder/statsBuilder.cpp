@@ -63,7 +63,7 @@ int main(void){
         std::vector<cv::Mat> vecImages;
         hop3d::Reader reader;
         reader.readMultipleImages("../../resources/depthImages",vecImages);
-        imageFilterer->computeOctets(vecImages[0],octets);
+        imageFilterer->computeOctets(vecImages[0],0,0,0,octets);
         std::cout << "stats builders oddddd d sd sag sdgg\n";
         std:: cout << " size: " << octets.size() << "\n";
 
