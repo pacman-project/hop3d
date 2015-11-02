@@ -22,7 +22,7 @@ class ObjectCompositionOctree: public ObjectComposition {
 public:
     /// Pointer
     typedef std::unique_ptr<ObjectCompositionOctree> Ptr;
-    typedef std::unique_ptr< Octree<ViewIndependentPart> > OctreePtr;
+    typedef std::shared_ptr< Octree<ViewIndependentPart> > OctreePtr;
 
     /// Construction
     ObjectCompositionOctree(void);

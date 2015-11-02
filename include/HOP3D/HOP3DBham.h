@@ -105,7 +105,7 @@ private:
     std::unique_ptr<DepthSensorModel> depthCameraModel;
 
     ///vector of objects compositions
-    std::vector<std::vector<ObjectComposition *>> objects;
+    std::vector<std::vector<ObjectCompositionOctree>> objects;
 };
 }
 #endif // HOP3DBHAM_H_INCLUDED
