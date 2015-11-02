@@ -117,6 +117,9 @@ void BorisDataset::readDepthImage(int categoryNo, int objectNo, int imageNo, cv:
     if (pcl::io::loadPCDFile<pcl::PointXYZRGBNormal> (path, *cloud) == -1){//* load the file
         PCL_ERROR ("Couldn't read pcd file \n");
     }
+    //Mat34 R(Eigen::Translation<double, 3>(0,0,0)*Quaternion(cloud->sensor_orientation_));
+    //Mat34 t(Eigen::Translation<double, 3>(cloud->sensor_origin_(0), cloud->sensor_origin_(1), cloud->sensor_origin_(2))*Quaternion(1,0,0,0));
+
     Mat34 cameraPose(Eigen::Translation<double, 3>(cloud->sensor_origin_(0), cloud->sensor_origin_(1), cloud->sensor_origin_(2))*Quaternion(cloud->sensor_orientation_));
     Mat34 cameraPoseInv(cameraPose.inverse());
     cv::Mat image(cloud->height,cloud->width, CV_16U,cv::Scalar(0));
@@ -124,13 +127,14 @@ void BorisDataset::readDepthImage(int categoryNo, int objectNo, int imageNo, cv:
         if (!std::isnan(cloud->points[i].x)){
             Mat34 point(Eigen::Translation<double, 3>(cloud->points[i].x,cloud->points[i].y,cloud->points[i].z)*Mat33::Identity());
             Mat34 pointCam=cameraPoseInv*point;
-            //Eigen::Vector3d coordImg = sensorModel.inverseModel(pointCam(0,3),pointCam(1,3),pointCam(2,3));
-            /*std::cout << "point3d " << pointCam(0,3) << ", " << pointCam(1,3) << ", " << pointCam(2,3) << "\n";
+            /*Eigen::Vector3d coordImg = sensorModel.inverseModel(pointCam(0,3),pointCam(1,3),pointCam(2,3));
+            std::cout << "point3d " << pointCam(0,3) << ", " << pointCam(1,3) << ", " << pointCam(2,3) << "\n";
             std::cout << "coordImg " << coordImg.transpose() << "\n";
+            std::cout << "coord img2:" << (unsigned int)i/cloud->width << ", " << (unsigned int)i%cloud->width << "\n";
             Eigen::Vector3d coord3d; sensorModel.getPoint(coordImg,coord3d);
             std::cout << "coord3d " << coord3d.transpose() << "\n";
             getchar();*/
-            //image.at<uint16_t>((unsigned int)coordImg(0), (unsigned int)coordImg(1)) = (short unsigned int)((double)coordImg(2)*sensorModel.config.depthImageScale);
+            //image.at<uint16_t>((unsigned int)round(coordImg(0)), (unsigned int)round(coordImg(1))) = (short unsigned int)((double)coordImg(2)*sensorModel.config.depthImageScale);
             image.at<uint16_t>((unsigned int)i/cloud->width, (unsigned int)i%cloud->width) = (short unsigned int)(pointCam(2,3)*sensorModel.config.depthImageScale);
         }
     }
@@ -151,7 +155,14 @@ Mat34 BorisDataset::readCameraPose(std::string& filename){
     if (reader.readHeader(filename, cloud, origin, orientation, pcd_version, data_type, data_idx)){
         PCL_ERROR ("Couldn't read pcd file \n");
     }
-    return Mat34(Eigen::Translation<double, 3>(origin(0),origin(1),origin(2))*Quaternion(orientation.w(),orientation.x(),orientation.y(),orientation.z()));
+    Mat34 cameraPose(Eigen::Translation<double, 3>(origin(0),origin(1),origin(2))*Quaternion(orientation.w(),orientation.x(),orientation.y(),orientation.z()));
+    /*Mat34 offset(Mat34::Identity());
+    offset(0,0)=-0.0146444; offset(0,1)=-0.0801927; offset(0,2)=0.996672;
+    offset(1,0)=0.999868; offset(1,1)=0.00588724; offset(1,2)=0.0151651;
+    offset(2,0)=-0.00708377; offset(2,1)=0.996762; offset(2,2)=0.0800958;
+    offset(0,3)=0.0800444; offset(1,3)=-0.041683; offset(2,3)=0.0753622;
+    cameraPose=cameraPose*offset;*/
+    return cameraPose;
 }
 
 hop3d::Dataset* hop3d::createBorisDataset(void) {

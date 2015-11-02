@@ -41,7 +41,7 @@ int main(void)
         reader.readMultipleImages("../../resources/depthImages",vecImages);
 
         hop3d::Dataset* dataset = hop3d::createBorisDataset(datasetConfigFile,sensorConfigFile);
-        dataset->getDepthImage(0,0,1,vecImages[0]);
+        dataset->getDepthImage(0,0,0,vecImages[0]);
 
         std::vector<hop3d::Octet> octets;
         filter->computeOctets(vecImages[0],0,0,0,octets);

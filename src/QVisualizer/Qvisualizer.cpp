@@ -299,11 +299,11 @@ GLuint QGLVisualizer::createBackgroundList(int layerNo){
         int patchSize = 5*(2*layerNo-1);
         glColor3ub(100,50,50);
         glBegin(GL_POINTS);
-        for (int n = 0; n < patchSize; n++){
+        /*for (int n = 0; n < patchSize; n++){
             for (int m = 0; m < patchSize; m++){
                 glVertex3d(config.pixelSize*(n-(patchSize/2)), config.pixelSize*(m-(patchSize/2)), 0);
             }
-        }
+        }*/
         glEnd();
     glPopMatrix();
     glEndList();
@@ -465,15 +465,18 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
     if (layerNo==0){
         Vec3 initPose(parts.begin()->parts.begin()->pose(0,3), parts.begin()->parts.begin()->pose(1,3), parts.begin()->parts.begin()->pose(2,3));
         for (auto & part : parts){
-            for (auto & partL : part.parts){
+            /*for (auto & partL : part.parts){
                 Vec3 pos(partL.pose(0,3), partL.pose(1,3), partL.pose(2,3));
-                double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0)-initPose(0), pos(1)-initPose(1), pos(2)-initPose(2), 1};
+                double GLmat[16]={partL.pose(0,0), partL.pose(1,0), partL.pose(2,0), 0,
+                                  partL.pose(0,1), partL.pose(1,1), partL.pose(2,1), 0,
+                                  partL.pose(0,2), partL.pose(1,2), partL.pose(2,2), 0,
+                                  pos(0)-initPose(0), pos(1)-initPose(1), pos(2)-initPose(2), 1};
                 glPushMatrix();
                     glMultMatrixd(GLmat);
                     glCallList(cloudsListLayers[2][partL.id]);
                 glPopMatrix();
-            }
-            /*
+            }*/
+
             /// if first view-independent parts are used
             Vec3 pos(part.pose(0,3), part.pose(1,3), part.pose(2,3));
             double GLmat[16]={part.pose(0,0), part.pose(1,0), part.pose(2,0), 0, part.pose(0,1), part.pose(1,1), part.pose(2,1), 0, part.pose(0,2), part.pose(1,2), part.pose(2,2), 0, pos(0)-initPose(0), pos(1)-initPose(1), pos(2)-initPose(2), 1};
@@ -481,19 +484,13 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
                 glMultMatrixd(GLmat);
                 glCallList(cloudsListLayers[3][hierarchy.get()->interpreter[part.id]]);
             glPopMatrix();
-            */
         }
     }
     if (layerNo==1){
         Vec3 initPose(parts.begin()->pose(0,3), parts.begin()->pose(1,3), parts.begin()->pose(2,3));
         int partNo=0;
         for (auto & part : parts){
-            /*std::cout << "part no " << partNo <<"\n";
-            std::cout << "part id " << part.id <<"\n";
-            //std::cout << "part pose \n" << part.pose.matrix() <<"\n";
-            std::cout << "part.offset\n" << part.offset.matrix() << "\n";*/
             partNo++;
-
             Mat34 pose = part.pose*part.offset;
             Vec3 pos(pose(0,3), pose(1,3), pose(2,3));
             double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(1,2), 0, pose(0,2), pose(1,2), pose(2,2), 0, pos(0)-initPose(0), pos(1)-initPose(1), pos(2)-initPose(2), 1};

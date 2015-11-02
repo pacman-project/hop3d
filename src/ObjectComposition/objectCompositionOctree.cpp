@@ -50,7 +50,7 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         Mat34 partPosition(Mat34::Identity());
         Vec3 pos3d;
         if (config.verbose==1){
-            std::cout << "parts notree, part.id: " << part.id << "\n";
+            std::cout << "update octree, part.id: " << part.id << "\n";
         }
         Mat34 part3D(Mat34::Identity());
         Vec3 normal; hierarchy.getNormal(part, normal);
@@ -58,13 +58,12 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         Vec3 position(part.location.u, part.location.v, part.location.depth);
         camModel.getPoint(position, pos3d);
         part3D.translation() = pos3d;//set position of the part
-        /*Mat33 rot; normal2rot(normal, rot);
 
-                */
         partPosition = cameraPose * part3D;//global position of the part
-        int x = int(partPosition(0,3)/config.voxelSize);
-        int y = int(partPosition(1,3)/config.voxelSize);
-        int z = int(partPosition(2,3)/config.voxelSize);
+        int x,y,z;
+        toCoordinate(partPosition(0,3),x, config.voxelSize);
+        toCoordinate(partPosition(1,3),y, config.voxelSize);
+        toCoordinate(partPosition(2,3),z, config.voxelSize);
         if (config.verbose==1){
             std::cout << "Update octree, xyz: " << x << ", " << y << ", " << z << "\n";
         }
@@ -77,6 +76,16 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         (*octrees[layerNo])(x,y,z).layerId=4;
         (*octrees[layerNo])(x,y,z).id=part.id;//its temporary id only
     }
+}
+
+/// convert global coordinates to octree coordinates
+void ObjectCompositionOctree::toCoordinate(double pos, int& coord, double scale){
+    coord = int(pos/scale)+config.voxelsNo/2;
+}
+
+/// convert octree coordinates to global coordinates
+void ObjectCompositionOctree::fromCoordinate(int coord, double& pos, double scale){
+    pos = scale*(coord-config.voxelsNo/2)+(scale/2.0);
 }
 
 /// update ids in the octree using new vocabulary
@@ -213,7 +222,10 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
 /// assign neighbouring parts to new part
 int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z, double scale){
     Mat34 pose(Mat34::Identity());
-    pose(0,3) = scale*x+(scale/2.0); pose(1,3) = scale*y+(scale/2.0); pose(2,3) = scale*z+(scale/2.0);
+    fromCoordinate(x, pose(0,3), scale);
+    fromCoordinate(y, pose(1,3), scale);
+    fromCoordinate(z, pose(2,3), scale);
+    //pose(0,3) = scale*x+(scale/2.0); pose(1,3) = scale*y+(scale/2.0); pose(2,3) = scale*z+(scale/2.0);
 //    if ((*octrees[layerNo]).at(x,y,z).id!=-1){
 //        partVoxel.pose = (*octrees[layerNo]).at(x,y,z).pose;
     //}

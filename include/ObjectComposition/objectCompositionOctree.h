@@ -80,6 +80,11 @@ private:
     /// find part in the vocabulary and return new id
     int findIdInVocabulary(const ViewIndependentPart& part, const std::vector<ViewIndependentPart>& vocabulary);
 
+    /// convert global coordinates to octree coordinates
+    void toCoordinate(double pos, int& coord, double scale);
+
+    /// convert octree coordinates to global coordinates
+    void fromCoordinate(int coord, double& pos, double scale);
 };
 }
 #endif // OBJECT_COMPOSITION_OCTREE_H_INCLUDED
