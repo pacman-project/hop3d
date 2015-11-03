@@ -195,7 +195,7 @@ void HOP3DBham::learn(){
     /*for (auto & part : vocabulary){
             part.print();
     }*/
-    partSelector->selectParts(newVocabulary, *hierarchy, 5);
+    partSelector->selectParts(newVocabulary, 5);
     std::cout << "Dictionary size (5-th layer): " << newVocabulary.size() << "\n";
     hierarchy.get()->viewIndependentLayers[1]=newVocabulary;
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category

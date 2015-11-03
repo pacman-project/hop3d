@@ -40,7 +40,7 @@ PartSelectorMean::Config::Config(std::string configFilename){
 }
 
 /// Select parts from the initial vocabulary
-void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, Hierarchy& hierarchy, int layerNo){
+void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, int layerNo){
     int clustersNo = (layerNo==5) ? config.clustersFifthLayer : config.clustersSixthLayer;
     if ((size_t)clustersNo > dictionary.size())
         clustersNo = (int)dictionary.size();
@@ -71,8 +71,8 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, Hierarc
             }
             std::cout << "\n";
         }
-        fit2clusters(centroids, dictionary, hierarchy, clusters);
-        computeCentroids(clusters, centroids, dictionary, hierarchy);
+        fit2clusters(centroids, dictionary, clusters);
+        computeCentroids(clusters, centroids, dictionary);
         if (config.verbose==2){
             std::cout << "centroids new: ";
             for (size_t j=0;j<centroids.size();j++){
@@ -156,7 +156,7 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy
 }
 
 /// assign parts to clusters according to given cetroid
-void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewIndependentPart::Seq>& clusters){
+void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, std::vector<ViewIndependentPart::Seq>& clusters){
     for (size_t i=0;i<clusters.size();i++)
         clusters[i].clear();
     for (auto it = dictionary.begin();it!=dictionary.end();it++){// for each part
@@ -243,7 +243,7 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
 }
 
 /// compute centroids for give clusters
-void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy){
+void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary){
     int clusterNo=0;
     for (auto itClust = clusters.begin(); itClust!=clusters.end();itClust++){ //for each cluster
         double distMin = std::numeric_limits<double>::max();

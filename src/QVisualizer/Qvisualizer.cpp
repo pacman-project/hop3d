@@ -299,11 +299,11 @@ GLuint QGLVisualizer::createBackgroundList(int layerNo){
         int patchSize = 5*(2*layerNo-1);
         glColor3ub(100,50,50);
         glBegin(GL_POINTS);
-        /*for (int n = 0; n < patchSize; n++){
+        for (int n = 0; n < patchSize; n++){
             for (int m = 0; m < patchSize; m++){
-                glVertex3d(config.pixelSize*(n-(patchSize/2)), config.pixelSize*(m-(patchSize/2)), 0);
+         //       glVertex3d(config.pixelSize*(n-(patchSize/2)), config.pixelSize*(m-(patchSize/2)), 0);
             }
-        }*/
+        }
         glEnd();
     glPopMatrix();
     glEndList();

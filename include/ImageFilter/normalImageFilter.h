@@ -83,6 +83,10 @@ public:
             std::string sensorFilename;
             // compute response if points no in filter window is bigger than threshold
             int backgroundThreshold;
+            // use median filter
+            bool useMedianFilter;
+            // kernel size
+            int kernelSize;
     };
 
 private:

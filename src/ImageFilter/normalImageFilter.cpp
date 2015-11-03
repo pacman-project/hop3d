@@ -34,6 +34,9 @@ NormalImageFilter::Config::Config(std::string configFilename){
     //model->FirstChildElement( "parameters" )->QueryDoubleAttribute("scalingToMeters", &scalingToMeters);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("backgroundThreshold", &backgroundThreshold);
 
+    model->FirstChildElement( "imageFiltering" )->QueryBoolAttribute("useMedianFilter", &useMedianFilter);
+    model->FirstChildElement( "imageFiltering" )->QueryIntAttribute("kernelSize", &kernelSize);
+
     if (verbose>0){
         std::cout << "Load normal filter parameters...\n";
         std::cout << "Rings no.: " << ringsNo << "\n";
@@ -70,6 +73,8 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
     double scale = 1/sensorModel.config.depthImageScale;
     if (config.verbose>1)
         imshow( "Input image", depthImage );
+    if (config.useMedianFilter)
+        cv::medianBlur(depthImage, depthImage, config.kernelSize);
     for (int i=0;i<depthImage.rows;i++){
         for (int j=0;j<depthImage.cols;j++){
             sensorModel.getPoint(i, j, depthImage.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
