@@ -40,7 +40,7 @@ PartSelectorMean::Config::Config(std::string configFilename){
 }
 
 /// Select parts from the initial vocabulary
-void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, int layerNo){
+void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
     int clustersNo = (layerNo==5) ? config.clustersFifthLayer : config.clustersSixthLayer;
     if ((size_t)clustersNo > dictionary.size())
         clustersNo = (int)dictionary.size();
@@ -71,8 +71,8 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, int lay
             }
             std::cout << "\n";
         }
-        fit2clusters(centroids, dictionary, clusters);
-        computeCentroids(clusters, centroids, dictionary);
+        fit2clusters(centroids, dictionary, hierarchy, clusters);
+        computeCentroids(clusters, centroids, dictionary, hierarchy);
         if (config.verbose==2){
             std::cout << "centroids new: ";
             for (size_t j=0;j<centroids.size();j++){
@@ -98,7 +98,7 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, int lay
 }
 
 /// Select parts from the initial vocabulary
-void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy& hierarchy, int layerNo){
+void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
     int clustersNo = (layerNo==2) ? config.clustersSecondLayer : config.clustersThirdLayer;
     if ((size_t)clustersNo > dictionary.size())
         clustersNo = (int)dictionary.size();
@@ -156,7 +156,7 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, Hierarchy
 }
 
 /// assign parts to clusters according to given cetroid
-void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, std::vector<ViewIndependentPart::Seq>& clusters){
+void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewIndependentPart::Seq>& clusters){
     for (size_t i=0;i<clusters.size();i++)
         clusters[i].clear();
     for (auto it = dictionary.begin();it!=dictionary.end();it++){// for each part
@@ -169,9 +169,9 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
             if (it->layerId==5){//compute distance from centroid
                 dist = ViewIndependentPart::distance(*it, dictionary[*itCentr], offset,0);
             }
-            /*else if (it->layerId==3){//compute distance from centroid
-                dist = ViewDependentPart::distance(*it,dictionary[*itCentr], dictionary, hierarchy.firstLayer);
-            }*/
+            else if (it->layerId==6){//compute distance from centroid
+                dist = ViewIndependentPart::distance(*it, dictionary[*itCentr], hierarchy.viewIndependentLayers[1], offset,0);
+            }
             if (dist<minDist){
                 minDist = dist;
                 centroidId = clusterNo;
@@ -243,7 +243,7 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
 }
 
 /// compute centroids for give clusters
-void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary){
+void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy){
     int clusterNo=0;
     for (auto itClust = clusters.begin(); itClust!=clusters.end();itClust++){ //for each cluster
         double distMin = std::numeric_limits<double>::max();
@@ -253,11 +253,11 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::S
             for (auto itPart2 = itClust->begin(); itPart2!=itClust->end();itPart2++){//compute mean dist for each part as a centroid
                 Mat34 offset;
                 if (itPart->layerId==5){//compute distance from centroid
-                    distSum+= ViewIndependentPart::distance(*itPart, *itPart2, offset,0);
+                    distSum += ViewIndependentPart::distance(*itPart, *itPart2, offset,0);
                 }
-                /*else if (itPart->layerId==3){
-                    distSum+=ViewDependentPart::distance(*itPart,*itPart2, dictionary, hierarchy.firstLayer);
-                }*/
+                else if (itPart->layerId==6){//compute distance from centroid
+                    distSum += ViewIndependentPart::distance(*itPart, *itPart2, hierarchy.viewIndependentLayers[1], offset,0);
+                }
             }
             if (distSum<distMin){
                 distMin=distSum;

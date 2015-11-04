@@ -106,6 +106,15 @@ void ObjectCompositionOctree::updateIds(int layerNo, const std::vector<ViewIndep
                         //(*octrees[layerNo])(idX,idY,idZ).offset=Mat34::Identity();
                         //getchar();
                     }
+                    if ((*octrees[layerNo])(idX,idY,idZ).layerId==6){//compute distance from centroid
+                        Mat34 off;
+                        ViewIndependentPart::distance(hierarchy.viewIndependentLayers[2][(*octrees[layerNo])(idX,idY,idZ).id], (*octrees[layerNo])(idX,idY,idZ), vocabulary, off, 0);
+                        (*octrees[layerNo])(idX,idY,idZ).offset = off;
+                        //std::cout << "old id " << idOld << ", new id " << (*octrees[layerNo])(idX,idY,idZ).id << "\n";
+                        //std::cout << "offset \n" << (*octrees[layerNo])(idX,idY,idZ).offset.matrix() << "\n";
+                        //(*octrees[layerNo])(idX,idY,idZ).offset=Mat34::Identity();
+                        //getchar();
+                    }
                 }
             }
         }
@@ -205,7 +214,7 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
                 ViewIndependentPart newPart;
                 newPart.layerId=destLayerNo+4;
                 // add neighbouring parts into structure
-                if (assignPartNeighbours(newPart, hierarchy, destLayerNo-1, idX, idY, idZ, config.voxelSize/double(destLayerNo))>0){
+                if (assignPartNeighbours(newPart, hierarchy, destLayerNo-1, idX, idY, idZ, pow(3.0,destLayerNo-1)*config.voxelSize)>0){
                     newPart.id = tempId;//hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
                     (*octrees[destLayerNo])(iterx,itery,iterz) = newPart;//update octree
                     vocabulary.push_back(newPart);
@@ -238,7 +247,10 @@ int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel
             for (int k=-1; k<2;k++){
                 if ((*octrees[layerNo]).at(x+i,y+j,z+k).id>=0){
                     //assign neighbouring ids
-                    partVoxel.partIds[i+1][j+1][k+1] = hierarchy.interpreter.at((*octrees[layerNo]).at(x+i,y+j,z+k).id);
+                    if (layerNo==0)
+                        partVoxel.partIds[i+1][j+1][k+1] = hierarchy.interpreter.at((*octrees[layerNo]).at(x+i,y+j,z+k).id);
+                    else
+                        partVoxel.partIds[i+1][j+1][k+1] = (*octrees[layerNo]).at(x+i,y+j,z+k).id;
                     // assign spatial relation
                     if ((*octrees[layerNo]).at(x+i,y+j,z+k).id!=-1){
                         //if (i==0&&j==0&&k==0){

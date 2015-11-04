@@ -30,10 +30,10 @@ public:
     PartSelectorMean(std::string config);
 
     /// Select parts from the initial vocabulary
-    void selectParts(ViewDependentPart::Seq& dictionary, Hierarchy& hierarchy, int layerNo);
+    void selectParts(ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo);
 
     /// Select parts from the initial vocabulary
-    void selectParts(ViewIndependentPart::Seq& dictionary, int layerNo);
+    void selectParts(ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo);
 
     /// get clusters of parts id stored in octree (one cluster per voxel)
     void createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy);
@@ -74,13 +74,13 @@ private:
     void fit2clusters(const std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewDependentPart::Seq>& clusters);
 
     /// assign parts to clusters according to given cetroid
-    void fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, std::vector<ViewIndependentPart::Seq>& clusters);
+    void fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewIndependentPart::Seq>& clusters);
 
     /// compute centroids for give clusters
     void computeCentroids(const std::vector<ViewDependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy);
 
     /// compute centroids for give clusters
-    void computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary);
+    void computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy);
 
     /// get clusters of parts id stored in octree (one cluster per voxel)
     bool isInOctets(std::vector< std::set<int>>& clusters, int id, std::vector< std::set<int>>::iterator& iter);

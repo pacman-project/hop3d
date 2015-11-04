@@ -131,6 +131,9 @@ public:
     /// compute distance between view-independent parts
     static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset, int verbose);
 
+    /// compute distance between view-independent parts
+    static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary, Mat34& offset, int verbose);
+
     /// normalize vector
     static inline void normalizeVector(Vec3& normal){
         double norm = normal.norm();
@@ -141,6 +144,11 @@ public:
     static Mat33 coordinateFromNormal(const Vec3& _normal);
     /// compute the min distance to the set of parts
     static double nearestNeighbour(Mat34 pose, std::vector<std::pair<Mat34, int>> parts, int& neighbourId);
+private:
+    ///compute offset for two sets of points
+    static Mat34 computeOffset(const std::vector<std::pair<Mat34, int>>& partASeq, const std::vector<std::pair<Mat34, int>>&partBSeq, Vec3& meanPosA, Vec3& normA, Vec3& meanPosB, Vec3& normB);
+    ///get central points from parts, mean and mean normal vector
+    static void getPoints(const ViewIndependentPart&partA, const ViewIndependentPart& partB, std::vector<std::pair<Mat34, int>>& partASeq, std::vector<std::pair<Mat34, int>>& partBSeq, Vec3& meanPosA, Vec3& normA, Vec3& meanPosB, Vec3& normB);
 };
 
 }

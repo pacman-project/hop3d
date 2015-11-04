@@ -195,12 +195,39 @@ void HOP3DBham::learn(){
     /*for (auto & part : vocabulary){
             part.print();
     }*/
-    partSelector->selectParts(newVocabulary, 5);
+    partSelector->selectParts(newVocabulary, *hierarchy, 5);
     std::cout << "Dictionary size (5-th layer): " << newVocabulary.size() << "\n";
     hierarchy.get()->viewIndependentLayers[1]=newVocabulary;
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
         for (auto & object : objects[categoryNo]){
             object.updateIds(1, hierarchy.get()->viewIndependentLayers[1], *hierarchy);
+        }
+    }
+
+    ///select part for 6th layer
+    vocabulary.clear();
+    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+            std::vector<ViewIndependentPart> vocab;
+            objects[categoryNo][objectNo].createNextLayerVocabulary(2, *hierarchy, vocab);
+            vocabulary.insert(vocabulary.end(),vocab.begin(), vocab.end());
+        }
+    }
+    //compute statistics
+    //select parts
+    std::cout << "initial 6th layer vacabulary size: " << vocabulary.size() << "\n";
+    std::cout << "Compute statistics for " << vocabulary.size() << " octets (6-th layer)\n";
+
+    newVocabulary.clear();
+    statsBuilder->computeStatistics(vocabulary, 6, 0, newVocabulary);
+    std::cout << "vocabulary size after statistics: " << newVocabulary.size() << "\n";
+
+    partSelector->selectParts(newVocabulary, *hierarchy, 6);
+    std::cout << "Dictionary size (6-th layer): " << newVocabulary.size() << "\n";
+    hierarchy.get()->viewIndependentLayers[2]=newVocabulary;
+    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+        for (auto & object : objects[categoryNo]){
+            object.updateIds(2, hierarchy.get()->viewIndependentLayers[2], *hierarchy);
         }
     }
     //visualization

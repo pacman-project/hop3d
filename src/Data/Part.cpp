@@ -84,61 +84,100 @@ double ViewIndependentPart::distance(const ViewIndependentPart& partA, const Vie
     std::vector<std::pair<Mat34, int>> partASeq;
     std::vector<std::pair<Mat34, int>> partBSeq;
     Vec3 normA(0,0,0), normB(0,0,0);
-    //Vec3 meanA(0,0,0), meanB(0,0,0);
-    int partAElementsNo=0; int partBElementsNo=0;
     Vec3 meanPosA(0,0,0); Vec3 meanPosB(0,0,0);
+    getPoints(partA,partB, partASeq, partBSeq, meanPosA, normA, meanPosB, normB);
+    offset = computeOffset(partASeq, partBSeq, meanPosA, normA, meanPosB, normB);
+
+    if (partASeq.size()<partBSeq.size()){
+        for (auto & part : partASeq){
+            int neighbourId=0;
+            sum+=nearestNeighbour(part.first*offset,partBSeq, neighbourId);
+            if (part.second!=partBSeq[neighbourId].second)
+                sum+=1;
+        }
+        sum/=double(partASeq.size());//divide by the number of matched elements
+    }
+    else{
+        for (auto & part : partBSeq){
+            int neighbourId=0;
+            sum+=nearestNeighbour(part.first*(offset.inverse()),partASeq, neighbourId);
+            if (part.second!=partASeq[neighbourId].second)
+                sum+=1;
+        }
+        sum/=double(partBSeq.size());//divide by the number of matched elements
+    }
+    sum+=fabs((double)partBSeq.size()-(double)partASeq.size())*81.0;//on 5th layer each part contain 81 points
+    return sum;
+}
+
+///get central points from parts, mean and mean normal vector
+void ViewIndependentPart::getPoints(const ViewIndependentPart& partA, const ViewIndependentPart& partB, std::vector<std::pair<Mat34, int>>& partASeq, std::vector<std::pair<Mat34, int>>& partBSeq, Vec3& meanPosA, Vec3& normA, Vec3& meanPosB, Vec3& normB){
+    normA = Vec3(0,0,0); normB = Vec3(0,0,0);
+    meanPosA = Vec3(0,0,0); meanPosB = Vec3(0,0,0);
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             for (int k=0;k<3;k++){
                 //Mat34 rel(Eigen::Translation<double, 3>(double(i),double(j),double(k))*Quaternion(1,0,0,0));
                 if(partA.partIds[i][j][k]!=-1){
-                    if (verbose){
-                        std::cout << "pA:\n" << partA.neighbourPoses[i][j][k].matrix() << "\n";
-                    }
                     normA+=partA.neighbourPoses[i][j][k].matrix().block<3,1>(0,2);
       //              meanA+=partA.neighbourPoses[i][j][k].matrix().block<3,1>(0,3);
-                    partAElementsNo++;
                     partASeq.push_back(std::make_pair(partA.neighbourPoses[i][j][k],partA.partIds[i][j][k]));
                     meanPosA+=partA.neighbourPoses[i][j][k].matrix().block<3,1>(0,3);
                 }
                 if(partB.partIds[i][j][k]!=-1){
-                    if (verbose){
-                        std::cout << "pB:\n" << partB.neighbourPoses[i][j][k].matrix() << "\n";
-                    }
                     normB+=partB.neighbourPoses[i][j][k].matrix().block<3,1>(0,2);
         //            meanB+=partB.neighbourPoses[i][j][k].matrix().block<3,1>(0,3);
-                    partBElementsNo++;
                     partBSeq.push_back(std::make_pair(partB.neighbourPoses[i][j][k],partB.partIds[i][j][k]));
                     meanPosB+=partB.neighbourPoses[i][j][k].matrix().block<3,1>(0,3);
                 }
             }
         }
     }
+}
+
+///compute offset for two sets of points
+Mat34 ViewIndependentPart::computeOffset(const std::vector<std::pair<Mat34, int>>& partASeq, const std::vector<std::pair<Mat34, int>>&partBSeq, Vec3& meanPosA, Vec3& normA, Vec3& meanPosB, Vec3& normB){
     meanPosA/=(double)partASeq.size(); meanPosB/=(double)partBSeq.size();
-    if (verbose){
-        std::cout << "mean A " << meanPosA.transpose() << "\n";
-        std::cout << "mean B " << meanPosB.transpose() << "\n";
-    }
     normalizeVector(normA); normalizeVector(normB);
-    //meanA/=double(partAElementsNo); meanB/=double(partBElementsNo);
     Mat33 coordPartA = coordinateFromNormal(normA);
     Mat33 coordPartB = coordinateFromNormal(normB);
     Mat34 partApose(Eigen::Translation<double,3>(meanPosA(0),meanPosA(1),meanPosA(2))*coordPartA);
-//    Mat34 partApose(Eigen::Translation<double,3>(0,0,0)*coordPartA);
     Mat34 partBpose(Eigen::Translation<double,3>(meanPosB(0),meanPosB(1),meanPosB(2))*coordPartB);
-//    Mat34 partBpose(Eigen::Translation<double,3>(0,0,0)*coordPartB);
-    if (verbose){
-        std::cout << "partApose:\n" << partApose.matrix() << "\n";
-        std::cout << "partBpose:\n" << partBpose.matrix() << "\n";
+    return partApose.inverse()*partBpose;
+}
+
+/// compute distance between view-independent parts
+double ViewIndependentPart::distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary, Mat34& offset, int verbose){
+    if (partA.partIds==partB.partIds){
+        offset = Mat34::Identity();
+        return 0;
     }
-    offset = partApose.inverse()*partBpose;
-    /*offset(0,3) = meanPosA(0)-meanPosB(0);
-    offset(1,3) = meanPosA(1)-meanPosB(1);
-    offset(2,3) = meanPosA(2)-meanPosB(2);*/
-    if (verbose){
-        std::cout << "offset:\n" << offset.matrix() << "\n";
-        getchar();
+    std::vector<std::pair<Mat34, int>> partASeq;
+    std::vector<std::pair<Mat34, int>> partBSeq;
+    Vec3 normA(0,0,0), normB(0,0,0);
+    Vec3 meanPosA(0,0,0); Vec3 meanPosB(0,0,0);
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
+                ViewIndependentPart pA, pB;
+                if (partA.partIds[i][j][k]!=-1)
+                    pA= vocabulary[partA.partIds[i][j][k]];
+                if (partB.partIds[i][j][k]!=-1)
+                    pB= vocabulary[partB.partIds[i][j][k]];
+                Vec3 nA(0,0,0), nB(0,0,0);
+                Vec3 meanA(0,0,0); Vec3 meanB(0,0,0);
+                getPoints(pA, pB, partASeq, partBSeq, meanA, nA, meanB, nB);
+                if (partA.partIds[i][j][k]!=-1){
+                    meanPosA+=meanA; normA+=nA;
+                }
+                if (partB.partIds[i][j][k]!=-1){
+                    meanPosB+=meanB; normB+=nB;
+                }
+            }
+        }
     }
+    double sum=0;
+    offset = computeOffset(partASeq, partBSeq, meanPosA, normA, meanPosB, normB);
 
     if (partASeq.size()<partBSeq.size()){
         for (auto & part : partASeq){
