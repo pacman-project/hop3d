@@ -49,7 +49,11 @@ PartSelectorMean::Config::Config(std::string configFilename){
 
 /// Select parts from the initial vocabulary
 void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
-    int clustersNo = (layerNo==5) ? config.clustersNo[4] : config.clustersNo[5];
+    int clustersNo;
+    if (config.useCompressionRate[layerNo-1])
+        clustersNo = (int)(config.compressionRate[layerNo-1]*(int)dictionary.size());
+    else
+        clustersNo = config.clustersNo[layerNo-1];
     if ((size_t)clustersNo > dictionary.size())
         clustersNo = (int)dictionary.size();
     if (config.verbose>0){
@@ -107,7 +111,11 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const H
 
 /// Select parts from the initial vocabulary
 void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
-    int clustersNo = (layerNo==2) ? config.clustersNo[1] : config.clustersNo[2];
+    int clustersNo;
+    if (config.useCompressionRate[layerNo-1])
+        clustersNo = (int)(config.compressionRate[layerNo-1]*(int)dictionary.size());
+    else
+        clustersNo = config.clustersNo[layerNo-1];
     if ((size_t)clustersNo > dictionary.size())
         clustersNo = (int)dictionary.size();
     if (config.verbose>0){

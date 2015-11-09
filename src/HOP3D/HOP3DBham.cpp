@@ -204,7 +204,6 @@ void HOP3DBham::learn(){
             }
         }
     }
-
     //visualization
     notify(*hierarchy);
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category

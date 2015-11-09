@@ -109,7 +109,7 @@ void ObjectCompositionOctree::updateIds(int layerNo, const std::vector<ViewIndep
                     }
                     if ((*octrees[layerNo])(idX,idY,idZ).layerId==6){//compute distance from centroid
                         Mat34 off;
-                        ViewIndependentPart::distance(hierarchy.viewIndependentLayers[2][(*octrees[layerNo])(idX,idY,idZ).id], (*octrees[layerNo])(idX,idY,idZ), vocabulary, off, 0);
+                        ViewIndependentPart::distance(hierarchy.viewIndependentLayers[2][(*octrees[layerNo])(idX,idY,idZ).id], (*octrees[layerNo])(idX,idY,idZ), hierarchy.viewIndependentLayers[1], off, 0);
                         (*octrees[layerNo])(idX,idY,idZ).offset = off;
                         //std::cout << "old id " << idOld << ", new id " << (*octrees[layerNo])(idX,idY,idZ).id << "\n";
                         //std::cout << "offset \n" << (*octrees[layerNo])(idX,idY,idZ).offset.matrix() << "\n";
