@@ -50,18 +50,18 @@ public:
         public:
             /// Verbose
             int verbose;
-            /// Clusters no -- first layer
-            int clustersSecondLayer;
-            /// Clusters no -- second layer
-            int clustersThirdLayer;
-            /// Clusters no -- fifth layer
-            int clustersFifthLayer;
-            /// Clusters no -- fifth layer
-            int clustersSixthLayer;
             /// Clustering -- max number of iterations
             int maxIter;
             /// Dictance measure
             int distanceMetric;
+            /// Numbber of layers
+            int layersNo;
+            /// use compression rate
+            std::vector<bool> useCompressionRate;
+            /// clusters numbers
+            std::vector<int> clustersNo;
+            /// compressionRate
+            std::vector<double> compressionRate;
     };
 
 private:

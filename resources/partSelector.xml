@@ -10,5 +10,12 @@
 		  1 -> dot product of normals and Euclidean distance
 		  2 -> dot product of normals and Mahalanobis distance
     -->
-    <parameters verbose="1" distanceMetric="2" clustersSecondLayer="730" clustersThirdLayer="100" clustersFifthLayer="43" clustersSixthLayer="5" maxIter="10"></parameters>
+    <parameters verbose="1" distanceMetric="2" layersNo="7" maxIter="10"></parameters>
+    <layer1 clusters="-1" useCompressionRate="false" compressionRate="0.5"></layer1> <!--constant size-->
+    <layer2 clusters="430" useCompressionRate="false" compressionsRate="0.7"></layer2>
+    <layer3 clusters="100" useCompressionRate="false" compressionsRate="0.8"></layer3>
+    <layer4 clusters="-1" useCompressionRate="false" compressionsRate="0.5"></layer4> <!--constant size-->
+    <layer5 clusters="43" useCompressionRate="false" compressionsRate="1.0"></layer5>
+    <layer6 clusters="5" useCompressionRate="false" compressionsRate="1.0"></layer6>
+    <layer7 clusters="5" useCompressionRate="false" compressionsRate="1.0"></layer7>
   </PartSelector>

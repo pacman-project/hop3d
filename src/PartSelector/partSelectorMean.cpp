@@ -31,17 +31,25 @@ PartSelectorMean::Config::Config(std::string configFilename){
     if (verbose == 1) {
         std::cout << "Load part selector parameters...\n";
     }
-    group->FirstChildElement( "parameters" )->QueryIntAttribute("clustersSecondLayer", &clustersSecondLayer);
-    group->FirstChildElement( "parameters" )->QueryIntAttribute("clustersThirdLayer", &clustersThirdLayer);
-    group->FirstChildElement( "parameters" )->QueryIntAttribute("clustersFifthLayer", &clustersFifthLayer);
-    group->FirstChildElement( "parameters" )->QueryIntAttribute("clustersSixthLayer", &clustersSixthLayer);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("maxIter", &maxIter);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("distanceMetric", &distanceMetric);
+    group->FirstChildElement( "parameters" )->QueryIntAttribute("layersNo", &layersNo);
+    useCompressionRate.resize(layersNo);
+    clustersNo.resize(layersNo);
+    compressionRate.resize(layersNo);
+    for (int i=0;i<layersNo;i++){
+        std::string layerName = "layer" + std::to_string(i+1);
+        bool ucr;
+        group->FirstChildElement( layerName.c_str() )->QueryBoolAttribute("useCompressionRate", &ucr);
+        useCompressionRate[i]=ucr;
+        group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("compressionRate", &compressionRate[i]);
+        group->FirstChildElement( layerName.c_str() )->QueryIntAttribute("clusters", &clustersNo[i]);
+    }
 }
 
 /// Select parts from the initial vocabulary
 void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
-    int clustersNo = (layerNo==5) ? config.clustersFifthLayer : config.clustersSixthLayer;
+    int clustersNo = (layerNo==5) ? config.clustersNo[4] : config.clustersNo[5];
     if ((size_t)clustersNo > dictionary.size())
         clustersNo = (int)dictionary.size();
     if (config.verbose>0){
@@ -99,7 +107,7 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const H
 
 /// Select parts from the initial vocabulary
 void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
-    int clustersNo = (layerNo==2) ? config.clustersSecondLayer : config.clustersThirdLayer;
+    int clustersNo = (layerNo==2) ? config.clustersNo[1] : config.clustersNo[2];
     if ((size_t)clustersNo > dictionary.size())
         clustersNo = (int)dictionary.size();
     if (config.verbose>0){

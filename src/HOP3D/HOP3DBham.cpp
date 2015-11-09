@@ -139,7 +139,6 @@ void HOP3DBham::learn(){
             std::cout << "Create object composition\n";
             ObjectCompositionOctree object(config.compositionConfig);
             objects[categoryNo].push_back(object);
-            std::cout << "object no " << objectNo << "\n";
             for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
                 //int layerNo=3;
                 std::vector<ViewDependentPart> parts;
@@ -172,64 +171,40 @@ void HOP3DBham::learn(){
 //    for (auto & word : vocabulary){
 //        word.print();
 //    }
-    ///select part for 5th layer
-    vocabulary.clear();
-    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
-            std::vector<ViewIndependentPart> vocab;
-            objects[categoryNo][objectNo].createNextLayerVocabulary(1, *hierarchy, vocab);
-            vocabulary.insert(vocabulary.end(),vocab.begin(), vocab.end());
+    for (int layerNo=0;layerNo<config.viewIndependentLayersNo-1;layerNo++){
+        ///select part for ith layer
+        vocabulary.clear();
+        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+            for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+                std::vector<ViewIndependentPart> vocab;
+                objects[categoryNo][objectNo].createNextLayerVocabulary(layerNo+1, *hierarchy, vocab);
+                vocabulary.insert(vocabulary.end(),vocab.begin(), vocab.end());
+            }
         }
-    }
-    //compute statistics
-    //select parts
-    std::cout << "initial 5th layer vacabulary size: " << vocabulary.size() << "\n";
-    std::cout << "Compute statistics for " << vocabulary.size() << " octets (5-th layer)\n";
-    /*for (auto & part : vocabulary){
-        if (part.id==0)
-            part.print();
-    }*/
-    ViewIndependentPart::Seq newVocabulary;
-    statsBuilder->computeStatistics(vocabulary, 5, 0, newVocabulary);
-    std::cout << "vocabulary size after statistics: " << newVocabulary.size() << "\n";
-    /*for (auto & part : vocabulary){
-            part.print();
-    }*/
-    partSelector->selectParts(newVocabulary, *hierarchy, 5);
-    std::cout << "Dictionary size (5-th layer): " << newVocabulary.size() << "\n";
-    hierarchy.get()->viewIndependentLayers[1]=newVocabulary;
-    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-        for (auto & object : objects[categoryNo]){
-            object.updateIds(1, hierarchy.get()->viewIndependentLayers[1], *hierarchy);
+        //compute statistics
+        //select parts
+        std::cout << "initial " << layerNo+5 << "th layer vacabulary size: " << vocabulary.size() << "\n";
+        std::cout << "Compute statistics for " << vocabulary.size() << " octets (5-th layer)\n";
+        /*for (auto & part : vocabulary){
+            if (part.id==0)
+                part.print();
+        }*/
+        ViewIndependentPart::Seq newVocabulary;
+        statsBuilder->computeStatistics(vocabulary, layerNo+5, 0, newVocabulary);
+        std::cout << "vocabulary size after statistics: " << newVocabulary.size() << "\n";
+        /*for (auto & part : vocabulary){
+                part.print();
+        }*/
+        partSelector->selectParts(newVocabulary, *hierarchy, layerNo+5);
+        std::cout << "Dictionary size (" << layerNo+5 << "-th layer): " << newVocabulary.size() << "\n";
+        hierarchy.get()->viewIndependentLayers[layerNo+1]=newVocabulary;
+        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+            for (auto & object : objects[categoryNo]){
+                object.updateIds(layerNo+1, hierarchy.get()->viewIndependentLayers[layerNo+1], *hierarchy);
+            }
         }
     }
 
-    ///select part for 6th layer
-    vocabulary.clear();
-    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
-            std::vector<ViewIndependentPart> vocab;
-            objects[categoryNo][objectNo].createNextLayerVocabulary(2, *hierarchy, vocab);
-            vocabulary.insert(vocabulary.end(),vocab.begin(), vocab.end());
-        }
-    }
-    //compute statistics
-    //select parts
-    std::cout << "initial 6th layer vacabulary size: " << vocabulary.size() << "\n";
-    std::cout << "Compute statistics for " << vocabulary.size() << " octets (6-th layer)\n";
-
-    newVocabulary.clear();
-    statsBuilder->computeStatistics(vocabulary, 6, 0, newVocabulary);
-    std::cout << "vocabulary size after statistics: " << newVocabulary.size() << "\n";
-
-    partSelector->selectParts(newVocabulary, *hierarchy, 6);
-    std::cout << "Dictionary size (6-th layer): " << newVocabulary.size() << "\n";
-    hierarchy.get()->viewIndependentLayers[2]=newVocabulary;
-    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-        for (auto & object : objects[categoryNo]){
-            object.updateIds(2, hierarchy.get()->viewIndependentLayers[2], *hierarchy);
-        }
-    }
     //visualization
     notify(*hierarchy);
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
