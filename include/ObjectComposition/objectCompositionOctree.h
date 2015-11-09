@@ -75,16 +75,16 @@ private:
     //void normal2rot(const Vec3& normal, Mat33& rot);
 
     /// assign neighbouring parts to new part
-    int assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z, double scale);
+    int assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z);
 
     /// find part in the vocabulary and return new id
     int findIdInVocabulary(const ViewIndependentPart& part, const std::vector<ViewIndependentPart>& vocabulary);
 
     /// convert global coordinates to octree coordinates
-    void toCoordinate(double pos, int& coord, double scale);
+    void toCoordinate(double pos, int& coord, int layerNo);
 
     /// convert octree coordinates to global coordinates
-    void fromCoordinate(int coord, double& pos, double scale);
+    void fromCoordinate(int coord, double& pos, int layero);
 };
 }
 #endif // OBJECT_COMPOSITION_OCTREE_H_INCLUDED

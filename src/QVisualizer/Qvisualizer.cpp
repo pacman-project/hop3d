@@ -244,7 +244,7 @@ void QGLVisualizer::updateHierarchy(){
 /// Draw point clouds
 void QGLVisualizer::drawPointClouds(void){
     //mtxPointClouds.lock();
-    for (int layerNo=0;layerNo<5;layerNo++){
+    for (int layerNo=0;layerNo<(int)cloudsListLayers.size();layerNo++){
         for (size_t i = 0;i<cloudsListLayers[layerNo].size();i++){
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.partDist[layerNo]*double(i)-((double)cloudsListLayers[layerNo].size()/2)*config.partDist[layerNo]), 0, config.posZ[layerNo], 1};
             glPushMatrix();

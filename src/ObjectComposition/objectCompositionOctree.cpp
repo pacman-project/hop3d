@@ -61,9 +61,9 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
 
         partPosition = cameraPose * part3D;//global position of the part
         int x,y,z;
-        toCoordinate(partPosition(0,3),x, config.voxelSize);
-        toCoordinate(partPosition(1,3),y, config.voxelSize);
-        toCoordinate(partPosition(2,3),z, config.voxelSize);
+        toCoordinate(partPosition(0,3),x, layerNo);
+        toCoordinate(partPosition(1,3),y, layerNo);
+        toCoordinate(partPosition(2,3),z, layerNo);
         if (config.verbose==1){
             std::cout << "Update octree, xyz: " << x << ", " << y << ", " << z << "\n";
         }
@@ -79,13 +79,14 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
 }
 
 /// convert global coordinates to octree coordinates
-void ObjectCompositionOctree::toCoordinate(double pos, int& coord, double scale){
-    coord = int(pos/scale)+config.voxelsNo/2;
+void ObjectCompositionOctree::toCoordinate(double pos, int& coord, int layerNo){
+    coord = int(pos/(pow(3.0,layerNo)*config.voxelSize))+(int)(config.voxelsNo/(2*pow(3.0,layerNo)));
+    //coord = int(pos/scale)+config.voxelsNo/2;
 }
 
 /// convert octree coordinates to global coordinates
-void ObjectCompositionOctree::fromCoordinate(int coord, double& pos, double scale){
-    pos = scale*(coord-config.voxelsNo/2)+(scale/2.0);
+void ObjectCompositionOctree::fromCoordinate(int coord, double& pos, int layerNo){
+    pos = (pow(3.0,layerNo)*config.voxelSize)*(coord-config.voxelsNo/(2*pow(3.0,layerNo)))+((pow(3.0,layerNo)*config.voxelSize)/2.0);
 }
 
 /// update ids in the octree using new vocabulary
@@ -214,7 +215,7 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
                 ViewIndependentPart newPart;
                 newPart.layerId=destLayerNo+4;
                 // add neighbouring parts into structure
-                if (assignPartNeighbours(newPart, hierarchy, destLayerNo-1, idX, idY, idZ, pow(3.0,destLayerNo-1)*config.voxelSize)>0){
+                if (assignPartNeighbours(newPart, hierarchy, destLayerNo-1, idX, idY, idZ)>0){
                     newPart.id = tempId;//hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
                     (*octrees[destLayerNo])(iterx,itery,iterz) = newPart;//update octree
                     vocabulary.push_back(newPart);
@@ -229,11 +230,11 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
 }
 
 /// assign neighbouring parts to new part
-int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z, double scale){
+int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z){
     Mat34 pose(Mat34::Identity());
-    fromCoordinate(x, pose(0,3), scale);
-    fromCoordinate(y, pose(1,3), scale);
-    fromCoordinate(z, pose(2,3), scale);
+    fromCoordinate(x, pose(0,3), layerNo);
+    fromCoordinate(y, pose(1,3), layerNo);
+    fromCoordinate(z, pose(2,3), layerNo);
     //pose(0,3) = scale*x+(scale/2.0); pose(1,3) = scale*y+(scale/2.0); pose(2,3) = scale*z+(scale/2.0);
 //    if ((*octrees[layerNo]).at(x,y,z).id!=-1){
 //        partVoxel.pose = (*octrees[layerNo]).at(x,y,z).pose;
