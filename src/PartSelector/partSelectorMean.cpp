@@ -188,6 +188,9 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
             else if (it->layerId==6){//compute distance from centroid
                 dist = ViewIndependentPart::distance(*it, dictionary[*itCentr], hierarchy.viewIndependentLayers[1], offset,0);
             }
+            else if (it->layerId==7){//compute distance from centroid
+                dist = ViewIndependentPart::distance(*it, dictionary[*itCentr], hierarchy.viewIndependentLayers[1], hierarchy.viewIndependentLayers[2], offset);
+            }
             if (dist<minDist){
                 minDist = dist;
                 centroidId = clusterNo;
@@ -273,6 +276,9 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::S
                 }
                 else if (itPart->layerId==6){//compute distance from centroid
                     distSum += ViewIndependentPart::distance(*itPart, *itPart2, hierarchy.viewIndependentLayers[1], offset,0);
+                }
+                else if (itPart->layerId==7){//compute distance from centroid
+                    distSum += ViewIndependentPart::distance(*itPart, *itPart2, hierarchy.viewIndependentLayers[1], hierarchy.viewIndependentLayers[2], offset);
                 }
             }
             if (distSum<distMin){

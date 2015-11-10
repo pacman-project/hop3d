@@ -146,6 +146,74 @@ Mat34 ViewIndependentPart::computeOffset(const std::vector<std::pair<Mat34, int>
     return partApose.inverse()*partBpose;
 }
 
+/// compute distance between view-independent parts (7th layer)
+double ViewIndependentPart::distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary1, const ViewIndependentPart::Seq vocabulary2, Mat34& offset){
+    if (partA.partIds==partB.partIds){
+        offset = Mat34::Identity();
+        return 0;
+    }
+    std::vector<std::pair<Mat34, int>> partASeq;
+    std::vector<std::pair<Mat34, int>> partBSeq;
+    Vec3 normA(0,0,0), normB(0,0,0);
+    Vec3 meanPosA(0,0,0); Vec3 meanPosB(0,0,0);
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
+                ViewIndependentPart pA, pB;
+                if (partA.partIds[i][j][k]!=-1)
+                    pA= vocabulary2[partA.partIds[i][j][k]];
+                if (partB.partIds[i][j][k]!=-1)
+                    pB= vocabulary2[partB.partIds[i][j][k]];
+                if ((partA.partIds[i][j][k]!=-1)&&(partA.partIds[i][j][k]!=-1)){
+                    for (int l=0;l<3;l++){
+                        for (int m=0;m<3;m++){
+                            for (int n=0;n<3;n++){
+                                ViewIndependentPart pAA, pBB;
+                                if (pA.partIds[i][j][k]!=-1)
+                                    pAA= vocabulary1[pA.partIds[i][j][k]];
+                                if (pB.partIds[i][j][k]!=-1)
+                                    pBB= vocabulary1[pB.partIds[i][j][k]];
+                                Vec3 nA(0,0,0), nB(0,0,0);
+                                Vec3 meanA(0,0,0); Vec3 meanB(0,0,0);
+                                getPoints(pAA, pBB, partASeq, partBSeq, meanA, nA, meanB, nB);
+                                if (pA.partIds[i][j][k]!=-1){
+                                    meanPosA+=meanA; normA+=nA;
+                                }
+                                if (pB.partIds[i][j][k]!=-1){
+                                    meanPosB+=meanB; normB+=nB;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    double sum=0;
+    offset = computeOffset(partASeq, partBSeq, meanPosA, normA, meanPosB, normB);
+
+    if (partASeq.size()<partBSeq.size()){
+        for (auto & part : partASeq){
+            int neighbourId=0;
+            sum+=nearestNeighbour(part.first*offset,partBSeq, neighbourId);
+            if (part.second!=partBSeq[neighbourId].second)
+                sum+=1;
+        }
+        sum/=double(partASeq.size());//divide by the number of matched elements
+    }
+    else{
+        for (auto & part : partBSeq){
+            int neighbourId=0;
+            sum+=nearestNeighbour(part.first*(offset.inverse()),partASeq, neighbourId);
+            if (part.second!=partASeq[neighbourId].second)
+                sum+=1;
+        }
+        sum/=double(partBSeq.size());//divide by the number of matched elements
+    }
+    sum+=fabs((double)partBSeq.size()-(double)partASeq.size())*81.0;//on 5th layer each part contain 81 points
+    return sum;
+}
+
 /// compute distance between view-independent parts
 double ViewIndependentPart::distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary, Mat34& offset, int verbose){
     if (partA.partIds==partB.partIds){

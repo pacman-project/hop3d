@@ -13,18 +13,20 @@ ObjectCompositionOctree::ObjectCompositionOctree(void) : ObjectComposition("Octr
 /// Construction
 ObjectCompositionOctree::ObjectCompositionOctree(std::string _config) :
         ObjectComposition("Octree Object Composition", COMPOSITION_OCTREE), config(_config) {
-    octrees.resize(3);
+    octrees.resize(4);
     octrees[0].reset(new Octree<ViewIndependentPart>(config.voxelsNo)); // cellSize0
     octrees[1].reset(new Octree<ViewIndependentPart>(config.voxelsNo/2)); // cellSize1=cellSize0*3;
     octrees[2].reset(new Octree<ViewIndependentPart>(config.voxelsNo/4)); // cellSize2=cellSize1*3=cellSize0*9;
+    octrees[3].reset(new Octree<ViewIndependentPart>(config.voxelsNo/8)); // cellSize2=cellSize1*3=cellSize0*9;
 }
 
 /// Destruction
 ObjectCompositionOctree::~ObjectCompositionOctree(void) {
-    octrees.resize(3);
-    octrees[0].reset(new Octree<ViewIndependentPart>(8)); // cellSize0
+    octrees.resize(4);
+    octrees[0].reset(new Octree<ViewIndependentPart>(2)); // cellSize0
     octrees[1].reset(new Octree<ViewIndependentPart>(4)); // cellSize1=cellSize0*3;
-    octrees[2].reset(new Octree<ViewIndependentPart>(2)); // cellSize2=cellSize1*3=cellSize0*9;
+    octrees[2].reset(new Octree<ViewIndependentPart>(8)); // cellSize2=cellSize1*3=cellSize0*9;
+    octrees[3].reset(new Octree<ViewIndependentPart>(16)); // cellSize2=cellSize1*3=cellSize0*9;
 }
 
 ///config class constructor

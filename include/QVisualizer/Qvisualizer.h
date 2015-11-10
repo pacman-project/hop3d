@@ -53,7 +53,7 @@ public:
             model->FirstChildElement( "hierarchy" )->QueryBoolAttribute("draw3Dobjects", &draw3Dobjects);
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("voxelSize", &voxelSize);
 
-            int layersNo=6;
+            int layersNo=7;
             partDist.resize(layersNo);
             posZ.resize(layersNo);
             for (int i=0;i<layersNo;i++){

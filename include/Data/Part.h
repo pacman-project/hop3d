@@ -134,6 +134,9 @@ public:
     /// compute distance between view-independent parts
     static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary, Mat34& offset, int verbose);
 
+    /// compute distance between view-independent parts (7th layer)
+    static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary1, const ViewIndependentPart::Seq vocabulary2, Mat34& offset);
+
     /// normalize vector
     static inline void normalizeVector(Vec3& normal){
         double norm = normal.norm();

@@ -10,6 +10,7 @@
 	<layer4 dist="0.3" posZ="1.5"></layer4>
 	<layer5 dist="0.4" posZ="2.0"></layer5>
 	<layer6 dist="0.5" posZ="2.5"></layer6>
+	<layer7 dist="0.6" posZ="3.5"></layer7>
 	<objectsLayer1 dist="1.12" posY="-0.7" posZ="0.0"></objectsLayer1>
 	<objectsLayer2 dist="1.12" posY="-0.7" posZ="0.5"></objectsLayer2>
 	<background red="0.2" green="0.2" blue="0.2" alpha="1.0"></background>

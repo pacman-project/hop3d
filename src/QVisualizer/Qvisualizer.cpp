@@ -76,21 +76,21 @@ public:
 
 QGLVisualizer::QGLVisualizer(void) {
     hierarchy.reset(new Hierarchy());
-    cloudsListLayers.resize(6);
-    clustersList.resize(6);
-    linksLists.resize(6);
-    layersOfObjects.resize(6);
-    objects3Dlist.resize(6);
+    cloudsListLayers.resize(7);
+    clustersList.resize(7);
+    linksLists.resize(7);
+    layersOfObjects.resize(7);
+    objects3Dlist.resize(7);
 }
 
 /// Construction
 QGLVisualizer::QGLVisualizer(Config _config): config(_config), updateHierarchyFlag(false){
     hierarchy.reset(new Hierarchy("configGlobal.xml"));
-    cloudsListLayers.resize(6);
-    clustersList.resize(6);
-    linksLists.resize(6);
-    layersOfObjects.resize(6);
-    objects3Dlist.resize(6);
+    cloudsListLayers.resize(7);
+    clustersList.resize(7);
+    linksLists.resize(7);
+    layersOfObjects.resize(7);
+    objects3Dlist.resize(7);
 }
 
 /// Construction
@@ -238,6 +238,9 @@ void QGLVisualizer::updateHierarchy(){
             linksLists[i+3].push_back(createVILinksList(int(i+4)));
         }
         mtxHierarchy.unlock();
+    }
+    else{
+        usleep(20000);
     }
 }
 
