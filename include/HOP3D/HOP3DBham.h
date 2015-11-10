@@ -80,6 +80,10 @@ public:
             std::string datasetConfig;
             /// dataset type
             int datasetType;
+            /// save hierarchy to file
+            bool save2file;
+            /// hierarchy filename
+            std::string filename2save;
     };
 
 private:

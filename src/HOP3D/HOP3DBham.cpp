@@ -64,6 +64,9 @@ HOP3DBham::Config::Config(std::string configFilename){
     group->FirstChildElement( "parameters" )->QueryIntAttribute("viewDependentLayersNo", &viewDependentLayersNo);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("viewIndependentLayersNo", &viewIndependentLayersNo);
 
+    group->FirstChildElement( "save2file" )->QueryBoolAttribute("save2file", &save2file);
+    filename2save = group->FirstChildElement( "save2file" )->Attribute( "filename2save" );
+
     statsConfig = (config.FirstChildElement( "StatisticsBuilder" )->Attribute( "configFilename" ));
     selectorConfig = (config.FirstChildElement( "PartSelector" )->Attribute( "configFilename" ));
     filtererConfig = (config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
@@ -80,7 +83,7 @@ void HOP3DBham::learn(){
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
     hop3d::ViewDependentPart::Seq dictionary;
 
-    ///2nd layer
+    /// 2nd layer
     //std::vector<cv::Mat> vecImages;
     //hop3d::Reader reader;
     //reader.readMultipleImages("../../resources/depthImages",vecImages);
@@ -183,7 +186,7 @@ void HOP3DBham::learn(){
         //compute statistics
         //select parts
         std::cout << "initial " << layerNo+5 << "th layer vacabulary size: " << vocabulary.size() << "\n";
-        std::cout << "Compute statistics for " << vocabulary.size() << " octets (5-th layer)\n";
+        std::cout << "Compute statistics for " << vocabulary.size() << " octets (" << layerNo + 5 << "-th layer)\n";
         ViewIndependentPart::Seq newVocabulary;
         statsBuilder->computeStatistics(vocabulary, layerNo+5, 0, newVocabulary);
         std::cout << "vocabulary size after statistics: " << newVocabulary.size() << "\n";
@@ -196,6 +199,15 @@ void HOP3DBham::learn(){
             }
         }
     }
+    // save hierarchy to file
+    if(config.save2file){
+        std::ofstream ofsHierarchy(config.filename2save);
+        ofsHierarchy << *hierarchy;
+        ofsHierarchy.close();
+    }
+    std::ifstream ifsHierarchy(config.filename2save);
+    ifsHierarchy >> *hierarchy;
+    ifsHierarchy.close();
     //visualization
     notify(*hierarchy);
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category

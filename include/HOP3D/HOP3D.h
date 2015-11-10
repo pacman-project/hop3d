@@ -31,7 +31,7 @@ public:
     /// Name of the hop3d
     virtual const std::string& getName() const {return name;}
 
-    /// learining from the dataset
+    /// learning from the dataset
     virtual void learn(void) = 0;
 
     /// Virtual descrutor
@@ -45,6 +45,6 @@ protected:
     /// Map type
     Type type;
 };
-};
+}
 
 #endif // _HOP3D_H_

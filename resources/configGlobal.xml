@@ -24,6 +24,7 @@
 <!--   Hierarchy configuration -->
   <Hierarchy>
     <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="4" categoriesNo="1" objectsNo="1" imagesNo="1"></parameters>
+    <save2file save2file="true" filename2save="hierarchyBoris.h3d"/>
   </Hierarchy>
   
 <!--  3D object composition configuration -->

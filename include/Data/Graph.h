@@ -21,6 +21,15 @@ public:
         viewDependentLayers(_viewDepLayersNo), viewIndependentLayers(_viewIndepLayersNo){
     }
 
+    // Insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const Hierarchy& hierarchy);//{
+//        os << hierarchy.firstLayer.size() << "\n";
+//        return os;
+    //}
+
+    // Extraction operator
+    friend std::istream& operator>>(std::istream& is, Hierarchy& hierarchy);
+
     /// relation between parts from last view dependent vocabulary and first view-independent
     std::map<int,int> interpreter;
 
