@@ -387,4 +387,49 @@ void ViewDependentPart::getNormal(Vec3& normal, const ViewDependentPart::Seq& la
     }
 }
 
+// Insertion operator
+std::ostream& operator<<(std::ostream& os, const ViewDependentPart& part){
+    os << part.id << " " << static_cast<unsigned int>(part.type) << " " << part.layerId << " " << part.cameraPoseId << " " << part.location;
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            os << part.partIds[i][j] << " ";
+        }
+    }
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            os << part.gaussians[i][j];
+        }
+    }
+    os << part.group.size() << "\n";
+    for (size_t i=0;i<part.group.size();i++){
+        os << part.group[i];
+    }
+    os << "\n";
+    return os;
+}
+
+// Extraction operator
+std::istream& operator>>(std::istream& is, ViewDependentPart& part){
+    unsigned int type;
+    is >> part.id >> type >> part.layerId >> part.cameraPoseId >> part.location;
+    part.type = static_cast<Part::Type>(type);
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            is >> part.partIds[i][j];
+        }
+    }
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            is >> part.gaussians[i][j];
+        }
+    }
+    int groupSize;
+    is >> groupSize;
+    part.group.resize(groupSize);
+    for (int i=0;i<groupSize;i++){
+        is >> part.group[i];
+    }
+    return is;
+}
+
 }

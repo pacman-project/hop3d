@@ -22,10 +22,7 @@ public:
     }
 
     // Insertion operator
-    friend std::ostream& operator<<(std::ostream& os, const Hierarchy& hierarchy);//{
-//        os << hierarchy.firstLayer.size() << "\n";
-//        return os;
-    //}
+    friend std::ostream& operator<<(std::ostream& os, const Hierarchy& hierarchy);
 
     // Extraction operator
     friend std::istream& operator>>(std::istream& is, Hierarchy& hierarchy);

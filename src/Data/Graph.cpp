@@ -25,21 +25,14 @@ std::ostream& operator<<(std::ostream& os, const Hierarchy& hierarchy){
     //save filters no
     os << hierarchy.firstLayer.size() << "\n";
     for (auto& filter : hierarchy.firstLayer){
-        os << filter.id;
-        os << " " << filter.normal(0) << " " << filter.normal(1) << " " << filter.normal(2) << " ";
-        os << filter.mask.rows << " " << filter.mask.cols << " ";
-        for (int i=0;i<filter.mask.rows;i++){
-            for (int j=0;j<filter.mask.cols;j++){
-                os << filter.mask.at<double>(i,j) << " ";
-            }
+        os << filter;
+    }
+    os << hierarchy.viewDependentLayers.size() << "\n";
+    for (size_t i = 0;i<hierarchy.viewDependentLayers.size();i++){
+        os << hierarchy.viewDependentLayers[i].size() << "\n";
+        for (auto& part : hierarchy.viewDependentLayers[i]){
+            os << part;
         }
-        os << filter.patch.rows << " " << filter.patch.cols << " ";
-        for (int i=0;i<filter.patch.rows;i++){
-            for (int j=0;j<filter.patch.cols;j++){
-                os << filter.patch.at<double>(i,j) << " ";
-            }
-        }
-        os << "\n";
     }
     return os;
 }
@@ -53,28 +46,22 @@ std::istream& operator>>(std::istream& is, Hierarchy& hierarchy){
     hierarchy.firstLayer.reserve(filtersNo);
     for (int i=0;i<filtersNo;i++){
         Filter filterTmp;
-        is >> filterTmp.id;
-        is >> filterTmp.normal(0) >> filterTmp.normal(1) >> filterTmp.normal(2);
-        int cols, rows;
-        is >> rows >> cols;
-        cv::Mat maskTmp(cols,rows, cv::DataType<double>::type,1);
-        for (int i=0;i<rows;i++){
-            for (int j=0;j<cols;j++){
-                is >> maskTmp.at<double>(i,j);
-            }
-        }
-        filterTmp.mask = maskTmp.clone();
-        is >> rows >> cols;
-        cv::Mat patchTmp(cols,rows, cv::DataType<double>::type,1);
-        for (int i=0;i<rows;i++){
-            for (int j=0;j<cols;j++){
-                is >> patchTmp.at<double>(i,j);
-            }
-        }
-        filterTmp.patch = patchTmp.clone();
+        is >> filterTmp;
         hierarchy.firstLayer.push_back(filterTmp);
     }
-    //cv::Mat patchTmp(config.filterSize,config.filterSize, cv::DataType<double>::type);
+    int viewDepLayersNo;
+    is >> viewDepLayersNo;
+    hierarchy.viewDependentLayers.clear();
+    hierarchy.viewDependentLayers.resize(viewDepLayersNo);
+    for (int i = 0;i<viewDepLayersNo;i++){
+        int partsNo;
+        is >> partsNo;
+        for (int j = 0;j<partsNo;j++){
+            ViewDependentPart part;
+            is >> part;
+            hierarchy.viewDependentLayers[i].push_back(part);
+        }
+    }
     return is;
 }
 

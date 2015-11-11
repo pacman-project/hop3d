@@ -60,7 +60,9 @@ public:
     std::vector<ViewDependentPart> group;
 
     /// Construction
-    inline ViewDependentPart(){}
+    inline ViewDependentPart(){
+        type = PART_VIEW_DEP;
+    }
 
     /// Construction
     inline ViewDependentPart(int _id, int _layerId, ImageCoordsDepth _location) :
@@ -75,6 +77,12 @@ public:
 
     ///get normal vector related to that part
     void getNormal(Vec3& normal, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters) const;
+
+    // Insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const ViewDependentPart& part);
+
+    // Extraction operator
+    friend std::istream& operator>>(std::istream& is, ViewDependentPart& part);
 
     /// Print
     void print() const;

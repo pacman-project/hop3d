@@ -84,6 +84,12 @@ public:
     /// compute distance between filters
     static double distance(const Filter& filterA, const Filter& filterB);
 
+    // Insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const Filter& hierarchy);
+
+    // Extraction operator
+    friend std::istream& operator>>(std::istream& is, Filter& hierarchy);
+
     ///Construction
     Filter(){}
 };
@@ -112,6 +118,12 @@ public:
 
     ///Depth value
     double depth;
+
+    // Insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const ImageCoordsDepth& coords);
+
+    // Extraction operator
+    friend std::istream& operator>>(std::istream& is, ImageCoordsDepth& coords);
 
     /// Construction
     ImageCoordsDepth(){};
@@ -159,6 +171,12 @@ public:
     /// covariance matrix
     Mat33 covariance;
 
+    // Insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const Gaussian3D& gaussian);
+
+    // Extraction operator
+    friend std::istream& operator>>(std::istream& is, Gaussian3D& gaussian);
+
     /// Construction
     Gaussian3D(){};
 };
@@ -179,6 +197,12 @@ public:
 
     /// function which creates se3 homogenous transformation from vector
     Mat34 fromVector(const Vec6& v);
+
+    // Insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const GaussianSE3& gaussian);
+
+    // Extraction operator
+    friend std::istream& operator>>(std::istream& is, GaussianSE3& gaussian);
 
     /// Construction
     GaussianSE3(){};

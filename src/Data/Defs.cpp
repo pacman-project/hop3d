@@ -7,6 +7,63 @@ namespace hop3d {
         return (filterA.id==filterB.id) ? 0 : (double)(1.0-filterA.normal.adjoint()*filterB.normal)/2.0;
     }
 
+    // Insertion operator
+    std::ostream& operator<<(std::ostream& os, const ImageCoordsDepth& coords){
+        //save coords
+        os << coords.depth << " " << coords.u << " " << coords.v << "\n";
+        return os;
+    }
+
+    // Extraction operator
+    std::istream& operator>>(std::istream& is, ImageCoordsDepth& coords){
+        is >> coords.depth >> coords.u >> coords.v;
+        return is;
+    }
+
+    // Insertion operator
+    std::ostream& operator<<(std::ostream& os, const Filter& filter){
+        os << filter.id;
+        os << " " << filter.normal(0) << " " << filter.normal(1) << " " << filter.normal(2) << " ";
+        os << filter.mask.rows << " " << filter.mask.cols << " ";
+        for (int i=0;i<filter.mask.rows;i++){
+            for (int j=0;j<filter.mask.cols;j++){
+                os << filter.mask.at<double>(i,j) << " ";
+            }
+        }
+        os << filter.patch.rows << " " << filter.patch.cols << " ";
+        for (int i=0;i<filter.patch.rows;i++){
+            for (int j=0;j<filter.patch.cols;j++){
+                os << filter.patch.at<double>(i,j) << " ";
+            }
+        }
+        os << "\n";
+        return os;
+    }
+
+    // Extraction operator
+    std::istream& operator>>(std::istream& is, Filter& filter){
+        is >> filter.id;
+        is >> filter.normal(0) >> filter.normal(1) >> filter.normal(2);
+        int cols, rows;
+        is >> rows >> cols;
+        cv::Mat maskTmp(cols,rows, cv::DataType<double>::type,1);
+        for (int i=0;i<rows;i++){
+            for (int j=0;j<cols;j++){
+                is >> maskTmp.at<double>(i,j);
+            }
+        }
+        filter.mask = maskTmp.clone();
+        is >> rows >> cols;
+        cv::Mat patchTmp(cols,rows, cv::DataType<double>::type,1);
+        for (int i=0;i<rows;i++){
+            for (int j=0;j<cols;j++){
+                is >> patchTmp.at<double>(i,j);
+            }
+        }
+        filter.patch = patchTmp.clone();
+        return is;
+    }
+
     /// Print octet
     void Octet::print() const{
         std::cout << "Camera pose id:" << poseId << "\n";
@@ -41,6 +98,30 @@ namespace hop3d {
                 sum+=Filter::distance(filters[octetA.partIds[i][j]], filters[octetB.partIds[i][j]]);
             }
         return sum;
+    }
+
+    // Insertion operator
+    std::ostream& operator<<(std::ostream& os, const Gaussian3D& gaussian){
+        //save gaussian 3d
+        os << gaussian.mean(0) << " " << gaussian.mean(1) << " " << gaussian.mean(2) << "\n";
+        for (int i=0;i<gaussian.covariance.rows();i++){
+            for (int j=0;j<gaussian.covariance.cols();j++){
+                os << gaussian.covariance(i,j) << " ";
+            }
+        }
+        return os;
+    }
+
+    // Extraction operator
+    std::istream& operator>>(std::istream& is, Gaussian3D& gaussian){
+        // read gaussian 3d
+        is >> gaussian.mean(0) >> gaussian.mean(1) >> gaussian.mean(2);
+        for (int i=0;i<gaussian.covariance.rows();i++){
+            for (int j=0;j<gaussian.covariance.cols();j++){
+                is >> gaussian.covariance(i,j);
+            }
+        }
+        return is;
     }
 
     /// normalize quaternion
@@ -87,5 +168,50 @@ namespace hop3d {
                 out(i,j)=rot(i,j);
         out.translation() = v.block<3,1>(0,0);
         return out;
+    }
+
+    // Insertion operator
+    std::ostream& operator<<(std::ostream& os, const GaussianSE3& gaussian){
+        //save filters no
+        /*os << hierarchy.firstLayer.size() << "\n";
+        for (auto& filter : hierarchy.firstLayer){
+            os << filter;
+        }
+        os << hierarchy.viewDependentLayers.size() << "\n";
+        for (size_t i = 0;i<hierarchy.viewDependentLayers.size();i++){
+            os << hierarchy.viewDependentLayers[i].size() << "\n";
+            for (auto& part : hierarchy.viewDependentLayers[i]){
+                os << part;
+            }
+        }*/
+        return os;
+    }
+
+    // Extraction operator
+    std::istream& operator>>(std::istream& is, GaussianSE3& gaussian){
+        // read filters no
+        /*int filtersNo;
+        is >> filtersNo;
+        hierarchy.firstLayer.clear();
+        hierarchy.firstLayer.reserve(filtersNo);
+        for (int i=0;i<filtersNo;i++){
+            Filter filterTmp;
+            is >> filterTmp;
+            hierarchy.firstLayer.push_back(filterTmp);
+        }
+        int viewDepLayersNo;
+        is >> viewDepLayersNo;
+        hierarchy.viewDependentLayers.clear();
+        hierarchy.viewDependentLayers.resize(viewDepLayersNo);
+        for (int i = 0;i<viewDepLayersNo;i++){
+            int partsNo;
+            is >> partsNo;
+            for (int j = 0;j<partsNo;j++){
+                ViewDependentPart part;
+                is >> part;
+                hierarchy.viewDependentLayers[i].push_back(part);
+            }
+        }*/
+        return is;
     }
 }
