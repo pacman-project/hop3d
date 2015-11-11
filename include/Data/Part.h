@@ -78,10 +78,10 @@ public:
     ///get normal vector related to that part
     void getNormal(Vec3& normal, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters) const;
 
-    // Insertion operator
+    /// Insertion operator
     friend std::ostream& operator<<(std::ostream& os, const ViewDependentPart& part);
 
-    // Extraction operator
+    /// Extraction operator
     friend std::istream& operator>>(std::istream& is, ViewDependentPart& part);
 
     /// Print
@@ -101,7 +101,13 @@ public:
         int id;
 
         Part3D(void){}
+
         Part3D(Mat34& _pose, int _id) : pose(_pose), id(_id){}
+        /// Insertion operator
+        friend std::ostream& operator<<(std::ostream& os, const Part3D& part);
+
+        /// Extraction operator
+        friend std::istream& operator>>(std::istream& is, Part3D& part);
     };
 
     /// part composition
@@ -155,6 +161,12 @@ public:
     static Mat33 coordinateFromNormal(const Vec3& _normal);
     /// compute the min distance to the set of parts
     static double nearestNeighbour(Mat34 pose, std::vector<std::pair<Mat34, int>> parts, int& neighbourId);
+
+    /// Insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const ViewIndependentPart& part);
+
+    /// Extraction operator
+    friend std::istream& operator>>(std::istream& is, ViewIndependentPart& part);
 private:
     ///compute offset for two sets of points
     static Mat34 computeOffset(const std::vector<std::pair<Mat34, int>>& partASeq, const std::vector<std::pair<Mat34, int>>&partBSeq, Vec3& meanPosA, Vec3& normA, Vec3& meanPosB, Vec3& normB);

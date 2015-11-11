@@ -66,6 +66,12 @@ typedef Eigen::Matrix<double, 6, 6> Mat66;
 /// Homogeneous representation of SE(3) rigid body transformations
 typedef Eigen::Transform<double, 3, Eigen::Affine> Mat34;
 
+// Insertion operator
+std::ostream& operator<<(std::ostream& os, const Mat34& mat);
+
+// Extraction operator
+std::istream& operator>>(std::istream& is, Mat34& mat);
+
 /// Depth image filter representation
 class Filter {
 public:

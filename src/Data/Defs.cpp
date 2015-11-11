@@ -2,6 +2,29 @@
 
 namespace hop3d {
 
+    // Insertion operator
+    std::ostream& operator<<(std::ostream& os, const Mat34& mat){
+        for (int i=0;i<3;i++){
+            for (int j=0;j<4;j++){
+                if (std::isnan(mat(i,j)))
+                    os << 0.0 << " ";
+                else
+                    os << mat(i,j) << " ";
+            }
+        }
+        return os;
+    }
+
+    // Extraction operator
+    std::istream& operator>>(std::istream& is, Mat34& mat){
+        for (int i=0;i<3;i++){
+            for (int j=0;j<4;j++){
+                is >> mat(i,j);
+            }
+        }
+        return is;
+    }
+
     /// compute distance between filters -- dot product for normals
     double Filter::distance (const Filter& filterA, const Filter& filterB){
         return (filterA.id==filterB.id) ? 0 : (double)(1.0-filterA.normal.adjoint()*filterB.normal)/2.0;
@@ -103,12 +126,21 @@ namespace hop3d {
     // Insertion operator
     std::ostream& operator<<(std::ostream& os, const Gaussian3D& gaussian){
         //save gaussian 3d
-        os << gaussian.mean(0) << " " << gaussian.mean(1) << " " << gaussian.mean(2) << "\n";
+        for (int i=0;i<3;i++){
+            if (std::isnan(gaussian.mean(i)))
+                os << 0.0 << " ";
+            else
+                os << gaussian.mean(i) << " ";
+        }
         for (int i=0;i<gaussian.covariance.rows();i++){
             for (int j=0;j<gaussian.covariance.cols();j++){
-                os << gaussian.covariance(i,j) << " ";
+                if (std::isnan(gaussian.covariance(i,j)))
+                    os << 0.0 << " ";
+                else
+                    os << gaussian.covariance(i,j) << " ";
             }
         }
+        os << "\n";
         return os;
     }
 
@@ -170,48 +202,39 @@ namespace hop3d {
         return out;
     }
 
-    // Insertion operator
+    /// Insertion operator
     std::ostream& operator<<(std::ostream& os, const GaussianSE3& gaussian){
-        //save filters no
-        /*os << hierarchy.firstLayer.size() << "\n";
-        for (auto& filter : hierarchy.firstLayer){
-            os << filter;
+        //mean value
+        for (int i=0;i<gaussian.mean.rows();i++){
+            if (std::isnan(gaussian.mean(i)))
+                os << 0.0 << " ";
+            else
+                os << gaussian.mean(i) << " ";
         }
-        os << hierarchy.viewDependentLayers.size() << "\n";
-        for (size_t i = 0;i<hierarchy.viewDependentLayers.size();i++){
-            os << hierarchy.viewDependentLayers[i].size() << "\n";
-            for (auto& part : hierarchy.viewDependentLayers[i]){
-                os << part;
+        // covariance
+        for (int i=0;i<gaussian.covariance.rows();i++){
+            for (int j=0;j<gaussian.covariance.rows();j++){
+                if (std::isnan(gaussian.covariance(i,j)))
+                    os << 0.0 << " ";
+                else
+                    os << gaussian.covariance(i,j) << " ";
             }
-        }*/
+        }
+        os << "\n";
         return os;
     }
 
-    // Extraction operator
+    /// Extraction operator
     std::istream& operator>>(std::istream& is, GaussianSE3& gaussian){
-        // read filters no
-        /*int filtersNo;
-        is >> filtersNo;
-        hierarchy.firstLayer.clear();
-        hierarchy.firstLayer.reserve(filtersNo);
-        for (int i=0;i<filtersNo;i++){
-            Filter filterTmp;
-            is >> filterTmp;
-            hierarchy.firstLayer.push_back(filterTmp);
-        }
-        int viewDepLayersNo;
-        is >> viewDepLayersNo;
-        hierarchy.viewDependentLayers.clear();
-        hierarchy.viewDependentLayers.resize(viewDepLayersNo);
-        for (int i = 0;i<viewDepLayersNo;i++){
-            int partsNo;
-            is >> partsNo;
-            for (int j = 0;j<partsNo;j++){
-                ViewDependentPart part;
-                is >> part;
-                hierarchy.viewDependentLayers[i].push_back(part);
+        // read mean
+        for (int i=0;i<gaussian.mean.rows();i++)
+            is >> gaussian.mean(i);
+        // covariance
+        for (int i=0;i<gaussian.covariance.rows();i++){
+            for (int j=0;j<gaussian.covariance.rows();j++){
+                is >> gaussian.covariance(i,j);
             }
-        }*/
+        }
         return is;
     }
 }

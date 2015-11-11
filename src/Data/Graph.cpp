@@ -34,6 +34,25 @@ std::ostream& operator<<(std::ostream& os, const Hierarchy& hierarchy){
             os << part;
         }
     }
+    // interpreter size
+    os << hierarchy.interpreter.size() << "\n";
+    for (auto& element : hierarchy.interpreter){
+        os << element.first << " " << element.second << " ";
+    }
+    os << "\n";
+    // interpreter size
+    os << hierarchy.interpreter2to3.size() << "\n";
+    for (auto& element : hierarchy.interpreter2to3){
+        os << element.first << " " << element.second << " ";
+    }
+    os << "\n";
+    os << hierarchy.viewIndependentLayers.size() << "\n";
+    for (size_t i = 0;i<hierarchy.viewIndependentLayers.size();i++){
+        os << hierarchy.viewIndependentLayers[i].size() << "\n";
+        for (auto& part : hierarchy.viewIndependentLayers[i]){
+            os << part;
+        }
+    }
     return os;
 }
 
@@ -60,6 +79,35 @@ std::istream& operator>>(std::istream& is, Hierarchy& hierarchy){
             ViewDependentPart part;
             is >> part;
             hierarchy.viewDependentLayers[i].push_back(part);
+        }
+    }
+    // interpreter size
+    int interpreterSize;
+    is >> interpreterSize;
+    hierarchy.interpreter.clear();
+    for (int i=0;i<interpreterSize;i++){
+        int firstId, secondId;
+        is >> firstId >> secondId;
+        hierarchy.interpreter.insert(std::make_pair(firstId, secondId));
+    }
+    // interpreter size
+    is >> interpreterSize;
+    for (int i=0;i<interpreterSize;i++){
+        int firstId, secondId;
+        is >> firstId >> secondId;
+        hierarchy.interpreter2to3.insert(std::make_pair(firstId, secondId));
+    }
+    int viewIndepLayersNo;
+    is >> viewIndepLayersNo;
+    hierarchy.viewIndependentLayers.clear();
+    hierarchy.viewIndependentLayers.resize(viewIndepLayersNo);
+    for (int i = 0;i<viewIndepLayersNo;i++){
+        int partsNo;
+        is >> partsNo;
+        for (int j = 0;j<partsNo;j++){
+            ViewIndependentPart part;
+            is >> part;
+            hierarchy.viewIndependentLayers[i].push_back(part);
         }
     }
     return is;

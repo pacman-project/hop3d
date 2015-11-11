@@ -432,4 +432,102 @@ std::istream& operator>>(std::istream& is, ViewDependentPart& part){
     return is;
 }
 
+/// Insertion operator
+std::ostream& operator<<(std::ostream& os, const ViewIndependentPart::Part3D& part){
+    os << part.id << " ";
+    os << part.pose << "\n";
+    return os;
+}
+
+/// Extraction operator
+std::istream& operator>>(std::istream& is, ViewIndependentPart::Part3D& part){
+    is >> part.id;
+    is >> part.pose;
+    return is;
+}
+
+/// Insertion operator
+std::ostream& operator<<(std::ostream& os, const ViewIndependentPart& part){
+    os << part.id << " " << part.layerId << " ";
+    // part Ids
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
+                if (std::isnan(part.partIds[i][j][k]))
+                    os << -2 << " ";
+                else
+                    os << part.partIds[i][j][k] << " ";
+            }
+        }
+    }
+    // gaussians
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
+                os << part.gaussians[i][j][k];
+            }
+        }
+    }
+    os << part.group.size() << "\n";
+    for (size_t i=0;i<part.group.size();i++){
+        os << part.group[i];
+    }
+    os << part.offset;
+    os << part.pose;
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
+                os << part.neighbourPoses[i][j][k];
+            }
+        }
+    }
+    os << part.parts.size() << " ";
+    for (auto& p3d : part.parts){
+        os << p3d;
+    }
+    os << "\n";
+    return os;
+}
+
+/// Extraction operator
+std::istream& operator>>(std::istream& is, ViewIndependentPart& part){
+    is >> part.id >> part.layerId;
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
+                is >> part.partIds[i][j][k];
+            }
+        }
+    }
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
+                is >> part.gaussians[i][j][k];
+            }
+        }
+    }
+    int groupSize;
+    is >> groupSize;
+    part.group.resize(groupSize);
+    for (int i=0;i<groupSize;i++){
+        is >> part.group[i];
+    }
+    is >> part.offset;
+    is >> part.pose;
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
+                is >> part.neighbourPoses[i][j][k];
+            }
+        }
+    }
+    int partsSize;
+    is >> partsSize;
+    part.parts.resize(partsSize);
+    for (int i=0;i<partsSize;i++){
+        is >> part.parts[i];
+    }
+    return is;
+}
+
 }
