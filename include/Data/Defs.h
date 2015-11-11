@@ -91,10 +91,10 @@ public:
     static double distance(const Filter& filterA, const Filter& filterB);
 
     // Insertion operator
-    friend std::ostream& operator<<(std::ostream& os, const Filter& hierarchy);
+    friend std::ostream& operator<<(std::ostream& os, const Filter& filter);
 
     // Extraction operator
-    friend std::istream& operator>>(std::istream& is, Filter& hierarchy);
+    friend std::istream& operator>>(std::istream& is, Filter& filter);
 
     ///Construction
     Filter(){}

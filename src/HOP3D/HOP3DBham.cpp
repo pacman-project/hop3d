@@ -203,10 +203,20 @@ void HOP3DBham::learn(){
     if(config.save2file){
         std::ofstream ofsHierarchy(config.filename2save);
         ofsHierarchy << *hierarchy;
+        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+            for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+                ofsHierarchy << objects[categoryNo][objectNo];
+            }
+        }
         ofsHierarchy.close();
     }
     std::ifstream ifsHierarchy(config.filename2save);
     ifsHierarchy >> *hierarchy;
+    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+            ifsHierarchy >> objects[categoryNo][objectNo];
+        }
+    }
     ifsHierarchy.close();
     //visualization
     notify(*hierarchy);

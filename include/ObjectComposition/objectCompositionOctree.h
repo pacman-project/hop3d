@@ -45,6 +45,51 @@ public:
     /// update ids in the octree using new vocabulary
     void updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy);
 
+    /// Insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const ObjectCompositionOctree& object){
+        os << static_cast<unsigned int>(object.type) << " ";
+        os << object.octrees.size() << " ";
+        for (auto& octree : object.octrees){
+            int voxelsNo=0;
+            for (int idX=0; idX<octree->size(); idX++)///to do z-slicing
+                for (int idY=0; idY<octree->size(); idY++)
+                    for (int idZ=0; idZ<octree->size(); idZ++)
+                        if (octree->at(idX,idY,idZ).parts.size()>0||octree->at(idX,idY,idZ).id!=-1)
+                            voxelsNo++;
+            os << voxelsNo << " ";
+            for (int idX=0; idX<octree->size(); idX++){///to do z-slicing
+                for (int idY=0; idY<octree->size(); idY++){
+                    for (int idZ=0; idZ<octree->size(); idZ++){
+                        if (octree->at(idX,idY,idZ).parts.size()>0||octree->at(idX,idY,idZ).id!=-1){
+                            os << idX << " " << idY << " " << idZ << " ";
+                            os << octree->at(idX,idY,idZ) << "\n";
+                        }
+                    }
+                }
+            }
+        }
+        return os;
+    }
+
+    // Extraction operator
+    friend std::istream& operator>>(std::istream& is, ObjectCompositionOctree& object){
+        unsigned int type;
+        is >> type;
+        object.type = static_cast<ObjectComposition::Type>(type);
+        int treesNo;
+        is >> treesNo;
+        for (int i=0;i<treesNo;i++){
+            int voxelsNo;
+            is >> voxelsNo;
+            for (int j=0;j<voxelsNo;j++){
+                int x,y,z;
+                is >> x >> y >> z;
+                is >> (*object.octrees[i])(x,y,z);
+            }
+        }
+        return is;
+    }
+
     /// Destruction
     ~ObjectCompositionOctree(void);
 
