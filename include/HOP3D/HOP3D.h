@@ -34,6 +34,9 @@ public:
     /// learning from the dataset
     virtual void learn(void) = 0;
 
+    /// load hierarchy from the file
+    virtual void load(std::string filename) = 0;
+
     /// Virtual descrutor
     virtual ~HOP3D() {
     }

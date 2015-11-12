@@ -43,6 +43,9 @@ public:
     /// learining from the dataset
     void learn(void);
 
+    /// load hierarchy from the file
+    void load(std::string filename);
+
     #ifdef QVisualizerBuild
         ///Attach visualizer
         void attachVisualizer(QGLVisualizer* visualizer);

@@ -210,10 +210,34 @@ void HOP3DBham::learn(){
         }
         ofsHierarchy.close();
     }
-    std::ifstream ifsHierarchy(config.filename2save);
+    //visualization
+    notify(*hierarchy);
+    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+        for (auto & object : objects[categoryNo]){
+            std::vector<ViewIndependentPart> objectParts;
+            int viewIndLayers = 2;
+            for (int i=0;i<viewIndLayers;i++){
+                object.getParts(i, objectParts);
+                notify(objectParts, i);
+            }
+        }
+    }
+    notify3Dmodels();
+
+    std::cout << "Finished\n";
+}
+
+/// load hierarchy from the file
+void HOP3DBham::load(std::string filename){
+    std::ifstream ifsHierarchy(filename);
     ifsHierarchy >> *hierarchy;
+    DatasetInfo datasetInfo;
+    dataset->getDatasetInfo(datasetInfo);
+    objects.resize(datasetInfo.categories.size());
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
         for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+            ObjectCompositionOctree object(config.compositionConfig);
+            objects[categoryNo].push_back(object);
             ifsHierarchy >> objects[categoryNo][objectNo];
         }
     }
@@ -231,7 +255,6 @@ void HOP3DBham::learn(){
         }
     }
     notify3Dmodels();
-
     std::cout << "Finished\n";
 }
 
