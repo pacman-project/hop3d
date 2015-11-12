@@ -47,6 +47,10 @@ public:
             backgroundColor.setBlueF(rgba[2]); backgroundColor.setAlphaF(rgba[3]);
             model->FirstChildElement( "pointCloud" )->QueryBoolAttribute("drawPointClouds", &drawPointClouds);
             model->FirstChildElement( "pointCloud" )->QueryDoubleAttribute("cloudPointSize", &cloudPointSize);
+            model->FirstChildElement( "pointCloud" )->QueryBoolAttribute("useNormalCloud", &useNormalCloud);
+
+            model->FirstChildElement( "surface" )->QueryBoolAttribute("drawSurfaces", &drawSurfaces);
+            model->FirstChildElement( "surface" )->QueryBoolAttribute("useNormalSurf", &useNormalSurf);
 
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("pixelSize", &pixelSize);
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("filterDepthScale", &filterDepthScale);
@@ -104,6 +108,12 @@ public:
         QColor backgroundColor;
         /// draw point clouds
         bool drawPointClouds;
+        /// draw point clouds
+        bool useNormalCloud;
+        /// draw surfaces
+        bool drawSurfaces;
+        /// use normal to the surface
+        bool useNormalSurf;
         /// point size
         double cloudPointSize;
         /// hierarchy pixel size in patch

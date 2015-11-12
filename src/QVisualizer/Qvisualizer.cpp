@@ -1,4 +1,5 @@
 #include "../include/QVisualizer/Qvisualizer.h"
+#include "../include/ImageFilter/normalImageFilter.h"
 #include <memory>
 #include <cmath>
 #include <stdexcept>
@@ -660,16 +661,47 @@ GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud, Vec3& norma
     // compile the display list, store a triangle in it
     glNewList(index, GL_COMPILE);
         glColor3ub(200,200,200);
-        glBegin(GL_POINTS);
-        for (size_t n = 0; n < pointCloud.pointCloudNormal.size(); n++){
-            //glColor3ub(pointCloud.second.pointCloudNormal[n].r, pointCloud.second.pointCloudNormal[n].g, pointCloud.second.pointCloudNormal[n].b);
-            glVertex3d(pointCloud.pointCloudNormal[n].position(0),
-                      pointCloud.pointCloudNormal[n].position(1),
-                      pointCloud.pointCloudNormal[n].position(2)*config.filterDepthScale);
+        if (config.drawPointClouds){
+            glBegin(GL_POINTS);
+            for (size_t n = 0; n < pointCloud.pointCloudNormal.size(); n++){
+                //glColor3ub(pointCloud.second.pointCloudNormal[n].r, pointCloud.second.pointCloudNormal[n].g, pointCloud.second.pointCloudNormal[n].b);
+                if (config.useNormalCloud)
+                    glNormal3d(-normal(0), -normal(1), -normal(2));
+                glVertex3d(pointCloud.pointCloudNormal[n].position(0),
+                          pointCloud.pointCloudNormal[n].position(1),
+                          pointCloud.pointCloudNormal[n].position(2)*config.filterDepthScale);
+            }
+            glEnd();
         }
-        glEnd();
+        if (config.drawSurfaces){
+            Mat33 rot = NormalImageFilter::coordinateFromNormal(normal);
+            glBegin(GL_POLYGON);
+            int quadSize=5;
+            Vec3 rightup(quadSize*config.pixelSize,-quadSize*config.pixelSize,0);
+            rightup=rot*rightup;
+            if (config.useNormalSurf)
+                glNormal3d(-normal(0), -normal(1), -normal(2));
+            glVertex3d(rightup(0), rightup(1),rightup(2));
+            Vec3 rightdown(quadSize*config.pixelSize,quadSize*config.pixelSize,0);
+            rightdown=rot*rightdown;
+            if (config.useNormalSurf)
+                glNormal3d(-normal(0), -normal(1), -normal(2));
+            glVertex3d(rightdown(0), rightdown(1),rightdown(2));
+            Vec3 leftdown(-quadSize*config.pixelSize,quadSize*config.pixelSize,0);
+            leftdown=rot*leftdown;
+            if (config.useNormalSurf)
+                glNormal3d(-normal(0), -normal(1), -normal(2));
+            glVertex3d(leftdown(0), leftdown(1), leftdown(2));
+            Vec3 leftup(-quadSize*config.pixelSize,-quadSize*config.pixelSize,0);
+            leftup=rot*leftup;
+            if (config.useNormalSurf)
+                glNormal3d(-normal(0), -normal(1), -normal(2));
+            glVertex3d(leftup(0), leftup(1), leftup(2));
+            glEnd();
+        }
         if (config.drawNormals){
             glBegin(GL_LINES);
+                glColor3d(config.normalsColor.redF(),config.normalsColor.greenF(),config.normalsColor.blueF());
                 glVertex3d(0.0, 0.0, 0.0);
                 glVertex3d(-normal(0)*config.normalsScale, -normal(1)*config.normalsScale, -normal(2)*config.normalsScale);
             glEnd();
@@ -797,12 +829,8 @@ void QGLVisualizer::animate(){
 void QGLVisualizer::init(){
     // Light setup
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0);
-    GLfloat specular_color[4] = { 0.99f, 0.99f, 0.99f, 1.0 };
+    GLfloat specular_color[4] = { 0.8f, 0.8f, 0.8f, 1.0 };
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  specular_color);
-
-    //Set global ambient light
-    GLfloat black[] = {(float)0.99, (float)0.99, (float)0.99, (float)1};
-    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, black);
 
     glEnable(GL_AUTO_NORMAL);
     glEnable(GL_NORMALIZE);
@@ -814,8 +842,6 @@ void QGLVisualizer::init(){
 
     //qglviewer::Quaternion q(-0.5,0.5,0.5,0.5);
     //camera()->setOrientation(q);
-
-    glDepthRange(1,0);
 
     setBackgroundColor(config.backgroundColor);
 
