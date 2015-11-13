@@ -677,26 +677,40 @@ GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud, Vec3& norma
             Mat33 rot = NormalImageFilter::coordinateFromNormal(normal);
             glBegin(GL_POLYGON);
             int quadSize=5;
-            Vec3 rightup(quadSize*config.pixelSize,-quadSize*config.pixelSize,0);
+            Vec3 rightup(quadSize*config.pixelSize,-quadSize*config.pixelSize,-0.0001);
             rightup=rot*rightup;
-            if (config.useNormalSurf)
-                glNormal3d(-normal(0), -normal(1), -normal(2));
+            if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
             glVertex3d(rightup(0), rightup(1),rightup(2));
-            Vec3 rightdown(quadSize*config.pixelSize,quadSize*config.pixelSize,0);
+            Vec3 rightdown(quadSize*config.pixelSize,quadSize*config.pixelSize,-0.0001);
             rightdown=rot*rightdown;
-            if (config.useNormalSurf)
-                glNormal3d(-normal(0), -normal(1), -normal(2));
+            if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
             glVertex3d(rightdown(0), rightdown(1),rightdown(2));
-            Vec3 leftdown(-quadSize*config.pixelSize,quadSize*config.pixelSize,0);
+            Vec3 leftdown(-quadSize*config.pixelSize,quadSize*config.pixelSize,-0.0001);
             leftdown=rot*leftdown;
-            if (config.useNormalSurf)
-                glNormal3d(-normal(0), -normal(1), -normal(2));
+            if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
             glVertex3d(leftdown(0), leftdown(1), leftdown(2));
-            Vec3 leftup(-quadSize*config.pixelSize,-quadSize*config.pixelSize,0);
+            Vec3 leftup(-quadSize*config.pixelSize,-quadSize*config.pixelSize,-0.0001);
             leftup=rot*leftup;
-            if (config.useNormalSurf)
-                glNormal3d(-normal(0), -normal(1), -normal(2));
+            if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
             glVertex3d(leftup(0), leftup(1), leftup(2));
+            glEnd();
+            glBegin(GL_POLYGON);
+            Vec3 rightupA(quadSize*config.pixelSize,-quadSize*config.pixelSize,0.0001);
+            rightupA=rot*rightupA;
+            if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
+            glVertex3d(rightupA(0), rightupA(1),rightupA(2));
+            Vec3 leftupA(-quadSize*config.pixelSize,-quadSize*config.pixelSize,0.0001);
+            leftupA=rot*leftupA;
+            if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
+            glVertex3d(leftupA(0), leftupA(1), leftupA(2));
+            Vec3 leftdownA(-quadSize*config.pixelSize,quadSize*config.pixelSize,0.0001);
+            leftdownA=rot*leftdownA;
+            if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
+            glVertex3d(leftdownA(0), leftdownA(1), leftdownA(2));
+            Vec3 rightdownA(quadSize*config.pixelSize,quadSize*config.pixelSize,0.0001);
+            rightdownA=rot*rightdownA;
+            if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
+            glVertex3d(rightdownA(0), rightdownA(1),rightdownA(2));
             glEnd();
         }
         if (config.drawNormals){
@@ -831,6 +845,29 @@ void QGLVisualizer::init(){
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0);
     GLfloat specular_color[4] = { 0.8f, 0.8f, 0.8f, 1.0 };
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  specular_color);
+
+    GLfloat ambientLight0[] = {0.2f, 0.2f, 0.2f, 0.0f};
+    GLfloat diffuseLight0[] = {0.6f, 0.6f, 0.6f, 0.0f};
+    GLfloat specularLight0[] = {1.0f, 1.0f, 1.0f, 1.0f};
+
+    GLfloat positionLight0[] = {0,0,0, 1.0f};
+    GLfloat directionLight0[] = {0,0,1};
+
+    GLfloat lm_ambient[] = {0.3, 0.3, 0.3, 1.0};
+
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lm_ambient);
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+
+    glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight0);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight0);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight0);
+
+    glLightfv(GL_LIGHT0, GL_POSITION, positionLight0);
+    glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, directionLight0);
+
+    glEnable (GL_LIGHTING);
+    glEnable (GL_LIGHT0);
+//    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
     glEnable(GL_AUTO_NORMAL);
     glEnable(GL_NORMALIZE);
