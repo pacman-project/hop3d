@@ -282,7 +282,7 @@ void QGLVisualizer::draw3Dobjects(void){
 /// Draw clusters
 void QGLVisualizer::drawClusters(void){
     //mtxPointClouds.lock();
-    for (size_t layerNo=0;layerNo<hierarchy->viewDependentLayers.size()+2;layerNo++){
+    for (size_t layerNo=0;layerNo<clustersList.size()-1;layerNo++){
         for (size_t i = 0;i<clustersList[layerNo+1].size();i++){
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.partDist[layerNo+1]*double(i)-((double)cloudsListLayers[layerNo+1].size()/2)*config.partDist[layerNo+1]), 0, config.posZ[layerNo+1], 1};
             glPushMatrix();
@@ -397,10 +397,10 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
                     glPushMatrix();
                         glMultMatrixd(GLmatrot);
                         if (id==-1){
-                            glColor3ub(200,200,200);
+                            /*glColor3ub(200,200,200);
                             glBegin(GL_POINTS);
                                 glVertex3d(pos(0), pos(1), pos(2));
-                            glEnd();
+                            glEnd();*/
                         }
                         else{
                             //this->drawAxis(0.5);
@@ -589,10 +589,10 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
                             glPushMatrix();
                                 glMultMatrixd(GLmatrot);
                                 if (id==-1){
-                                    glColor3ub(200,200,200);
+                                    /*glColor3ub(200,200,200);
                                     glBegin(GL_POINTS);
                                         glVertex3d(pos(0), pos(1)+(double)(config.partDist[layerNo-1]*double(componentNo+1)), pos(2));
-                                    glEnd();
+                                    glEnd();*/
                                 }
                                 else{
                                     //this->drawAxis(0.5);
@@ -674,6 +674,7 @@ GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud, Vec3& norma
             glEnd();
         }
         if (config.drawSurfaces){
+            //glColor3d(0.1,1.0,0.1);
             Mat33 rot = NormalImageFilter::coordinateFromNormal(normal);
             glBegin(GL_POLYGON);
             int quadSize=5;
@@ -853,7 +854,7 @@ void QGLVisualizer::init(){
     GLfloat positionLight0[] = {0,0,0, 1.0f};
     GLfloat directionLight0[] = {0,0,1};
 
-    GLfloat lm_ambient[] = {0.3, 0.3, 0.3, 1.0};
+    GLfloat lm_ambient[] = {(float)0.3, (float)0.3, (float)0.3, (float)1.0};
 
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lm_ambient);
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);

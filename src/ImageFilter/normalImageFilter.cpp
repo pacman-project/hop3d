@@ -51,6 +51,34 @@ const std::string& NormalImageFilter::getName() const {
     return name;
 }
 
+/// compute median
+uint16_t NormalImageFilter::median(const cv::Mat& inputImg, int u, int v, int kernelSize){
+    int size = kernelSize/2;
+    std::vector<short unsigned int> values;
+    for (int i=v-size;i<v+size+1;i++){
+        for (int j=u-size;j<u+size+1;j++){
+            if ((i>=0)&&(j>=0)&&(i<inputImg.rows)&&(j<inputImg.cols)){
+                values.push_back(inputImg.at<uint16_t>(j,i));
+            }
+        }
+    }
+    std::sort(values.begin(), values.end());
+    if (values.size()>0){
+        return (values[values.size()/2]);
+    }
+    else
+        return 0;
+}
+
+///Apply median filter on the image
+void NormalImageFilter::medianFilter(const cv::Mat& inputImg, cv::Mat& outputImg, int kernelSize){
+    for (int i=0;i<inputImg.rows;i++){
+        for (int j=0;j<inputImg.cols;j++){
+            outputImg.at<uint16_t>(i,j)=median(inputImg, i, j, kernelSize);
+        }
+    }
+}
+
 ///compute set of octets from set of the depth images
 void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets){
     octets.clear();
@@ -73,16 +101,22 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
     double scale = 1/sensorModel.config.depthImageScale;
     if (config.verbose>1)
         imshow( "Input image", depthImage );
-    if (config.useMedianFilter)
-        cv::medianBlur(depthImage, depthImage, config.kernelSize);
-    for (int i=0;i<depthImage.rows;i++){
-        for (int j=0;j<depthImage.cols;j++){
-            sensorModel.getPoint(i, j, depthImage.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
+    cv::Mat filteredImg = depthImage.clone();
+    if (config.useMedianFilter){
+        if (config.kernelSize<6)
+            cv::medianBlur(depthImage, filteredImg, config.kernelSize);
+        else {
+            medianFilter(depthImage, filteredImg, config.kernelSize);
         }
     }
-    cv::Mat idsImage(depthImage.rows,depthImage.cols, cv::DataType<uchar>::type,cv::Scalar(0));
-    for (int i=config.filterSize/2;i<depthImage.rows-(config.filterSize/2);i++){
-        for (int j=config.filterSize/2;j<depthImage.cols-(config.filterSize/2);j++){
+    for (int i=0;i<filteredImg.rows;i++){
+        for (int j=0;j<filteredImg.cols;j++){
+            sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
+        }
+    }
+    cv::Mat idsImage(filteredImg.rows,filteredImg.cols, cv::DataType<uchar>::type,cv::Scalar(0));
+    for (int i=config.filterSize/2;i<filteredImg.rows-(config.filterSize/2);i++){
+        for (int j=config.filterSize/2;j<filteredImg.cols-(config.filterSize/2);j++){
             if (!std::isnan(cloudOrd[i][j].position(2))){
                 computeNormal(i, j, cloudOrd);
                 //compute id

@@ -147,6 +147,12 @@ private:
 
     /// update structure which holds parts images
     void updatePartsImages(int categoryNo, int objectNo, int imageNo, const PartsImage& partsImage);
+
+    /// Apply median filter on the image
+    void medianFilter(const cv::Mat& inputImg, cv::Mat& outputImg, int kernelSize);
+
+    /// compute median
+    uint16_t median(const cv::Mat& inputImg, int u, int v, int kernelSize);
 };
 
 }
