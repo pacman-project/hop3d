@@ -33,6 +33,7 @@ NormalImageFilter::Config::Config(std::string configFilename){
     model->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     //model->FirstChildElement( "parameters" )->QueryDoubleAttribute("scalingToMeters", &scalingToMeters);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("backgroundThreshold", &backgroundThreshold);
+    model->FirstChildElement( "parameters" )->QueryIntAttribute("PCAWindowSize", &PCAWindowSize);
 
     model->FirstChildElement( "imageFiltering" )->QueryBoolAttribute("useMedianFilter", &useMedianFilter);
     model->FirstChildElement( "imageFiltering" )->QueryIntAttribute("kernelSize", &kernelSize);
@@ -254,7 +255,7 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
     }
 }
 
-/// compute max response in vindow
+/// compute max response in the window
 void NormalImageFilter::findMaxResponse(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Octet& octet, int idx, int idy) const{
     octet.responses[idx][idy]=-1;    octet.partIds[idx][idy]=-1;
     for (int i=-config.filterSize/2;i<1+config.filterSize/2;i++){
@@ -423,12 +424,13 @@ void NormalImageFilter::toNormal(int id, Vec3& normal) const{
 /// compute normal on the image (filter size)
 void NormalImageFilter::computeNormal(int u, int v, std::vector< std::vector<hop3d::PointNormal> >& cloudOrd){
     std::vector<hop3d::PointNormal> points;
-    for (int i=-config.filterSize/2;i<1+config.filterSize/2;i++){
-        for (int j=-config.filterSize/2;j<1+config.filterSize/2;j++){
-            if (!std::isnan(cloudOrd[u+i][v+j].position(2))){
-                points.push_back(cloudOrd[u+i][v+j]);
-               // std::cout << "point " << cloudOrd[u+i][v+j].position << "\n";
-            }
+    for (int i=-config.PCAWindowSize/2;i<1+config.PCAWindowSize/2;i++){
+        for (int j=-config.PCAWindowSize/2;j<1+config.PCAWindowSize/2;j++){
+            if (((u+i)>=0)&&((u+i)<(int)cloudOrd.size())&&((v+j)>=0)&&(int(v+j)<(int)cloudOrd[u+i].size()))
+                if (!std::isnan(cloudOrd[u+i][v+j].position(2))){
+                    points.push_back(cloudOrd[u+i][v+j]);
+                   // std::cout << "point " << cloudOrd[u+i][v+j].position << "\n";
+                }
         }
     }
     if (points.size()>size_t(config.backgroundThreshold))

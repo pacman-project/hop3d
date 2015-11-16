@@ -674,7 +674,7 @@ GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud, Vec3& norma
             glEnd();
         }
         if (config.drawSurfaces){
-            //glColor3d(0.1,1.0,0.1);
+            glColor3d(0.5,0.5,0.5);
             Mat33 rot = NormalImageFilter::coordinateFromNormal(normal);
             glBegin(GL_POLYGON);
             int quadSize=5;

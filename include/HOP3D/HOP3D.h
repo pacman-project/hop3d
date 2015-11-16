@@ -26,7 +26,7 @@ public:
     /// overloaded constructor
     HOP3D(const std::string _name, Type _type) :
             name(_name), type(_type) {
-    };
+    }
 
     /// Name of the hop3d
     virtual const std::string& getName() const {return name;}

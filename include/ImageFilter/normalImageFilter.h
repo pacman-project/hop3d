@@ -87,6 +87,8 @@ public:
             bool useMedianFilter;
             // kernel size
             int kernelSize;
+            // PCA window size
+            int PCAWindowSize;
     };
 
 private:

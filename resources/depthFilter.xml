@@ -11,7 +11,7 @@
     <name>NormalDepthFilter</name>
 <!-- parameters:
     background threshold - compute response if points no in filter window is bigger than threshold-->    
-    <parameters ringsNo="6" filterSize="5" verbose="0" backgroundThreshold="13"></parameters>
+    <parameters ringsNo="6" filterSize="5" PCAWindowSize="5" verbose="0" backgroundThreshold="13"></parameters>
 <!--     kernelSize - aperture linear size (max 5) -->
     <imageFiltering useMedianFilter="true" kernelSize="3"></imageFiltering>
   </NormalFilterer>
