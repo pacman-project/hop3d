@@ -327,6 +327,8 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
                 break;
             }
             if (i==dictionary.size()-1){
+                std::cout << "dictionary.size() " << dictionary.size() << "\n";
+                std::cout << "centerId " << centerId  << " does not exist \n";
                 std::cout << "Something is wrong with ids in clusterization\n";
             }
         }

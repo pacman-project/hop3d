@@ -83,6 +83,8 @@ public:
             std::string sensorFilename;
             // compute response if points no in filter window is bigger than threshold
             int backgroundThreshold;
+            // true fin max for the group, false - find max for the whole window
+            bool nonMaximumSupressionGroup;
             // use median filter
             bool useMedianFilter;
             // kernel size
@@ -131,6 +133,9 @@ private:
 
     /// compute max response in vindow
     void findMaxResponse(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Octet& octet, int idx, int idy) const;
+
+    /// compute max response for the most numerous group in the window
+    void findMaxGroupResponse(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Octet& octet, int idx, int idy) const;
 
     /// Fill in octet
     void fillInOctet(const OctetsImage& octetsImage, const ViewDependentPart::Seq& dictionary, int u, int v, Octet& octet) const;

@@ -33,6 +33,7 @@ NormalImageFilter::Config::Config(std::string configFilename){
     model->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     //model->FirstChildElement( "parameters" )->QueryDoubleAttribute("scalingToMeters", &scalingToMeters);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("backgroundThreshold", &backgroundThreshold);
+    model->FirstChildElement( "imageFiltering" )->QueryBoolAttribute("nonMaximumSupressionGroup", &nonMaximumSupressionGroup);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("PCAWindowSize", &PCAWindowSize);
 
     model->FirstChildElement( "imageFiltering" )->QueryBoolAttribute("useMedianFilter", &useMedianFilter);
@@ -227,7 +228,10 @@ NormalImageFilter::OctetsImage NormalImageFilter::extractOctets(const std::vecto
 void NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u,  int v, Octet& octet) const{
     for (int i=-1;i<2;i++){//for neighbouring blocks in octet
         for (int j=-1;j<2;j++){
-            findMaxResponse(responseImg, cloudOrd, u+i*config.filterSize, v+j*config.filterSize, octet, i+1, j+1);
+            if (config.nonMaximumSupressionGroup)
+                findMaxGroupResponse(responseImg, cloudOrd, u+i*config.filterSize, v+j*config.filterSize, octet, i+1, j+1);
+            else
+                findMaxResponse(responseImg, cloudOrd, u+i*config.filterSize, v+j*config.filterSize, octet, i+1, j+1);
         }
     }
     if (octet.partIds[1][1]!=-1){//set relative position for octets
@@ -266,6 +270,46 @@ void NormalImageFilter::findMaxResponse(const std::vector< std::vector<Response>
                 ImageCoordsDepth coord;
                 coord.u = v+j; coord.v = u+i; coord.depth = cloudOrd[u+i][v+j].position(2);
                 octet.filterPos[idx][idy] = coord;
+            }
+        }
+    }
+}
+
+/// compute max response for the most numerous group in the window
+void NormalImageFilter::findMaxGroupResponse(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Octet& octet, int idx, int idy) const{
+    octet.responses[idx][idy]=-1;    octet.partIds[idx][idy]=-1;
+    std::map<int,int> occurencesMap;
+    for (int i=-config.filterSize/2;i<1+config.filterSize/2;i++){
+        for (int j=-config.filterSize/2;j<1+config.filterSize/2;j++){
+            std::pair<std::map<int,int>::iterator,bool> ret;
+            if (responseImg[u+i][v+j].first!=-1){
+                ret = occurencesMap.insert ( std::pair<int,int>(responseImg[u+i][v+j].first,1) );
+                if (ret.second==false) {
+                    occurencesMap[responseImg[u+i][v+j].first]=ret.first->second+1;
+                }
+            }
+        }
+    }
+    if (occurencesMap.size()>0){
+        int maxCount=0;
+        for (auto& occur : occurencesMap){// find max occurences
+            if (occur.second>maxCount)
+                maxCount = occur.second;
+        }
+        std::vector<int> maxIds;// most countable ids
+        for (auto& occur : occurencesMap){
+            if (occur.second==maxCount)
+                maxIds.push_back(occur.first);
+        }
+        for (int i=-config.filterSize/2;i<1+config.filterSize/2;i++){
+            for (int j=-config.filterSize/2;j<1+config.filterSize/2;j++){
+                if ((responseImg[u+i][v+j].second>octet.responses[idx][idy])&&(std::find(maxIds.begin(), maxIds.end(), responseImg[u+i][v+j].first) != maxIds.end())){
+                    octet.responses[idx][idy] = responseImg[u+i][v+j].second;
+                    octet.partIds[idx][idy] = responseImg[u+i][v+j].first;
+                    ImageCoordsDepth coord;
+                    coord.u = v+j; coord.v = u+i; coord.depth = cloudOrd[u+i][v+j].position(2);
+                    octet.filterPos[idx][idy] = coord;
+                }
             }
         }
     }
