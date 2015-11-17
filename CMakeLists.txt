@@ -27,13 +27,8 @@ option(BUILD_HOP3D_DATASET "Build HOP3D dataset library" ON)
 mark_as_advanced(BUILD_HOP3D_DATASET)
 option(BUILD_HOP3D_OBJECT_COMPOSITION "Build HOP3D object composition library" ON)
 mark_as_advanced(BUILD_HOP3D_OBJECT_COMPOSITION)
-option(BUILD_VISUALIZATION_MODULE "Build HOP3D visualization OpenGL3.0" OFF)
-mark_as_advanced(BUILD_VISUALIZATION_MODULE)
 option(BUILD_VISUALIZATION_QT "Build HOP3D visualization QT" ON)
 mark_as_advanced(BUILD_VISUALIZATION_QT)
-if (BUILD_VISUALIZATION_MODULE AND BUILD_VISUALIZATION_QT)
-message(FATAL_ERROR "Please select one visualizer: Qt or OpenGL3.0")
-endif (BUILD_VISUALIZATION_MODULE AND BUILD_VISUALIZATION_QT)
 
 # demos
 option(BUILD_HOP3D_DEMO "Build HOP3D demonstration programs and libraries" ON)
@@ -176,91 +171,8 @@ SET(CORE_FILES
 SOURCE_GROUP("Core" FILES ${CORE_HEADERS})
 SOURCE_GROUP("Core" FILES ${CORE_SOURCES})
 
-IF (BUILD_VISUALIZATION_MODULE)
-    SET(VISUALIZER_SOURCES
-            ${PROJECT_PATH}/src/Visualizer/Visualizer.cpp
-            ${PROJECT_PATH}/src/Visualizer/shader.cpp
-            ${PROJECT_PATH}/src/Visualizer/texture.cpp
-            ${PROJECT_PATH}/src/Visualizer/objloader.cpp
-            ${PROJECT_PATH}/src/Visualizer/vboindexer.cpp
-            ${PROJECT_PATH}/src/Visualizer/quaternion_utils.cpp
-    )
-
-    SET(VISUALIZER_HEADERS
-            ${PROJECT_PATH}/include/Visualizer/Visualizer.h
-            ${PROJECT_PATH}/include/Visualizer/shader.hpp
-            ${PROJECT_PATH}/include/Visualizer/texture.hpp
-            ${PROJECT_PATH}/include/Visualizer/objloader.hpp
-            ${PROJECT_PATH}/include/Visualizer/vboindexer.hpp
-            ${PROJECT_PATH}/include/Visualizer/quaternion_utils.hpp
-    )
-    SET(VISUALIZER_FILES
-            ${PROJECT_PATH}/src/shaders/StandardShading.fragmentshader
-            ${PROJECT_PATH}/src/shaders/StandardShading.vertexshader
-    )
-SOURCE_GROUP("VISUALIZER" FILES ${VISUALISATION_HEADERS})
-SOURCE_GROUP("VISUALIZER" FILES ${VISUALISATION_SOURCES})
-ENDIF (BUILD_VISUALIZATION_MODULE)
-
-
-SET(APPS_SOURCES
-        ${PROJECT_PATH}/src/Apps/Learning/Data.cpp
-        ${PROJECT_PATH}/src/Apps/Learning/Learning.cpp
-        ${PROJECT_PATH}/src/Apps/Inference/Data.cpp
-        ${PROJECT_PATH}/src/Apps/Inference/Inference.cpp
-        ${PROJECT_PATH}/src/Apps/Visualization/Data.cpp
-        ${PROJECT_PATH}/src/Apps/Visualization/Visualization.cpp
-)
-SET(APPS_HEADERS
-        ${PROJECT_PATH}/include/Apps/Learning/Data.h
-        ${PROJECT_PATH}/include/Apps/Learning/Learning.h
-        ${PROJECT_PATH}/include/Apps/Inference/Data.h
-        ${PROJECT_PATH}/include/Apps/Inference/Inference.h
-        ${PROJECT_PATH}/include/Apps/Visualization/Data.h
-        ${PROJECT_PATH}/include/Apps/Visualization/Visualization.h
-)
-SET(DATA_FILES
-)
-SOURCE_GROUP("APPS" FILES ${APPS_HEADERS})
-SOURCE_GROUP("APPS" FILES ${APPS_SOURCES})
-
-
 #SET( PROJ_LIBRARIES "flann" )
 SET( PROJ_INCLUDES  "${PROJECT_PATH}/include/" )
-
-IF (BUILD_VISUALIZATION_MODULE)
-    FIND_PACKAGE ( OpenGL REQUIRED)
-# Compile external dependencies
-add_subdirectory (external)
-
-
-
-# On Visual 2005 and above, this module can set the debug working directory
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/external/rpavlik-cmake-modules-1c73e35")
-include(CreateLaunchers)
-include(MSVCMultipleProcessCompile) # /MP
-
-include_directories(
-        external/AntTweakBar-1.16/include/
-        external/glfw-3.0.3/include/GLFW/
-        include/
-        .
-)
-
-set(ALL_LIBS
-        ${OPENGL_LIBRARY}
-        GLFW_303
-        ANTTWEAKBAR_116_OGLCORE_GLFW
-)
-
-add_definitions(
-        -DTW_STATIC
-        -DTW_NO_LIB_PRAGMA
-        -DTW_NO_DIRECT3D
-        -D_CRT_SECURE_NO_WARNINGS
-)
-
-ENDIF (BUILD_VISUALIZATION_MODULE)
 
 ###############################################################################
 #
@@ -489,20 +401,9 @@ endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_NORMAL_FILTERER)
 
 ADD_LIBRARY("${PROJ_NAME}_data" ${DATA_HEADERS} ${DATA_SOURCES})
 ADD_LIBRARY("${PROJ_NAME}_core" ${CORE_HEADERS} ${CORE_SOURCES})
-IF (BUILD_VISUALIZATION_MODULE)
-ADD_LIBRARY("${PROJ_NAME}_visualizer" ${VISUALIZER_HEADERS} ${VISUALIZER_SOURCES})
-ENDIF (BUILD_VISUALIZATION_MODULE)
 
 ADD_EXECUTABLE(${PROJ_NAME} "main.cpp"   )
-IF (BUILD_VISUALIZATION_MODULE)
-ADD_EXECUTABLE("${PROJ_NAME}_Visualization" "src/Apps/Visualization/Visualization.cpp")
-ENDIF (BUILD_VISUALIZATION_MODULE)
-ADD_EXECUTABLE("${PROJ_NAME}_Learning" "src/Apps/Learning/Learning.cpp")
-ADD_EXECUTABLE("${PROJ_NAME}_Inference" "src/Apps/Inference/Inference.cpp")
+
 
 TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" Utilities imageFilter tinyxml2 opencv_core)
-IF (BUILD_VISUALIZATION_MODULE AND BUILD_HOP3D_DEMO_VISUALIZER)
-TARGET_LINK_LIBRARIES( "${PROJ_NAME}_Visualization" ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" Utilities "${PROJ_NAME}_visualizer" ${ALL_LIBS} )
-ENDIF (BUILD_VISUALIZATION_MODULE AND BUILD_HOP3D_DEMO_VISUALIZER)
-TARGET_LINK_LIBRARIES( "${PROJ_NAME}_Learning" ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" Utilities)
