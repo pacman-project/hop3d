@@ -34,7 +34,11 @@ NormalImageFilter::Config::Config(std::string configFilename){
     //model->FirstChildElement( "parameters" )->QueryDoubleAttribute("scalingToMeters", &scalingToMeters);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("backgroundThreshold", &backgroundThreshold);
     model->FirstChildElement( "imageFiltering" )->QueryBoolAttribute("nonMaximumSupressionGroup", &nonMaximumSupressionGroup);
-    model->FirstChildElement( "parameters" )->QueryIntAttribute("PCAWindowSize", &PCAWindowSize);
+
+    model->FirstChildElement( "PCA" )->QueryIntAttribute("PCAWindowSize", &PCAWindowSize);
+    model->FirstChildElement( "PCA" )->QueryDoubleAttribute("PCADistThreshold", &PCADistThreshold);
+    model->FirstChildElement( "PCA" )->QueryDoubleAttribute("PCARelDistClusters", &PCARelDistClusters);
+    model->FirstChildElement( "PCA" )->QueryBoolAttribute("PCAuseClustering", &PCAuseClustering);
 
     model->FirstChildElement( "imageFiltering" )->QueryBoolAttribute("useMedianFilter", &useMedianFilter);
     model->FirstChildElement( "imageFiltering" )->QueryIntAttribute("kernelSize", &kernelSize);
@@ -468,19 +472,117 @@ void NormalImageFilter::toNormal(int id, Vec3& normal) const{
 /// compute normal on the image (filter size)
 void NormalImageFilter::computeNormal(int u, int v, std::vector< std::vector<hop3d::PointNormal> >& cloudOrd){
     std::vector<hop3d::PointNormal> points;
+    double min=std::numeric_limits<double>::max();
+    double max=std::numeric_limits<double>::min();
     for (int i=-config.PCAWindowSize/2;i<1+config.PCAWindowSize/2;i++){
         for (int j=-config.PCAWindowSize/2;j<1+config.PCAWindowSize/2;j++){
             if (((u+i)>=0)&&((u+i)<(int)cloudOrd.size())&&((v+j)>=0)&&(int(v+j)<(int)cloudOrd[u+i].size()))
                 if (!std::isnan(cloudOrd[u+i][v+j].position(2))){
+                    if (cloudOrd[u+i][v+j].position(2)<min)
+                        min=cloudOrd[u+i][v+j].position(2);
+                    if (cloudOrd[u+i][v+j].position(2)>max)
+                        max=cloudOrd[u+i][v+j].position(2);
                     points.push_back(cloudOrd[u+i][v+j]);
                    // std::cout << "point " << cloudOrd[u+i][v+j].position << "\n";
                 }
         }
     }
-    if (points.size()>size_t(config.backgroundThreshold))
-        normalPCA(points, cloudOrd[u][v]);
+    if (points.size()>size_t(config.backgroundThreshold)){
+        if (config.PCAuseClustering){
+            if ((max-min)>config.PCADistThreshold) {// try to create two clasters
+                std::vector<hop3d::PointNormal> pointGroup;
+                if (extractGroup(points, pointGroup)){
+                    normalPCA(pointGroup, cloudOrd[u][v]);
+                }
+                else {
+                    cloudOrd[u][v].normal = Vec3(NAN,NAN,NAN);
+                }
+            }
+            else{
+                normalPCA(points, cloudOrd[u][v]);
+            }
+        }
+        else {
+            if ((max-min)>config.PCADistThreshold)
+                cloudOrd[u][v].normal = Vec3(NAN,NAN,NAN);
+            else
+                normalPCA(points, cloudOrd[u][v]);
+        }
+    }
     else
         cloudOrd[u][v].normal = Vec3(NAN,NAN,NAN);
+}
+
+/// try to extract two clusters. If clusters are well separated (PCARelDistClusters parameter) return true
+bool NormalImageFilter::extractGroup(const std::vector<hop3d::PointNormal>& points, std::vector<hop3d::PointNormal>& pointGroup) const{
+    int clustersNo=2;//its written for two clusters only
+    std::vector<int> centroids={0,1};
+    std::vector<std::vector<int>> clusters; clusters.resize(clustersNo);
+    int iterMax=20;
+    for (int i=0;i<iterMax;i++){
+        //assign to clusters
+        int pointNo=0;
+        clusters[0].clear(); clusters[1].clear();//clear both clusters
+        for (auto& point : points){
+            if (pointNo==centroids[0])
+                clusters[0].push_back(pointNo);
+            else if (pointNo==centroids[1])
+                clusters[1].push_back(pointNo);
+            else{
+                if (fabs(points[centroids[0]].position(2)-point.position(2))<fabs(points[centroids[1]].position(2)-point.position(2)))
+                    clusters[0].push_back(pointNo);
+                else
+                    clusters[1].push_back(pointNo);
+            }
+            pointNo++;
+        }
+        // find new centroids
+        for (int j=0;j<clustersNo;j++){
+            double minDist[2]={std::numeric_limits<double>::max(), std::numeric_limits<double>::max()};
+            for (auto& point : clusters[j]){
+                double dist = 0;
+                for (auto& point2 : clusters[j]){
+                    dist+=fabs(points[point].position(2)-points[point2].position(2));
+                }
+                dist = dist/double(clusters[j].size());
+                if (dist<minDist[j]){
+                    minDist[j]=dist;
+                    centroids[j]=point;
+                }
+            }
+        }
+    }
+    //computer parameters of two clusters
+    double minDist[2]={std::numeric_limits<double>::max(), std::numeric_limits<double>::max()};
+    double maxDist[2]={std::numeric_limits<double>::min(), std::numeric_limits<double>::min()};
+    for (int j=0;j<clustersNo;j++){
+        for (auto& partId : clusters[j]){
+            if (points[partId].position(2)>maxDist[j])
+                maxDist[j]=points[partId].position(2);
+            if (points[partId].position(2)<minDist[j])
+                minDist[j]=points[partId].position(2);
+        }
+    }
+    double dist = (minDist[1]>minDist[0]) ? (minDist[1]-maxDist[0]) : (minDist[0]-maxDist[1]);
+    double width = (minDist[1]>minDist[0]) ? (maxDist[0]-minDist[0]) : (maxDist[1]-minDist[1]);
+    int bigger, smaller;
+    if (clusters[0].size()>clusters[1].size()){
+        bigger=0; smaller=1;
+    }
+    else{
+        bigger=1; smaller=0;
+    }
+    if ((double(clusters[smaller].size())/double(clusters[bigger].size()))<0.75)
+        return false;
+
+    if (fabs(dist/width)>config.PCARelDistClusters){
+        int clusterNo = bigger;//(minDist[1]>minDist[0]) ? 0 : 1;
+        pointGroup.clear();
+        for (auto& id : clusters[clusterNo])
+            pointGroup.push_back(points[id]);
+        return true;
+    }
+    return false;
 }
 
 /// Compute normal vector using PCA
@@ -508,8 +610,11 @@ void NormalImageFilter::normalPCA(std::vector<hop3d::PointNormal>& points, hop3d
         if (std::real(es.eigenvalues()(2))<std::real(es.eigenvalues()(1)))
             min=2;
     }
-    else if (std::real(es.eigenvalues()(2))<std::real(es.eigenvalues()(1)))
+    else if (std::real(es.eigenvalues()(2))<std::real(es.eigenvalues()(1))){
         min=2;
+        if (std::real(es.eigenvalues()(0))<std::real(es.eigenvalues()(2)))
+            min=0;
+    }
     pointNormal.normal = Vec3(std::real(es.eigenvectors()(1,min)), std::real(es.eigenvectors()(0,min)), std::real(es.eigenvectors()(2,min)));
     if (pointNormal.normal(2)<0)
         pointNormal.normal=-pointNormal.normal;

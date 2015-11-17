@@ -73,24 +73,30 @@ public:
 
         Config(std::string configFilename);
         public:
-            // number of rings -- number of filters: 2*((1-2^ringsNo)/(1-2))
+            /// number of rings -- number of filters: 2*((1-2^ringsNo)/(1-2))
             int ringsNo;
-            // filter size in pixels
+            /// filter size in pixels
             int filterSize;
-            // displaying variables and images for debugging
+            /// displaying variables and images for debugging
             int verbose;
-            //depth sensor model filenames
+            /// depth sensor model filenames
             std::string sensorFilename;
-            // compute response if points no in filter window is bigger than threshold
+            /// compute response if points no in filter window is bigger than threshold
             int backgroundThreshold;
-            // true fin max for the group, false - find max for the whole window
+            /// true fin max for the group, false - find max for the whole window
             bool nonMaximumSupressionGroup;
-            // use median filter
+            /// use median filter
             bool useMedianFilter;
-            // kernel size
+            /// kernel size
             int kernelSize;
-            // PCA window size
+            /// PCA window size
             int PCAWindowSize;
+            /// PCA max distance between points -- if bigger run clusterization
+            double PCADistThreshold;
+            /// use clustering
+            bool PCAuseClustering;
+            /// create two clusters and check distance between them. If distance is PCARelDistClusters times larger than width of the front cluster run PCA
+            double PCARelDistClusters;
     };
 
 private:
@@ -160,6 +166,9 @@ private:
 
     /// compute median
     uint16_t median(const cv::Mat& inputImg, int u, int v, int kernelSize);
+
+    /// try to extract two clusters. If clusters are well separated (PCARelDistClusters parameter) return true
+    bool extractGroup(const std::vector<hop3d::PointNormal>& points, std::vector<hop3d::PointNormal>& pointGroup) const;
 };
 
 }

@@ -12,7 +12,10 @@
 <!-- parameters:
     background threshold - compute response if points no in filter window is bigger than threshold
     nonMaximumSupressionGroup - true fin max for the group, false - find max for the whole window-->    
-    <parameters ringsNo="9" filterSize="5" PCAWindowSize="9" verbose="0" backgroundThreshold="80" nonMaximumSupressionGroup="true"></parameters>
-<!--     kernelSize - aperture linear size (max 5) -->
+    <parameters ringsNo="7" filterSize="5" verbose="0" backgroundThreshold="40" nonMaximumSupressionGroup="true"></parameters>
+<!--     PCAWindowSize - aperture linear size
+    PCARelDistClusters - create two clusters and check distance between them. If distance is PCARelDistClusters times larger than width of the front cluster run PCA
+    -->
+    <PCA PCAWindowSize="9" PCADistThreshold="0.015" PCAuseClustering="false" PCARelDistClusters="4.0"></PCA>
     <imageFiltering useMedianFilter="true" kernelSize="7"></imageFiltering>
   </NormalFilterer>

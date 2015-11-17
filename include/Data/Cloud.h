@@ -16,6 +16,9 @@ public:
     /// normal vector
     Vec3 normal;
 
+    /// Euclidean distance
+    double euclideanDistance(const Vec3& vec) const;
+
     ///Construction
     PointNormal(){}
 
