@@ -123,10 +123,10 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
     cv::Mat idsImage(filteredImg.rows,filteredImg.cols, cv::DataType<uchar>::type,cv::Scalar(0));
     for (int i=config.filterSize/2;i<filteredImg.rows-(config.filterSize/2);i++){
         for (int j=config.filterSize/2;j<filteredImg.cols-(config.filterSize/2);j++){
-            if (!std::isnan(cloudOrd[i][j].position(2))){
+			if (!std::isnan(double(cloudOrd[i][j].position(2)))){
                 computeNormal(i, j, cloudOrd);
-                //compute id
-                if (!std::isnan(cloudOrd[i][j].normal(2))){
+                //compute id 
+				if (!std::isnan(double(cloudOrd[i][j].normal(2)))){
                     responseImage[i][j].first = toId(cloudOrd[i][j].normal);
                     //compute response (dot product)
                     responseImage[i][j].second = cloudOrd[i][j].normal.adjoint()*filters[responseImage[i][j].first].normal;
@@ -477,7 +477,7 @@ void NormalImageFilter::computeNormal(int u, int v, std::vector< std::vector<hop
     for (int i=-config.PCAWindowSize/2;i<1+config.PCAWindowSize/2;i++){
         for (int j=-config.PCAWindowSize/2;j<1+config.PCAWindowSize/2;j++){
             if (((u+i)>=0)&&((u+i)<(int)cloudOrd.size())&&((v+j)>=0)&&(int(v+j)<(int)cloudOrd[u+i].size()))
-                if (!std::isnan(cloudOrd[u+i][v+j].position(2))){
+				if (!std::isnan(double(cloudOrd[u + i][v + j].position(2)))){
                     if (cloudOrd[u+i][v+j].position(2)<min)
                         min=cloudOrd[u+i][v+j].position(2);
                     if (cloudOrd[u+i][v+j].position(2)>max)
@@ -633,11 +633,11 @@ void NormalImageFilter::generateFilters(void){
         Mat34 rot(Mat34::Identity());
         rot.matrix().block<3,3>(0,0)=coord;
         int u=0;
-        for (int i=-config.filterSize/2;i<1+config.filterSize/2;i++){
+        for (int j=-config.filterSize/2;j<1+config.filterSize/2;i++){
             int v=0;
-            for (int j=-config.filterSize/2;j<1+config.filterSize/2;j++){
+            for (int k=-config.filterSize/2;k<1+config.filterSize/2;k++){
                 Mat34 point(Mat34::Identity());
-                point(0,3) = double(i); point(1,3) = double(j);
+                point(0,3) = double(j); point(1,3) = double(k);
                 point=rot*point;
                 patchTmp.at<double>(u,v) = point(2,3);
                 v++;

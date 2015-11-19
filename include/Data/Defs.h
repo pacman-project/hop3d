@@ -2,8 +2,9 @@
 #define DATA_DEFS_H
 #include <iostream>
 #include <memory>
+#include <array>
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include "opencv2/core/core.hpp"
 
 namespace hop3d {

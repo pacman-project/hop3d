@@ -1,4 +1,6 @@
 #include "Data/Defs.h"
+#include <cmath>
+#include <float.h>
 
 namespace hop3d {
 
@@ -6,7 +8,8 @@ namespace hop3d {
     std::ostream& operator<<(std::ostream& os, const Mat34& mat){
         for (int i=0;i<3;i++){
             for (int j=0;j<4;j++){
-                if (std::isnan(mat(i,j)))
+                //if (std::isnan(mat(i,j)))
+				if (_isnan(double(mat(i, j))))
                     os << 0.0 << " ";
                 else
                     os << mat(i,j) << " ";
@@ -127,14 +130,14 @@ namespace hop3d {
     std::ostream& operator<<(std::ostream& os, const Gaussian3D& gaussian){
         //save gaussian 3d
         for (int i=0;i<3;i++){
-            if (std::isnan(gaussian.mean(i)))
+			if (std::isnan(double(gaussian.mean(i))))
                 os << 0.0 << " ";
             else
                 os << gaussian.mean(i) << " ";
         }
         for (int i=0;i<gaussian.covariance.rows();i++){
             for (int j=0;j<gaussian.covariance.cols();j++){
-                if (std::isnan(gaussian.covariance(i,j)))
+				if (std::isnan(double(gaussian.covariance(i, j))))
                     os << 0.0 << " ";
                 else
                     os << gaussian.covariance(i,j) << " ";
@@ -206,7 +209,7 @@ namespace hop3d {
     std::ostream& operator<<(std::ostream& os, const GaussianSE3& gaussian){
         //mean value
         for (int i=0;i<gaussian.mean.rows();i++){
-            if (std::isnan(gaussian.mean(i)))
+			if (std::isnan(double(gaussian.mean(i))))
                 os << 0.0 << " ";
             else
                 os << gaussian.mean(i) << " ";
@@ -214,7 +217,7 @@ namespace hop3d {
         // covariance
         for (int i=0;i<gaussian.covariance.rows();i++){
             for (int j=0;j<gaussian.covariance.rows();j++){
-                if (std::isnan(gaussian.covariance(i,j)))
+				if (std::isnan(double(gaussian.covariance(i, j))))
                     os << 0.0 << " ";
                 else
                     os << gaussian.covariance(i,j) << " ";

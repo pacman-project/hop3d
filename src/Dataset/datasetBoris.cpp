@@ -124,7 +124,7 @@ void BorisDataset::readDepthImage(int categoryNo, int objectNo, int imageNo, cv:
     Mat34 cameraPoseInv(cameraPose.inverse());
     cv::Mat image(cloud->height,cloud->width, CV_16U,cv::Scalar(0));
     for (size_t i = 0; i < cloud->points.size(); ++i){
-        if (!std::isnan(cloud->points[i].x)){
+        if (!std::isnan(double(cloud->points[i].x))){
             Mat34 point(Eigen::Translation<double, 3>(cloud->points[i].x,cloud->points[i].y,cloud->points[i].z)*Mat33::Identity());
             Mat34 pointCam=cameraPoseInv*point;
             /*Eigen::Vector3d coordImg = sensorModel.inverseModel(pointCam(0,3),pointCam(1,3),pointCam(2,3));

@@ -47,10 +47,10 @@ class DepthSensorModel {
     class Config{
       public:
         Config() :
-            focalLength{582.64, 586.97},
-            focalAxis{320.17, 260.0},
+            focalLength({582.64, 586.97}),
+            focalAxis({320.17, 260.0}),
             varU(1.1046), varV(0.64160),
-            distVarCoefs{-8.9997e-06, 3.069e-003, 3.6512e-006, -0.0017512e-3}{
+            distVarCoefs({-8.9997e-06, 3.069e-003, 3.6512e-006, -0.0017512e-3}){
         }
         Config(std::string configFilename){
             tinyxml2::XMLDocument config;
@@ -73,11 +73,11 @@ class DepthSensorModel {
             model->FirstChildElement( "depth" )->QueryDoubleAttribute("depthImageScale", &depthImageScale);
         }
         public:
-            double focalLength[2];
-            double focalAxis[2];
+            std::array<double,2> focalLength;
+			std::array<double,2> focalAxis;
             double varU, varV;// variance u,v
-            double distVarCoefs[4];
-            int imageSize[2];//[sizeU, sizeV]
+			std::array<double,4> distVarCoefs;
+			std::array<int,2> imageSize;//[sizeU, sizeV]
             double depthImageScale;
     };
 

@@ -133,10 +133,18 @@ public:
     /// statistics for positions
     std::array<std::array<std::array<GaussianSE3,3>,3>,3> gaussians;
 
-    ViewIndependentPart(): partIds{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1} {
+    ViewIndependentPart() {
+		for (int i=0;i<3;i++)
+			for (int j=0;j<3;j++)
+				for (int k=0;k<3;k++)
+					partIds[i][j][k] = -1;
         id=-1;
     }
-    ViewIndependentPart(int size) : partIds{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}{
+    ViewIndependentPart(int size){
+		for (int i=0;i<3;i++)
+			for (int j=0;j<3;j++)
+				for (int k=0;k<3;k++)
+					partIds[i][j][k] = -1;
         size=size-1; id=-1;
     }// required by octree
     /// Print
@@ -160,7 +168,7 @@ public:
     /// compute coordinate system from normal vector
     static Mat33 coordinateFromNormal(const Vec3& _normal);
     /// compute the min distance to the set of parts
-    static double nearestNeighbour(Mat34 pose, std::vector<std::pair<Mat34, int>> parts, int& neighbourId);
+    static double nearestNeighbour(const Mat34& pose, std::vector<std::pair<Mat34, int>> parts, int& neighbourId);
 
     /// Insertion operator
     friend std::ostream& operator<<(std::ostream& os, const ViewIndependentPart& part);

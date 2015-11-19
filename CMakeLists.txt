@@ -98,6 +98,9 @@ INCLUDE_DIRECTORIES( ${EIGEN_INCLUDE} ${PROJ_INCLUDES} )
 # OpenCV
 FIND_PACKAGE(OpenCV REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
+
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC ON) 
 FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
 
 # PCL
@@ -105,12 +108,6 @@ FIND_PACKAGE(PCL REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
-
-find_package(GLEW REQUIRED)
-if (GLEW_FOUND)
-    include_directories(${GLEW_INCLUDE_DIRS})
-    link_libraries(${GLEW_LIBRARIES})
-endif()
 
 # Executable output directory
 SET(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build/bin${OUTPUT_DIRECTORY_POSTFIX} CACHE PATH "Executable output directory")
@@ -139,39 +136,6 @@ IF (UNIX)
 SET(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -std=c++11 -pthread -fopenmp")
 ENDIF()
 
-SET(DATA_SOURCES
-
-        ${PROJECT_PATH}/src/Data/Cloud.cpp
-        ${PROJECT_PATH}/src/Data/Defs.cpp
-        ${PROJECT_PATH}/src/Data/Graph.cpp
-        ${PROJECT_PATH}/src/Data/Part.cpp
-        ${PROJECT_PATH}/src/Data/Vocabulary.cpp
-)
-SET(DATA_HEADERS
-        ${PROJECT_PATH}/include/Data/Cloud.h
-        ${PROJECT_PATH}/include/Data/Defs.h
-        ${PROJECT_PATH}/include/Data/Graph.h
-        ${PROJECT_PATH}/include/Data/Part.h
-        ${PROJECT_PATH}/include/Data/Vocabulary.h
-)
-SET(DATA_FILES
-)
-SOURCE_GROUP("Data" FILES ${DATA_HEADERS})
-SOURCE_GROUP("Data" FILES ${DATA_SOURCES})
-
-
-SET(CORE_SOURCES
-        ${PROJECT_PATH}/src/Core/LayerFilterer.cpp
-)
-SET(CORE_HEADERS
-        ${PROJECT_PATH}/include/Core/LayerFilterer.h
-)
-SET(CORE_FILES
-)
-SOURCE_GROUP("Core" FILES ${CORE_HEADERS})
-SOURCE_GROUP("Core" FILES ${CORE_SOURCES})
-
-#SET( PROJ_LIBRARIES "flann" )
 SET( PROJ_INCLUDES  "${PROJECT_PATH}/include/" )
 
 ###############################################################################
@@ -180,7 +144,11 @@ SET( PROJ_INCLUDES  "${PROJECT_PATH}/include/" )
 #
 ###############################################################################
 
-add_library(tinyxml2 SHARED ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.h ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.cpp)
+IF (WIN32)
+	add_library(tinyxml2 STATIC ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.h ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.cpp)
+ELSE (UNIX)
+	add_library(tinyxml2 SHARED ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.h ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.cpp)
+ENDIF()
 
 ###############################################################################
 #
@@ -189,6 +157,25 @@ add_library(tinyxml2 SHARED ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml
 ###############################################################################
 
 include_directories(${CMAKE_SOURCE_DIR}/external/octree)
+
+###############################################################################
+#
+# HOP3D Data
+#
+###############################################################################
+
+if(BUILD_HOP3D)
+        file(GLOB DATA_SOURCES
+            "${CMAKE_SOURCE_DIR}/src/Data/*.cpp"
+        )
+        file(GLOB DATA_HEADERS
+            "${CMAKE_SOURCE_DIR}/include/Data/*.h"
+        )
+        ADD_LIBRARY(hop3dData STATIC ${DATA_SOURCES} ${DATA_HEADERS})
+        target_link_libraries(hop3dData)# tinyxml2 opencv_core opencv_highgui opencv_contrib boost_filesystem boost_system)
+        INSTALL(TARGETS hop3dData RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
+        INSTALL(FILES ${DATA_HEADERS} DESTINATION include/hop3d/Data/)
+endif(BUILD_HOP3D)
 
 ###############################################################################
 #
@@ -225,7 +212,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_FILTER)
         )
 
         ADD_LIBRARY(imageFilter STATIC ${FILTER_SOURCES} ${FILTER_HEADERS})
-        TARGET_LINK_LIBRARIES(imageFilter Utilities "${PROJ_NAME}_data")
+        TARGET_LINK_LIBRARIES(imageFilter Utilities hop3dData)
         INSTALL(TARGETS imageFilter RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${FILTER_HEADERS} DESTINATION include/hop3d/ImageFilter/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_FILTER)
@@ -245,7 +232,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_STATISTICS)
         )
 
         ADD_LIBRARY(statisticsBuilder STATIC ${FILTER_SOURCES} ${FILTER_HEADERS})
-        TARGET_LINK_LIBRARIES(statisticsBuilder "${PROJ_NAME}_data")
+        TARGET_LINK_LIBRARIES(statisticsBuilder hop3dData)
         INSTALL(TARGETS statisticsBuilder RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${FILTER_HEADERS} DESTINATION include/hop3d/StatisticsBuilder/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_STATISTICS)
@@ -265,7 +252,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_PART_SELECTOR)
         )
 
         ADD_LIBRARY(partSelector STATIC ${SELECTOR_SOURCES} ${SELECTOR_HEADERS})
-        TARGET_LINK_LIBRARIES(partSelector "${PROJ_NAME}_data" imageFilter)
+        TARGET_LINK_LIBRARIES(partSelector hop3dData imageFilter)
         INSTALL(TARGETS partSelector RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${SELECTOR_HEADERS} DESTINATION include/hop3d/PartSelector/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_PART_SELECTOR)
@@ -285,7 +272,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_OBJECT_COMPOSITION)
         )
 
         ADD_LIBRARY(objectComposition STATIC ${OBJ_COMPOSITION_SOURCES} ${OBJ_COMPOSITION_HEADERS})
-        TARGET_LINK_LIBRARIES(objectComposition "${PROJ_NAME}_data")
+        TARGET_LINK_LIBRARIES(objectComposition hop3dData)
         INSTALL(TARGETS objectComposition RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${OBJ_COMPOSITION_HEADERS} DESTINATION include/hop3d/ObjectComposition/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_OBJECT_COMPOSITION)
@@ -399,11 +386,8 @@ if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_NORMAL_FILTERER)
         INSTALL(TARGETS demoNormalFilterer RUNTIME DESTINATION bin)
 endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_NORMAL_FILTERER)
 
-ADD_LIBRARY("${PROJ_NAME}_data" ${DATA_HEADERS} ${DATA_SOURCES})
-ADD_LIBRARY("${PROJ_NAME}_core" ${CORE_HEADERS} ${CORE_SOURCES})
-
 ADD_EXECUTABLE(${PROJ_NAME} "main.cpp"   )
 
 
-TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" Utilities imageFilter tinyxml2 opencv_core)
+#TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES})
+#TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" Utilities imageFilter tinyxml2 opencv_core)

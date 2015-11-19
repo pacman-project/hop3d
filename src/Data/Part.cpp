@@ -270,7 +270,7 @@ double ViewIndependentPart::distance(const ViewIndependentPart& partA, const Vie
 }
 
 /// compute the min distance to the set of parts
-double ViewIndependentPart::nearestNeighbour(Mat34 pose, std::vector<std::pair<Mat34, int>> parts, int& neighbourId){
+double ViewIndependentPart::nearestNeighbour(const Mat34& pose, std::vector<std::pair<Mat34, int>> parts, int& neighbourId){
     double minDist=std::numeric_limits<double>::max();
     int partId=0;
     for (auto part : parts){
@@ -455,7 +455,7 @@ std::ostream& operator<<(std::ostream& os, const ViewIndependentPart& part){
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             for (int k=0;k<3;k++){
-                if (std::isnan(part.partIds[i][j][k]))
+				if (std::isnan(double(part.partIds[i][j][k])))
                     os << -2 << " ";
                 else
                     os << part.partIds[i][j][k] << " ";

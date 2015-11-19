@@ -32,7 +32,7 @@ public:
         std::vector<GLdouble>::iterator n = normals.begin();
         std::vector<GLdouble>::iterator t = texcoords.begin();
         for(r = 0; r < rings; r++) for(s = 0; s < sectors; s++) {
-                double const y = sin( -M_PI_2 + M_PI * r * R );
+                double const y = sin( -(M_PI/2.0) + M_PI * r * R );
                 double const x = cos(2*M_PI * s * S) * sin( M_PI * r * R );
                 double const z = sin(2*M_PI * s * S) * sin( M_PI * r * R );
 
@@ -241,7 +241,7 @@ void QGLVisualizer::updateHierarchy(){
         mtxHierarchy.unlock();
     }
     else{
-        usleep(20000);
+		std::this_thread::sleep_for(std::chrono::microseconds(20000));
     }
 }
 
