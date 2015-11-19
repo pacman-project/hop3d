@@ -358,6 +358,7 @@ void NormalImageFilter::computeImages3rdLayer(int categoryNo, int objectNo, int 
                 int id = findId(dictionary,octetsImage[i][j]);
                 part = dictionary[id];
                 part.id = id;
+                part.layerId=3;
                 //std::cout << "found id : " << findId(dictionary,octetsImage[i][j]) << " new id " << dictionary[findId(dictionary,octetsImage[i][j])].id << "\n";
                 //std::cout << "parts no " << partsNo << "\n";
                 part.location = octetsImage[i][j].filterPos[1][1];

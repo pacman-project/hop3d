@@ -115,15 +115,10 @@ std::istream& operator>>(std::istream& is, Hierarchy& hierarchy){
 
 /// get normal vector related to the part
 void Hierarchy::getNormal(const ViewDependentPart& part, Vec3& normal) const{
-    int layerId = part.layerId;
-    if (layerId==2) {
-        int filterId = part.partIds[1][1];
-        normal = firstLayer[filterId].normal;
-    }
-    else if (layerId==3) {
-        int filterId = viewDependentLayers[0][part.partIds[1][1]].partIds[1][1];
-        normal = firstLayer[filterId].normal;
-    }
+    if (part.layerId>2)
+        getNormal(viewDependentLayers[part.layerId-3][part.partIds[1][1]], normal);
+    else
+        normal = firstLayer[part.partIds[1][1]].normal;
 }
 
 /// print ids
