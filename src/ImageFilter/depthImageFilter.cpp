@@ -66,7 +66,7 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo, 
     hop3d::ImagesDisplay displayer;
     std::vector<cv::Mat> filteredImages(filters.size());
     //applying all the filters to an image
-    unsigned long int e1 = cv::getTickCount();
+    unsigned long int e1 = (unsigned long)cv::getTickCount();
 
 //#pragma omp parallel for
     for(unsigned int iterF = 0 ; iterF < filters.size(); iterF++)
@@ -77,7 +77,7 @@ void DepthImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo, 
         filteredImage.release();
 
     }
-    unsigned long int e2 = cv::getTickCount();
+    unsigned long int e2 = (unsigned long) cv::getTickCount();
     double time = double((e2 - e1))/double(cv::getTickFrequency());
     std::cout << "Execution time: " << time << std::endl;
 

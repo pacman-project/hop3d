@@ -24,7 +24,7 @@ int main(void){
         std::cout << statsBuilder->getName() << "\n";
 
         std::vector<hop3d::Octet> octets;
-        std::default_random_engine generator(time(0));
+        std::default_random_engine generator((unsigned int)time(0));
         std::uniform_int_distribution<int> distribution(0,3); // filters ids distribution
         int filterSize = 7;
         std::normal_distribution<double> distributionUV(filterSize/2.0, filterSize/2.0); // filters ids distribution

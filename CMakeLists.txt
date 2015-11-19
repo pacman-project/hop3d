@@ -12,7 +12,9 @@ SET( PROJ_NAME      "HOP3D" )
 SET( PROJ_PATH      ${CMAKE_SOURCE_DIR} )
 SET( PROJ_OUT_PATH  ${CMAKE_BINARY_DIR} )
 
+IF (UNIX)
 SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread -O0")
+ENDIF (UNIX)
 
 option(BUILD_HOP3D "Build HOP3D libraries" ON)
 option(BUILD_HOP3D_UTILITIES "Build HOP3D Utilities library" ON)
@@ -102,7 +104,13 @@ include_directories( ${OpenCV_INCLUDE_DIRS} )
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_STATIC ON) 
 FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
-
+INCLUDE_DIRECTORIES(
+  ${Boost_INCLUDE_DIRS}
+ )
+ LINK_DIRECTORIES(
+  ${Boost_LIBRARY_DIRS}
+ )
+ 
 # PCL
 FIND_PACKAGE(PCL REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
@@ -343,11 +351,6 @@ endif(BUILD_HOP3D)
 ###############################################################################
 
 if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_STATS)
-
-        SET(DEMO_FILES
-                ${PROJECT_ROOT}/resources/configGlobal.xml
-        )
-
         SET(DEMO_SOURCES ./src/Apps/DemoStatsBuilder/statsBuilder.cpp)
         ADD_EXECUTABLE(statsBuilder ${DEMO_SOURCES})
         TARGET_LINK_LIBRARIES(statsBuilder tinyxml2 statisticsBuilder imageFilter partSelector)
@@ -363,7 +366,7 @@ endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_STATS)
 ###############################################################################
 
 if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_QVISUALIZER AND BUILD_VISUALIZATION_QT)
-        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath ./")
+        #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath ./")
         SET(DEMO_SOURCES ./src/Apps/DemoQVisualizer/demoQVisualizer.cpp)
         ADD_EXECUTABLE(demoQVisualizer ${DEMO_SOURCES})
 #        add_dependencies(demoVisualizer Map)
@@ -378,7 +381,7 @@ endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_QVISUALIZER AND BUILD_VISUALIZATION_
 ###############################################################################
 
 if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_NORMAL_FILTERER)
-        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath ./")
+        #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath ./")
         SET(DEMO_SOURCES ./src/Apps/DemoNormalFilterer/demoNormalFilterer.cpp)
         ADD_EXECUTABLE(demoNormalFilterer ${DEMO_SOURCES})
 #        add_dependencies(demoVisualizer Map)
