@@ -52,7 +52,7 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         Mat34 partPosition(Mat34::Identity());
         Vec3 pos3d;
         if (config.verbose==1){
-            std::cout << "update octree, part.id: " << part.id << "\n";
+            std::cout << "update octree, part.id: " << part.id << " layer id" << part.layerId << "\n";
         }
         Mat34 part3D(Mat34::Identity());
         Vec3 normal; hierarchy.getNormal(part, normal);
