@@ -634,7 +634,7 @@ void NormalImageFilter::generateFilters(void){
         Mat34 rot(Mat34::Identity());
         rot.matrix().block<3,3>(0,0)=coord;
         int u=0;
-        for (int j=-config.filterSize/2;j<1+config.filterSize/2;i++){
+        for (int j=-config.filterSize/2;j<1+config.filterSize/2;j++){
             int v=0;
             for (int k=-config.filterSize/2;k<1+config.filterSize/2;k++){
                 Mat34 point(Mat34::Identity());
