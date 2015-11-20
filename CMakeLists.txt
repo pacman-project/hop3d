@@ -12,7 +12,9 @@ SET( PROJ_NAME      "HOP3D" )
 SET( PROJ_PATH      ${CMAKE_SOURCE_DIR} )
 SET( PROJ_OUT_PATH  ${CMAKE_BINARY_DIR} )
 
-SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread -O0")
+#SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread -O0")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_CRT_SECURE_NO_DEPRECATE")
+SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ox")
 
 option(BUILD_HOP3D "Build HOP3D libraries" ON)
 option(BUILD_HOP3D_UTILITIES "Build HOP3D Utilities library" ON)
@@ -54,19 +56,6 @@ INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/Defs")
 
 # Project root directory
 GET_FILENAME_COMPONENT(PROJECT_PATH . ABSOLUTE CACHE INTERNAL "Path prefix for the project")
-# Windows 32/64 bit
-IF (WIN32)
-        SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
-        IF(X86_64)
-                SET(PROGRAM_FILES $ENV{ProgramW6432})
-                SET(X86_WIN "64")
-                SET(X86_X64 "/x64")
-        ELSE(X86_64)
-                SET(PROGRAM_FILES $ENV{ProgramFiles})
-                SET(X86_WIN "32")
-                SET(X86_X64 "")
-        ENDIF(X86_64)
-ENDIF()
 
 #OpenGL library
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
@@ -74,11 +63,29 @@ FIND_PACKAGE(OpenGL)
 include_directories(${OPENGL_INCLUDE_DIR})
 link_directories(${OPENGL_LIBRARY})
 
+# GLUT
+SET(GLUT_INCLUDE_DIRS "" CACHE PATH "Path prefix for Glut include dir")
+SET(GLUT_LIBRARY_DIRS "" CACHE PATH "Path prefix for Glut library dir")
+include_directories(${GLUT_INCLUDE_DIRS})
+link_directories(${GLUT_LIBRARY_DIRS})
+
+# Qt
+FIND_PACKAGE(Qt5Xml REQUIRED)
+FIND_PACKAGE(Qt5OpenGL REQUIRED)
+FIND_PACKAGE(Qt5Gui REQUIRED)
+FIND_PACKAGE(Qt5Widgets REQUIRED)
+include_directories(
+	${Qt5OpenGL_INCLUDE_DIRS}
+	${Qt5Xml_INCLUDE_DIRS}
+	${Qt5Gui_INCLUDE_DIRS}
+	${Qt5Widgets_INCLUDE_DIRS}
+)
+
+# QGLViewer
 if (BUILD_VISUALIZATION_QT)
     #QGLViewer library
     FIND_PACKAGE(QGLViewer)
     include_directories(${QGLVIEWER_INCLUDE_DIR})
-    include_directories(${QT_INCLUDES})
     link_directories(${QGLVIEWER_LIBRARY})
 endif (BUILD_VISUALIZATION_QT)
 
@@ -99,9 +106,15 @@ INCLUDE_DIRECTORIES( ${EIGEN_INCLUDE} ${PROJ_INCLUDES} )
 FIND_PACKAGE(OpenCV REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_STATIC ON) 
-FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
+#set(Boost_USE_STATIC_LIBS ON)
+#set(Boost_USE_STATIC ON) 
+#FIND_PACKAGE( Boost 1.54 COMPONENTS system filesystem REQUIRED )
+ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB)
+SET(Boost_USE_STATIC_LIBS ON)
+SET(Boost_ALL_DYN_LINK OFF)
+FIND_PACKAGE(Boost COMPONENTS system filesystem)
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
 
 # PCL
 FIND_PACKAGE(PCL REQUIRED)
@@ -192,7 +205,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_UTILITIES)
         )
 
         ADD_LIBRARY(Utilities STATIC ${UTILITIES_SOURCES} ${UTILITIES_HEADERS})
-        target_link_libraries(Utilities tinyxml2 opencv_core opencv_highgui opencv_contrib boost_filesystem boost_system)
+        target_link_libraries(Utilities tinyxml2 opencv_core opencv_highgui opencv_contrib ${Boost_LIBRARIES})
         INSTALL(TARGETS Utilities RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${UTILITIES_HEADERS} DESTINATION include/hop3d/Utilities/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_UTILITIES)
@@ -224,17 +237,17 @@ endif(BUILD_HOP3D AND BUILD_HOP3D_FILTER)
 ###############################################################################
 
 if(BUILD_HOP3D AND BUILD_HOP3D_STATISTICS)
-        file(GLOB FILTER_SOURCES
+        file(GLOB STATISTICS_SOURCES
             "${CMAKE_SOURCE_DIR}/src/StatisticsBuilder/*.cpp"
         )
-        file(GLOB FILTER_HEADERS
+        file(GLOB STATISTICS_HEADERS
             "${CMAKE_SOURCE_DIR}/include/StatisticsBuilder/*.h"
         )
 
-        ADD_LIBRARY(statisticsBuilder STATIC ${FILTER_SOURCES} ${FILTER_HEADERS})
+        ADD_LIBRARY(statisticsBuilder STATIC ${STATISTICS_SOURCES} ${STATISTICS_HEADERS})
         TARGET_LINK_LIBRARIES(statisticsBuilder hop3dData)
         INSTALL(TARGETS statisticsBuilder RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
-        INSTALL(FILES ${FILTER_HEADERS} DESTINATION include/hop3d/StatisticsBuilder/)
+        INSTALL(FILES ${STATISTICS_HEADERS} DESTINATION include/hop3d/StatisticsBuilder/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_STATISTICS)
 
 ###############################################################################
@@ -292,7 +305,7 @@ if(BUILD_HOP3D AND BUILD_VISUALIZATION_QT)
             "${CMAKE_SOURCE_DIR}/include/QVisualizer/*.h"
         )
         ADD_LIBRARY(QVisualizer STATIC ${QVISUALIZER_SOURCES} ${QVISUALIZER_HEADERS})
-        TARGET_LINK_LIBRARIES(QVisualizer tinyxml2 ${QGLVIEWER_LIBRARY} ${QT_LIBRARIES} QtCore QtXml QtOpenGL QtGui ${OPENGL_LIBRARY})
+        TARGET_LINK_LIBRARIES(QVisualizer tinyxml2 ${QGLVIEWER_LIBRARY} ${QT_LIBRARIES} ${OPENGL_LIBRARY})
         INSTALL(TARGETS QVisualizer RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${QVISUALIZER_HEADERS} DESTINATION include/hop3d/QVisualizer/)
 endif(BUILD_HOP3D AND BUILD_VISUALIZATION_QT)
@@ -330,7 +343,7 @@ if(BUILD_HOP3D)
             "${CMAKE_SOURCE_DIR}/include/HOP3D/*.h"
         )
         ADD_LIBRARY(LIBHOP3D STATIC ${LIBHOP3D_SOURCES} ${LIBHOP3D_HEADERS})
-        TARGET_LINK_LIBRARIES(LIBHOP3D tinyxml2 Dataset statisticsBuilder Utilities partSelector imageFilter objectComposition)
+        TARGET_LINK_LIBRARIES(LIBHOP3D Dataset statisticsBuilder Utilities partSelector imageFilter objectComposition ${QT_LIBRARIES})
         INSTALL(TARGETS LIBHOP3D RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${LIBHOP3D_HEADERS} DESTINATION include/hop3D/HOP3D/)
 endif(BUILD_HOP3D)
@@ -348,9 +361,9 @@ if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_STATS)
                 ${PROJECT_ROOT}/resources/configGlobal.xml
         )
 
-        SET(DEMO_SOURCES ./src/Apps/DemoStatsBuilder/statsBuilder.cpp)
-        ADD_EXECUTABLE(statsBuilder ${DEMO_SOURCES})
-        TARGET_LINK_LIBRARIES(statsBuilder tinyxml2 statisticsBuilder imageFilter partSelector)
+        SET(DEMO_STATS_SOURCES ./src/Apps/DemoStatsBuilder/statsBuilder.cpp)
+        ADD_EXECUTABLE(statsBuilder ${DEMO_STATS_SOURCES})
+        TARGET_LINK_LIBRARIES(statsBuilder tinyxml2 statisticsBuilder imageFilter partSelector ${QT_LIBRARIES} ${Boost_LIBRARIES})
         INSTALL(TARGETS statsBuilder RUNTIME DESTINATION bin)
         INSTALL(FILES ${DEMO_FILES} DESTINATION bin)
 
@@ -363,11 +376,11 @@ endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_STATS)
 ###############################################################################
 
 if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_QVISUALIZER AND BUILD_VISUALIZATION_QT)
-        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath ./")
-        SET(DEMO_SOURCES ./src/Apps/DemoQVisualizer/demoQVisualizer.cpp)
-        ADD_EXECUTABLE(demoQVisualizer ${DEMO_SOURCES})
+        #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath ./")
+        SET(DEMO_QVISUALIZER_SOURCES ./src/Apps/DemoQVisualizer/demoQVisualizer.cpp)
+        ADD_EXECUTABLE(demoQVisualizer ${DEMO_QVISUALIZER_SOURCES})
 #        add_dependencies(demoVisualizer Map)
-        TARGET_LINK_LIBRARIES(demoQVisualizer LIBHOP3D QVisualizer tinyxml2 ${QGLVIEWER_LIBRARY} ${QT_LIBRARIES} ${OPENGL_LIBRARY} glut)
+        TARGET_LINK_LIBRARIES(demoQVisualizer LIBHOP3D QVisualizer tinyxml2 freeglut)
         INSTALL(TARGETS demoQVisualizer RUNTIME DESTINATION bin)
 endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_QVISUALIZER AND BUILD_VISUALIZATION_QT)
 
@@ -378,15 +391,16 @@ endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_QVISUALIZER AND BUILD_VISUALIZATION_
 ###############################################################################
 
 if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_NORMAL_FILTERER)
-        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath ./")
-        SET(DEMO_SOURCES ./src/Apps/DemoNormalFilterer/demoNormalFilterer.cpp)
-        ADD_EXECUTABLE(demoNormalFilterer ${DEMO_SOURCES})
+        #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath ./")
+        SET(DEMO_NORMAL_FILTERER_SOURCES ./src/Apps/DemoNormalFilterer/demoNormalFilterer.cpp)
+        ADD_EXECUTABLE(demoNormalFilterer ${DEMO_NORMAL_FILTERER_SOURCES})
 #        add_dependencies(demoVisualizer Map)
-        TARGET_LINK_LIBRARIES(demoNormalFilterer imageFilter Dataset tinyxml2 boost_system)
+        TARGET_LINK_LIBRARIES(demoNormalFilterer imageFilter Dataset tinyxml2 ${OPENGL_LIBRARY} ${Boost_LIBRARIES})
         INSTALL(TARGETS demoNormalFilterer RUNTIME DESTINATION bin)
 endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_NORMAL_FILTERER)
 
-ADD_EXECUTABLE(${PROJ_NAME} "main.cpp"   )
+ADD_EXECUTABLE(${PROJ_NAME} "main.cpp")
+TARGET_LINK_LIBRARIES(${PROJ_NAME} imageFilter Dataset tinyxml2 ${Boost_LIBRARIES})
 
 
 #TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES})
