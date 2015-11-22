@@ -13,7 +13,7 @@ SET( PROJ_PATH      ${CMAKE_SOURCE_DIR} )
 SET( PROJ_OUT_PATH  ${CMAKE_BINARY_DIR} )
 
 IF (UNIX)
-	SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread -O0")
+        SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread -O0 -fPIC")
 ELSE()
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_CRT_SECURE_NO_DEPRECATE")
 	SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ox")
@@ -73,22 +73,31 @@ include_directories(${GLUT_INCLUDE_DIRS})
 link_directories(${GLUT_LIBRARY_DIRS})
 
 # Qt
-FIND_PACKAGE(Qt5Xml REQUIRED)
-FIND_PACKAGE(Qt5OpenGL REQUIRED)
-FIND_PACKAGE(Qt5Gui REQUIRED)
-FIND_PACKAGE(Qt5Widgets REQUIRED)
-include_directories(
-	${Qt5OpenGL_INCLUDE_DIRS}
-	${Qt5Xml_INCLUDE_DIRS}
-	${Qt5Gui_INCLUDE_DIRS}
-	${Qt5Widgets_INCLUDE_DIRS}
-)
+IF (WIN32)
+    FIND_PACKAGE(Qt5Xml REQUIRED)
+    FIND_PACKAGE(Qt5OpenGL REQUIRED)
+    FIND_PACKAGE(Qt5Gui REQUIRED)
+    FIND_PACKAGE(Qt5Widgets REQUIRED)
+    include_directories(
+            ${Qt5OpenGL_INCLUDE_DIRS}
+            ${Qt5Xml_INCLUDE_DIRS}
+            ${Qt5Gui_INCLUDE_DIRS}
+            ${Qt5Widgets_INCLUDE_DIRS}
+    )
+else (WIN32)
+    include_directories(${QT_INCLUDES})
+endif (WIN32)
+# FIX: Qt was built with -reduce-relocations
+#if (Qt5_POSITION_INDEPENDENT_CODE)
+#    SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
+#endif()
 
 # QGLViewer
 if (BUILD_VISUALIZATION_QT)
     #QGLViewer library
     FIND_PACKAGE(QGLViewer)
     include_directories(${QGLVIEWER_INCLUDE_DIR})
+    include_directories(${QT_INCLUDES})
     link_directories(${QGLVIEWER_LIBRARY})
 endif (BUILD_VISUALIZATION_QT)
 
@@ -308,8 +317,12 @@ if(BUILD_HOP3D AND BUILD_VISUALIZATION_QT)
             "${CMAKE_SOURCE_DIR}/include/QVisualizer/*.h"
         )
         ADD_LIBRARY(QVisualizer STATIC ${QVISUALIZER_SOURCES} ${QVISUALIZER_HEADERS})
-        TARGET_LINK_LIBRARIES(QVisualizer tinyxml2 ${QGLVIEWER_LIBRARY} ${OPENGL_LIBRARY})
-		qt5_use_modules(QVisualizer Widgets OpenGL)
+        if (WIN32)
+            TARGET_LINK_LIBRARIES(QVisualizer tinyxml2 ${QGLVIEWER_LIBRARY} ${OPENGL_LIBRARY})
+                    qt5_use_modules(QVisualizer Widgets OpenGL)
+        else (WIN32)
+            TARGET_LINK_LIBRARIES(QVisualizer tinyxml2 ${QGLVIEWER_LIBRARY} ${OPENGL_LIBRARY} ${QT_LIBRARIES} QtCore QtXml QtOpenGL QtGui)
+        endif (WIN32)
         INSTALL(TARGETS QVisualizer RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${QVISUALIZER_HEADERS} DESTINATION include/hop3d/QVisualizer/)
 endif(BUILD_HOP3D AND BUILD_VISUALIZATION_QT)
@@ -384,7 +397,11 @@ if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_QVISUALIZER AND BUILD_VISUALIZATION_QT)
         SET(DEMO_QVISUALIZER_SOURCES ./src/Apps/DemoQVisualizer/demoQVisualizer.cpp)
         ADD_EXECUTABLE(demoQVisualizer ${DEMO_QVISUALIZER_SOURCES})
 #        add_dependencies(demoVisualizer Map)
-        TARGET_LINK_LIBRARIES(demoQVisualizer LIBHOP3D QVisualizer tinyxml2 freeglut)
+        IF (UNIX)
+            TARGET_LINK_LIBRARIES(demoQVisualizer LIBHOP3D QVisualizer tinyxml2 glut)
+        else(UNIX)
+            TARGET_LINK_LIBRARIES(demoQVisualizer LIBHOP3D QVisualizer tinyxml2 freeglut)
+        endif(UNIX)
         INSTALL(TARGETS demoQVisualizer RUNTIME DESTINATION bin)
 endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_QVISUALIZER AND BUILD_VISUALIZATION_QT)
 

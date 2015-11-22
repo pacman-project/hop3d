@@ -8,8 +8,11 @@ namespace hop3d {
     std::ostream& operator<<(std::ostream& os, const Mat34& mat){
         for (int i=0;i<3;i++){
             for (int j=0;j<4;j++){
-                //if (std::isnan(mat(i,j)))
+                #ifdef _WIN32
 				if (_isnan(double(mat(i, j))))
+                #else
+                if (std::isnan(mat(i,j)))
+                #endif
                     os << 0.0 << " ";
                 else
                     os << mat(i,j) << " ";
