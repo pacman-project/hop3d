@@ -223,7 +223,26 @@ void HOP3DBham::learn(){
         }
     }
     notify3Dmodels();
-
+    std::vector<int> ids;
+    getPartsIds(0,0,1, 339, 292, ids);
+    /*std::cout << "ids: ";
+    for (auto& id : ids)
+        std:: cout << id << ", ";
+    std::cout << "\n";*/
+    getPartsIds(0,0,1, 310, 311, ids);
+    /*std::cout << "ids: ";
+    for (auto& id : ids)
+        std:: cout << id << ", ";
+    std::cout << "\n";*/
+    getPartsIds(0,0,1, 349, 290, ids);
+    /*std::cout << "ids: ";
+    for (auto& id : ids)
+        std:: cout << id << ", ";
+    std::cout << "\n";
+    ViewDependentPart ptemp = hierarchy.get()->viewDependentLayers[1][ids[2]];
+    std::cout << ptemp.partIds[1][1] << ", ";
+    ptemp = hierarchy.get()->viewDependentLayers[0][ptemp.partIds[1][1]];
+    std::cout << ptemp.partIds[1][1] << "\n";*/
     std::cout << "Finished\n";
 }
 
@@ -256,6 +275,12 @@ void HOP3DBham::load(std::string filename){
     }
     notify3Dmodels();
     std::cout << "Finished\n";
+}
+
+/// get set of ids from hierarchy for the given input point
+void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids){
+    ids.clear();
+    imageFilterer->getPartsIds(categoryNo, objectNo, imageNo, u, v, ids);
 }
 
 hop3d::HOP3D* hop3d::createHOP3DBham(void) {

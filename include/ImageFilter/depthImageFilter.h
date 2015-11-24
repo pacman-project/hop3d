@@ -61,6 +61,9 @@ public:
     /// get last view dependent layer parts from the image
     void getLastVDLayerParts(int categoryNo, int objectNo, int imageNo, std::vector<ViewDependentPart>& parts) const;
 
+    /// get set of ids for the given input point
+    void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids);
+
     class Config{
       public:
         Config() {

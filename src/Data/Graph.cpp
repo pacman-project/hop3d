@@ -121,6 +121,15 @@ void Hierarchy::getNormal(const ViewDependentPart& part, Vec3& normal) const{
         normal = firstLayer[part.partIds[1][1]].normal;
 }
 
+/// get points related to the part assuming that we have flat patches
+void Hierarchy::getPoints(const ViewDependentPart& part, std::vector<Vec3>& points) const{
+/*  todo  if (part.layerId>2)
+        getPoints(viewDependentLayers[part.layerId-3][part.partIds[1][1]], points);
+    else
+        normal = firstLayer[part.partIds[1][1]].normal;
+        */
+}
+
 /// print ids
 void Hierarchy::printIds(const ViewDependentPart& part){
     if (part.layerId==2){

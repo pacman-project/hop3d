@@ -90,6 +90,9 @@ public:
     };
 
 private:
+    /// get set of ids from hierarchy for the given input point
+    void getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids);
+
     /// Configuration of the module
     Config config;
 

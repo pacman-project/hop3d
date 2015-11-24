@@ -215,6 +215,12 @@ void DepthImageFilter::getLastVDLayerParts(int categoryNo, int objectNo, int ima
     parts.clear();
 }
 
+/// get set of ids for the given input point
+void DepthImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids){
+    ids.clear();
+    std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v << "\n";
+}
+
 int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, Filter &filter, cv::Mat &filteredImage)
 {
 

@@ -36,6 +36,9 @@ public:
     /// get normal vector related to the part
     void getNormal(const ViewDependentPart& part, Vec3& normal) const;
 
+    /// get points related to the part assuming that we have flat patches
+    void getPoints(const ViewDependentPart& part, std::vector<Vec3>& points) const;
+
     /// print ids
     void printIds(const ViewDependentPart& part);
 
