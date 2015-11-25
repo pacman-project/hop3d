@@ -223,26 +223,10 @@ void HOP3DBham::learn(){
         }
     }
     notify3Dmodels();
-    std::vector<int> ids;
-    getPartsIds(0,0,1, 339, 292, ids);
-    /*std::cout << "ids: ";
-    for (auto& id : ids)
-        std:: cout << id << ", ";
-    std::cout << "\n";*/
-    getPartsIds(0,0,1, 310, 311, ids);
-    /*std::cout << "ids: ";
-    for (auto& id : ids)
-        std:: cout << id << ", ";
-    std::cout << "\n";*/
-    getPartsIds(0,0,1, 349, 290, ids);
-    /*std::cout << "ids: ";
-    for (auto& id : ids)
-        std:: cout << id << ", ";
-    std::cout << "\n";
-    ViewDependentPart ptemp = hierarchy.get()->viewDependentLayers[1][ids[2]];
-    std::cout << ptemp.partIds[1][1] << ", ";
-    ptemp = hierarchy.get()->viewDependentLayers[0][ptemp.partIds[1][1]];
-    std::cout << ptemp.partIds[1][1] << "\n";*/
+    //std::vector<int> ids;
+    //getPartsIds(0,0,1, 339, 292, ids);
+    //getPartsIds(0,0,1, 350, 290, ids);
+    //getPartsIds(0,0,1, 333, 292, ids);
     std::cout << "Finished\n";
 }
 
@@ -280,7 +264,22 @@ void HOP3DBham::load(std::string filename){
 /// get set of ids from hierarchy for the given input point
 void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids){
     ids.clear();
-    imageFilterer->getPartsIds(categoryNo, objectNo, imageNo, u, v, ids);
+    ViewDependentPart lastVDpart;
+    imageFilterer->getPartsIds(categoryNo, objectNo, imageNo, u, v, ids, lastVDpart);
+    //ids.push_back(hierarchy.get()->interpreter2to3[ids.back()]);
+    Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
+    //std::cout << cameraPose.matrix() << " \n";
+    if (ids.back()==-1){
+        for (int i=0;i<3;i++) ids.push_back(-1);
+    }
+    else{
+        objects[categoryNo][objectNo].getPartsIds(lastVDpart, cameraPose, *depthCameraModel, *hierarchy, ids);
+    }
+    std::cout << "ids: ";
+    for (auto& id : ids){
+        std::cout << id << ", ";
+    }
+    std::cout << "\n";
 }
 
 hop3d::HOP3D* hop3d::createHOP3DBham(void) {

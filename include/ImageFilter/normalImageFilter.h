@@ -67,7 +67,7 @@ public:
     static Mat33 coordinateFromNormal(const Vec3& _normal);
 
     /// get set of ids for the given input point
-    void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids);
+    void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart);
 
     class Config{
       public:

@@ -48,6 +48,9 @@ public:
     /// update ids in the octree using new vocabulary
     virtual void updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy) = 0;
 
+    /// get set of ids for the given input point
+    virtual void getPartsIds(const ViewDependentPart& part, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy, std::vector<int>& ids) const = 0;
+
     /// Virtual descrutor
     virtual ~ObjectComposition() {
     }

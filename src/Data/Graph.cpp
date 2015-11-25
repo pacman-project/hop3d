@@ -41,11 +41,11 @@ std::ostream& operator<<(std::ostream& os, const Hierarchy& hierarchy){
     }
     os << "\n";
     // interpreter size
-    os << hierarchy.interpreter2to3.size() << "\n";
-    for (auto& element : hierarchy.interpreter2to3){
-        os << element.first << " " << element.second << " ";
-    }
-    os << "\n";
+   // os << hierarchy.interpreter2to3.size() << "\n";
+    //for (auto& element : hierarchy.interpreter2to3){
+   //     os << element.first << " " << element.second << " ";
+   // }
+    //os << "\n";
     os << hierarchy.viewIndependentLayers.size() << "\n";
     for (size_t i = 0;i<hierarchy.viewIndependentLayers.size();i++){
         os << hierarchy.viewIndependentLayers[i].size() << "\n";
@@ -91,12 +91,12 @@ std::istream& operator>>(std::istream& is, Hierarchy& hierarchy){
         hierarchy.interpreter.insert(std::make_pair(firstId, secondId));
     }
     // interpreter size
-    is >> interpreterSize;
-    for (int i=0;i<interpreterSize;i++){
-        int firstId, secondId;
-        is >> firstId >> secondId;
-        hierarchy.interpreter2to3.insert(std::make_pair(firstId, secondId));
-    }
+    //is >> interpreterSize;
+    //for (int i=0;i<interpreterSize;i++){
+    //    int firstId, secondId;
+    //    is >> firstId >> secondId;
+    //    hierarchy.interpreter2to3.insert(std::make_pair(firstId, secondId));
+    //}
     int viewIndepLayersNo;
     is >> viewIndepLayersNo;
     hierarchy.viewIndependentLayers.clear();

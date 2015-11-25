@@ -216,8 +216,10 @@ void DepthImageFilter::getLastVDLayerParts(int categoryNo, int objectNo, int ima
 }
 
 /// get set of ids for the given input point
-void DepthImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids){
+void DepthImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart){
+    std::cout << "not implemented\n";
     ids.clear();
+    std::cout << lastVDpart.id << "\n";
     std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v << "\n";
 }
 

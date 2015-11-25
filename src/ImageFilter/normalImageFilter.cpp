@@ -674,7 +674,7 @@ void NormalImageFilter::normalizeVector(Vec3& normal){
 }
 
 /// get set of ids for the given input point
-void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids){
+void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart){
     // get filter id
     std::cout << "u v " << u << ", " << v << "\n";
     unsigned int octetCoords[2]={v/(config.filterSize*3),u/(config.filterSize*3)};
@@ -709,8 +709,8 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
             }
             std::cout << "\n";
         }*/
-        ViewDependentPart part = partsImages[categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
-        ids.push_back(part.id);
+        lastVDpart = partsImages[categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
+        ids.push_back(lastVDpart.id);
         /*std::cout << "part.id " << part.id << "\n";
         std::cout << " l2 id " << part.partIds[(v/(config.filterSize*3))%3][(u/(config.filterSize*3))%3] << "\n";
         for (int i=0;i<3;i++){
@@ -724,6 +724,7 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
     else{
         ids.push_back(-2); //point wasn't used to create part (2nd layer)
         ids.push_back(-2); //point wasn't used to create part (3rd layer)
+        lastVDpart.id = -2;
     }
 }
 

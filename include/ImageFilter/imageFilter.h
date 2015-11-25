@@ -51,7 +51,7 @@ public:
     virtual void getLastVDLayerParts(int categoryNo, int objectNo, int imageNo, std::vector<ViewDependentPart>& parts) const = 0;
 
     /// get set of ids for the given input point
-    virtual void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids) = 0;
+    virtual void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart) = 0;
 
     /// Virtual descrutor
     virtual ~ImageFilter() {

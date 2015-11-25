@@ -45,6 +45,9 @@ public:
     /// update ids in the octree using new vocabulary
     void updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy);
 
+    /// get set of ids for the given input point
+    void getPartsIds(const ViewDependentPart& part, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy, std::vector<int>& ids) const;
+
     /// Insertion operator
     friend std::ostream& operator<<(std::ostream& os, const ObjectCompositionOctree& object){
         os << static_cast<unsigned int>(object.type) << " ";
@@ -126,10 +129,10 @@ private:
     int findIdInVocabulary(const ViewIndependentPart& part, const std::vector<ViewIndependentPart>& vocabulary);
 
     /// convert global coordinates to octree coordinates
-    void toCoordinate(double pos, int& coord, int layerNo);
+    void toCoordinate(double pos, int& coord, int layerNo) const;
 
     /// convert octree coordinates to global coordinates
-    void fromCoordinate(int coord, double& pos, int layero);
+    void fromCoordinate(int coord, double& pos, int layero) const;
 };
 }
 #endif // OBJECT_COMPOSITION_OCTREE_H_INCLUDED
