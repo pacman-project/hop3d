@@ -93,6 +93,9 @@ private:
     /// get set of ids from hierarchy for the given input point
     void getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids);
 
+    /// create part-coloured point clouds
+    void createPartClouds();
+
     /// Configuration of the module
     Config config;
 
@@ -107,6 +110,9 @@ private:
 
     /// Image Filterer
     Dataset *dataset;
+
+    /// structure which stores info about dataset
+    DatasetInfo datasetInfo;
 
     ///structure to store hierarchy
     std::unique_ptr<Hierarchy> hierarchy;

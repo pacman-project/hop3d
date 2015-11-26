@@ -298,18 +298,17 @@ int DepthImageFilter::nonMaximaSuppression(const std::vector<cv::Mat> responsesI
                 maxResponsesIdsImageTemp.at<int>(j,i) = int(itMin - minResponses.begin());
             }
         }
-
-     }
-     auto max = std::max_element(maxResponses.begin(),maxResponses.end());
-     double maxValue = *max;
-     maxResponsesImageTemp = maxResponsesImageTemp.mul(cv::Scalar(-1));
-     maxResponsesImageTemp = maxResponsesImageTemp + maxValue;
-     maxResponsesImageTemp = maxResponsesImageTemp.mul(cv::Scalar(1/maxValue));
-     maxResponsesImage = maxResponsesImageTemp.clone();
-     maxResponsesIdsImage = maxResponsesIdsImageTemp.clone();
-     maxResponsesImageTemp.release();
-     maxResponsesIdsImageTemp.release();
-     return 0;
+    }
+    auto max = std::max_element(maxResponses.begin(),maxResponses.end());
+    double maxValue = *max;
+    maxResponsesImageTemp = maxResponsesImageTemp.mul(cv::Scalar(-1));
+    maxResponsesImageTemp = maxResponsesImageTemp + maxValue;
+    maxResponsesImageTemp = maxResponsesImageTemp.mul(cv::Scalar(1/maxValue));
+    maxResponsesImage = maxResponsesImageTemp.clone();
+    maxResponsesIdsImage = maxResponsesIdsImageTemp.clone();
+    maxResponsesImageTemp.release();
+    maxResponsesIdsImageTemp.release();
+    return 0;
 }
 
 hop3d::ImageFilter* hop3d::createDepthImageFilter(void) {

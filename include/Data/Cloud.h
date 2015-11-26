@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <memory>
+#include <array>
 
 #include "Data/Defs.h"
 #include "Data/Part.h"
@@ -26,27 +27,32 @@ public:
     PointNormal(Vec3 _position, Vec3 _normal) : position(_position), normal(_normal) {}
 };
 
+class PointColor{
+public:
+    /// position
+    Vec3 position;
+    /// normal vector
+    std::array<double,4> color;
+
+    ///Construction
+    PointColor(){}
+
+    ///Construction
+    PointColor(Vec3 _position, std::array<double,4> _color) : position(_position), color(_color) {}
+};
+
 class Cloud{
 public:
     /// Pointer
     typedef std::unique_ptr<Cloud> Ptr;
-    hop3d::U64 ID;
+    int id;
 protected:
 
 private:
 
 };
 
-class PartCloud : public Cloud{
-public:
-    typedef std::unique_ptr<PartCloud> Ptr;
-
-protected:
-
-private:
-};
-
-class PointCloud : public Cloud{
+class PointCloud{
 public:
     /// Pointer
     typedef std::unique_ptr<PointCloud> Ptr;
@@ -56,6 +62,15 @@ protected:
 
 private:
 
+};
+
+class PointCloudRGBA{
+public:
+    /// Pointer
+    typedef std::unique_ptr<PointCloudRGBA> Ptr;
+    std::vector<hop3d::PointColor> pointCloudRGBA;
+protected:
+private:
 };
 
 }

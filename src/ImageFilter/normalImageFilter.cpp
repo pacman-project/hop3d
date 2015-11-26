@@ -676,7 +676,7 @@ void NormalImageFilter::normalizeVector(Vec3& normal){
 /// get set of ids for the given input point
 void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart){
     // get filter id
-    std::cout << "u v " << u << ", " << v << "\n";
+    //std::cout << "u v " << u << ", " << v << "\n";
     unsigned int octetCoords[2]={v/(config.filterSize*3),u/(config.filterSize*3)};
 //    std::cout << "coord 1st " << octetCoords[0] << ", " << octetCoords[1] << "\n";
 //    std::cout << "1st image size " << octetsImages1stLayer[categoryNo][objectNo][imageNo].size() << "x" << octetsImages1stLayer[categoryNo][objectNo][imageNo][0].size() << "\n";
