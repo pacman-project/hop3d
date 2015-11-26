@@ -161,6 +161,14 @@ void QGLVisualizer::update(hop3d::Hierarchy& _hierarchy) {
     updateHierarchyFlag = true;
 }
 
+/// update part clouds
+void QGLVisualizer::update(std::vector<std::vector<hop3d::PointCloudRGBA>>& objects){
+    activeLayer=0;
+    for (size_t layerNo=0;layerNo<objects.size();layerNo++){
+        partObjectsLists.push_back(createPartObjList(objects[layerNo]));
+    }
+}
+
 /// Update 3D object model
 void QGLVisualizer::update(const std::vector<ViewIndependentPart>& objectParts, int objLayerId){
     mtxHierarchy.lock();
@@ -277,6 +285,11 @@ void QGLVisualizer::draw3Dobjects(void){
         }
     }
     //mtxPointClouds.unlock();
+}
+
+/// Draw part objects
+void QGLVisualizer::drawPartObjects(void){
+    glCallList(partObjectsLists[activeLayer]);
 }
 
 /// Draw clusters
@@ -455,6 +468,33 @@ GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
             glPopMatrix();
         }
     }
+    glPopMatrix();
+    glEndList();
+    return index;
+}
+
+/// Create point cloud List
+GLuint QGLVisualizer::createPartObjList(const std::vector<hop3d::PointCloudRGBA>& objects){
+    GLuint index = glGenLists(1);
+    glNewList(index, GL_COMPILE);
+    glPushMatrix();
+    int objectsNo = (int)objects.size();
+    glBegin(GL_POINTS);
+    int objectNo=0;
+    for (auto& cloud : objects){
+        double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.partObjectsPos[0]*double(objectNo)-(objectsNo/2)*config.partObjectsPos[0]), config.partObjectsPos[1], config.partObjectsPos[2], 1};
+        glPushMatrix();
+        glMultMatrixd(GLmat);
+        for (auto& point: cloud.pointCloudRGBA){
+            glPointSize((float)config.cloudPointSize);
+            glColor3f((float)point.color[0], (float)point.color[1], (float)point.color[2]);
+            //glNormal3d(-normal(0), -normal(1), -normal(2));
+            glVertex3d(point.position(0), point.position(1), point.position(2));
+        }
+        glPopMatrix();
+        objectNo++;
+    }
+    glEnd();
     glPopMatrix();
     glEndList();
     return index;
@@ -831,6 +871,8 @@ void QGLVisualizer::draw(){
         drawClusters();
     if (config.draw3Dobjects)
         draw3Dobjects();
+    if (config.drawPartObjects)
+        drawPartObjects();
     drawPointClouds();
     updateHierarchy();
     update3Dobjects();

@@ -77,6 +77,12 @@ public:
                 model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posZ", &objectsPosZ[i]);
             }
 
+            model->FirstChildElement( "objectsParts" )->QueryBoolAttribute("drawPartObjects", &drawPartObjects);
+            partObjectsPos.resize(3);
+            model->FirstChildElement( "objectsParts" )->QueryDoubleAttribute("dist", &partObjectsPos[0]);
+            model->FirstChildElement( "objectsParts" )->QueryDoubleAttribute("posY", &partObjectsPos[1]);
+            model->FirstChildElement( "objectsParts" )->QueryDoubleAttribute("posZ", &partObjectsPos[2]);
+
             model->FirstChildElement( "layer2layer" )->QueryBoolAttribute("drawLayer2Layer", &drawLayer2Layer);
             model->FirstChildElement( "layer2layer" )->QueryDoubleAttribute("red", &rgba[0]);
             model->FirstChildElement( "layer2layer" )->QueryDoubleAttribute("green", &rgba[1]);
@@ -152,6 +158,12 @@ public:
         std::vector<double> objectsPosZ;
         /// "y" coordinate of the objects at i-th hierarchy layer
         std::vector<double> objectsPosY;
+
+        /// draw objects colored by part id
+        bool drawPartObjects;
+        /// distance parameters
+        std::vector<double> partObjectsPos;
+
     };
 
     /// Construction
@@ -174,6 +186,9 @@ public:
 
     /// Update 3D object models
     void update3Dmodels(void);
+
+    /// update part clouds
+    void update(std::vector<std::vector<hop3d::PointCloudRGBA>>& objects);
 
 private:
     Config config;
@@ -208,6 +223,12 @@ private:
     /// clusters list
     std::vector< std::vector< GLuint > > objects3Dlist;
 
+    /// partObjects list
+    std::vector< GLuint > partObjectsLists;
+
+    /// active layer for partObjects
+    int activeLayer;
+
     /// draw objects
     void draw();
 
@@ -234,6 +255,12 @@ private:
 
     /// Draw objects
     void draw3Dobjects(void);
+
+    /// Draw part objects
+    void drawPartObjects(void);
+
+    /// Create point cloud List
+    GLuint createPartObjList(const std::vector<hop3d::PointCloudRGBA>& objects);
 
     /// Create point cloud List
     GLuint createCloudList(hop3d::PointCloud& pointCloud, hop3d::Vec3& normal);

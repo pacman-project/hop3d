@@ -42,15 +42,11 @@ int main(int argc, char** argv)
         QGLVisualizer visu(configVis);
 
         visu.setWindowTitle("HOP3D hierarchy viewer");
-
         // Make the viewer window visible on screen.
         visu.show();
-
         ((hop3d::HOP3DBham*)lhop3d)->attachVisualizer(&visu);
-
         // run HOP3D
         std::thread tHOP3D(runHOP3D);
-
         // Run main loop.
         application.exec();
         tHOP3D.join();

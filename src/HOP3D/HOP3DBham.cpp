@@ -83,7 +83,6 @@ HOP3DBham::Config::Config(std::string configFilename){
 void HOP3DBham::learn(){
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
     hop3d::ViewDependentPart::Seq dictionary;
-
     /// 2nd layer
     //std::vector<cv::Mat> vecImages;
     //hop3d::Reader reader;
@@ -125,7 +124,6 @@ void HOP3DBham::learn(){
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
-
     //represent all images in parts from 3rd layer
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
         for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
@@ -223,7 +221,7 @@ void HOP3DBham::learn(){
         }
     }
     notify3Dmodels();
-    createPartClouds();
+    //createPartClouds();
     //std::vector<int> ids;
     //getPartsIds(0,0,1, 339, 292, ids);
     //getPartsIds(0,0,1, 350, 290, ids);
@@ -285,6 +283,7 @@ void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, in
 
 /// create part-coloured point clouds
 void HOP3DBham::createPartClouds(){
+    std::cout << "fgfg\n";
     /// clouds for the first layer
     int layersNo=(int)hierarchy.get()->viewDependentLayers.size()+(int)hierarchy.get()->viewIndependentLayers.size();
     std::vector<std::vector<std::array<double,4>>> colors(layersNo);
@@ -294,17 +293,20 @@ void HOP3DBham::createPartClouds(){
     for (int layerNo=0;layerNo<(int)hierarchy.get()->viewDependentLayers.size();layerNo++){
         colors[layerNo+1].resize(hierarchy.get()->viewDependentLayers[layerNo].size());
     }
+    std::cout << "fgfg1\n";
     for (int layerNo=0;layerNo<(int)hierarchy.get()->viewIndependentLayers.size()-1;layerNo++){
         colors[layerNo+(int)hierarchy.get()->viewDependentLayers.size()+1].resize(hierarchy.get()->viewIndependentLayers[layerNo].size());
     }
+    std::cout << "fgfg2\n";
     for (size_t layerNo=0;layerNo<colors.size();layerNo++){
         for (size_t partNo=0;partNo<colors[layerNo].size();partNo++){
             std::array<double,4> color({uniformDist(engine), uniformDist(engine), uniformDist(engine), 1.0});
             colors[layerNo][partNo] = color;
         }
     }
+    std::cout << "fgfg3\n";
     /// point clouds
-    std::vector<std::vector<hop3d::PointCloudRGBA>> cloudsObj(layersNo);
+    std::vector<std::vector<hop3d::PointCloudRGBA>> cloudsObj(layersNo); // vector of coloured objects
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
         for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
             (datasetInfo.categories[categoryNo].objects.size());
@@ -312,7 +314,9 @@ void HOP3DBham::createPartClouds(){
             for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
                 std::vector<int> ids;
                 cv::Mat depthImage;
+                std::cout << "DF\n";
                 dataset->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo, depthImage);
+                std::cout << "DF1\n";
                 for (int u=0;u<depthImage.cols;u++){
                     for (int v=0;v<depthImage.rows;v++){
                         getPartsIds((int)categoryNo, (int)objectNo, (int)imageNo, u, v, ids);
@@ -334,6 +338,9 @@ void HOP3DBham::createPartClouds(){
             }
         }
     }
+    std::cout << "fgfg5\n";
+    notify(cloudsObj);
+    std::cout << "fgfg6\n";
 }
 
 hop3d::HOP3D* hop3d::createHOP3DBham(void) {

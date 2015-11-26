@@ -119,7 +119,6 @@ void BorisDataset::readDepthImage(int categoryNo, int objectNo, int imageNo, cv:
     }
     //Mat34 R(Eigen::Translation<double, 3>(0,0,0)*Quaternion(cloud->sensor_orientation_));
     //Mat34 t(Eigen::Translation<double, 3>(cloud->sensor_origin_(0), cloud->sensor_origin_(1), cloud->sensor_origin_(2))*Quaternion(1,0,0,0));
-
     Mat34 cameraPose(Eigen::Translation<double, 3>(cloud->sensor_origin_(0), cloud->sensor_origin_(1), cloud->sensor_origin_(2))*Quaternion(cloud->sensor_orientation_));
     Mat34 cameraPoseInv(cameraPose.inverse());
     cv::Mat image(cloud->height,cloud->width, CV_16U,cv::Scalar(0));
