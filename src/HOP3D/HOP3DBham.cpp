@@ -221,7 +221,7 @@ void HOP3DBham::learn(){
         }
     }
     notify3Dmodels();
-    //createPartClouds();
+    createPartClouds();
     //std::vector<int> ids;
     //getPartsIds(0,0,1, 339, 292, ids);
     //getPartsIds(0,0,1, 350, 290, ids);
@@ -268,7 +268,7 @@ void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, in
     //ids.push_back(hierarchy.get()->interpreter2to3[ids.back()]);
     Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
     //std::cout << cameraPose.matrix() << " \n";
-    if (ids.back()==-1){
+    if (ids.back()<0){
         for (int i=0;i<3;i++) ids.push_back(-1);
     }
     else {
@@ -283,7 +283,6 @@ void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, in
 
 /// create part-coloured point clouds
 void HOP3DBham::createPartClouds(){
-    std::cout << "fgfg\n";
     /// clouds for the first layer
     int layersNo=(int)hierarchy.get()->viewDependentLayers.size()+(int)hierarchy.get()->viewIndependentLayers.size();
     std::vector<std::vector<std::array<double,4>>> colors(layersNo);
@@ -293,18 +292,15 @@ void HOP3DBham::createPartClouds(){
     for (int layerNo=0;layerNo<(int)hierarchy.get()->viewDependentLayers.size();layerNo++){
         colors[layerNo+1].resize(hierarchy.get()->viewDependentLayers[layerNo].size());
     }
-    std::cout << "fgfg1\n";
     for (int layerNo=0;layerNo<(int)hierarchy.get()->viewIndependentLayers.size()-1;layerNo++){
         colors[layerNo+(int)hierarchy.get()->viewDependentLayers.size()+1].resize(hierarchy.get()->viewIndependentLayers[layerNo].size());
     }
-    std::cout << "fgfg2\n";
     for (size_t layerNo=0;layerNo<colors.size();layerNo++){
         for (size_t partNo=0;partNo<colors[layerNo].size();partNo++){
             std::array<double,4> color({uniformDist(engine), uniformDist(engine), uniformDist(engine), 1.0});
             colors[layerNo][partNo] = color;
         }
     }
-    std::cout << "fgfg3\n";
     /// point clouds
     std::vector<std::vector<hop3d::PointCloudRGBA>> cloudsObj(layersNo); // vector of coloured objects
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
@@ -314,21 +310,24 @@ void HOP3DBham::createPartClouds(){
             for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
                 std::vector<int> ids;
                 cv::Mat depthImage;
-                std::cout << "DF\n";
                 dataset->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo, depthImage);
-                std::cout << "DF1\n";
-                for (int u=0;u<depthImage.cols;u++){
-                    for (int v=0;v<depthImage.rows;v++){
+                Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+                for (int u=0;u<depthImage.rows;u++){
+                    for (int v=0;v<depthImage.cols;v++){
                         getPartsIds((int)categoryNo, (int)objectNo, (int)imageNo, u, v, ids);
                         Vec3 point3D;
-                        double depth = depthImage.at<uint16_t>(u, v)/depthCameraModel.get()->config.depthImageScale;
-                        depthCameraModel.get()->getPoint(u,v,depth,point3D);
+                        depthCameraModel.get()->getPoint(v,u,depthImage.at<uint16_t>(u, v)/depthCameraModel.get()->config.depthImageScale,point3D);
                         for (size_t layerNo=0;layerNo<ids.size();layerNo++){
                             PointColor pointRGBA(point3D,std::array<double,4>({0.0,0.0,0.0,1.0}));
-                            if (ids[layerNo]>=0)
+                            if (ids[layerNo]>=0){
                                 pointRGBA.color = colors[layerNo][ids[layerNo]];
-                            if (!std::isnan(point3D(0)))
+                            }
+                            if (!std::isnan(point3D(0))){
+                                Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(point3D(0),point3D(1),point3D(2)));
+                                Mat34 pointWorld = cameraPose*pointCam;
+                                pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(1)=pointWorld(1,3); pointRGBA.position(2)=pointWorld(2,3);
                                 objsTmp[layerNo].pointCloudRGBA.push_back(pointRGBA);
+                            }
                         }
                     }
                 }
@@ -338,9 +337,8 @@ void HOP3DBham::createPartClouds(){
             }
         }
     }
-    std::cout << "fgfg5\n";
     notify(cloudsObj);
-    std::cout << "fgfg6\n";
+    createPartObjects();
 }
 
 hop3d::HOP3D* hop3d::createHOP3DBham(void) {

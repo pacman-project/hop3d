@@ -677,7 +677,7 @@ void NormalImageFilter::normalizeVector(Vec3& normal){
 void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart){
     // get filter id
     //std::cout << "u v " << u << ", " << v << "\n";
-    unsigned int octetCoords[2]={v/(config.filterSize*3),u/(config.filterSize*3)};
+    unsigned int octetCoords[2]={u/(config.filterSize*3),v/(config.filterSize*3)};
 //    std::cout << "coord 1st " << octetCoords[0] << ", " << octetCoords[1] << "\n";
 //    std::cout << "1st image size " << octetsImages1stLayer[categoryNo][objectNo][imageNo].size() << "x" << octetsImages1stLayer[categoryNo][objectNo][imageNo][0].size() << "\n";
     /*for (int i=0;i<octetsImages1stLayer[categoryNo][objectNo][imageNo].size();i++){
@@ -690,18 +690,18 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
     if ((octetCoords[0]<octetsImages1stLayer[categoryNo][objectNo][imageNo].size())&&(octetCoords[1]<octetsImages1stLayer[categoryNo][objectNo][imageNo][0].size())){
         Octet octet = octetsImages1stLayer[categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
   //      std::cout << "coord 1st id " << (v/(config.filterSize))%3 << ", " << (u/(config.filterSize))%3 << " -> " << octet.partIds[(v/(config.filterSize))%3][(u/(config.filterSize))%3] << "\n";
-        ids.push_back(octet.partIds[(v/(config.filterSize))%3][(u/(config.filterSize))%3]);
+        ids.push_back(octet.partIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]);
     }
     else{
         ids.push_back(-2); //point wasn't used to create part
     }
-    unsigned int octetCoords2nd[2]={v/(config.filterSize*3*3),u/(config.filterSize*3*3)};
+    unsigned int octetCoords2nd[2]={u/(config.filterSize*3*3),v/(config.filterSize*3*3)};
     //std::cout << "coord 2st " << octetCoords2nd[0] << ", " << octetCoords2nd[1] << "\n";
     //std::cout << "2st image size " << octetsImages2ndLayer[categoryNo][objectNo][imageNo].size() << "x" << octetsImages2ndLayer[categoryNo][objectNo][imageNo][0].size() << "\n";
     if ((octetCoords2nd[0]<octetsImages2ndLayer[categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<octetsImages2ndLayer[categoryNo][objectNo][imageNo][0].size())){
         Octet octet2nd = octetsImages2ndLayer[categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
       //  std::cout << "coord 2st id " << (v/(config.filterSize*3))%3 << ", " << (u/(config.filterSize*3))%3 << " -> " << octet2nd.partIds[(v/(config.filterSize*3))%3][(u/(config.filterSize*3))%3] << "\n";
-        ids.push_back(octet2nd.partIds[(v/(config.filterSize*3))%3][(u/(config.filterSize*3))%3]);
+        ids.push_back(octet2nd.partIds[(u/(config.filterSize*3))%3][(v/(config.filterSize*3))%3]);
 //        std::cout << " octet 2nd:\n";
         /*for (int i=0;i<3;i++){
             for (int j=0;j<3;j++){

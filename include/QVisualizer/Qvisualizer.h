@@ -205,6 +205,9 @@ private:
     /// update 3D models
     bool update3DModelsFlag;
 
+    /// updatePartsObjectsFlag
+    bool updatePartsObjectsFlag;
+
     /// cloud list
     std::vector< std::vector<GLuint> > cloudsListLayers;
 
@@ -219,6 +222,9 @@ private:
 
     /// objects indexed by layerNo
     std::vector<Object3DSeq> layersOfObjects;
+
+    /// object clouds coloured by part id
+    std::vector<std::vector<hop3d::PointCloudRGBA>> partClouds;
 
     /// clusters list
     std::vector< std::vector< GLuint > > objects3Dlist;
@@ -249,6 +255,12 @@ private:
 
     /// Draw point clouds
     void drawPointClouds(void);
+
+    /// Update parts objects
+    void updatePartsObjects(void);
+
+    /// create partObjects
+    void createPartObjects();
 
     /// Draw clusters
     void drawClusters(void);
@@ -303,6 +315,9 @@ private:
 
     /// Draw layer 2 layer links
     void drawLayer2Layer(void);
+
+    /// keyboard events
+    void keyPressEvent(QKeyEvent *e);
 
     /// Draw ellipsoid
     void drawEllipsoid(unsigned int uiStacks, unsigned int uiSlices, double fA, double fB, double fC) const;

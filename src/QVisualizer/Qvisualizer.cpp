@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <chrono>
 #include <GL/glut.h>
+#include <QKeyEvent>
 
 using namespace hop3d;
 
@@ -164,9 +165,23 @@ void QGLVisualizer::update(hop3d::Hierarchy& _hierarchy) {
 /// update part clouds
 void QGLVisualizer::update(std::vector<std::vector<hop3d::PointCloudRGBA>>& objects){
     activeLayer=0;
-    for (size_t layerNo=0;layerNo<objects.size();layerNo++){
-        partObjectsLists.push_back(createPartObjList(objects[layerNo]));
+    partClouds = objects;
+}
+
+/// Update parts objects
+void QGLVisualizer::updatePartsObjects(void){
+    if (updatePartsObjectsFlag){
+        updatePartsObjectsFlag = false;
+        for (size_t layerNo=0;layerNo<partClouds.size();layerNo++){
+            partObjectsLists.push_back(createPartObjList(partClouds[layerNo]));
+        }
     }
+    partClouds.clear();
+}
+
+/// create partObjects
+void QGLVisualizer::createPartObjects(){
+    updatePartsObjectsFlag = true;
 }
 
 /// Update 3D object model
@@ -289,7 +304,8 @@ void QGLVisualizer::draw3Dobjects(void){
 
 /// Draw part objects
 void QGLVisualizer::drawPartObjects(void){
-    glCallList(partObjectsLists[activeLayer]);
+    if (activeLayer<(int)partObjectsLists.size())
+        glCallList(partObjectsLists[activeLayer]);
 }
 
 /// Draw clusters
@@ -876,6 +892,7 @@ void QGLVisualizer::draw(){
     drawPointClouds();
     updateHierarchy();
     update3Dobjects();
+    updatePartsObjects();
 }
 
 /// draw objects
@@ -933,7 +950,54 @@ void QGLVisualizer::init(){
     // Opens help window
     help();
 
+    // Add custom key description (see keyPressEvent).
+    setKeyDescription(Qt::Key_1, "Display parts from layer 1");
+    setKeyDescription(Qt::Key_2, "Display parts from layer 2");
+    setKeyDescription(Qt::Key_3, "Display parts from layer 3");
+    setKeyDescription(Qt::Key_4, "Display parts from layer 4");
+    setKeyDescription(Qt::Key_5, "Display parts from layer 5");
+    setKeyDescription(Qt::Key_6, "Display parts from layer 6");
+
     startAnimation();
+}
+
+/// keyboard events
+void QGLVisualizer::keyPressEvent(QKeyEvent *e) {
+  // Get event modifiers key
+  const Qt::KeyboardModifiers modifiers = e->modifiers();
+
+  // A simple switch on e->key() is not sufficient if we want to take state key into account.
+  // With a switch, it would have been impossible to separate 'F' from 'CTRL+F'.
+  // That's why we use imbricated if...else and a "handled" boolean.
+  bool handled = false;
+  if ((e->key()==Qt::Key_1) && (modifiers==Qt::NoButton)){
+      activeLayer=0;
+      handled = true;
+  }
+  else if ((e->key()==Qt::Key_2) && (modifiers==Qt::NoButton)){
+      activeLayer=1;
+      handled = true;
+  }
+  else if ((e->key()==Qt::Key_3) && (modifiers==Qt::NoButton)){
+      activeLayer=2;
+      handled = true;
+  }
+  else if ((e->key()==Qt::Key_4) && (modifiers==Qt::NoButton)){
+      activeLayer=3;
+      handled = true;
+  }
+  else if ((e->key()==Qt::Key_5) && (modifiers==Qt::NoButton)){
+      activeLayer=4;
+      handled = true;
+  }
+  else if ((e->key()==Qt::Key_6) && (modifiers==Qt::NoButton)){
+      activeLayer=5;
+      handled = true;
+  }
+  // ... and so on with other else/if blocks.
+
+  if (!handled)
+    QGLViewer::keyPressEvent(e);
 }
 
 /// generate help string

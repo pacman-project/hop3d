@@ -47,3 +47,12 @@ void Subject::notify3Dmodels(){
         }
     }
 }
+
+void Subject::createPartObjects(){
+    for(vector<Observer*>::const_iterator iter = list.begin(); iter != list.end(); ++iter)
+    {
+        if(*iter != 0) {
+            (*iter)->createPartObjects();
+        }
+    }
+}
