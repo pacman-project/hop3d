@@ -10,6 +10,8 @@
 #include "dataset.h"
 #include "../../external/tinyXML/tinyxml2.h"
 #include "Utilities/depthSensorModel.h"
+#include <string>
+#include <unordered_map>
 
 namespace hop3d {
     /// create a single dataset object
@@ -39,6 +41,9 @@ public:
     /// read camera pose from file
     Mat34 getCameraPose(int categoryNo, int objectNo, int imageNo) const;
 
+    /// translate path to filename into category, object, image numbers
+    void translateString(const std::string& path, int& categoryNo, int& objectNo, int& imageNo) const;
+
     /// Destruction
     ~BorisDataset(void);
 
@@ -49,14 +54,20 @@ public:
 
         Config(std::string configFilename);
         public:
-            // Dataset structure
+            /// Dataset structure
             DatasetInfo dataset;
-            // verbose
+            /// verbose
             int verbose;
-            // dataset type
+            /// dataset type
             std::string type;
-            // dataset path
+            /// dataset path
             std::string path;
+            /// categories map from category name to category id
+            std::unordered_map<std::string,int> categories;
+            /// categories map from object name to object id
+            std::unordered_map<std::string,int> objects;
+            /// categories map from image name to image id
+            std::unordered_map<std::string,int> images;
     };
 
 private:

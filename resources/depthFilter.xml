@@ -10,12 +10,12 @@
   <NormalFilterer>
     <name>NormalDepthFilter</name>
 <!-- parameters:
-    background threshold - compute response if points no in filter window is bigger than threshold
     nonMaximumSupressionGroup - true fin max for the group, false - find max for the whole window-->    
-    <parameters ringsNo="7" filterSize="5" verbose="0" backgroundThreshold="40" nonMaximumSupressionGroup="true"></parameters>
+    <parameters ringsNo="7" filterSize="5" verbose="0" nonMaximumSupressionGroup="true"></parameters>
 <!--     PCAWindowSize - aperture linear size
     PCARelDistClusters - create two clusters and check distance between them. If distance is PCARelDistClusters times larger than width of the front cluster run PCA
+    background threshold - compute response if points no in filter window is bigger than threshold
     -->
-    <PCA PCAWindowSize="9" PCADistThreshold="0.015" PCAuseClustering="false" PCARelDistClusters="4.0"></PCA>
+    <PCA PCAWindowSize="9" PCADistThreshold="0.035" PCAbackgroundThreshold="40" PCAuseClustering="false" PCARelDistClusters="4.0"></PCA>
     <imageFiltering useMedianFilter="true" kernelSize="7"></imageFiltering>
   </NormalFilterer>

@@ -32,13 +32,13 @@ NormalImageFilter::Config::Config(std::string configFilename){
     model->FirstChildElement( "parameters" )->QueryIntAttribute("filterSize", &filterSize);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     //model->FirstChildElement( "parameters" )->QueryDoubleAttribute("scalingToMeters", &scalingToMeters);
-    model->FirstChildElement( "parameters" )->QueryIntAttribute("backgroundThreshold", &backgroundThreshold);
     model->FirstChildElement( "imageFiltering" )->QueryBoolAttribute("nonMaximumSupressionGroup", &nonMaximumSupressionGroup);
 
     model->FirstChildElement( "PCA" )->QueryIntAttribute("PCAWindowSize", &PCAWindowSize);
     model->FirstChildElement( "PCA" )->QueryDoubleAttribute("PCADistThreshold", &PCADistThreshold);
     model->FirstChildElement( "PCA" )->QueryDoubleAttribute("PCARelDistClusters", &PCARelDistClusters);
     model->FirstChildElement( "PCA" )->QueryBoolAttribute("PCAuseClustering", &PCAuseClustering);
+    model->FirstChildElement( "PCA" )->QueryIntAttribute("PCAbackgroundThreshold", &PCAbackgroundThreshold);
 
     model->FirstChildElement( "imageFiltering" )->QueryBoolAttribute("useMedianFilter", &useMedianFilter);
     model->FirstChildElement( "imageFiltering" )->QueryIntAttribute("kernelSize", &kernelSize);
@@ -488,7 +488,7 @@ void NormalImageFilter::computeNormal(int u, int v, std::vector< std::vector<hop
                 }
         }
     }
-    if (points.size()>size_t(config.backgroundThreshold)){
+    if (points.size()>size_t(config.PCAbackgroundThreshold)){
         if (config.PCAuseClustering){
             if ((max-min)>config.PCADistThreshold) {// try to create two clasters
                 std::vector<hop3d::PointNormal> pointGroup;
@@ -510,8 +510,9 @@ void NormalImageFilter::computeNormal(int u, int v, std::vector< std::vector<hop
                 normalPCA(points, cloudOrd[u][v]);
         }
     }
-    else
+    else {
         cloudOrd[u][v].normal = Vec3(NAN,NAN,NAN);
+    }
 }
 
 /// try to extract two clusters. If clusters are well separated (PCARelDistClusters parameter) return true

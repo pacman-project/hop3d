@@ -46,6 +46,9 @@ public:
     /// load hierarchy from the file
     void load(std::string filename);
 
+    /// get set of ids from hierarchy for the given input point
+    void getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const;
+
     #ifdef QVisualizerBuild
         ///Attach visualizer
         void attachVisualizer(QGLVisualizer* visualizer);
@@ -91,7 +94,7 @@ public:
 
 private:
     /// get set of ids from hierarchy for the given input point
-    void getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids);
+    void getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids) const;
 
     /// create part-coloured point clouds
     void createPartClouds();

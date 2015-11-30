@@ -38,6 +38,9 @@ public:
     /// get camera pose
     virtual Mat34 getCameraPose(int categoryNo, int objectNo, int imageNo) const = 0;
 
+    /// translate path to filename into category, object, image numbers
+    virtual void translateString(const std::string& path, int& categoryNo, int& objectNo, int& imageNo) const = 0;
+
     /// Virtual descrutor
     virtual ~Dataset() {
     }

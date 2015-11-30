@@ -79,6 +79,13 @@ HOP3DBham::Config::Config(std::string configFilename){
     config.FirstChildElement( "Dataset" )->QueryIntAttribute("datasetType", &datasetType);
 }
 
+/// get set of ids from hierarchy for the given input point
+void HOP3DBham::getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const{
+    int categoryNo, objectNo, imageNo = 0;
+    dataset->translateString(path, categoryNo, objectNo, imageNo);
+    getPartsIds(categoryNo, objectNo, imageNo, u, v, ids);
+}
+
 /// learining from the dataset
 void HOP3DBham::learn(){
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
@@ -261,7 +268,7 @@ void HOP3DBham::load(std::string filename){
 }
 
 /// get set of ids from hierarchy for the given input point
-void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids){
+void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids) const{
     ids.clear();
     ViewDependentPart lastVDpart;
     imageFilterer->getPartsIds(categoryNo, objectNo, imageNo, u, v, ids, lastVDpart);
@@ -315,6 +322,7 @@ void HOP3DBham::createPartClouds(){
                 for (int u=0;u<depthImage.rows;u++){
                     for (int v=0;v<depthImage.cols;v++){
                         getPartsIds((int)categoryNo, (int)objectNo, (int)imageNo, u, v, ids);
+                        //getPartsIds("../../../Datasets/ObjectDB-2014-Boris-v7/mug2/data-points_raw-mug2-3.pcd", u, v, ids);
                         Vec3 point3D;
                         depthCameraModel.get()->getPoint(v,u,depthImage.at<uint16_t>(u, v)/depthCameraModel.get()->config.depthImageScale,point3D);
                         for (size_t layerNo=0;layerNo<ids.size();layerNo++){

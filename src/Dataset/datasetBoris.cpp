@@ -48,6 +48,8 @@ BorisDataset::Config::Config(std::string configFilename){
             std::stringstream objectName;
             objectName << "Object" << objectNo;
             dataset.categories[categoryNo].objects[objectNo].name = model->FirstChildElement( categoryName.str().c_str() )->FirstChildElement( objectName.str().c_str() )->Attribute( "name" );
+            categories.emplace(std::make_pair(dataset.categories[categoryNo].objects[objectNo].name, categoryNo));
+            objects.insert(std::make_pair(dataset.categories[categoryNo].objects[objectNo].name,objectNo));
             if (verbose>1)
                 std::cout << dataset.categories[categoryNo].objects[objectNo].name <<"\n";
             int imagesNo;
@@ -58,6 +60,7 @@ BorisDataset::Config::Config(std::string configFilename){
                 std::stringstream imageName;
                 imageName << "Image" << imageNo;
                 dataset.categories[categoryNo].objects[objectNo].images[imageNo] = model->FirstChildElement( categoryName.str().c_str() )->FirstChildElement( objectName.str().c_str() )->FirstChildElement( imageName.str().c_str() )->Attribute( "name" );
+                images.insert(std::make_pair(dataset.categories[categoryNo].objects[objectNo].images[imageNo],imageNo));
                 std::string filePath(path + "/" + dataset.categories[categoryNo].objects[objectNo].name + "/" + dataset.categories[categoryNo].objects[objectNo].images[imageNo]);
                 dataset.categories[categoryNo].objects[objectNo].poses[imageNo] = readCameraPose(filePath);
                 if (verbose>1)
@@ -143,6 +146,16 @@ void BorisDataset::readDepthImage(int categoryNo, int objectNo, int imageNo, cv:
 /// read camera pose from file
 Mat34 BorisDataset::getCameraPose(int categoryNo, int objectNo, int imageNo) const{
     return config.dataset.categories[categoryNo].objects[objectNo].poses[imageNo];
+}
+
+/// translate path to filename into category, object, image numbers
+void BorisDataset::translateString(const std::string& path, int& categoryNo, int& objectNo, int& imageNo) const{
+    size_t found = path.find_last_of("/\\");
+    std::string folder = path.substr(0,found);
+    size_t foundFolder = folder.find_last_of("/\\");
+    categoryNo = config.categories.at(folder.substr(foundFolder+1));
+    objectNo = config.objects.at(folder.substr(foundFolder+1));
+    imageNo = config.images.at(path.substr(found+1));
 }
 
 /// read camera pose from file

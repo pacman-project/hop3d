@@ -85,7 +85,7 @@ public:
             /// depth sensor model filenames
             std::string sensorFilename;
             /// compute response if points no in filter window is bigger than threshold
-            int backgroundThreshold;
+            int PCAbackgroundThreshold;
             /// true fin max for the group, false - find max for the whole window
             bool nonMaximumSupressionGroup;
             /// use median filter
