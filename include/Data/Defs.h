@@ -153,9 +153,11 @@ public:
     std::array<std::array<ImageCoordsDepth,3>,3> filterPos;
     /// camera pose Id
     int poseId;
+    ///is background
+    bool isBackground;
 
     /// Construction
-    Octet(){
+    Octet() : isBackground(true){
         for (size_t i=0;i<partIds.size();i++)
             partIds[i].fill(-1);
     }

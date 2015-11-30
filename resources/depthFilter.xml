@@ -10,8 +10,9 @@
   <NormalFilterer>
     <name>NormalDepthFilter</name>
 <!-- parameters:
-    nonMaximumSupressionGroup - true fin max for the group, false - find max for the whole window-->    
-    <parameters ringsNo="7" filterSize="5" verbose="0" nonMaximumSupressionGroup="true"></parameters>
+    nonMaximumSupressionGroup - true fin max for the group, false - find max for the whole window
+    minOctetsSize - minimal number of elements in the octet-->    
+    <parameters ringsNo="7" filterSize="5" verbose="0" nonMaximumSupressionGroup="true" minOctetSize="3"></parameters>
 <!--     PCAWindowSize - aperture linear size
     PCARelDistClusters - create two clusters and check distance between them. If distance is PCARelDistClusters times larger than width of the front cluster run PCA
     background threshold - compute response if points no in filter window is bigger than threshold

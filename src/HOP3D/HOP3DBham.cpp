@@ -96,6 +96,7 @@ void HOP3DBham::learn(){
     //reader.readMultipleImages("../../resources/depthImages",vecImages);
     dataset->getDatasetInfo(datasetInfo);
     std::vector<hop3d::Octet> octets;
+    std::vector<hop3d::Octet> octets2nd;
     int startId = (int)hierarchy.get()->firstLayer.size();
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
         if (layerNo==0){
@@ -110,6 +111,7 @@ void HOP3DBham::learn(){
                     }
                 }
             }
+            octets2nd = octets;
         }
         else if (layerNo==1){
             octets.clear();
@@ -229,6 +231,23 @@ void HOP3DBham::learn(){
     }
     notify3Dmodels();
     createPartClouds();
+    std::cout << "octets size: " << octets2nd.size() << "\n";
+    std::cout << "vocabulary size: " << hierarchy.get()->viewDependentLayers[0].size() << "\n";
+    for (auto& octet : octets2nd){
+        int partNo=0;
+        for (auto& part : hierarchy.get()->viewDependentLayers[0]){
+            if (part.partIds==octet.partIds){
+                std::cout << "part Id: " << partNo << "\n";
+                break;
+            }
+            partNo++;
+        }
+        std::vector<int> ids;
+        getPartsIds(0,0,0, (int)octet.filterPos[1][1].v, (int)octet.filterPos[1][1].u, ids);
+        std::cout << "readed Id: " << ids[1] << "\n";
+        if (ids[1]==-1)
+            hierarchy.get()->viewDependentLayers[0][partNo].print();
+    }
     //std::vector<int> ids;
     //getPartsIds(0,0,1, 339, 292, ids);
     //getPartsIds(0,0,1, 350, 290, ids);
