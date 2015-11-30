@@ -304,7 +304,7 @@ void HOP3DBham::createPartClouds(){
     }
     for (size_t layerNo=0;layerNo<colors.size();layerNo++){
         for (size_t partNo=0;partNo<colors[layerNo].size();partNo++){
-            std::array<double,4> color({uniformDist(engine), uniformDist(engine), uniformDist(engine), 1.0});
+            std::array<double,4> color = {uniformDist(engine), uniformDist(engine), uniformDist(engine), 1.0};
             colors[layerNo][partNo] = color;
         }
     }
