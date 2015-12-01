@@ -356,7 +356,7 @@ void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, con
         int v=0;
         for (size_t j=1; j<octetsImage[0].size()-1;j=j+3){
             Octet octet;
-            if (!octetsImage[i][j].isBackground){
+            if (!isBackground(octetsImage, (int)i, (int)j)){
                 fillInOctet(octetsImage, dictionary, (int)i, (int)j, octet);
                 computeRelativePositions(octet,2);
                 octet.isBackground=false;
@@ -370,6 +370,18 @@ void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, con
     updateOctetsImages2ndLayer(categoryNo, objectNo, imageNo, nextLayerOctetsImg);
 }
 
+/// check if octet is background
+bool NormalImageFilter::isBackground(OctetsImage& octetsImage, int u, int v) const{
+    for (int i=-1;i<2;i++){
+        for (int j=-1;j<2;j++){
+            if (!octetsImage[i+u][j+v].isBackground){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 /// define 2rd layer octet images using selected words from third layer
 void NormalImageFilter::computeImages3rdLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary){
     PartsImage partsImage (octetsImages2ndLayer[categoryNo][objectNo][imageNo].size(), std::vector<ViewDependentPart> (octetsImages2ndLayer[categoryNo][objectNo][imageNo].back().size()));
@@ -380,7 +392,8 @@ void NormalImageFilter::computeImages3rdLayer(int categoryNo, int objectNo, int 
             ViewDependentPart part;
             part.id=-1;
             //std::cout << "(" << i << "," << j << ")" << octetsImage[i][j].filterIds[1][1] << ", ";
-            if (octetsImage[i][j].partIds[1][1]!=-1){
+            //if (!isBackground(octetsImage,(int)i, (int)j)){
+            if (!octetsImage[i][j].isBackground){
                 //std::cout << dictionary.size() << "\n";
                 //std::cout << "findId(dictionary,octetsImage[i][j]) " << findId(dictionary,octetsImage[i][j]) << "\n";
                 int id = findId(dictionary,octetsImage[i][j]);
@@ -406,7 +419,7 @@ void NormalImageFilter::getLastVDLayerParts(int categoryNo, int objectNo, int im
     PartsImage partsImage = partsImages[categoryNo][objectNo][imageNo];
     for (size_t i=0; i<partsImage.size();i++){
         for (size_t j=0; j<partsImage.back().size();j++){
-            if (partsImage[i][j].id!=-1){
+            if (!partsImage[i][j].isBackground()){
                 parts.push_back(partsImage[i][j]);
             }
         }
@@ -427,7 +440,7 @@ void NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDe
 
 /// determine id of the part using dictionary
 int NormalImageFilter::findId(const ViewDependentPart::Seq& dictionary, const Octet& octet) const{
-    if (octet.partIds[1][1]==-1)//background
+    if (octet.isBackground)//background
         return -1;
     int id=0;
     for (auto & part : dictionary){
@@ -706,6 +719,13 @@ void NormalImageFilter::normalizeVector(Vec3& normal){
 void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart){
     // get filter id
     //std::cout << "u v " << u << ", " << v << "\n";
+    /*for (int i=0;i<octetsImages2ndLayer[categoryNo][objectNo][imageNo].size();i++){
+        for (int j=0;j<octetsImages2ndLayer[categoryNo][objectNo][imageNo][0].size();j++){
+            if (!octetsImages2ndLayer[categoryNo][objectNo][imageNo][i][j].isBackground)
+                octetsImages2ndLayer[categoryNo][objectNo][imageNo][i][j].print();
+        }
+    }
+    getchar();*/
     unsigned int octetCoords[2]={u/(config.filterSize*3),v/(config.filterSize*3)};
 //    std::cout << "coord 1st " << octetCoords[0] << ", " << octetCoords[1] << "\n";
 //    std::cout << "1st image size " << octetsImages1stLayer[categoryNo][objectNo][imageNo].size() << "x" << octetsImages1stLayer[categoryNo][objectNo][imageNo][0].size() << "\n";

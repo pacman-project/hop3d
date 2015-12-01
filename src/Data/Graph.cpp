@@ -115,10 +115,14 @@ std::istream& operator>>(std::istream& is, Hierarchy& hierarchy){
 
 /// get normal vector related to the part
 void Hierarchy::getNormal(const ViewDependentPart& part, Vec3& normal) const{
-    if (part.layerId>2)
-        getNormal(viewDependentLayers[part.layerId-3][part.partIds[1][1]], normal);
-    else
-        normal = firstLayer[part.partIds[1][1]].normal;
+    if (part.partIds[1][1]==-1)
+        normal = Vec3(0,0,-1);
+    else{
+        if (part.layerId>2)
+            getNormal(viewDependentLayers[part.layerId-3][part.partIds[1][1]], normal);
+        else
+            normal = firstLayer[part.partIds[1][1]].normal;
+    }
 }
 
 /// get points related to the part assuming that we have flat patches

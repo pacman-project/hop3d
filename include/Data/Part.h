@@ -33,10 +33,18 @@ public:
     std::array<std::array<int,3>,3> partIds;
 
     /// Construction
-    inline Part(){}
+    inline Part(){
+        for (int i=0;i<3;i++)
+            for (int j=0;j<3;j++)
+                partIds[i][j] = -1;
+    }
 
     /// Construction
     inline Part(int _id, int _layerId, Type _type) : id(_id), layerId(_layerId), type(_type){
+        for (int i=0;i<3;i++)
+            for (int j=0;j<3;j++)
+                partIds[i][j] = -1;
+        id=-1;
     }
 };
 
@@ -83,6 +91,9 @@ public:
 
     /// Extraction operator
     friend std::istream& operator>>(std::istream& is, ViewDependentPart& part);
+
+    /// check if part is background
+    bool isBackground(void) const;
 
     /// Print
     void print() const;

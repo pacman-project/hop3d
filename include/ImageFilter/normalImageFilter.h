@@ -174,6 +174,9 @@ private:
 
     /// try to extract two clusters. If clusters are well separated (PCARelDistClusters parameter) return true
     bool extractGroup(const std::vector<hop3d::PointNormal>& points, std::vector<hop3d::PointNormal>& pointGroup) const;
+
+    /// check if octet is background
+    bool isBackground(OctetsImage& octetsImage, int u, int v) const;
 };
 
 }

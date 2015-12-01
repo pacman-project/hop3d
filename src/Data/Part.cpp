@@ -31,6 +31,17 @@ void ViewDependentPart::print() const{
     }
 }
 
+/// check if part is background
+bool ViewDependentPart::isBackground(void) const{
+    for (size_t i=0; i<partIds.size();i++){
+        for (size_t j=0; j<partIds[0].size();j++){
+            if (partIds[i][j]!=-1)
+                return false;
+        }
+    }
+    return true;
+}
+
 /// Print
 void ViewIndependentPart::print() const{
     std::cout << "Id: " << id << "\n";

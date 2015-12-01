@@ -231,7 +231,7 @@ void HOP3DBham::learn(){
     }
     notify3Dmodels();
     createPartClouds();
-    std::cout << "octets size: " << octets2nd.size() << "\n";
+    /*std::cout << "octets size: " << octets2nd.size() << "\n";
     std::cout << "vocabulary size: " << hierarchy.get()->viewDependentLayers[0].size() << "\n";
     for (auto& octet : octets2nd){
         int partNo=0;
@@ -247,7 +247,7 @@ void HOP3DBham::learn(){
         std::cout << "readed Id: " << ids[1] << "\n";
         if (ids[1]==-1)
             hierarchy.get()->viewDependentLayers[0][partNo].print();
-    }
+    }*/
     //std::vector<int> ids;
     //getPartsIds(0,0,1, 339, 292, ids);
     //getPartsIds(0,0,1, 350, 290, ids);
