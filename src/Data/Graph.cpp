@@ -115,14 +115,37 @@ std::istream& operator>>(std::istream& is, Hierarchy& hierarchy){
 
 /// get normal vector related to the part
 void Hierarchy::getNormal(const ViewDependentPart& part, Vec3& normal) const{
-    if (part.partIds[1][1]==-1)
-        normal = Vec3(0,0,-1);
-    else{
-        if (part.layerId>2)
+    if (part.layerId>2){
+        if (part.partIds[1][1]!=-1)
             getNormal(viewDependentLayers[part.layerId-3][part.partIds[1][1]], normal);
-        else
-            normal = firstLayer[part.partIds[1][1]].normal;
+        else{
+            normal=Vec3(0,0,-1);
+        }
     }
+    else {
+        if (part.partIds[1][1]!=-1)
+            normal = firstLayer[part.partIds[1][1]].normal;
+        else{
+            computeMeanVector(part, normal);
+            //normal=Vec3(0,0,-1);
+            //std::cout << "normal " << normal.transpose() << " ";
+        }
+    }
+}
+
+/// compute mean vector for 2nd layer part
+void Hierarchy::computeMeanVector(const ViewDependentPart& part, Vec3& normal) const{
+    Vec3 mean(0,0,0); int normalsNo=0;
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            if (part.partIds[i][j]!=-1){
+                mean += firstLayer[part.partIds[i][j]].normal;
+                normalsNo++;
+            }
+        }
+    }
+    mean/=double(normalsNo);
+    normal = mean.normalized();
 }
 
 /// get points related to the part assuming that we have flat patches

@@ -42,6 +42,9 @@ public:
     /// print ids
     void printIds(const ViewDependentPart& part);
 
+    /// compute mean vector for 2nd layer part
+    void computeMeanVector(const ViewDependentPart& part, Vec3& normal) const;
+
     /// Construction
     Hierarchy(std::string configFilename);
 };

@@ -243,6 +243,10 @@ bool NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >&
         }
     }
     if (elementsNo>config.minOctetSize){//set relative position for octets
+        if (octet.partIds[1][1]==-1){
+            octet.filterPos[1][1].u = v;
+            octet.filterPos[1][1].v = u;
+        }
         computeRelativePositions(octet, 1);
         octet.isBackground=false;
         return true;
@@ -255,10 +259,16 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
     double meanDepth=0;
     if (octet.partIds[1][1]==-1){
         int depthNo=0;
+        double min=std::numeric_limits<double>::max();
+        double max=std::numeric_limits<double>::min();
         for (int i=0;i<3;i++){//compute mean depth
             for (int j=0;j<3;j++){
                 if (octet.partIds[i][j]!=-1){
                     meanDepth+= octet.filterPos[i][j].depth;
+                    if (min>octet.filterPos[i][j].depth)
+                        min = octet.filterPos[i][j].depth;
+                    if (max<octet.filterPos[i][j].depth)
+                        max = octet.filterPos[i][j].depth;
                     depthNo++;
                 }
             }
@@ -432,7 +442,12 @@ void NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDe
         for (int j=-1;j<2;j++){
             int id = findId(dictionary, octetsImage[u+i][v+j]);
             octet.partIds[i+1][j+1]=id;
-            octet.filterPos[i+1][j+1]=octetsImage[u+i][v+j].filterPos[1][1];
+            if (id ==-1){
+                octet.filterPos[i+1][j+1].u=(v+j)*(config.filterSize*3)+((config.filterSize*3)/2);//octetsImage[u+i][v+j].filterPos[1][1];
+                octet.filterPos[i+1][j+1].v=(u+i)*(config.filterSize*3)+((config.filterSize*3)/2);
+            }
+            else
+                octet.filterPos[i+1][j+1]=octetsImage[u+i][v+j].filterPos[1][1];
             octet.responses[i+1][j+1]=octetsImage[u+i][v+j].responses[1][1];
         }
     }
