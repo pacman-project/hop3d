@@ -187,16 +187,6 @@ void QGLVisualizer::createPartObjects(){
 /// Update 3D object model
 void QGLVisualizer::update(const std::vector<ViewIndependentPart>& objectParts, int objLayerId){
     mtxHierarchy.lock();
-    /*Object3D object;
-    for (auto & part : objectParts){
-        ViewIndependentPart p = part;
-        int partIdNo=0;
-        for (auto & part3rd : part.parts){
-            p.parts[partIdNo].id = hierarchy->interpreter[part3rd.id];
-            partIdNo++;
-        }
-        object.push_back(p);
-    }*/
     layersOfObjects[objLayerId].push_back(objectParts);
     mtxHierarchy.unlock();
 }
