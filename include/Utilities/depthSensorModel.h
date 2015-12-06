@@ -42,7 +42,7 @@ class DepthSensorModel {
     hop3d::Mat33 informationMatrixFromImageCoordinates(double u, double v, double z);
 
     /// normalize vector
-    static void normalizeVector(hop3d::Vec3& normal);
+    //static void normalizeVector(hop3d::Vec3& normal);
 
     class Config{
       public:

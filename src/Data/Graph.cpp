@@ -119,7 +119,8 @@ void Hierarchy::getNormal(const ViewDependentPart& part, Vec3& normal) const{
         if (part.partIds[1][1]!=-1)
             getNormal(viewDependentLayers[part.layerId-3][part.partIds[1][1]], normal);
         else{
-            normal=Vec3(0,0,-1);
+            //normal=Vec3(0,0,-1);
+            computeMeanVector(part, normal);
         }
     }
     else {
@@ -135,16 +136,20 @@ void Hierarchy::getNormal(const ViewDependentPart& part, Vec3& normal) const{
 
 /// compute mean vector for 2nd layer part
 void Hierarchy::computeMeanVector(const ViewDependentPart& part, Vec3& normal) const{
-    Vec3 mean(0,0,0); int normalsNo=0;
+    Vec3 mean(0,0,0);
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             if (part.partIds[i][j]!=-1){
-                mean += firstLayer[part.partIds[i][j]].normal;
-                normalsNo++;
+                if (part.layerId>2){
+                    Vec3 normTmp;
+                    getNormal(viewDependentLayers[part.layerId-3][part.partIds[i][j]], normTmp);
+                    mean += normTmp;
+                }
+                else
+                    mean += firstLayer[part.partIds[i][j]].normal;
             }
         }
     }
-    mean/=double(normalsNo);
     normal = mean.normalized();
 }
 

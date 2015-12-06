@@ -56,28 +56,33 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
         }
         Mat34 part3D(Mat34::Identity());
         Vec3 normal; hierarchy.getNormal(part, normal);
-        part3D = NormalImageFilter::coordinateFromNormal(normal);
-        Vec3 position(part.location.u, part.location.v, part.location.depth);
-        camModel.getPoint(position, pos3d);
-        part3D.translation() = pos3d;//set position of the part
-        //std::cout << "normal " << normal.transpose() << "\n";
-//std::cout << "part " << part.id << "\n" << part3D.matrix() << "\n";
-        partPosition = cameraPose * part3D;//global position of the part
-        int x,y,z;
-        toCoordinate(partPosition(0,3),x, layerNo);
-        toCoordinate(partPosition(1,3),y, layerNo);
-        toCoordinate(partPosition(2,3),z, layerNo);
-        if (config.verbose==1){
-            std::cout << "Update octree, xyz: " << x << ", " << y << ", " << z << "\n";
+        if (normal(2)==-1){
+
         }
-        //std::cout << "part.id " << part.id << "\n";
-        //std::cout << "partPosition: \n" << partPosition.matrix() << "\n";
-        //getchar();
-        ViewIndependentPart::Part3D viewIndependentPart(partPosition, part.id);
-        (*octrees[layerNo])(x,y,z).pose = partPosition;
-        (*octrees[layerNo])(x,y,z).parts.push_back(viewIndependentPart);
-        (*octrees[layerNo])(x,y,z).layerId=4;
-        (*octrees[layerNo])(x,y,z).id=part.id;//its temporary id only
+        else{
+            part3D = NormalImageFilter::coordinateFromNormal(normal);
+            Vec3 position(part.location.u, part.location.v, part.location.depth);
+            camModel.getPoint(position, pos3d);
+            part3D.translation() = pos3d;//set position of the part
+            //std::cout << "normal " << normal.transpose() << "\n";
+    //std::cout << "part " << part.id << "\n" << part3D.matrix() << "\n";
+            partPosition = cameraPose * part3D;//global position of the part
+            int x,y,z;
+            toCoordinate(partPosition(0,3),x, layerNo);
+            toCoordinate(partPosition(1,3),y, layerNo);
+            toCoordinate(partPosition(2,3),z, layerNo);
+            if (config.verbose==1){
+                std::cout << "Update octree, xyz: " << x << ", " << y << ", " << z << "\n";
+            }
+            //std::cout << "part.id " << part.id << "\n";
+            //std::cout << "partPosition: \n" << partPosition.matrix() << "\n";
+            //getchar();
+            ViewIndependentPart::Part3D viewIndependentPart(partPosition, part.id);
+            (*octrees[layerNo])(x,y,z).pose = partPosition;
+            (*octrees[layerNo])(x,y,z).parts.push_back(viewIndependentPart);
+            (*octrees[layerNo])(x,y,z).layerId=4;
+            (*octrees[layerNo])(x,y,z).id=part.id;//its temporary id only
+        }
     }
 }
 

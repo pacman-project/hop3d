@@ -69,7 +69,7 @@ hop3d::Mat33 DepthSensorModel::informationMatrixFromImageCoordinates(double u, d
 }
 
 /// normalize vector
-void DepthSensorModel::normalizeVector(hop3d::Vec3& normal){
+/*void DepthSensorModel::normalizeVector(hop3d::Vec3& normal){
     double norm = normal.norm();
     normal.x() /= norm;    normal.y() /= norm;    normal.z() /= norm;
-}
+}*/

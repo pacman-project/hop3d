@@ -149,7 +149,7 @@ void ViewIndependentPart::getPoints(const ViewIndependentPart& partA, const View
 ///compute offset for two sets of points
 Mat34 ViewIndependentPart::computeOffset(const std::vector<std::pair<Mat34, int>>& partASeq, const std::vector<std::pair<Mat34, int>>&partBSeq, Vec3& meanPosA, Vec3& normA, Vec3& meanPosB, Vec3& normB){
     meanPosA/=(double)partASeq.size(); meanPosB/=(double)partBSeq.size();
-    normalizeVector(normA); normalizeVector(normB);
+    normA.normalize(); normB.normalize();
     Mat33 coordPartA = coordinateFromNormal(normA);
     Mat33 coordPartB = coordinateFromNormal(normB);
     Mat34 partApose(Eigen::Translation<double,3>(meanPosA(0),meanPosA(1),meanPosA(2))*coordPartA);
@@ -300,9 +300,9 @@ Mat33 ViewIndependentPart::coordinateFromNormal(const Vec3& _normal){
     Vec3 x(1,0,0); Vec3 y;
     Vec3 normal(_normal);
     y = normal.cross(x);
-    normalizeVector(y);
+    y.normalize();
     x = y.cross(normal);
-    normalizeVector(x);
+    x.normalize();
     Mat33 R;
     R.block(0,0,3,1) = x;
     R.block(0,1,3,1) = y;
@@ -340,13 +340,13 @@ double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDep
                             // compute Mahalanobis distance
                             mahalanobisDist = sqrt((partA.gaussians[i][j].mean-partB.gaussians[i][j].mean).transpose()*((partA.gaussians[i][j].covariance+partB.gaussians[i][j].covariance)/2.0).inverse()*(partA.gaussians[i][j].mean-partB.gaussians[i][j].mean));
                             if (distanceMetric==2){//mahalanobis
-                                sum+=dotprod*mahalanobisDist;
+                                sum+=dotprod*exp(mahalanobisDist);
                             }
                         }
                         else {// compute Euclidean distance
                             euclDist = sqrt((partA.gaussians[i][j].mean-partB.gaussians[i][j].mean).transpose()*(partA.gaussians[i][j].mean-partB.gaussians[i][j].mean));
                             if (distanceMetric==1||distanceMetric==2){// Euclidean or Mahalanobis
-                                sum+=dotprod*euclDist;
+                                sum+=dotprod*exp(euclDist);
                             }
                         }
                     }

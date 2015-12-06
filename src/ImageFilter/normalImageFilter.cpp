@@ -257,24 +257,32 @@ bool NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >&
 //set relative position for octets
 void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) const{
     double meanDepth=0;
+    double min=std::numeric_limits<double>::max();
+    double max=std::numeric_limits<double>::min();
+    double globU=0, globV=0;
     if (octet.partIds[1][1]==-1){
         int depthNo=0;
-        double min=std::numeric_limits<double>::max();
-        double max=std::numeric_limits<double>::min();
         for (int i=0;i<3;i++){//compute mean depth
             for (int j=0;j<3;j++){
                 if (octet.partIds[i][j]!=-1){
                     meanDepth+= octet.filterPos[i][j].depth;
-                    if (min>octet.filterPos[i][j].depth)
+                    if (min>octet.filterPos[i][j].depth){
                         min = octet.filterPos[i][j].depth;
-                    if (max<octet.filterPos[i][j].depth)
+                        globU = octet.filterPos[i][j].u;
+                        globV = octet.filterPos[i][j].v;
+                    }
+                    if (max<octet.filterPos[i][j].depth){
                         max = octet.filterPos[i][j].depth;
+                    }
                     depthNo++;
                 }
             }
         }
         meanDepth /= double(depthNo);
         octet.filterPos[1][1].depth = meanDepth;
+        //octet.filterPos[1][1].depth = min;
+        //octet.filterPos[1][1].u = globU;
+        //octet.filterPos[1][1].v = globV;
     }
     for (int i=0;i<3;i++){//for neighbouring blocks
         for (int j=0;j<3;j++){
@@ -714,9 +722,9 @@ Mat33 NormalImageFilter::coordinateFromNormal(const Vec3& _normal){
     Vec3 x(1,0,0); Vec3 y;
     Vec3 normal(_normal);
     y = normal.cross(x);
-    normalizeVector(y);
+    y.normalize();
     x = y.cross(normal);
-    normalizeVector(x);
+    x.normalize();
     Mat33 R;
     R.block(0,0,3,1) = x;
     R.block(0,1,3,1) = y;
@@ -725,10 +733,10 @@ Mat33 NormalImageFilter::coordinateFromNormal(const Vec3& _normal){
 }
 
 /// normalize vector
-void NormalImageFilter::normalizeVector(Vec3& normal){
+/*void NormalImageFilter::normalizeVector(Vec3& normal){
     double norm = normal.norm();
     normal.x() /= norm;    normal.y() /= norm;    normal.z() /= norm;
-}
+}*/
 
 /// get set of ids for the given input point
 void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart){

@@ -144,14 +144,14 @@ public:
     /// statistics for positions
     std::array<std::array<std::array<GaussianSE3,3>,3>,3> gaussians;
 
-    ViewIndependentPart() {
+    ViewIndependentPart() : pose(Mat34::Identity()), offset(Mat34::Identity()){
 		for (int i=0;i<3;i++)
 			for (int j=0;j<3;j++)
 				for (int k=0;k<3;k++)
 					partIds[i][j][k] = -1;
         id=-1;
     }
-    ViewIndependentPart(int size){
+    ViewIndependentPart(int size) : pose(Mat34::Identity()), offset(Mat34::Identity()){
 		for (int i=0;i<3;i++)
 			for (int j=0;j<3;j++)
 				for (int k=0;k<3;k++)
@@ -171,10 +171,10 @@ public:
     static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary1, const ViewIndependentPart::Seq vocabulary2, Mat34& offset);
 
     /// normalize vector
-    static inline void normalizeVector(Vec3& normal){
+    /*static inline void normalizeVector(Vec3& normal){
         double norm = normal.norm();
         normal.x() /= norm;    normal.y() /= norm;    normal.z() /= norm;
-    }
+    }*/
 
     /// compute coordinate system from normal vector
     static Mat33 coordinateFromNormal(const Vec3& _normal);

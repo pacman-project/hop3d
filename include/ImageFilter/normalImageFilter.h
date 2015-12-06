@@ -134,7 +134,7 @@ private:
     void generateFilters(void);
 
     /// normalize vector
-    static void normalizeVector(Vec3& normal);
+    //static void normalizeVector(Vec3& normal);
 
     ///extract octets from response image
     OctetsImage extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets);

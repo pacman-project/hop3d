@@ -243,7 +243,7 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
         clusters[centroidId].push_back(*it);
     }
     if (config.verbose==2){
-        std::cout << "Elements no in clusters: ";
+        std::cout << "Elements no in clusters (clusters size: " << clusters.size() << "): ";
         for (size_t i=0;i<clusters.size();i++){
             std::cout << clusters[i].size() << ", ";
         }
@@ -300,12 +300,12 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::S
 /// compute centroids for give clusters
 void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy){
     int clusterNo=0;
-    for (auto itClust = clusters.begin(); itClust!=clusters.end();itClust++){ //for each cluster
+    for (auto& cluster : clusters){ //for each cluster
         double distMin = std::numeric_limits<double>::max();
         int centerId=0;
-        for (auto itPart = itClust->begin(); itPart!=itClust->end();itPart++){//for each part in cluster
+        for (auto itPart = cluster.begin(); itPart!=cluster.end();itPart++){//for each part in cluster
             double distSum = 0; //compute new centroid
-            for (auto itPart2 = itClust->begin(); itPart2!=itClust->end();itPart2++){//compute mean dist for each part as a centroid
+            for (auto itPart2 = cluster.begin(); itPart2!=cluster.end();itPart2++){//compute mean dist for each part as a centroid
                 double dist=0;
                 if (itPart->layerId==2){
                     dist=ViewDependentPart::distance(*itPart,*itPart2,hierarchy.firstLayer, config.distanceMetric);
@@ -328,8 +328,14 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
             }
             if (i==dictionary.size()-1){
                 std::cout << "dictionary.size() " << dictionary.size() << "\n";
-                std::cout << "centerId " << centerId  << " does not exist \n";
+                std::cout << "centerId3 " << centerId  << " does not exist \n";
+                std::cout << "parts in dictionary: ";
+                for (auto& part : dictionary){
+                    std::cout << part.id << " ";
+                }
+                std::cout << "\n";
                 std::cout << "Something is wrong with ids in clusterization\n";
+                getchar();
             }
         }
         clusterNo++;
@@ -368,6 +374,7 @@ void PartSelectorMean::createUniqueClusters(const std::vector< std::set<int>>& c
         Vec3 normal;
         hierarchy.getNormal(vdp,normal);
         //vdp.getNormal(normal,hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
+        part.pose = Mat34::Identity();
         part.pose = NormalImageFilter::coordinateFromNormal(normal);
         for (auto & partId : cluster){
             ViewIndependentPart partTmp;
