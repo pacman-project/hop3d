@@ -120,7 +120,7 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
             sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
         }
     }
-    cv::Mat idsImage(filteredImg.rows,filteredImg.cols, cv::DataType<uchar>::type,cv::Scalar(0));
+    cv::Mat idsImage(filteredImg.rows,filteredImg.cols, cv::DataType<int>::type,cv::Scalar(0));
     for (int i=config.filterSize/2;i<filteredImg.rows-(config.filterSize/2);i++){
         for (int j=config.filterSize/2;j<filteredImg.cols-(config.filterSize/2);j++){
 			if (!std::isnan(double(cloudOrd[i][j].position(2)))){
@@ -176,6 +176,31 @@ void NormalImageFilter::updateOctetsImages1stLayer(int categoryNo, int objectNo,
         octetsImages1stLayer[categoryNo][objectNo].resize(imageNo+1);
     }
     octetsImages1stLayer[categoryNo][objectNo][imageNo] = octetsImage;
+}
+
+/// returs filter ids and their position on the image
+void NormalImageFilter::getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<FilterCoords>& filterCoords) const {
+    filterCoords.clear();
+    for (auto& row : octetsImages1stLayer[categoryNo][objectNo][imageNo]){
+        for (auto& octet : row){
+            if (!octet.isBackground){
+                for (int i=0;i<3;i++){
+                    for (int j=0;j<3;j++){
+                        if (octet.partIds[i][j]!=-1){
+                            if (i==1&&j==1){
+                                FilterCoords fcoords(octet.partIds[i][j], octet.filterPos[i][j]);
+                                filterCoords.push_back(fcoords);
+                            }
+                            else{
+                                FilterCoords fcoords(octet.partIds[i][j], octet.filterPos[1][1]+octet.filterPos[i][j]);
+                                filterCoords.push_back(fcoords);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// update structure which holds octets images
@@ -259,7 +284,7 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
     double meanDepth=0;
     double min=std::numeric_limits<double>::max();
     double max=std::numeric_limits<double>::min();
-    double globU=0, globV=0;
+    //double globU=0, globV=0;
     if (octet.partIds[1][1]==-1){
         int depthNo=0;
         for (int i=0;i<3;i++){//compute mean depth
@@ -268,8 +293,8 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
                     meanDepth+= octet.filterPos[i][j].depth;
                     if (min>octet.filterPos[i][j].depth){
                         min = octet.filterPos[i][j].depth;
-                        globU = octet.filterPos[i][j].u;
-                        globV = octet.filterPos[i][j].v;
+                        //globU = octet.filterPos[i][j].u;
+                        //globV = octet.filterPos[i][j].v;
                     }
                     if (max<octet.filterPos[i][j].depth){
                         max = octet.filterPos[i][j].depth;

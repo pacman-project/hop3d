@@ -15,6 +15,8 @@ public:
     virtual void update(const std::vector<hop3d::ViewIndependentPart>& objectParts, int objLayerId) = 0;
     virtual void update3Dmodels(void) = 0;
     virtual void update(std::vector<std::vector<hop3d::PointCloudRGBA>>& clouds) = 0;
+    /// update object from filters
+    virtual void update(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo) = 0;
     virtual void createPartObjects() = 0;
 };
 
@@ -30,6 +32,8 @@ public:
     void notify(std::vector<hop3d::ViewIndependentPart>& objectParts, int objLayerId);
     void notify3Dmodels();
     void notify(std::vector<std::vector<hop3d::PointCloudRGBA>>& clouds);
+    /// update object from filters
+    void notify(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo);
     void createPartObjects();
 };
 

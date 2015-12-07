@@ -21,7 +21,7 @@ class DepthSensorModel {
     DepthSensorModel(std::string configFile);
 
     /// compute 3D point from image coordinates
-    void getPoint(int u, int v, double depth, Eigen::Vector3d& point3D) const;
+    void getPoint(double u, double v, double depth, Eigen::Vector3d& point3D) const;
 
     /// compute 3D point from image coordinates
     void getPoint(const Eigen::Vector3d& depthImageCoord, Eigen::Vector3d& point3D) const;

@@ -11,8 +11,12 @@
 	<layer5 dist="0.45" posZ="3.0"></layer5>
 	<layer6 dist="0.55" posZ="4.0"></layer6>
 	<layer7 dist="0.65" posZ="5.0"></layer7>
-	<objectsLayer1 dist="1.12" posY="-0.7" posZ="0.0"></objectsLayer1>
-	<objectsLayer2 dist="1.12" posY="-0.7" posZ="0.5"></objectsLayer2>
+	<objectsLayer1 draw="true" dist="1.12" posY="-0.7" posZ="0.0"></objectsLayer1>
+	<objectsLayer2 draw="true" dist="1.12" posY="-0.7" posZ="0.25"></objectsLayer2>
+	<objectsLayer3 draw="true" dist="1.12" posY="-0.7" posZ="0.5"></objectsLayer3>
+	<objectsLayer4 draw="true" dist="1.12" posY="-0.7" posZ="0.75"></objectsLayer4>
+	<objectsLayer5 draw="true" dist="1.12" posY="-0.7" posZ="1.0"></objectsLayer5>
+	<objectsLayer6 draw="true" dist="1.12" posY="-0.7" posZ="1.25"></objectsLayer6>
 	<objectsParts drawPartObjects="true" dist="0.3" posY="0.0" posZ="-0.1"></objectsParts>
 	<background red="1.0" green="1.0" blue="1.0" alpha="1.0"></background>
 	<pointCloud drawPointClouds="false" cloudPointSize="3" useNormalCloud="true"></pointCloud>

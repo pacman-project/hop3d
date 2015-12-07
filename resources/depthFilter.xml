@@ -18,5 +18,5 @@
     background threshold - compute response if points no in filter window is bigger than threshold
     -->
     <PCA PCAWindowSize="7" PCADistThreshold="0.025" PCAbackgroundThreshold="40" PCAuseClustering="false" PCARelDistClusters="4.0"></PCA>
-    <imageFiltering useMedianFilter="false" kernelSize="7"></imageFiltering>
+    <imageFiltering useMedianFilter="true" kernelSize="7"></imageFiltering>
   </NormalFilterer>

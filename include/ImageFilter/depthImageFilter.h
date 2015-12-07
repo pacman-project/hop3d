@@ -64,6 +64,9 @@ public:
     /// get set of ids for the given input point
     void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart);
 
+    /// returs filter ids and their position on the image
+    void getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<FilterCoords>& filterCoords) const;
+
     class Config{
       public:
         Config() {

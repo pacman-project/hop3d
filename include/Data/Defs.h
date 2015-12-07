@@ -133,10 +133,36 @@ public:
     friend std::istream& operator>>(std::istream& is, ImageCoordsDepth& coords);
 
     /// Construction
-    ImageCoordsDepth(){};
+    ImageCoordsDepth(){}
 
     /// Construction
-    ImageCoordsDepth(double _u, double _v, double _depth) : ImageCoords(_u, _v), depth(_depth) {};
+    ImageCoordsDepth(double _u, double _v, double _depth) : ImageCoords(_u, _v), depth(_depth) {}
+
+    friend ImageCoordsDepth operator+(const ImageCoordsDepth& lhs, const ImageCoordsDepth& rhs){
+        ImageCoordsDepth result;
+        result.u = lhs.u+rhs.u;
+        result.v = lhs.v+rhs.v;
+        result.depth = lhs.depth+rhs.depth;
+        return result;
+    }
+};
+
+class FilterCoords {
+public:
+    /// set of FilterCoords
+    typedef std::vector<FilterCoords> Seq;
+
+    ///Filter id
+    int filterId;
+
+    /// coordinates
+    ImageCoordsDepth coords;
+
+    /// Construction
+    FilterCoords(){}
+
+    /// Construction
+    FilterCoords(int _filterId, ImageCoordsDepth _coords) : filterId(_filterId), coords(_coords) {}
 };
 
 /// Octet representation

@@ -26,6 +26,15 @@ public:
     /// vector of 3D objects
     typedef std::vector<Object3D> Object3DSeq;
 
+    /// filter 3D position
+    class Filter3D{
+    public:
+        /// id of the filter
+        int filterId;
+        /// position of the filter
+        hop3d::Mat34 filterPose;
+    };
+
     class Config{
       public:
         Config() {
@@ -66,12 +75,16 @@ public:
                 model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posZ", &posZ[i]);
             }
 
-            layersNo=2;
+            layersNo=6;
+            objectsDraw.resize(layersNo);
             objectsDist.resize(layersNo);
             objectsPosY.resize(layersNo);
             objectsPosZ.resize(layersNo);
             for (int i=0;i<layersNo;i++){
                 std::string layerName = "objectsLayer" + std::to_string (i+1);
+                bool drawObj;
+                model->FirstChildElement( layerName.c_str() )->QueryBoolAttribute("draw", &drawObj);
+                objectsDraw[i] = drawObj;
                 model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("dist", &objectsDist[i]);
                 model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posY", &objectsPosY[i]);
                 model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posZ", &objectsPosZ[i]);
@@ -152,6 +165,8 @@ public:
         QColor normalsColor;
         /// scale normal vector
         double normalsScale;
+        /// draw flags for objects
+        std::vector<bool> objectsDraw;
         /// distance between objects in i-th layers (x coordinate)
         std::vector<double> objectsDist;
         /// "z" coordinate of the objects at i-th hierarchy layer
@@ -189,6 +204,9 @@ public:
 
     /// update part clouds
     void update(std::vector<std::vector<hop3d::PointCloudRGBA>>& objects);
+
+    /// update object from filters
+    void update(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo);
 
 private:
     Config config;
@@ -228,6 +246,9 @@ private:
 
     /// clusters list
     std::vector< std::vector< GLuint > > objects3Dlist;
+
+    /// objects drawn from filter poses
+    std::vector<std::vector<Filter3D>> objectsFromFilters;
 
     /// partObjects list
     std::vector< GLuint > partObjectsLists;
@@ -288,6 +309,9 @@ private:
 
     /// Create objects lists
     GLuint createObjList(const std::vector<hop3d::ViewIndependentPart>& parts, int layerNo);
+
+    /// Create point cloud List from filters (planar patches)
+    GLuint createObjList(const std::vector<Filter3D>& filters);
 
     /// Create clusters List
     GLuint createClustersList(hop3d::ViewDependentPart& part, int layerNo);

@@ -220,12 +220,31 @@ void HOP3DBham::learn(){
     //visualization
     notify(*hierarchy);
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+            for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
+                std::vector<FilterCoords> filterCoords;
+                imageFilterer->getResponseFilters((int)categoryNo, (int)objectNo, (int)imageNo, filterCoords);
+                Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+                std::vector<std::pair<int, Mat34>> filtersPoses;
+                for (auto& filterCoord : filterCoords){
+                    Vec3 point3d;
+                    depthCameraModel.get()->getPoint(filterCoord.coords.u, filterCoord.coords.v, filterCoord.coords.depth, point3d);
+                    Mat34 pointPose(Mat34::Identity());
+                    pointPose.translation() = point3d;
+                    pointPose = cameraPose * pointPose;
+                    filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
+                }
+                notify(filtersPoses,(int)objectNo);
+            }
+        }
+    }
+    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
         for (auto & object : objects[categoryNo]){
             std::vector<ViewIndependentPart> objectParts;
             int viewIndLayers = 2;
             for (int i=0;i<viewIndLayers;i++){
                 object.getParts(i, objectParts);
-                notify(objectParts, i);
+                notify(objectParts, i+4);
             }
         }
     }

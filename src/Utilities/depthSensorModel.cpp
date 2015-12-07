@@ -11,7 +11,7 @@ DepthSensorModel::DepthSensorModel(std::string configFile) : config(configFile){
 }
 
 /// compute 3D point from image coordinates
-void DepthSensorModel::getPoint(int u, int v, double depth, Eigen::Vector3d& point3D) const{
+void DepthSensorModel::getPoint(double u, double v, double depth, Eigen::Vector3d& point3D) const{
     if (depth>6.0||depth<0.4)//out of range
         point3D=Eigen::Vector3d(NAN,NAN,NAN);
     else {
