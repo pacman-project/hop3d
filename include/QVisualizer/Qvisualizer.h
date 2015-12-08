@@ -26,13 +26,13 @@ public:
     /// vector of 3D objects
     typedef std::vector<Object3D> Object3DSeq;
 
-    /// filter 3D position
-    class Filter3D{
+    /// VD part 3D position
+    class Part3D{
     public:
-        /// id of the filter
-        int filterId;
-        /// position of the filter
-        hop3d::Mat34 filterPose;
+        /// id of the part
+        int id;
+        /// position of the part
+        hop3d::Mat34 pose;
     };
 
     class Config{
@@ -206,7 +206,7 @@ public:
     void update(std::vector<std::vector<hop3d::PointCloudRGBA>>& objects);
 
     /// update object from filters
-    void update(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo);
+    void update(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo, int layerNo);
 
 private:
     Config config;
@@ -248,7 +248,7 @@ private:
     std::vector< std::vector< GLuint > > objects3Dlist;
 
     /// objects drawn from filter poses
-    std::vector<std::vector<Filter3D>> objectsFromFilters;
+    std::vector<std::vector<std::vector<Part3D>>> objectsFromParts;
 
     /// partObjects list
     std::vector< GLuint > partObjectsLists;
@@ -311,7 +311,7 @@ private:
     GLuint createObjList(const std::vector<hop3d::ViewIndependentPart>& parts, int layerNo);
 
     /// Create point cloud List from filters (planar patches)
-    GLuint createObjList(const std::vector<Filter3D>& filters);
+    GLuint createObjList(const std::vector<Part3D>& parts, int layerNo);
 
     /// Create clusters List
     GLuint createClustersList(hop3d::ViewDependentPart& part, int layerNo);

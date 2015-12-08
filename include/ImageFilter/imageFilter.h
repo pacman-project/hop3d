@@ -54,7 +54,10 @@ public:
     virtual void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart) = 0;
 
     /// returs filter ids and their position on the image
-    virtual void getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<FilterCoords>& filterCoords) const = 0;
+    virtual void getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const = 0;
+
+    /// returs parts ids and their position on the image
+    virtual void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const = 0;
 
     /// Virtual descrutor
     virtual ~ImageFilter() {

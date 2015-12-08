@@ -70,7 +70,10 @@ public:
     void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart);
 
     /// returs filter ids and their position on the image
-    void getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<FilterCoords>& filterCoords) const;
+    void getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const;
+
+    /// returs parts ids and their position on the image
+    void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const;
 
     class Config{
       public:

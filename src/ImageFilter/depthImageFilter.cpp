@@ -224,9 +224,15 @@ void DepthImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, un
 }
 
 /// returs filter ids and their position on the image
-void DepthImageFilter::getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<FilterCoords>& filterCoords) const{
+void DepthImageFilter::getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const{
     std::cout << categoryNo << objectNo << imageNo << "\n";
-    filterCoords.clear();
+    partCoords.clear();
+}
+
+/// returs parts ids and their position on the image
+void DepthImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const{
+    std::cout << categoryNo << objectNo << imageNo << layerNo << "\n";
+    partCoords.clear();
 }
 
 int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, Filter &filter, cv::Mat &filteredImage)

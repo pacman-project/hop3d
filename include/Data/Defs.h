@@ -147,10 +147,10 @@ public:
     }
 };
 
-class FilterCoords {
+class PartCoords {
 public:
-    /// set of FilterCoords
-    typedef std::vector<FilterCoords> Seq;
+    /// set of PartCoords
+    typedef std::vector<PartCoords> Seq;
 
     ///Filter id
     int filterId;
@@ -159,10 +159,10 @@ public:
     ImageCoordsDepth coords;
 
     /// Construction
-    FilterCoords(){}
+    PartCoords(){}
 
     /// Construction
-    FilterCoords(int _filterId, ImageCoordsDepth _coords) : filterId(_filterId), coords(_coords) {}
+    PartCoords(int _filterId, ImageCoordsDepth _coords) : filterId(_filterId), coords(_coords) {}
 };
 
 /// Octet representation

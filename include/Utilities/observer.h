@@ -16,7 +16,7 @@ public:
     virtual void update3Dmodels(void) = 0;
     virtual void update(std::vector<std::vector<hop3d::PointCloudRGBA>>& clouds) = 0;
     /// update object from filters
-    virtual void update(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo) = 0;
+    virtual void update(std::vector<std::pair<int, hop3d::Mat34>>& partsPoses, int objectNo, int layerNo) = 0;
     virtual void createPartObjects() = 0;
 };
 
@@ -33,7 +33,7 @@ public:
     void notify3Dmodels();
     void notify(std::vector<std::vector<hop3d::PointCloudRGBA>>& clouds);
     /// update object from filters
-    void notify(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo);
+    void notify(std::vector<std::pair<int, hop3d::Mat34>>& partsPoses, int objectNo, int layerNo);
     void createPartObjects();
 };
 

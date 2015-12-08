@@ -83,6 +83,7 @@ QGLVisualizer::QGLVisualizer(void) {
     linksLists.resize(7);
     layersOfObjects.resize(7);
     objects3Dlist.resize(7);
+    objectsFromParts.resize(7);
 }
 
 /// Construction
@@ -93,6 +94,7 @@ QGLVisualizer::QGLVisualizer(Config _config): config(_config), updateHierarchyFl
     linksLists.resize(7);
     layersOfObjects.resize(7);
     objects3Dlist.resize(7);
+    objectsFromParts.resize(7);
 }
 
 /// Construction
@@ -191,16 +193,16 @@ void QGLVisualizer::update(const std::vector<ViewIndependentPart>& objectParts, 
     mtxHierarchy.unlock();
 }
 
-/// update object from filters
-void QGLVisualizer::update(std::vector<std::pair<int, Mat34>>& filtersPoses, int objectNo){
-    if (objectsFromFilters.size()<=(size_t)objectNo){
-        objectsFromFilters.resize(objectNo+1);
+/// update object from parts
+void QGLVisualizer::update(std::vector<std::pair<int, Mat34>>& partsPoses, int objectNo, int layerNo){
+    if (objectsFromParts[layerNo].size()<=(size_t)objectNo){
+        objectsFromParts[layerNo].resize(objectNo+1);
     }
-    for (auto& filter : filtersPoses){
-        Filter3D filterPose;
-        filterPose.filterId = filter.first;
-        filterPose.filterPose = filter.second;
-        objectsFromFilters[objectNo].push_back(filterPose);
+    for (auto& part : partsPoses){
+        Part3D partPose;
+        partPose.id = part.first;
+        partPose.pose = part.second;
+        objectsFromParts[layerNo][objectNo].push_back(partPose);
     }
 }
 
@@ -222,8 +224,10 @@ void QGLVisualizer::update3Dobjects(void){
             }
             layerNo++;
         }
-        for (auto& object : objectsFromFilters){
-            objects3Dlist[0].push_back(createObjList(object));
+        for (layerNo = 0;layerNo<2;layerNo++){
+            for (auto& object : objectsFromParts[layerNo]){
+                objects3Dlist[layerNo].push_back(createObjList(object, layerNo));
+            }
         }
     }
 }
@@ -522,18 +526,18 @@ GLuint QGLVisualizer::createPartObjList(const std::vector<hop3d::PointCloudRGBA>
     return index;
 }
 
-/// Create point cloud List from filters (planar patches)
-GLuint QGLVisualizer::createObjList(const std::vector<Filter3D>& filters){
+/// Create point cloud List from parts (planar patches)
+GLuint QGLVisualizer::createObjList(const std::vector<Part3D>& parts, int layerNo){
     // create one display list
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
     glPushMatrix();
-        Vec3 initPose(filters.begin()->filterPose(0,3), filters.begin()->filterPose(1,3), filters.begin()->filterPose(2,3));
-        for (auto & filter : filters){
-            double GLmat[16]={filter.filterPose(0,0), filter.filterPose(1,0), filter.filterPose(2,0), 0, filter.filterPose(0,1), filter.filterPose(1,1), filter.filterPose(2,1), 0, filter.filterPose(0,2), filter.filterPose(1,2), filter.filterPose(2,2), 0, filter.filterPose(0,3)-initPose(0), filter.filterPose(1,3)-initPose(1), filter.filterPose(2,3)-initPose(2), 1};
+        Vec3 initPose(parts.begin()->pose(0,3), parts.begin()->pose(1,3), parts.begin()->pose(2,3));
+        for (auto & part : parts){
+            double GLmat[16]={part.pose(0,0), part.pose(1,0), part.pose(2,0), 0, part.pose(0,1), part.pose(1,1), part.pose(2,1), 0, part.pose(0,2), part.pose(1,2), part.pose(2,2), 0, part.pose(0,3)-initPose(0), part.pose(1,3)-initPose(1), part.pose(2,3)-initPose(2), 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
-                glCallList(cloudsListLayers[0][filter.filterId]);
+                glCallList(cloudsListLayers[layerNo][part.id]);
             glPopMatrix();
         }
     glPopMatrix();

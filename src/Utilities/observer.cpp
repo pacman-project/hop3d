@@ -29,10 +29,10 @@ void Subject::notify(std::vector<hop3d::ViewIndependentPart>& objectParts, int o
 }
 
 /// update object from filters
-void Subject::notify(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo){
+void Subject::notify(std::vector<std::pair<int, hop3d::Mat34>>& partsPoses, int objectNo, int layerNo){
     for(vector<Observer*>::const_iterator iter = list.begin(); iter != list.end(); ++iter) {
         if(*iter != 0) {
-            (*iter)->update(filtersPoses, objectNo);
+            (*iter)->update(partsPoses, objectNo, layerNo);
         }
     }
 }

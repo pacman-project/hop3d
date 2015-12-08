@@ -179,8 +179,8 @@ void NormalImageFilter::updateOctetsImages1stLayer(int categoryNo, int objectNo,
 }
 
 /// returs filter ids and their position on the image
-void NormalImageFilter::getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<FilterCoords>& filterCoords) const {
-    filterCoords.clear();
+void NormalImageFilter::getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const {
+    partCoords.clear();
     for (auto& row : octetsImages1stLayer[categoryNo][objectNo][imageNo]){
         for (auto& octet : row){
             if (!octet.isBackground){
@@ -188,12 +188,39 @@ void NormalImageFilter::getResponseFilters(int categoryNo, int objectNo, int ima
                     for (int j=0;j<3;j++){
                         if (octet.partIds[i][j]!=-1){
                             if (i==1&&j==1){
-                                FilterCoords fcoords(octet.partIds[i][j], octet.filterPos[i][j]);
-                                filterCoords.push_back(fcoords);
+                                PartCoords fcoords(octet.partIds[i][j], octet.filterPos[i][j]);
+                                partCoords.push_back(fcoords);
                             }
                             else{
-                                FilterCoords fcoords(octet.partIds[i][j], octet.filterPos[1][1]+octet.filterPos[i][j]);
-                                filterCoords.push_back(fcoords);
+                                PartCoords fcoords(octet.partIds[i][j], octet.filterPos[1][1]+octet.filterPos[i][j]);
+                                partCoords.push_back(fcoords);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// returs parts ids and their position on the image
+void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const{
+    partCoords.clear();
+    if (layerNo==1){
+        for (auto& row : octetsImages2ndLayer[categoryNo][objectNo][imageNo]){
+            for (auto& octet : row){
+                if (!octet.isBackground){
+                    for (int i=0;i<3;i++){
+                        for (int j=0;j<3;j++){
+                            if (octet.partIds[i][j]!=-1){
+                                if (i==1&&j==1){
+                                    PartCoords fcoords(octet.partIds[i][j], octet.filterPos[i][j]);
+                                    partCoords.push_back(fcoords);
+                                }
+                                else{
+                                    PartCoords fcoords(octet.partIds[i][j], octet.filterPos[1][1]+octet.filterPos[i][j]);
+                                    partCoords.push_back(fcoords);
+                                }
                             }
                         }
                     }
