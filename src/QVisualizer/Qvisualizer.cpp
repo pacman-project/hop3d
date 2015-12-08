@@ -224,7 +224,7 @@ void QGLVisualizer::update3Dobjects(void){
             }
             layerNo++;
         }
-        for (layerNo = 0;layerNo<2;layerNo++){
+        for (layerNo = 0;layerNo<3;layerNo++){
             for (auto& object : objectsFromParts[layerNo]){
                 objects3Dlist[layerNo].push_back(createObjList(object, layerNo));
             }
