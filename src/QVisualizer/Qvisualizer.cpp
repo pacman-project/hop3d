@@ -84,6 +84,7 @@ QGLVisualizer::QGLVisualizer(void) {
     layersOfObjects.resize(7);
     objects3Dlist.resize(7);
     objectsFromParts.resize(7);
+    activeLayer=0;
 }
 
 /// Construction
@@ -95,6 +96,7 @@ QGLVisualizer::QGLVisualizer(Config _config): config(_config), updateHierarchyFl
     layersOfObjects.resize(7);
     objects3Dlist.resize(7);
     objectsFromParts.resize(7);
+    activeLayer=0;
 }
 
 /// Construction

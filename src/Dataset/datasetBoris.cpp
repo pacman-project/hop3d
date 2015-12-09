@@ -117,6 +117,8 @@ void BorisDataset::getDatasetInfo(hop3d::DatasetInfo& dataset) const{
 void BorisDataset::readDepthImage(int categoryNo, int objectNo, int imageNo, cv::Mat& depthImage) const{
     pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
     std::string path = config.path + "/" + config.dataset.categories[categoryNo].objects[objectNo].name + "/" + config.dataset.categories[categoryNo].objects[objectNo].images[imageNo];
+    if (config.verbose>1)
+        std::cout << "load " << path << "\n";
     if (pcl::io::loadPCDFile<pcl::PointXYZRGBNormal> (path, *cloud) == -1){//* load the file
         PCL_ERROR ("Couldn't read pcd file \n");
     }

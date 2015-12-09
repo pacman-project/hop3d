@@ -229,26 +229,11 @@ void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, in
         }
     }
     if (layerNo==2){
-        std::cout << "lay no " << layerNo << "\n";
         for (auto& row : partsImages[categoryNo][objectNo][imageNo]){
             for (auto& part : row){
                 if (!part.isBackground()){
-                    for (int i=0;i<3;i++){
-                        for (int j=0;j<3;j++){
-                            if (part.partIds[i][j]!=-1){
-                                if (i==1&&j==1){
-                                    ImageCoordsDepth position(part.gaussians[i][j].mean(1), part.gaussians[i][j].mean(0), part.gaussians[i][j].mean(2));
-                                    PartCoords fcoords(part.partIds[i][j], position);
-                                    partCoords.push_back(fcoords);
-                                }
-                                else{
-                                    ImageCoordsDepth position(part.gaussians[i][j].mean(1), part.gaussians[i][j].mean(0), part.gaussians[i][j].mean(2));
-                                    PartCoords fcoords(part.partIds[i][j], part.location+position);
-                                    partCoords.push_back(fcoords);
-                                }
-                            }
-                        }
-                    }
+                    PartCoords fcoords(part.id, part.location);
+                    partCoords.push_back(fcoords);
                 }
             }
         }
