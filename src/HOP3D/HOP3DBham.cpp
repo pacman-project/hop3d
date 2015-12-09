@@ -228,7 +228,6 @@ void HOP3DBham::learn(){
                         imageFilterer->getResponseFilters((int)categoryNo, (int)objectNo, (int)imageNo, partCoords);
                     else
                         imageFilterer->getParts3D((int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoords);
-                    std::cout << "parts no " << partCoords.size() << " laye no " << layerNo << "\n";
                     Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                     std::vector<std::pair<int, Mat34>> filtersPoses;
                     for (auto& filterCoord : partCoords){
@@ -250,7 +249,7 @@ void HOP3DBham::learn(){
             int viewIndLayers = 2;
             for (int i=0;i<viewIndLayers;i++){
                 object.getParts(i, objectParts);
-                notify(objectParts, i+4);
+                notify(objectParts, i+3);
             }
         }
     }

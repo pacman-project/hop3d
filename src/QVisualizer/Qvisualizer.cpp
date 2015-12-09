@@ -553,7 +553,7 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
     glPushMatrix();
-    if (layerNo==4){
+    if (layerNo==3){
         Vec3 initPose(parts.begin()->parts.begin()->pose(0,3), parts.begin()->parts.begin()->pose(1,3), parts.begin()->parts.begin()->pose(2,3));
         for (auto & part : parts){
             /*for (auto & partL : part.parts){
@@ -577,7 +577,7 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
             glPopMatrix();
         }
     }
-    if (layerNo==5){
+    if (layerNo==4){
         Vec3 initPose(parts.begin()->pose(0,3), parts.begin()->pose(1,3), parts.begin()->pose(2,3));
         int partNo=0;
         for (auto & part : parts){
