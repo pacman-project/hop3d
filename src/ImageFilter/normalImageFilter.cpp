@@ -350,8 +350,8 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
         for (int j=0;j<3;j++){
             if (!((i==1)&&(j==1))){
                 if (octet.partIds[i][j]==-1){
-                    octet.filterPos[i][j].u=(j-1)*layerNo*(config.filterSize+config.filterSize/2.0);
-                    octet.filterPos[i][j].v=(i-1)*layerNo*(config.filterSize+config.filterSize/2.0);
+                    octet.filterPos[i][j].u=(j-1)*config.filterSize*(2.0*layerNo-1.0);//(j-1)*layerNo*(config.filterSize+config.filterSize/2.0);
+                    octet.filterPos[i][j].v=(j-1)*config.filterSize*(2.0*layerNo-1.0);//(i-1)*layerNo*(config.filterSize+config.filterSize/2.0);
                     octet.filterPos[i][j].depth=meanDepth;
                 }
                 else {

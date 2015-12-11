@@ -133,7 +133,7 @@ public:
     friend std::istream& operator>>(std::istream& is, ImageCoordsDepth& coords);
 
     /// Construction
-    ImageCoordsDepth(){}
+    ImageCoordsDepth(){u=0; v=0; depth=0;}
 
     /// Construction
     ImageCoordsDepth(double _u, double _v, double _depth) : ImageCoords(_u, _v), depth(_depth) {}
@@ -175,8 +175,10 @@ public:
     std::array<std::array<int,3>,3> partIds;
     /// filter response
     std::array<std::array<double,3>,3> responses;
-    /// mask of the filter
+    /// position of parts (u, v, depth)
     std::array<std::array<ImageCoordsDepth,3>,3> filterPos;
+    /// position of parts (x, y, depth)
+    std::array<std::array<Vec3,3>,3> partsPosEucl;
     /// camera pose Id
     int poseId;
     ///is background
