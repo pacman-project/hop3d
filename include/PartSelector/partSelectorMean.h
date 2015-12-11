@@ -84,6 +84,9 @@ private:
 
     /// get clusters of parts id stored in octree (one cluster per voxel)
     bool isInOctets(std::vector< std::set<int>>& clusters, int id, std::vector< std::set<int>>::iterator& iter);
+
+    ///find new center of cluster
+    int centerOfCluster(const std::set<int>& cluster, const ViewDependentPart::Seq& vocabulary, const Hierarchy& hierarchy) const;
 };
 }
 #endif // PART_SELECTOR_MEAN_H_INCLUDED

@@ -8,6 +8,12 @@
 
 namespace hop3d {
 
+template <typename T>
+bool isCloseToZero(T x)
+{
+    return std::abs(x) < std::numeric_limits<T>::epsilon();
+}
+
 class Part{
 public:
     /// Sequence

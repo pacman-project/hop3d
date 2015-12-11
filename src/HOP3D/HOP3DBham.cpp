@@ -126,9 +126,9 @@ void HOP3DBham::learn(){
                 }
             }
         }
-        std::cout << "Compute statistics for " << octets.size() << " octets (" << layerNo+2 << "-th layer)\n";
+        std::cout << "Compute statistics for " << octets.size() << " octets (" << layerNo+2 << " layer)\n";
         statsBuilder->computeStatistics(octets, layerNo+2, startId, dictionary);
-        std::cout << "Dictionary size (" << layerNo+2 << "-th layer): " << dictionary.size() << "\n";
+        std::cout << "Dictionary size (" << layerNo+2 << " layer): " << dictionary.size() << "\n";
         partSelector->selectParts(dictionary, *hierarchy, layerNo+2);
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
@@ -177,8 +177,14 @@ void HOP3DBham::learn(){
     std::cout << "4th layer vocabulary size: " << vocabulary.size() << "\n";
     /// First view-independent layer (three and a half layer)
     hierarchy.get()->viewIndependentLayers[0]=vocabulary;
+    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+            objects[categoryNo][objectNo].updateVoxelsPose(0, vocabulary);
+        }
+    }
 //    for (auto & word : vocabulary){
 //        word.print();
+//        getchar();
 //    }
     for (int layerNo=0;layerNo<config.viewIndependentLayersNo-1;layerNo++){
         ///select part for ith layer

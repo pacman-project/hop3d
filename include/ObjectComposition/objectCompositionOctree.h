@@ -48,6 +48,9 @@ public:
     /// get set of ids for the given input point
     void getPartsIds(const ViewDependentPart& part, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy, std::vector<int>& ids) const;
 
+    /// upodate voxel poses using new vocabulary
+    void updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary);
+
     /// Insertion operator
     friend std::ostream& operator<<(std::ostream& os, const ObjectCompositionOctree& object){
         os << static_cast<unsigned int>(object.type) << " ";

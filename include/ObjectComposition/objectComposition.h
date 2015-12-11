@@ -51,6 +51,9 @@ public:
     /// get set of ids for the given input point
     virtual void getPartsIds(const ViewDependentPart& part, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy, std::vector<int>& ids) const = 0;
 
+    /// upodate voxel poses using new vocabulary
+    virtual void updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary) = 0;
+
     /// Virtual descrutor
     virtual ~ObjectComposition() {
     }

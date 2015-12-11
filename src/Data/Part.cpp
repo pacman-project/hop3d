@@ -25,8 +25,8 @@ void ViewDependentPart::print() const{
         for (size_t j=0; j<gaussians.size();j++){
             std::cout << "mean(" << i << ", " << j << "): ";
             std::cout << gaussians[i][j].mean.transpose() << "\n";
-            //std::cout << "covariance(" << i-1 << ", " << j-1 << "):\n";
-            //std::cout << gaussians[i][j].covariance << "\n";
+            std::cout << "covariance(" << i << ", " << j << "):\n";
+            std::cout << gaussians[i][j].covariance << "\n";
         }
     }
 }

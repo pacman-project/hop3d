@@ -297,6 +297,30 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::S
     }
 }
 
+///find new center of cluster
+int PartSelectorMean::centerOfCluster(const std::set<int>& cluster, const ViewDependentPart::Seq& vocabulary, const Hierarchy& hierarchy) const{
+    double distMin = std::numeric_limits<double>::max();
+    int centerId=0;
+    for (auto& id : cluster){//for each part id in cluster
+        double distSum = 0; //compute new centroid
+        for (auto& id2 : cluster){//compute mean dist for each part as a centroid
+            double dist=0;
+            if (vocabulary[id].layerId==2){
+                dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2],hierarchy.firstLayer, config.distanceMetric);
+            }
+            else if (vocabulary[id].layerId==3){
+                dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
+            }
+            distSum+=dist;
+        }
+        if (distSum<distMin){
+            distMin=distSum;
+            centerId=id;
+        }
+    }
+    return centerId;
+}
+
 /// compute centroids for give clusters
 void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy){
     int clusterNo=0;
@@ -370,13 +394,22 @@ void PartSelectorMean::createUniqueClusters(const std::vector< std::set<int>>& c
         ViewIndependentPart part;
         part.layerId=4;
         part.id = idNo;
-        ViewDependentPart vdp = hierarchy.viewDependentLayers.back()[*cluster.begin()];//get view dependent part related to view-independent part
+        //ViewDependentPart vdp = hierarchy.viewDependentLayers.back()[*cluster.begin()];//get view dependent part related to view-independent part
+        //select representative part
+        int clusterCenter = centerOfCluster(cluster, hierarchy.viewDependentLayers.back(), hierarchy);
+        ViewDependentPart vdp = hierarchy.viewDependentLayers.back()[clusterCenter];//get view dependent part related to view-independent part
         Vec3 normal;
         hierarchy.getNormal(vdp,normal);
         //vdp.getNormal(normal,hierarchy.viewDependentLayers[0], hierarchy.firstLayer);
         part.pose = Mat34::Identity();
         part.pose = NormalImageFilter::coordinateFromNormal(normal);
-        for (auto & partId : cluster){
+        std::vector<int> clusterNoOrder; //we have to change the order in the cluster (representative part is first)
+        clusterNoOrder.reserve(cluster.size());
+        clusterNoOrder.push_back(clusterCenter);
+        for (auto & partId : cluster)
+            if (partId!=clusterCenter)
+                clusterNoOrder.push_back(partId);
+        for (auto & partId : clusterNoOrder){//representative part is first in the group
             ViewIndependentPart partTmp;
             vdp = hierarchy.viewDependentLayers.back()[partId];//get view dependent part related to view-independent part
             //vdp.getNormal(normal, hierarchy.viewDependentLayers[0], hierarchy.firstLayer);

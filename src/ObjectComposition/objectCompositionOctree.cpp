@@ -86,6 +86,26 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
     }
 }
 
+/// upodate voxel poses using new vocabulary
+void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary){
+    for (int idX=0; idX<(*octrees[layerNo]).size(); idX++){///to do z-slicing
+        for (int idY=0; idY<(*octrees[layerNo]).size(); idY++){
+            for (int idZ=0; idZ<(*octrees[layerNo]).size(); idZ++){
+                if ((*octrees[layerNo]).at(idX,idY,idZ).id>=0){
+                    for (auto& word: vocabulary){
+                        int representativeId = word.group.begin()->id;//id of the VD representative part
+                        for (auto& part : (*octrees[layerNo])(idX,idY,idZ).parts){ //find representative id in the voxel
+                            if (part.id==representativeId){// and update the pose part by pose of the representative part
+                                (*octrees[layerNo])(idX,idY,idZ).pose = part.pose;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 /// get set of ids for the given input point
 void ObjectCompositionOctree::getPartsIds(const ViewDependentPart& part, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy, std::vector<int>& ids) const{
     Mat34 partPosition(Mat34::Identity());
