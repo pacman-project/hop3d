@@ -110,6 +110,12 @@ namespace hop3d {
             }
             std::cout << "\n";
         }
+        for (size_t i=0;i<this->partsPosEucl.size();i++){
+            for (size_t j=0;j<partsPosEucl[i].size();j++){
+                std::cout << "(" << partsPosEucl[i][j](0) << "," << partsPosEucl[i][j](1) << "," << partsPosEucl[i][j](2) << "), ";
+            }
+            std::cout << "\n";
+        }
     }
 
     /// compute distance between octets -- dot product for normals for each filter

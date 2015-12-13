@@ -8,6 +8,7 @@ void ViewDependentPart::print() const{
     std::cout << "Id: " << id << "\n";
     std::cout << "Layer id: " << layerId << "\n";
     std::cout << "Image coords: " << location.u << ", " << location.v << ", " << location.depth << "\n";
+    std::cout << "Location Euclidean: " << locationEucl(0) << ", " << locationEucl(1) << ", " << locationEucl(2) << "\n";
     std::cout << "Group size: " << group.size() << "\n";
     std::cout << "ids: ";
     for (int i =0; i<3; i++){
@@ -86,7 +87,7 @@ void ViewIndependentPart::print() const{
 }
 
 /// compute distance between view-independent parts
-double ViewIndependentPart::distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset, int verbose){
+double ViewIndependentPart::distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset){
     if (partA.partIds==partB.partIds){
         offset = Mat34::Identity();
         return 0;
@@ -226,7 +227,7 @@ double ViewIndependentPart::distance(const ViewIndependentPart& partA, const Vie
 }
 
 /// compute distance between view-independent parts
-double ViewIndependentPart::distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary, Mat34& offset, int verbose){
+double ViewIndependentPart::distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary, Mat34& offset){
     if (partA.partIds==partB.partIds){
         offset = Mat34::Identity();
         return 0;

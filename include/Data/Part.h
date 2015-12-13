@@ -64,6 +64,8 @@ public:
     /// Position of the part on the image
     ImageCoordsDepth location;
 
+    Vec3 locationEucl;
+
     /// Camera pose id
     int cameraPoseId;
 
@@ -168,10 +170,10 @@ public:
     void print() const;
 
     /// compute distance between view-independent parts
-    static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset, int verbose);
+    static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset);
 
     /// compute distance between view-independent parts
-    static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary, Mat34& offset, int verbose);
+    static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary, Mat34& offset);
 
     /// compute distance between view-independent parts (7th layer)
     static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary1, const ViewIndependentPart::Seq vocabulary2, Mat34& offset);

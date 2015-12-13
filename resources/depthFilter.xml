@@ -12,7 +12,7 @@
 <!-- parameters:
     nonMaximumSupressionGroup - true fin max for the group, false - find max for the whole window
     minOctetsSize - minimal number of elements in the octet-->    
-    <parameters ringsNo="6" filterSize="5" verbose="0" nonMaximumSupressionGroup="true" minOctetSize="3"></parameters>
+    <parameters ringsNo="6" filterSize="5" verbose="0" nonMaximumSupressionGroup="true" minOctetSize="3" useEuclideanCoordinates="true"></parameters>
 <!--     PCAWindowSize - aperture linear size
     PCARelDistClusters - create two clusters and check distance between them. If distance is PCARelDistClusters times larger than width of the front cluster run PCA
     background threshold - compute response if points no in filter window is bigger than threshold

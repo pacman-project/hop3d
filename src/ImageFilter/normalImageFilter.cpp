@@ -33,6 +33,7 @@ NormalImageFilter::Config::Config(std::string configFilename){
     model->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     model->FirstChildElement( "parameters" )->QueryBoolAttribute("nonMaximumSupressionGroup", &nonMaximumSupressionGroup);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("minOctetSize", &minOctetSize);
+    model->FirstChildElement( "parameters" )->QueryBoolAttribute("useEuclideanCoordinates", &useEuclideanCoordinates);
 
     model->FirstChildElement( "PCA" )->QueryIntAttribute("PCAWindowSize", &PCAWindowSize);
     model->FirstChildElement( "PCA" )->QueryDoubleAttribute("PCADistThreshold", &PCADistThreshold);
@@ -308,6 +309,9 @@ bool NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >&
         if (octet.partIds[1][1]==-1){
             octet.filterPos[1][1].u = v;
             octet.filterPos[1][1].v = u;
+            if (config.useEuclideanCoordinates){
+                sensorModel.getPoint(u,v,1.0,octet.partsPosEucl[1][1]);
+            }
         }
         computeRelativePositions(octet, 1);
         octet.isBackground=false;
@@ -342,10 +346,13 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
         }
         meanDepth /= double(depthNo);
         octet.filterPos[1][1].depth = meanDepth;
+        if (config.useEuclideanCoordinates)
+            octet.partsPosEucl[1][1](2) = meanDepth;
         //octet.filterPos[1][1].depth = min;
         //octet.filterPos[1][1].u = globU;
         //octet.filterPos[1][1].v = globV;
     }
+    sensorModel.getPoint(octet.filterPos[1][1].u,octet.filterPos[1][1].v,octet.filterPos[1][1].depth,octet.partsPosEucl[1][1]);
     for (int i=0;i<3;i++){//for neighbouring blocks
         for (int j=0;j<3;j++){
             if (!((i==1)&&(j==1))){
@@ -353,8 +360,15 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
                     octet.filterPos[i][j].u=(j-1)*config.filterSize*(2.0*layerNo-1.0);//(j-1)*layerNo*(config.filterSize+config.filterSize/2.0);
                     octet.filterPos[i][j].v=(j-1)*config.filterSize*(2.0*layerNo-1.0);//(i-1)*layerNo*(config.filterSize+config.filterSize/2.0);
                     octet.filterPos[i][j].depth=meanDepth;
+                    if (config.useEuclideanCoordinates){
+                        sensorModel.getPoint(octet.filterPos[i][j].u,octet.filterPos[i][j].v,octet.filterPos[i][j].depth,octet.partsPosEucl[i][j]);
+                    }
                 }
                 else {
+                    if (config.useEuclideanCoordinates){
+                        sensorModel.getPoint(octet.filterPos[i][j].u,octet.filterPos[i][j].v,octet.filterPos[i][j].depth,octet.partsPosEucl[i][j]);
+                        octet.partsPosEucl[i][j]-=octet.partsPosEucl[1][1];
+                    }
                     octet.filterPos[i][j].u-=octet.filterPos[1][1].u;
                     octet.filterPos[i][j].v-=octet.filterPos[1][1].v;
                     octet.filterPos[i][j].depth-=octet.filterPos[1][1].depth;
@@ -376,6 +390,8 @@ bool NormalImageFilter::findMaxResponse(const std::vector< std::vector<Response>
                 ImageCoordsDepth coord;
                 coord.u = v+j; coord.v = u+i; coord.depth = cloudOrd[u+i][v+j].position(2);
                 octet.filterPos[idx][idy] = coord;
+                if (config.useEuclideanCoordinates)
+                    sensorModel.getPoint(coord.u, coord.v, coord.depth, octet.partsPosEucl[idx][idy]);
                 isBackground = false;
             }
         }
@@ -418,6 +434,8 @@ bool NormalImageFilter::findMaxGroupResponse(const std::vector< std::vector<Resp
                     ImageCoordsDepth coord;
                     coord.u = v+j; coord.v = u+i; coord.depth = cloudOrd[u+i][v+j].position(2);
                     octet.filterPos[idx][idy] = coord;
+                    if (config.useEuclideanCoordinates)
+                        sensorModel.getPoint(coord.u, coord.v, coord.depth, octet.partsPosEucl[idx][idy]);
                     isBackground = false;
                 }
             }
@@ -483,6 +501,7 @@ void NormalImageFilter::computeImages3rdLayer(int categoryNo, int objectNo, int 
                 //std::cout << "found id : " << findId(dictionary,octetsImage[i][j]) << " new id " << dictionary[findId(dictionary,octetsImage[i][j])].id << "\n";
                 //std::cout << "parts no " << partsNo << "\n";
                 part.location = octetsImage[i][j].filterPos[1][1];
+                part.locationEucl = octetsImage[i][j].partsPosEucl[1][1];
                 part.gaussians[1][1].mean=Vec3(octetsImage[i][j].filterPos[1][1].u, octetsImage[i][j].filterPos[1][1].v, octetsImage[i][j].filterPos[1][1].depth);
                 partsNo++;
             }
@@ -515,9 +534,14 @@ void NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDe
             if (id ==-1){
                 octet.filterPos[i+1][j+1].u=(v+j)*(config.filterSize*3)+((config.filterSize*3)/2);//octetsImage[u+i][v+j].filterPos[1][1];
                 octet.filterPos[i+1][j+1].v=(u+i)*(config.filterSize*3)+((config.filterSize*3)/2);
+                if (config.useEuclideanCoordinates)
+                    sensorModel.getPoint(octet.filterPos[i+1][j+1].u, octet.filterPos[i+1][j+1].u, 1.0, octet.partsPosEucl[i+1][j+1]);
             }
-            else
+            else {
                 octet.filterPos[i+1][j+1]=octetsImage[u+i][v+j].filterPos[1][1];
+                if (config.useEuclideanCoordinates)
+                    sensorModel.getPoint(octet.filterPos[i+1][j+1].u, octet.filterPos[i+1][j+1].u, octet.filterPos[i+1][j+1].depth, octet.partsPosEucl[i+1][j+1]);
+            }
             octet.responses[i+1][j+1]=octetsImage[u+i][v+j].responses[1][1];
         }
     }

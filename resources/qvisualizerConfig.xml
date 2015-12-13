@@ -3,7 +3,7 @@
   <VisualizerConfig>
   	<name>QGLVisualizer</name>
 	<parameters verbose="0"></parameters>
-	<hierarchy pixelSize="0.001" filterDepthScale="0.0008" draw3Dobjects="true" voxelSize="0.02"></hierarchy>
+	<hierarchy pixelSize="0.001" useEuclideanCoordinates="true" filterDepthScale="0.0008" draw3Dobjects="true" voxelSize="0.02"></hierarchy>
 	<layer1 dist="0.03" posZ="0.1"></layer1>
 	<layer2 dist="0.15" posZ="0.5"></layer2>
 	<layer3 dist="0.25" posZ="1.0"></layer3>

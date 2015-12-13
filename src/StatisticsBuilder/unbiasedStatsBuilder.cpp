@@ -26,6 +26,7 @@ UnbiasedStatsBuilder::Config::Config(std::string configFilename){
         std::cout << "unable to load unbiased stats builder config file.\n";
     tinyxml2::XMLElement * group = config.FirstChildElement( "StatsBuilder" );
     group->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
+    group->FirstChildElement( "parameters" )->QueryBoolAttribute("useEuclideanCoordinates", &useEuclideanCoordinates);
     if (verbose == 1) {
         std::cout << "Load statistics builder parameters...\n";
     }
@@ -111,10 +112,12 @@ void UnbiasedStatsBuilder::computeGaussians(Octet::Seq& group, ViewDependentPart
                 part.gaussians[i][j].covariance = Mat33::Identity();
             }
             else{
-                Gaussian3D gauss;
-                computeGaussian(group, gauss, (unsigned int)i, (unsigned int)j);
-                part.gaussians[i][j].mean = gauss.mean;
-                part.gaussians[i][j].covariance = gauss.covariance;
+                if (group.back().partIds[i][j]!=-1){
+                    Gaussian3D gauss;
+                    computeGaussian(group, gauss, (unsigned int)i, (unsigned int)j);
+                    part.gaussians[i][j].mean = gauss.mean;
+                    part.gaussians[i][j].covariance = gauss.covariance;
+                }
             }
         }
     }
@@ -139,16 +142,26 @@ void UnbiasedStatsBuilder::computeGaussians(ViewIndependentPart::Seq& group, Vie
 /// compute Gaussian parameters
 void UnbiasedStatsBuilder::computeGaussian(const Octet::Seq& group, Gaussian3D& gauss, unsigned int u, unsigned int v) const{
     Vec3 mean(0,0,0);
-    for (auto it = group.begin(); it!=group.end(); it++){
-        mean(0)+=it->filterPos[u][v].u;
-        mean(1)+=it->filterPos[u][v].v;
-        mean(2)+=it->filterPos[u][v].depth;
+    for (auto& octet : group){
+        if (config.useEuclideanCoordinates){
+            mean+=octet.partsPosEucl[u][v];
+        }
+        else{
+            mean(0)+=octet.filterPos[u][v].u;
+            mean(1)+=octet.filterPos[u][v].v;
+            mean(2)+=octet.filterPos[u][v].depth;
+        }
     }
     gauss.mean = mean*(1.0/double(group.size()));
     Mat33 cov; cov.setZero();
     for (auto it = group.begin(); it!=group.end(); it++){
-        Vec3 pos(it->filterPos[u][v].u, it->filterPos[u][v].v, it->filterPos[u][v].depth);
-        cov+=(pos-gauss.mean)*(pos-gauss.mean).transpose();
+        if (config.useEuclideanCoordinates){
+            cov+=(it->partsPosEucl[u][v]-gauss.mean)*(it->partsPosEucl[u][v]-gauss.mean).transpose();
+        }
+        else{
+            Vec3 pos(it->filterPos[u][v].u, it->filterPos[u][v].v, it->filterPos[u][v].depth);
+            cov+=(pos-gauss.mean)*(pos-gauss.mean).transpose();
+        }
     }
     gauss.covariance = cov*(1.0/double(group.size()));
 }

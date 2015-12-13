@@ -47,6 +47,8 @@ public:
         public:
             /// Verbose
             int verbose;
+            /// use Euclidean coordinates to define part position
+            bool useEuclideanCoordinates;
     };
 
 private:

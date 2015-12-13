@@ -470,7 +470,11 @@ GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
     //flipGaussians(part.gaussians);
     for (size_t n = 0; n < part.partIds.size(); n++){
         for (size_t m = 0; m < part.partIds[n].size(); m++){
-            Vec3 pos(config.pixelSize*part.gaussians[n][m].mean(0), config.pixelSize*part.gaussians[n][m].mean(1), part.gaussians[n][m].mean(2));
+            Vec3 pos;
+            if (config.useEuclideanCoordinates)
+                pos = part.gaussians[n][m].mean;
+            else
+                pos = Vec3(config.pixelSize*part.gaussians[n][m].mean(0), config.pixelSize*part.gaussians[n][m].mean(1), part.gaussians[n][m].mean(2));
             int id = part.partIds[n][m];
             if ((n==1)&&(m==1)){
                 pos(0)=0; pos(1)=0; pos(2)=0;
@@ -710,7 +714,11 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
     for (auto itComp = part.group.begin(); itComp!=part.group.end();itComp++){
         for (size_t n = 0; n < itComp->partIds.size(); n++){
             for (size_t m = 0; m < itComp->partIds[n].size(); m++){
-                Vec3 pos(config.pixelSize*itComp->gaussians[n][m].mean(0), config.pixelSize*itComp->gaussians[n][m].mean(1), itComp->gaussians[n][m].mean(2));
+                Vec3 pos;
+                if (config.useEuclideanCoordinates)
+                    pos = itComp->gaussians[n][m].mean;
+                else
+                    pos = Vec3(config.pixelSize*itComp->gaussians[n][m].mean(0), config.pixelSize*itComp->gaussians[n][m].mean(1), itComp->gaussians[n][m].mean(2));
                 if ((n==1)&&(m==1)){
                     pos(0)=0; pos(1)=0; pos(2)=0;
                 }
@@ -756,7 +764,7 @@ GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud, Vec3& norma
                     glNormal3d(-normal(0), -normal(1), -normal(2));
                 glVertex3d(pointCloud.pointCloudNormal[n].position(0),
                           pointCloud.pointCloudNormal[n].position(1),
-                          pointCloud.pointCloudNormal[n].position(2)*config.filterDepthScale);
+                          pointCloud.pointCloudNormal[n].position(2));
             }
             glEnd();
         }

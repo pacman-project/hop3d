@@ -109,13 +109,13 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
 /// get set of ids for the given input point
 void ObjectCompositionOctree::getPartsIds(const ViewDependentPart& part, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy, std::vector<int>& ids) const{
     Mat34 partPosition(Mat34::Identity());
-    Vec3 pos3d;
     Mat34 part3D(Mat34::Identity());
     Vec3 normal; hierarchy.getNormal(part, normal);
     part3D = NormalImageFilter::coordinateFromNormal(normal);
-    Vec3 position(part.location.u, part.location.v, part.location.depth);
-    camModel.getPoint(position, pos3d);
-    part3D.translation() = pos3d;//set position of the part
+    //Vec3 position = Vec3(part.location.u, part.location.v, part.location.depth);
+    //Vec3 pos3d;
+    //camModel.getPoint(position, pos3d);
+    part3D.translation() = part.locationEucl;//set position of the part
     partPosition = cameraPose * part3D;//global position of the part
     int x,y,z;
     toCoordinate(partPosition(0,3),x, 0);
@@ -156,7 +156,7 @@ void ObjectCompositionOctree::updateIds(int layerNo, const std::vector<ViewIndep
                     (*octrees[layerNo])(idX,idY,idZ).id = findIdInVocabulary((*octrees[layerNo]).at(idX,idY,idZ), vocabulary);
                     if ((*octrees[layerNo])(idX,idY,idZ).layerId==5){//compute distance from centroid
                         Mat34 off;
-                        ViewIndependentPart::distance(hierarchy.viewIndependentLayers[1][(*octrees[layerNo])(idX,idY,idZ).id], (*octrees[layerNo])(idX,idY,idZ), off, 0);
+                        ViewIndependentPart::distance(hierarchy.viewIndependentLayers[1][(*octrees[layerNo])(idX,idY,idZ).id], (*octrees[layerNo])(idX,idY,idZ), off);
                         (*octrees[layerNo])(idX,idY,idZ).offset = off;
                         //std::cout << "old id " << idOld << ", new id " << (*octrees[layerNo])(idX,idY,idZ).id << "\n";
                         //std::cout << "offset \n" << (*octrees[layerNo])(idX,idY,idZ).offset.matrix() << "\n";
@@ -165,7 +165,7 @@ void ObjectCompositionOctree::updateIds(int layerNo, const std::vector<ViewIndep
                     }
                     if ((*octrees[layerNo])(idX,idY,idZ).layerId==6){//compute distance from centroid
                         Mat34 off;
-                        ViewIndependentPart::distance(hierarchy.viewIndependentLayers[2][(*octrees[layerNo])(idX,idY,idZ).id], (*octrees[layerNo])(idX,idY,idZ), hierarchy.viewIndependentLayers[1], off, 0);
+                        ViewIndependentPart::distance(hierarchy.viewIndependentLayers[2][(*octrees[layerNo])(idX,idY,idZ).id], (*octrees[layerNo])(idX,idY,idZ), hierarchy.viewIndependentLayers[1], off);
                         (*octrees[layerNo])(idX,idY,idZ).offset = off;
                         //std::cout << "old id " << idOld << ", new id " << (*octrees[layerNo])(idX,idY,idZ).id << "\n";
                         //std::cout << "offset \n" << (*octrees[layerNo])(idX,idY,idZ).offset.matrix() << "\n";

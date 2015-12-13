@@ -215,7 +215,7 @@ public:
     friend std::istream& operator>>(std::istream& is, Gaussian3D& gaussian);
 
     /// Construction
-    Gaussian3D(){};
+    Gaussian3D() : mean(Vec3::Zero()), covariance(Mat33::Zero()){};
 };
 
 /// 3D Gaussian (SE3)

@@ -108,6 +108,8 @@ public:
             bool PCAuseClustering;
             /// create two clusters and check distance between them. If distance is PCARelDistClusters times larger than width of the front cluster run PCA
             double PCARelDistClusters;
+            /// use Euclidean coordinates to define part position
+            bool useEuclideanCoordinates;
     };
 
 private:

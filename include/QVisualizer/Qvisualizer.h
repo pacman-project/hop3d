@@ -65,6 +65,7 @@ public:
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("filterDepthScale", &filterDepthScale);
             model->FirstChildElement( "hierarchy" )->QueryBoolAttribute("draw3Dobjects", &draw3Dobjects);
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("voxelSize", &voxelSize);
+            model->FirstChildElement( "hierarchy" )->QueryBoolAttribute("useEuclideanCoordinates", &useEuclideanCoordinates);
 
             int layersNo=7;
             partDist.resize(layersNo);
@@ -159,6 +160,8 @@ public:
         int verbose;
         /// scale depth of filter patches
         double filterDepthScale;
+        /// use Euclidean coordinates to define part position
+        bool useEuclideanCoordinates;
         /// draw normals
         bool drawNormals;
         /// normals color
