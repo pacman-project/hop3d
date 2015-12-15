@@ -190,7 +190,7 @@ public:
     friend std::istream& operator>>(std::istream& is, GaussianSE3& gaussian);
 
     /// Construction
-    GaussianSE3(){};
+    GaussianSE3() : mean(Vec6::Zero()), covariance(Mat66::Zero()){}
 
 protected:
     /// normalize quaternion

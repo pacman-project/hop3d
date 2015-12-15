@@ -229,7 +229,10 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
         for (auto itCentr = centroids.begin();itCentr!=centroids.end();itCentr++){//for each cluster
             double dist = 0;
             if (it->layerId==2){//compute distance from centroid
-                dist = ViewDependentPart::distance(*it,dictionary[*itCentr],hierarchy.firstLayer, config.distanceMetric);
+                if (config.distanceMetric==3)
+                    dist=ViewDependentPart::distanceInvariant(*it,dictionary[*itCentr], config.distanceMetric);
+                else
+                    dist = ViewDependentPart::distance(*it,dictionary[*itCentr],hierarchy.firstLayer, config.distanceMetric);
             }
             else if (it->layerId==3){//compute distance from centroid
                 dist = ViewDependentPart::distance(*it,dictionary[*itCentr], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
@@ -306,7 +309,10 @@ int PartSelectorMean::centerOfCluster(const std::set<int>& cluster, const ViewDe
         for (auto& id2 : cluster){//compute mean dist for each part as a centroid
             double dist=0;
             if (vocabulary[id].layerId==2){
-                dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2],hierarchy.firstLayer, config.distanceMetric);
+                if (config.distanceMetric==3)
+                    dist=ViewDependentPart::distanceInvariant(vocabulary[id],vocabulary[id2], config.distanceMetric);
+                else
+                    dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2],hierarchy.firstLayer, config.distanceMetric);
             }
             else if (vocabulary[id].layerId==3){
                 dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
@@ -332,7 +338,10 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
             for (auto itPart2 = cluster.begin(); itPart2!=cluster.end();itPart2++){//compute mean dist for each part as a centroid
                 double dist=0;
                 if (itPart->layerId==2){
-                    dist=ViewDependentPart::distance(*itPart,*itPart2,hierarchy.firstLayer, config.distanceMetric);
+                    if (config.distanceMetric==3)
+                        dist=ViewDependentPart::distanceInvariant(*itPart,*itPart2, config.distanceMetric);
+                    else
+                        dist=ViewDependentPart::distance(*itPart,*itPart2,hierarchy.firstLayer, config.distanceMetric);
                 }
                 else if (itPart->layerId==3){
                     dist=ViewDependentPart::distance(*itPart,*itPart2, hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);

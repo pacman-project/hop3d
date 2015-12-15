@@ -311,78 +311,101 @@ Mat33 ViewIndependentPart::coordinateFromNormal(const Vec3& _normal){
     return R;
 }
 
+///find optimal transformation between normals
+double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, Mat34& transOpt){
+    std::vector<std::pair<int, int>> pointCorrespondence = {{0,0}, {0,1}, {0,2}, {1,2}, {2,2}, {2,1}, {2,0}, {1,0}};
+    double minDist = std::numeric_limits<double>::max();
+    Mat34 trans;
+    for (size_t i=0;i<pointCorrespondence.size();i++){
+        int pairsNo=0;
+        std::vector<Vec3> setA; std::vector<Vec3> setB;
+        int idx=i;
+        for (size_t j=0;j<pointCorrespondence.size();j++){
+            int coordA[2]={pointCorrespondence[j].first, pointCorrespondence[j].second};//partA is not rotated
+            int coordB[2]={pointCorrespondence[idx%(pointCorrespondence.size())].first, pointCorrespondence[idx%(pointCorrespondence.size())].second};//partA is not rotated
+            if ((partA.partIds[coordA[0]][coordA[1]]!=-1)&&(partB.partIds[coordB[0]][coordB[1]]!=-1)){
+                pairsNo++;
+                setA.push_back(partA.partsPosNorm[coordA[0]][coordA[1]].mean.block<3,1>(0,0));
+                setB.push_back(partB.partsPosNorm[coordB[0]][coordB[1]].mean.block<3,1>(0,0));
+            }
+            idx++;
+        }
+        if ((partA.partIds[1][1]!=-1)&&(partB.partIds[1][1]!=-1)){
+            pairsNo++;
+            setA.push_back(partA.partsPosNorm[1][1].mean.block<3,1>(0,0));
+            setB.push_back(partB.partsPosNorm[1][1].mean.block<3,1>(0,0));
+        }
+        if (pairsNo>2){ // possible to find SE3 transformation
+            Eigen::MatrixXd pointsA(pairsNo,3);
+            Eigen::MatrixXd pointsB(pairsNo,3);
+            for (int pairNo=0;pairNo<pairsNo;pairNo++){
+                for (int col=0;col<3;col++){
+                    pointsA(pairNo,col) = setA[pairNo](col);
+                    pointsB(pairNo,col) = setB[pairNo](col);
+                }
+            }
+            trans = putslam::KabschEst::computeTrans(pointsA, pointsB);
+            double error = computeError(partA, partB, trans);
+            if (error<minDist){
+                minDist=error;
+                transOpt = trans;
+            }
+        }
+    }
+    return minDist;
+}
+
+/// view invariant error for two parts with known SE3 transformation
+double ViewDependentPart::computeError(const ViewDependentPart& partA, const ViewDependentPart& partB, Mat34 transformation){
+    double errorTmp=0;
+    for (size_t i=0; i<partA.partIds.size();i++){
+        for (size_t j=0; j<partA.partIds.size();j++){
+            if ((partA.partIds[i][j]!=-1)&&(partB.partIds[i][j]!=-1)){
+                Eigen::Matrix<double, 4, 1> posPrim;
+                posPrim(0) = partA.partsPosNorm[i][j].mean(0); posPrim(1) = partA.partsPosNorm[i][j].mean(1); posPrim(2) = partA.partsPosNorm[i][j].mean(2); posPrim(3) = 1;
+                posPrim = transformation * posPrim;
+                errorTmp += sqrt((posPrim.block<3,1>(0,0)-partB.partsPosNorm[i][j].mean.block<3,1>(0,0)).transpose()*(posPrim.block<3,1>(0,0)-partB.partsPosNorm[i][j].mean.block<3,1>(0,0)));
+            }
+        }
+    }
+    return errorTmp;
+}
+
 /// compute distance between view dependent parts (invariant version)
 double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric){
     if (partA.partIds==partB.partIds)//fast
         return 0;
-    double sum=0;
-    for (size_t i=0; i<partA.partIds.size();i++){
-        for (size_t j=0; j<partA.partIds.size();j++){
-            double dotprod=0;
-            if ((partA.partIds[i][j]==-1)&&(partB.partIds[i][j]==-1)){
-                dotprod=0;
-                sum+=dotprod;
-            }
-            else if ((partA.partIds[i][j]==-1)||(partB.partIds[i][j]==-1)){
-                dotprod=1;
-                sum+=dotprod;
-            }
-            else{
-                //dotprod=Filter::distance(filters[partA.partIds[i][j]], filters[partB.partIds[i][j]]);
-                Vec3 normA(partA.partsPosNorm[i][j].mean(3), partA.partsPosNorm[i][j].mean(4), partA.partsPosNorm[i][j].mean(5));
-                Vec3 normB(partB.partsPosNorm[i][j].mean(3), partB.partsPosNorm[i][j].mean(4), partB.partsPosNorm[i][j].mean(5));
-                Vec3 posA(partA.partsPosNorm[i][j].mean(0), partA.partsPosNorm[i][j].mean(1), partA.partsPosNorm[i][j].mean(2));
-                Vec3 posB(partB.partsPosNorm[i][j].mean(0), partB.partsPosNorm[i][j].mean(1), partB.partsPosNorm[i][j].mean(2));
-                //std::cout << "normA B " << normA.transpose() << " " << normB.transpose() << "\n";
-                dotprod = acos(normA.adjoint()*normB);
-                //dotprod = sqrt((partA.partsPosNorm[i][j].mean-partB.partsPosNorm[i][j].mean).transpose()*(partA.partsPosNorm[i][j].mean-partB.partsPosNorm[i][j].mean));
-                //std::cout << partA.partsPosNorm[i][j].mean.transpose() << " " << partB.partsPosNorm[i][j].mean.transpose() << "\n";
-                //std::cout << "dotprod " << dotprod << "\n";
-                //if (partA.partIds[1][1]!=-1&&partB.partIds[1][1]!=-1) {
-                    //dotprod-=0.01+Filter::distance(filters[partA.partIds[1][1]], filters[partB.partIds[1][1]]);
-                    Vec3 normCenterA(partA.partsPosNorm[1][1].mean(3), partA.partsPosNorm[1][1].mean(4), partA.partsPosNorm[1][1].mean(5));
-                    Vec3 normCenterB(partB.partsPosNorm[1][1].mean(3), partB.partsPosNorm[1][1].mean(4), partB.partsPosNorm[1][1].mean(5));
-                    //std::cout << "norm CA CB " << normCenterA.transpose() << " " << normCenterB.transpose() << "\n";
-                    dotprod -= acos(normCenterA.adjoint()*normCenterB);
-                    //Vec3 centerPosA(partA.partsPosNorm[1][1].mean(0), partA.partsPosNorm[1][1].mean(1), partA.partsPosNorm[1][1].mean(2));
-                    //Vec3 centerPosB(partB.partsPosNorm[1][1].mean(0), partB.partsPosNorm[1][1].mean(1), partB.partsPosNorm[1][1].mean(2));
-                    //double dotprod1 = sqrt((partA.partsPosNorm[1][1].mean-partB.partsPosNorm[1][1].mean).transpose()*(partA.partsPosNorm[1][1].mean-partB.partsPosNorm[1][1].mean));
-                    dotprod=fabs(dotprod);
-                    //std::cout << "dotprod1 " << i << ", " << j << " " << dotprod << "\n";
-                    //getchar();
-                //}
-                if (i!=1&&j!=1){
-                    sum+=dotprod;
-                }
-                // compute mahalanobis distance
-                /*if (i!=1&&j!=1){
-                    if (distanceMetric==0){//dotproduct
-                        sum+=dotprod;
-                    }
-                    else {
-                        double mahalanobisDist;
-                        double euclDist;
-                        if (partA.gaussians[i][j].covariance(0,0)>0&&partB.gaussians[i][j].covariance(0,0)>0){
-                            // compute Mahalanobis distance
-                            mahalanobisDist = sqrt((partA.gaussians[i][j].mean-partB.gaussians[i][j].mean).transpose()*((partA.gaussians[i][j].covariance+partB.gaussians[i][j].covariance)/2.0).inverse()*(partA.gaussians[i][j].mean-partB.gaussians[i][j].mean));
-                            if (distanceMetric==2){//mahalanobis
-                                sum+=dotprod*exp(mahalanobisDist);
-                            }
-                        }
-                        else {// compute Euclidean distance
-                            euclDist = sqrt((partA.gaussians[i][j].mean-partB.gaussians[i][j].mean).transpose()*(partA.gaussians[i][j].mean-partB.gaussians[i][j].mean));
-                            if (distanceMetric==1||distanceMetric==2){// Euclidean or Mahalanobis
-                                sum+=dotprod*exp(euclDist);
-                            }
-                        }
-                    }
-                }
-                else
-                    sum+=dotprod;
-                    */
-            }
+    Mat34 transOpt;
+    ViewDependentPart partC;
+    ViewDependentPart partD;
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            partC.partIds[i][j]=i;
+            partD.partIds[i][j]=j+i+1;
         }
     }
+    partC.partsPosNorm[0][0].mean << -0.1,0.1,0,0,0,1;    partC.partsPosNorm[0][1].mean << 0,0.1,0,0,0,1;    partC.partsPosNorm[0][2].mean << 0.1,0.1,0,0,0,1;
+    partD.partsPosNorm[0][0].mean << -0.0,0.1,0,0,0,1;    partD.partsPosNorm[0][1].mean << 0.1,0.1,0,0,0,1;    partD.partsPosNorm[0][2].mean << 0.2,0.1,0,0,0,1;
+
+    partC.partsPosNorm[1][0].mean << -0.1,0.0,0,0,0,1;    partC.partsPosNorm[1][1].mean << 0,0.0,0,0,0,1;    partC.partsPosNorm[1][2].mean << 0.1,0.0,0,0,0,1;
+    partD.partsPosNorm[1][0].mean << -0.0,0.0,0,0,0,1;    partD.partsPosNorm[1][1].mean << 0.1,0.0,0,0,0,1;    partD.partsPosNorm[1][2].mean << 0.2,0.0,0,0,0,1;
+
+    partC.partsPosNorm[2][0].mean << -0.1,-0.1,0,0,0,1;    partC.partsPosNorm[2][1].mean << 0,-0.1,0,0,0,1;    partC.partsPosNorm[2][2].mean << 0.1,-0.1,0,0,0,1;
+    partD.partsPosNorm[2][0].mean << -0.0,-0.1,0,0,0,1;    partD.partsPosNorm[2][1].mean << 0.1,-0.1,0,0,0,1;    partD.partsPosNorm[2][2].mean << 0.2,-0.1,0,0,0,1;
+
+    /*for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            std::cout << partC.partsPosNorm[i][j].mean.transpose() << "\n";
+        }
+    }
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            std::cout << partD.partsPosNorm[i][j].mean.transpose() << "\n";
+        }
+    }*/
+    double sum = findOptimalTransformation(partA, partB, transOpt);
+    //std::cout << "optimal transformation: \n" << transOpt.matrix() << "\n";
+    //std::cout << "error " << sum << "\n";
     return sum;
 }
 
@@ -405,7 +428,7 @@ double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDep
             else{
                 dotprod=Filter::distance(filters[partA.partIds[i][j]], filters[partB.partIds[i][j]]);
                 if (partA.partIds[1][1]!=-1&&partB.partIds[1][1]!=-1) {
-                    dotprod-=0.01+Filter::distance(filters[partA.partIds[1][1]], filters[partB.partIds[1][1]]);
+                    dotprod=0.01+Filter::distance(filters[partA.partIds[1][1]], filters[partB.partIds[1][1]]);
                 }
                 if (i!=1&&j!=1){
                     sum+=dotprod;

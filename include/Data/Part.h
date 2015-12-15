@@ -1,10 +1,12 @@
 #ifndef DATA_PART_H
 #define DATA_PART_H
-#include <iostream>
-#include <memory>
-#include <vector>
 
 #include "Data/Defs.h"
+#include "Utilities/kabschEst.h"
+
+#include <memory>
+#include <vector>
+#include <iostream>
 
 namespace hop3d {
 
@@ -88,6 +90,9 @@ public:
         Part(_id, _layerId, PART_VIEW_DEP), location(_location){
     }
 
+    ///find optimal transformation between normals
+    static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, Mat34& transOpt);
+
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters, int distanceMetric);
 
@@ -96,6 +101,9 @@ public:
 
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters, int distanceMetric);
+
+    /// view invariant error for two parts with known SE3 transformation
+    static double computeError(const ViewDependentPart& partA, const ViewDependentPart& partB, Mat34 transformation);
 
     ///get normal vector related to that part
     void getNormal(Vec3& normal, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters) const;
