@@ -156,6 +156,9 @@ private:
     /// compute max response for the most numerous group in the window
     bool findMaxGroupResponse(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Octet& octet, int idx, int idy) const;
 
+    /// compute mean response in the window
+    bool findMeanResponse(const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Octet& octet, int idx, int idy) const;
+
     /// Fill in octet
     void fillInOctet(const OctetsImage& octetsImage, const ViewDependentPart::Seq& dictionary, int u, int v, Octet& octet) const;
 
@@ -185,6 +188,9 @@ private:
 
     /// check if octet is background
     bool isBackground(OctetsImage& octetsImage, int u, int v) const;
+
+    /// compute max response in the window
+    bool computeNormalStats(const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Vec6& mean, Mat66& cov) const;
 };
 
 }

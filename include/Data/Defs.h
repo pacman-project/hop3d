@@ -165,6 +165,42 @@ public:
     PartCoords(int _filterId, ImageCoordsDepth _coords) : filterId(_filterId), coords(_coords) {}
 };
 
+
+/// 3D Gaussian (SE3)
+class GaussianSE3{
+public:
+    /// set of SE3 Gaussians
+    typedef std::vector<GaussianSE3> Seq;
+
+    /// position
+    Vec6 mean;
+    /// covariance matrix
+    Mat66 covariance;
+
+    /// functions to handle the toVector of the whole transformations
+    Vec6 toVector(const Mat34& t);
+
+    /// function which creates se3 homogenous transformation from vector
+    Mat34 fromVector(const Vec6& v);
+
+    // Insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const GaussianSE3& gaussian);
+
+    // Extraction operator
+    friend std::istream& operator>>(std::istream& is, GaussianSE3& gaussian);
+
+    /// Construction
+    GaussianSE3(){};
+
+protected:
+    /// normalize quaternion
+    Eigen::Quaterniond& normalize(Eigen::Quaterniond& q);
+    /// rotation matrix SO(3) to vector3
+    Vec3 toCompactQuaternion(const Mat33& R);
+    /// rotation matrix from compact quaternion
+    Mat33 fromCompactQuaternion(const Vec3& v);
+};
+
 /// Octet representation
 class Octet {
 public:
@@ -179,6 +215,8 @@ public:
     std::array<std::array<ImageCoordsDepth,3>,3> filterPos;
     /// position of parts (x, y, depth)
     std::array<std::array<Vec3,3>,3> partsPosEucl;
+    /// position and normal
+    std::array<std::array<GaussianSE3,3>,3> partsPosNorm;
     /// camera pose Id
     int poseId;
     ///is background
@@ -216,41 +254,6 @@ public:
 
     /// Construction
     Gaussian3D() : mean(Vec3::Zero()), covariance(Mat33::Zero()){};
-};
-
-/// 3D Gaussian (SE3)
-class GaussianSE3{
-public:
-    /// set of SE3 Gaussians
-    typedef std::vector<GaussianSE3> Seq;
-
-    /// position
-    Vec6 mean;
-    /// covariance matrix
-    Mat66 covariance;
-
-    /// functions to handle the toVector of the whole transformations
-    Vec6 toVector(const Mat34& t);
-
-    /// function which creates se3 homogenous transformation from vector
-    Mat34 fromVector(const Vec6& v);
-
-    // Insertion operator
-    friend std::ostream& operator<<(std::ostream& os, const GaussianSE3& gaussian);
-
-    // Extraction operator
-    friend std::istream& operator>>(std::istream& is, GaussianSE3& gaussian);
-
-    /// Construction
-    GaussianSE3(){};
-
-protected:
-    /// normalize quaternion
-    Eigen::Quaterniond& normalize(Eigen::Quaterniond& q);
-    /// rotation matrix SO(3) to vector3
-    Vec3 toCompactQuaternion(const Mat33& R);
-    /// rotation matrix from compact quaternion
-    Mat33 fromCompactQuaternion(const Vec3& v);
 };
 
 /// Set of images

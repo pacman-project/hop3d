@@ -72,6 +72,9 @@ public:
     /// Gaussians related to positions of neighbouring parts
     std::array<std::array<Gaussian3D,3>,3> gaussians;
 
+    /// position and normal
+    std::array<std::array<GaussianSE3,3>,3> partsPosNorm;
+
     /// part aggregated from the same level vocabulary
     std::vector<ViewDependentPart> group;
 
@@ -87,6 +90,9 @@ public:
 
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters, int distanceMetric);
+
+    /// compute distance between view dependent parts
+    static double distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric);
 
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters, int distanceMetric);

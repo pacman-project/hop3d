@@ -303,6 +303,7 @@ bool NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >&
                 if (findMaxResponse(responseImg, cloudOrd, u+i*config.filterSize, v+j*config.filterSize, octet, i+1, j+1))
                     elementsNo++;
             }
+            findMeanResponse(cloudOrd, u+i*config.filterSize, v+j*config.filterSize, octet, i+1, j+1);
         }
     }
     if (elementsNo>config.minOctetSize){//set relative position for octets
@@ -323,6 +324,7 @@ bool NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >&
 //set relative position for octets
 void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) const{
     double meanDepth=0;
+    Vec6 meanPosNorm(Vec6::Zero());
     double min=std::numeric_limits<double>::max();
     double max=std::numeric_limits<double>::min();
     //double globU=0, globV=0;
@@ -332,6 +334,7 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
             for (int j=0;j<3;j++){
                 if (octet.partIds[i][j]!=-1){
                     meanDepth+= octet.filterPos[i][j].depth;
+                    meanPosNorm+=octet.partsPosNorm[i][j].mean;
                     if (min>octet.filterPos[i][j].depth){
                         min = octet.filterPos[i][j].depth;
                         //globU = octet.filterPos[i][j].u;
@@ -345,7 +348,12 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
             }
         }
         meanDepth /= double(depthNo);
+        meanPosNorm /= double(depthNo);
+        Vec3 normMean(meanPosNorm(3), meanPosNorm(4), meanPosNorm(5));
+        normMean.normalize();
+        meanPosNorm(3) = normMean(0); meanPosNorm(4) = normMean(1); meanPosNorm(5) = normMean(2);
         octet.filterPos[1][1].depth = meanDepth;
+        octet.partsPosNorm[1][1].mean = meanPosNorm;
         if (config.useEuclideanCoordinates)
             octet.partsPosEucl[1][1](2) = meanDepth;
         //octet.filterPos[1][1].depth = min;
@@ -372,10 +380,49 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
                     octet.filterPos[i][j].u-=octet.filterPos[1][1].u;
                     octet.filterPos[i][j].v-=octet.filterPos[1][1].v;
                     octet.filterPos[i][j].depth-=octet.filterPos[1][1].depth;
+                    octet.partsPosNorm[i][j].mean-=octet.partsPosNorm[1][1].mean;//should be boxplus
                 }
             }
         }
     }
+}
+
+/// compute max response in the window
+bool NormalImageFilter::computeNormalStats(const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Vec6& mean, Mat66& cov) const{
+    mean = Vec6::Zero();
+    bool isBackground=true;
+    int normalsNo=0;
+    for (int i=-config.filterSize/2;i<1+config.filterSize/2;i++){
+        for (int j=-config.filterSize/2;j<1+config.filterSize/2;j++){
+            if ((!std::isnan(double(cloudOrd[u+i][v+j].normal(2))))&&(!std::isnan(double(cloudOrd[u+i][v+j].position(0))))){
+                Vec6 posNorm;
+                posNorm << cloudOrd[u+i][v+j].position, cloudOrd[u+i][v+j].normal;
+                mean+=posNorm;
+                isBackground = false;
+                normalsNo++;
+            }
+        }
+    }
+    if (normalsNo<2)
+        return false;
+    mean*=(1.0/double(normalsNo));
+    cov.setZero();
+    for (int i=-config.filterSize/2;i<1+config.filterSize/2;i++){
+        for (int j=-config.filterSize/2;j<1+config.filterSize/2;j++){
+            if ((!std::isnan(double(cloudOrd[u+i][v+j].normal(2))))&&(!std::isnan(double(cloudOrd[u+i][v+j].position(0))))){
+                Vec6 posNorm;
+                posNorm << cloudOrd[u+i][v+j].position, cloudOrd[u+i][v+j].normal;
+                cov+=(posNorm-mean)*(posNorm-mean).transpose();
+            }
+        }
+    }
+    cov*=(1.0/double(normalsNo));
+    return !isBackground;// succes if not background
+}
+
+/// compute mean response in the window
+bool NormalImageFilter::findMeanResponse(const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Octet& octet, int idx, int idy) const{
+    return computeNormalStats(cloudOrd, u, v, octet.partsPosNorm[idx][idy].mean, octet.partsPosNorm[idx][idy].covariance);
 }
 
 /// compute max response in the window

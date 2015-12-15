@@ -45,6 +45,7 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, i
     for (auto it = groups.begin(); it!=groups.end(); it++){ //compute statistics
         ViewDependentPart part;
         computeGaussians(*it, part);
+        part.partsPosNorm = it->back().partsPosNorm;//todo compute statistic
         part.partIds=it->back().partIds;//copy octet
         part.layerId = layerNo;
         part.id = (int)partId;
