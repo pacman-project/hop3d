@@ -345,7 +345,7 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
                 }
             }
             trans = putslam::KabschEst::computeTrans(pointsA, pointsB);
-            double error = computeError(partA, partB, trans);
+            double error = computeError(partA, partB, trans, 3, 0.05);
             if (error<minDist){
                 minDist=error;
                 transOpt = trans;
@@ -356,19 +356,37 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
 }
 
 /// view invariant error for two parts with known SE3 transformation
-double ViewDependentPart::computeError(const ViewDependentPart& partA, const ViewDependentPart& partB, Mat34 transformation){
-    double errorTmp=0;
+double ViewDependentPart::computeError(const ViewDependentPart& partA, const ViewDependentPart& partB, const Mat34& transformation, int type, double coeff){
+    double errorRot=0;
+    double errorPos=0;
     for (size_t i=0; i<partA.partIds.size();i++){
         for (size_t j=0; j<partA.partIds.size();j++){
             if ((partA.partIds[i][j]!=-1)&&(partB.partIds[i][j]!=-1)){
-                Eigen::Matrix<double, 4, 1> posPrim;
-                posPrim(0) = partA.partsPosNorm[i][j].mean(0); posPrim(1) = partA.partsPosNorm[i][j].mean(1); posPrim(2) = partA.partsPosNorm[i][j].mean(2); posPrim(3) = 1;
-                posPrim = transformation * posPrim;
-                errorTmp += sqrt((posPrim.block<3,1>(0,0)-partB.partsPosNorm[i][j].mean.block<3,1>(0,0)).transpose()*(posPrim.block<3,1>(0,0)-partB.partsPosNorm[i][j].mean.block<3,1>(0,0)));
+                if ((type == 1)||((type == 3))){
+                    Eigen::Matrix<double, 4, 1> posPrim;
+                    posPrim(0) = partA.partsPosNorm[i][j].mean(0); posPrim(1) = partA.partsPosNorm[i][j].mean(1); posPrim(2) = partA.partsPosNorm[i][j].mean(2); posPrim(3) = 1;
+                    posPrim = transformation * posPrim;
+                    errorPos+= sqrt((posPrim.block<3,1>(0,0)-partB.partsPosNorm[i][j].mean.block<3,1>(0,0)).transpose()*(posPrim.block<3,1>(0,0)-partB.partsPosNorm[i][j].mean.block<3,1>(0,0)));
+                }
+                if ((type == 2)||((type == 3))){
+                    double anglePart = acos((transformation.rotation()*partA.partsPosNorm[i][j].mean.block<3,1>(3,0)).adjoint()*partB.partsPosNorm[i][j].mean.block<3,1>(3,0));
+                    double angleCenter = acos((transformation.rotation()*partA.partsPosNorm[1][1].mean.block<3,1>(3,0)).adjoint()*partB.partsPosNorm[1][1].mean.block<3,1>(3,0));
+                    errorRot+=fabs(anglePart-angleCenter);
+                    //std::cout << "error tmp " << errorTmp << "\n";
+                }
+            }
+            else if ((partA.partIds[i][j]==-1)||(partB.partIds[i][j]==-1)){
+                errorPos+=coeff;
+                errorRot+=coeff;
             }
         }
     }
-    return errorTmp;
+    //std::cout << "distpos " << errorPos << " dist rot: " << errorRot << "\n";
+    //getchar();
+    /*std::cout << transformation.matrix() << "\n";
+    std::cout << "error final " << errorTmp << "\n";
+    getchar();*/
+    return errorPos+coeff*errorRot;
 }
 
 /// compute distance between view dependent parts (invariant version)
@@ -376,7 +394,7 @@ double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, cons
     if (partA.partIds==partB.partIds)//fast
         return 0;
     Mat34 transOpt;
-    ViewDependentPart partC;
+    /*ViewDependentPart partC;
     ViewDependentPart partD;
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
@@ -384,16 +402,16 @@ double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, cons
             partD.partIds[i][j]=j+i+1;
         }
     }
-    partC.partsPosNorm[0][0].mean << -0.1,0.1,0,0,0,1;    partC.partsPosNorm[0][1].mean << 0,0.1,0,0,0,1;    partC.partsPosNorm[0][2].mean << 0.1,0.1,0,0,0,1;
-    partD.partsPosNorm[0][0].mean << -0.0,0.1,0,0,0,1;    partD.partsPosNorm[0][1].mean << 0.1,0.1,0,0,0,1;    partD.partsPosNorm[0][2].mean << 0.2,0.1,0,0,0,1;
+    partC.partsPosNorm[0][0].mean << -0.1,-0.1,0,0,0,1;    partC.partsPosNorm[0][1].mean << 0,0.1,0,0,0,1;    partC.partsPosNorm[0][2].mean << 0.1,0.1,0,0,0,1;
+    partD.partsPosNorm[0][0].mean << -0.0,0.1,0,0,-0.78,0.78;    partD.partsPosNorm[0][1].mean << 0.1,0.1,0,0,0,1;    partD.partsPosNorm[0][2].mean << 0.2,0.1,0,0,-0.78,0.78;
 
     partC.partsPosNorm[1][0].mean << -0.1,0.0,0,0,0,1;    partC.partsPosNorm[1][1].mean << 0,0.0,0,0,0,1;    partC.partsPosNorm[1][2].mean << 0.1,0.0,0,0,0,1;
-    partD.partsPosNorm[1][0].mean << -0.0,0.0,0,0,0,1;    partD.partsPosNorm[1][1].mean << 0.1,0.0,0,0,0,1;    partD.partsPosNorm[1][2].mean << 0.2,0.0,0,0,0,1;
+    partD.partsPosNorm[1][0].mean << -0.0,0.1,0,0,-0.78,0.78;    partD.partsPosNorm[1][1].mean << 0.1,0.0,0,0,0,1;    partD.partsPosNorm[1][2].mean << 0.2,0.0,0,0,-0.78,0.78;
 
     partC.partsPosNorm[2][0].mean << -0.1,-0.1,0,0,0,1;    partC.partsPosNorm[2][1].mean << 0,-0.1,0,0,0,1;    partC.partsPosNorm[2][2].mean << 0.1,-0.1,0,0,0,1;
-    partD.partsPosNorm[2][0].mean << -0.0,-0.1,0,0,0,1;    partD.partsPosNorm[2][1].mean << 0.1,-0.1,0,0,0,1;    partD.partsPosNorm[2][2].mean << 0.2,-0.1,0,0,0,1;
+    partD.partsPosNorm[2][0].mean << -0.0,0.1,0,0,-0.78,0.78;    partD.partsPosNorm[2][1].mean << 0.1,-0.1,0,0,0,1;    partD.partsPosNorm[2][2].mean << 0.2,-0.1,0,0,-0.78,0.78;
 
-    /*for (int i=0;i<3;i++){
+    for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             std::cout << partC.partsPosNorm[i][j].mean.transpose() << "\n";
         }
@@ -404,8 +422,9 @@ double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, cons
         }
     }*/
     double sum = findOptimalTransformation(partA, partB, transOpt);
-    //std::cout << "optimal transformation: \n" << transOpt.matrix() << "\n";
-    //std::cout << "error " << sum << "\n";
+    /*std::cout << "optimal transformation: \n" << transOpt.matrix() << "\n";
+    std::cout << "error " << sum << "\n";
+    getchar();*/
     return sum;
 }
 

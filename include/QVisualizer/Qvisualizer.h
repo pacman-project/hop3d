@@ -277,6 +277,9 @@ private:
     /// Update 3D object models
     void update3Dobjects(void);
 
+    /// draw flat patch
+    void drawPatch(const hop3d::Vec3& normal) const;
+
     /// Draw point clouds
     void drawPointClouds(void);
 
@@ -305,7 +308,7 @@ private:
     GLuint createBackgroundList(int layerNo);
 
     /// Create view independent part list
-    GLuint createPartList(hop3d::ViewDependentPart& part, int layerNo);
+    GLuint createPartList(const hop3d::ViewDependentPart& part, int layerNo);
 
     /// Create point cloud List
     GLuint createVIPartList(hop3d::ViewIndependentPart& part, int layerNo);

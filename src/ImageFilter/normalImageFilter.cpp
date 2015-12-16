@@ -303,7 +303,7 @@ bool NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >&
                 if (findMaxResponse(responseImg, cloudOrd, u+i*config.filterSize, v+j*config.filterSize, octet, i+1, j+1))
                     elementsNo++;
             }
-            findMeanResponse(cloudOrd, u+i*config.filterSize, v+j*config.filterSize, octet, i+1, j+1);
+            //findMeanResponse(cloudOrd, u+i*config.filterSize, v+j*config.filterSize, octet, i+1, j+1);
         }
     }
     if (elementsNo>config.minOctetSize){//set relative position for octets
@@ -380,7 +380,7 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
                     octet.filterPos[i][j].u-=octet.filterPos[1][1].u;
                     octet.filterPos[i][j].v-=octet.filterPos[1][1].v;
                     octet.filterPos[i][j].depth-=octet.filterPos[1][1].depth;
-                    octet.partsPosNorm[i][j].mean-=octet.partsPosNorm[1][1].mean;//should be boxplus
+                    octet.partsPosNorm[i][j].mean.block<3,1>(0,0)-=octet.partsPosNorm[1][1].mean.block<3,1>(0,0);//should be boxplus
                 }
             }
         }
@@ -406,6 +406,7 @@ bool NormalImageFilter::computeNormalStats(const std::vector< std::vector<hop3d:
     if (normalsNo<2)
         return false;
     mean*=(1.0/double(normalsNo));
+    mean.block<3,1>(3,0).normalized();
     cov.setZero();
     for (int i=-config.filterSize/2;i<1+config.filterSize/2;i++){
         for (int j=-config.filterSize/2;j<1+config.filterSize/2;j++){
@@ -449,7 +450,7 @@ bool NormalImageFilter::findMaxResponse(const std::vector< std::vector<Response>
 /// compute max response for the most numerous group in the window
 bool NormalImageFilter::findMaxGroupResponse(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Octet& octet, int idx, int idy) const{
     octet.responses[idx][idy]=-1;    octet.partIds[idx][idy]=-1;
-    std::map<int,int> occurencesMap;
+    std::map<int,int> occurencesMap;//filter id and number of occurences
     for (int i=-config.filterSize/2;i<1+config.filterSize/2;i++){
         for (int j=-config.filterSize/2;j<1+config.filterSize/2;j++){
             std::pair<std::map<int,int>::iterator,bool> ret;
@@ -473,6 +474,9 @@ bool NormalImageFilter::findMaxGroupResponse(const std::vector< std::vector<Resp
             if (occur.second==maxCount)
                 maxIds.push_back(occur.first);
         }
+        Vec3 meanPos(0,0,0);
+        Vec3 meanNormal(0,0,0);
+        int pointsNo=0;
         for (int i=-config.filterSize/2;i<1+config.filterSize/2;i++){
             for (int j=-config.filterSize/2;j<1+config.filterSize/2;j++){
                 if ((responseImg[u+i][v+j].second>octet.responses[idx][idy])&&(std::find(maxIds.begin(), maxIds.end(), responseImg[u+i][v+j].first) != maxIds.end())){
@@ -481,11 +485,23 @@ bool NormalImageFilter::findMaxGroupResponse(const std::vector< std::vector<Resp
                     ImageCoordsDepth coord;
                     coord.u = v+j; coord.v = u+i; coord.depth = cloudOrd[u+i][v+j].position(2);
                     octet.filterPos[idx][idy] = coord;
-                    if (config.useEuclideanCoordinates)
-                        sensorModel.getPoint(coord.u, coord.v, coord.depth, octet.partsPosEucl[idx][idy]);
+                    //if (config.useEuclideanCoordinates)
+                    sensorModel.getPoint(coord.u, coord.v, coord.depth, octet.partsPosEucl[idx][idy]);
+                    meanPos+=octet.partsPosEucl[idx][idy];
+                    meanNormal += cloudOrd[u+i][v+j].normal;
+                    pointsNo++;
                     isBackground = false;
                 }
             }
+        }
+        if (pointsNo>0){
+            meanPos/=double(pointsNo);
+            meanNormal/=double(pointsNo);
+            meanNormal.normalize();
+            octet.partsPosNorm[idx][idy].mean.block<3,1>(0,0)=meanPos;
+            octet.partsPosNorm[idx][idy].mean.block<3,1>(3,0)=meanNormal;
+            //std::cout << "pos no " << pointsNo << " " << meanPos.transpose() << " " << meanNormal.transpose() << "\n";
+            //getchar();
         }
     }
     return !isBackground;// succes if not background

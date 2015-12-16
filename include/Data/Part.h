@@ -103,7 +103,7 @@ public:
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters, int distanceMetric);
 
     /// view invariant error for two parts with known SE3 transformation
-    static double computeError(const ViewDependentPart& partA, const ViewDependentPart& partB, Mat34 transformation);
+    static double computeError(const ViewDependentPart& partA, const ViewDependentPart& partB, const Mat34& transformation, int type, double coeff);
 
     ///get normal vector related to that part
     void getNormal(Vec3& normal, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters) const;

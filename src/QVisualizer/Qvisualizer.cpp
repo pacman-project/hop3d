@@ -461,7 +461,7 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
 }
 
 /// Create point cloud List
-GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
+GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo){
     // create one display list
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
@@ -485,7 +485,7 @@ GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
                 pos(1)=config.pixelSize*double(double(n)-1.0)*(patchSize+(patchSize/2.0));
                 pos(2)=0;
             }*/
-            double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
+            /*double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
             //std::cout << id << " pos " << pos.transpose() << "\n";
             glPushMatrix();
                 glMultMatrixd(GLmat);
@@ -494,8 +494,21 @@ GLuint QGLVisualizer::createPartList(ViewDependentPart& part, int layerNo){
                     glCallList(backgroundList[layerNo-1]);
                 }
                 else{
-                    //glColor3ub(200,200,200);
+                    glColor3ub(1,0,0);
                     glCallList(cloudsListLayers[layerNo-1][id]);
+                }
+            glPopMatrix();*/
+            Vec3 posPart(part.partsPosNorm[n][m].mean.block<3,1>(0,0));
+            double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1), posPart(2), 1};
+            glPushMatrix();
+                glMultMatrixd(GLmat1);
+                if (id==-1){
+                    //glColor3ub(100,50,50);
+                    glCallList(backgroundList[layerNo-1]);
+                }
+                else{
+                    glColor3d(0.5,0.5,0.5);
+                    drawPatch(Vec3(part.partsPosNorm[n][m].mean.block<3,1>(3,0)));
                 }
             glPopMatrix();
         }
@@ -726,18 +739,31 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                     pos(0)=config.pixelSize*double(double(n)-1.0)*5.0;
                     pos(1)=config.pixelSize*double(double(m)-1.0)*5.0;
                 }*/
-                double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
+                int id = itComp->partIds[n][m];
+                /*double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
+                //std::cout << id << " pos " << pos.transpose() << "\n";
                 glPushMatrix();
                     glMultMatrixd(GLmat);
-                    //glColor4d(config.clustersColor.red(), config.clustersColor.green(), config.clustersColor.blue(), config.clustersColor.alpha());
-                    int id = itComp->partIds[n][m];
                     if (id==-1){
                         //glColor3ub(100,50,50);
                         glCallList(backgroundList[layerNo-1]);
                     }
                     else{
-                        //glColor3ub(200,200,200);
+                        glColor3ub(1,0,0);
                         glCallList(cloudsListLayers[layerNo-1][id]);
+                    }
+                glPopMatrix();*/
+                Vec3 posPart(itComp->partsPosNorm[n][m].mean.block<3,1>(0,0));
+                double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), posPart(2), 1};
+                glPushMatrix();
+                    glMultMatrixd(GLmat1);
+                    if (id==-1){
+                        //glColor3ub(100,50,50);
+                        glCallList(backgroundList[layerNo-1]);
+                    }
+                    else{
+                        glColor3d(0.5,0.5,0.5);
+                        drawPatch(Vec3(itComp->partsPosNorm[n][m].mean.block<3,1>(3,0)));
                     }
                 glPopMatrix();
             }
@@ -747,6 +773,57 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
     glPopMatrix();
     glEndList();
     return index;
+}
+
+/// draw flat patch
+void QGLVisualizer::drawPatch(const Vec3& normal) const{
+    if (config.drawSurfaces){
+        Mat33 rot = NormalImageFilter::coordinateFromNormal(normal);
+        glBegin(GL_POLYGON);
+        int quadSize=5;
+        Vec3 rightup(quadSize*config.pixelSize,-quadSize*config.pixelSize,-0.0001);
+        rightup=rot*rightup;
+        if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
+        glVertex3d(rightup(0), rightup(1),rightup(2));
+        Vec3 rightdown(quadSize*config.pixelSize,quadSize*config.pixelSize,-0.0001);
+        rightdown=rot*rightdown;
+        if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
+        glVertex3d(rightdown(0), rightdown(1),rightdown(2));
+        Vec3 leftdown(-quadSize*config.pixelSize,quadSize*config.pixelSize,-0.0001);
+        leftdown=rot*leftdown;
+        if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
+        glVertex3d(leftdown(0), leftdown(1), leftdown(2));
+        Vec3 leftup(-quadSize*config.pixelSize,-quadSize*config.pixelSize,-0.0001);
+        leftup=rot*leftup;
+        if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
+        glVertex3d(leftup(0), leftup(1), leftup(2));
+        glEnd();
+        glBegin(GL_POLYGON);
+        Vec3 rightupA(quadSize*config.pixelSize,-quadSize*config.pixelSize,0.0001);
+        rightupA=rot*rightupA;
+        if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
+        glVertex3d(rightupA(0), rightupA(1),rightupA(2));
+        Vec3 leftupA(-quadSize*config.pixelSize,-quadSize*config.pixelSize,0.0001);
+        leftupA=rot*leftupA;
+        if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
+        glVertex3d(leftupA(0), leftupA(1), leftupA(2));
+        Vec3 leftdownA(-quadSize*config.pixelSize,quadSize*config.pixelSize,0.0001);
+        leftdownA=rot*leftdownA;
+        if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
+        glVertex3d(leftdownA(0), leftdownA(1), leftdownA(2));
+        Vec3 rightdownA(quadSize*config.pixelSize,quadSize*config.pixelSize,0.0001);
+        rightdownA=rot*rightdownA;
+        if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
+        glVertex3d(rightdownA(0), rightdownA(1),rightdownA(2));
+        glEnd();
+    }
+    if (config.drawNormals){
+        glBegin(GL_LINES);
+            glColor3d(config.normalsColor.redF(),config.normalsColor.greenF(),config.normalsColor.blueF());
+            glVertex3d(0.0, 0.0, 0.0);
+            glVertex3d(-normal(0)*config.normalsScale, -normal(1)*config.normalsScale, -normal(2)*config.normalsScale);
+        glEnd();
+    }
 }
 
 /// Create point cloud List
@@ -768,54 +845,7 @@ GLuint QGLVisualizer::createCloudList(hop3d::PointCloud& pointCloud, Vec3& norma
             }
             glEnd();
         }
-        if (config.drawSurfaces){
-            glColor3d(0.5,0.5,0.5);
-            Mat33 rot = NormalImageFilter::coordinateFromNormal(normal);
-            glBegin(GL_POLYGON);
-            int quadSize=5;
-            Vec3 rightup(quadSize*config.pixelSize,-quadSize*config.pixelSize,-0.0001);
-            rightup=rot*rightup;
-            if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
-            glVertex3d(rightup(0), rightup(1),rightup(2));
-            Vec3 rightdown(quadSize*config.pixelSize,quadSize*config.pixelSize,-0.0001);
-            rightdown=rot*rightdown;
-            if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
-            glVertex3d(rightdown(0), rightdown(1),rightdown(2));
-            Vec3 leftdown(-quadSize*config.pixelSize,quadSize*config.pixelSize,-0.0001);
-            leftdown=rot*leftdown;
-            if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
-            glVertex3d(leftdown(0), leftdown(1), leftdown(2));
-            Vec3 leftup(-quadSize*config.pixelSize,-quadSize*config.pixelSize,-0.0001);
-            leftup=rot*leftup;
-            if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
-            glVertex3d(leftup(0), leftup(1), leftup(2));
-            glEnd();
-            glBegin(GL_POLYGON);
-            Vec3 rightupA(quadSize*config.pixelSize,-quadSize*config.pixelSize,0.0001);
-            rightupA=rot*rightupA;
-            if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
-            glVertex3d(rightupA(0), rightupA(1),rightupA(2));
-            Vec3 leftupA(-quadSize*config.pixelSize,-quadSize*config.pixelSize,0.0001);
-            leftupA=rot*leftupA;
-            if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
-            glVertex3d(leftupA(0), leftupA(1), leftupA(2));
-            Vec3 leftdownA(-quadSize*config.pixelSize,quadSize*config.pixelSize,0.0001);
-            leftdownA=rot*leftdownA;
-            if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
-            glVertex3d(leftdownA(0), leftdownA(1), leftdownA(2));
-            Vec3 rightdownA(quadSize*config.pixelSize,quadSize*config.pixelSize,0.0001);
-            rightdownA=rot*rightdownA;
-            if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
-            glVertex3d(rightdownA(0), rightdownA(1),rightdownA(2));
-            glEnd();
-        }
-        if (config.drawNormals){
-            glBegin(GL_LINES);
-                glColor3d(config.normalsColor.redF(),config.normalsColor.greenF(),config.normalsColor.blueF());
-                glVertex3d(0.0, 0.0, 0.0);
-                glVertex3d(-normal(0)*config.normalsScale, -normal(1)*config.normalsScale, -normal(2)*config.normalsScale);
-            glEnd();
-        }
+        drawPatch(normal);
     glEndList();
     return index;
 }
