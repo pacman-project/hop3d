@@ -168,6 +168,9 @@ private:
     /// determine id of the part using dictionary
     int findId(const ViewDependentPart::Seq& dictionary, const Octet& octet) const;
 
+    /// determine id of the part using dictionary
+    int findId(const ViewDependentPart::Seq& dictionary, const Octet& octet, Mat34& offset) const;
+
     /// update structure which holds octets images
     void updateOctetsImages1stLayer(int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage);
 

@@ -39,6 +39,9 @@ hop3d::Mat34 KabschEst::computeTrans(const Eigen::MatrixXd& setA, const Eigen::M
         centerOfMassB[i] = setB.col(i).mean();
     }
 
+    std::cout << "coma " << centerOfMassA << "\n";
+    std::cout << "comb " << centerOfMassB << "\n";
+
     // Moving to center of mass
     Eigen::MatrixXd setAnew(setA.rows(), setA.cols()); Eigen::MatrixXd setBnew(setB.rows(), setB.cols());
     for(int j=0;j<setA.rows();j++) {
@@ -46,21 +49,30 @@ hop3d::Mat34 KabschEst::computeTrans(const Eigen::MatrixXd& setA, const Eigen::M
             setBnew.row(j) = setB.row(j) - centerOfMassB.transpose();
     }
 
+    std::cout << "setAnew " << setAnew << "\n";
+    std::cout << "setBnew " << setBnew << "\n";
+
     // A = setAnew * setBnew
-    Eigen::MatrixXd A(setA.rows(), setA.cols());
+    Eigen::MatrixXd A(setA.cols(), setA.cols());
     A = setAnew.transpose() * setBnew;
+    std::cout << "A\n" << A << "\n";
 
     // SVD of A
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
     Eigen::MatrixXd V = svd.matrixU();
     Eigen::MatrixXd W = svd.matrixV();
 
+    std::cout << "V " << V << "\n";
+    std::cout << "W " << W << "\n";
+
     // Ensuring it is right-handed coordinate system
     Eigen::Matrix3d U = Eigen::MatrixXd::Identity(3,3);
     U(2,2) = sgn((A.determinant()!=0) ? A.determinant() : 1);
-
+std::cout << "det " << A.determinant() << "\n";
     // Optimal rotation matrix
     U = W * U * V.transpose();
+
+    std::cout << "U " << U << "\n";
 
     // Computing the translation
     Eigen::Vector3d T;

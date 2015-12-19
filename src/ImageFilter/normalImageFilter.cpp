@@ -189,11 +189,11 @@ void NormalImageFilter::getResponseFilters(int categoryNo, int objectNo, int ima
                     for (int j=0;j<3;j++){
                         if (octet.partIds[i][j]!=-1){
                             if (i==1&&j==1){
-                                PartCoords fcoords(octet.partIds[i][j], octet.filterPos[i][j]);
+                                PartCoords fcoords(octet.partIds[i][j], octet.filterPos[i][j], octet.offsets[i][j]);
                                 partCoords.push_back(fcoords);
                             }
                             else{
-                                PartCoords fcoords(octet.partIds[i][j], octet.filterPos[1][1]+octet.filterPos[i][j]);
+                                PartCoords fcoords(octet.partIds[i][j], octet.filterPos[1][1]+octet.filterPos[i][j], octet.offsets[i][j]);
                                 partCoords.push_back(fcoords);
                             }
                         }
@@ -215,11 +215,11 @@ void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, in
                         for (int j=0;j<3;j++){
                             if (octet.partIds[i][j]!=-1){
                                 if (i==1&&j==1){
-                                    PartCoords fcoords(octet.partIds[i][j], octet.filterPos[i][j]);
+                                    PartCoords fcoords(octet.partIds[i][j], octet.filterPos[i][j], octet.offsets[i][j]);
                                     partCoords.push_back(fcoords);
                                 }
                                 else{
-                                    PartCoords fcoords(octet.partIds[i][j], octet.filterPos[1][1]+octet.filterPos[i][j]);
+                                    PartCoords fcoords(octet.partIds[i][j], octet.filterPos[1][1]+octet.filterPos[i][j], octet.offsets[i][j]);
                                     partCoords.push_back(fcoords);
                                 }
                             }
@@ -233,7 +233,7 @@ void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, in
         for (auto& row : partsImages[categoryNo][objectNo][imageNo]){
             for (auto& part : row){
                 if (!part.isBackground()){
-                    PartCoords fcoords(part.id, part.location);
+                    PartCoords fcoords(part.id, part.location, Mat34::Identity());
                     partCoords.push_back(fcoords);
                 }
             }
@@ -592,7 +592,9 @@ void NormalImageFilter::getLastVDLayerParts(int categoryNo, int objectNo, int im
 void NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDependentPart::Seq& dictionary, int u, int v, Octet& octet) const{
     for (int i=-1; i<2;i++){
         for (int j=-1;j<2;j++){
-            int id = findId(dictionary, octetsImage[u+i][v+j]);
+            Mat34 offset;
+            int id = findId(dictionary, octetsImage[u+i][v+j], offset);
+            octet.offsets[i+1][j+1]=offset;
             octet.partIds[i+1][j+1]=id;
             if (id ==-1){
                 octet.filterPos[i+1][j+1].u=(v+j)*(config.filterSize*3)+((config.filterSize*3)/2);//octetsImage[u+i][v+j].filterPos[1][1];
@@ -630,6 +632,28 @@ int NormalImageFilter::findId(const ViewDependentPart::Seq& dictionary, const Oc
     octet.print();
     getchar();
     return -1;
+}
+
+/// determine id of the part using dictionary
+int NormalImageFilter::findId(const ViewDependentPart::Seq& dictionary, const Octet& octet, Mat34& offset) const{
+    if (octet.isBackground)//background
+        return -1;
+    int id=0; int foundId(0);
+    double minDist=std::numeric_limits<double>::max();
+    ViewDependentPart partVD;
+    partVD.partsPosNorm = octet.partsPosNorm;
+    partVD.partIds = octet.partIds;
+    for (auto & part : dictionary){
+        double dist = ViewDependentPart::distanceInvariant(part, partVD, 1, offset);
+        if (dist==0)
+            return id;
+        if (dist<minDist){
+            minDist = dist;
+            foundId = id;
+        }
+        id++;
+    }
+    return foundId;
 }
 
 /// get filters

@@ -470,15 +470,15 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
     //flipGaussians(part.gaussians);
     for (size_t n = 0; n < part.partIds.size(); n++){
         for (size_t m = 0; m < part.partIds[n].size(); m++){
-            Vec3 pos;
+            int id = part.partIds[n][m];
+            /*Vec3 pos;
             if (config.useEuclideanCoordinates)
                 pos = part.gaussians[n][m].mean;
             else
                 pos = Vec3(config.pixelSize*part.gaussians[n][m].mean(0), config.pixelSize*part.gaussians[n][m].mean(1), part.gaussians[n][m].mean(2));
-            int id = part.partIds[n][m];
             if ((n==1)&&(m==1)){
                 pos(0)=0; pos(1)=0; pos(2)=0;
-            }
+            }*/
             /*else if (id==-1){
                 double patchSize = 5.0*(2.0*layerNo-1.0);
                 pos(0)=config.pixelSize*double(double(m)-1.0)*(patchSize+(patchSize/2.0));
@@ -725,16 +725,22 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
     //flipIds(part.partIds);// because it's more natural for user
     //flipGaussians(part.gaussians);
     for (auto itComp = part.group.begin(); itComp!=part.group.end();itComp++){
+        Mat34 estTrans;
+        //part.print();
+        //itComp->print();
+        ViewDependentPart::distanceInvariant(part,*itComp,1,estTrans);
+        //std::cout << estTrans.matrix() << "\n";
+        //getchar();
         for (size_t n = 0; n < itComp->partIds.size(); n++){
             for (size_t m = 0; m < itComp->partIds[n].size(); m++){
-                Vec3 pos;
+                /*Vec3 pos;
                 if (config.useEuclideanCoordinates)
                     pos = itComp->gaussians[n][m].mean;
                 else
                     pos = Vec3(config.pixelSize*itComp->gaussians[n][m].mean(0), config.pixelSize*itComp->gaussians[n][m].mean(1), itComp->gaussians[n][m].mean(2));
                 if ((n==1)&&(m==1)){
                     pos(0)=0; pos(1)=0; pos(2)=0;
-                }
+                }*/
                 /*else{
                     pos(0)=config.pixelSize*double(double(n)-1.0)*5.0;
                     pos(1)=config.pixelSize*double(double(m)-1.0)*5.0;
@@ -754,6 +760,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                     }
                 glPopMatrix();*/
                 Vec3 posPart(itComp->partsPosNorm[n][m].mean.block<3,1>(0,0));
+                //double GLmat1[16]={estTrans(0,0), estTrans(1,0), estTrans(2,0), 0, estTrans(0,1), estTrans(1,1), estTrans(2,1), 0, estTrans(0,2), estTrans(1,2), estTrans(2,2), 0, posPart(0), posPart(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), posPart(2), 1};
                 double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), posPart(2), 1};
                 glPushMatrix();
                     glMultMatrixd(GLmat1);
@@ -768,6 +775,47 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                 glPopMatrix();
             }
         }
+        double GLmat2[16]={estTrans(0,0), estTrans(1,0), estTrans(2,0), 0, estTrans(0,1), estTrans(1,1), estTrans(2,1), 0, estTrans(0,2), estTrans(1,2), estTrans(2,2), 0, estTrans(0,3),estTrans(1,3)+(double)(config.partDist[layerNo]*double(componentNo+1)),estTrans(2,3), 1};
+        //double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), posPart(2), 1};
+        glPushMatrix();
+            glMultMatrixd(GLmat2);
+        for (size_t n = 0; n < part.partIds.size(); n++){
+            for (size_t m = 0; m < part.partIds[n].size(); m++){
+                /*else{
+                    pos(0)=config.pixelSize*double(double(n)-1.0)*5.0;
+                    pos(1)=config.pixelSize*double(double(m)-1.0)*5.0;
+                }*/
+                int id = part.partIds[n][m];
+                /*double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), pos(2), 1};
+                //std::cout << id << " pos " << pos.transpose() << "\n";
+                glPushMatrix();
+                    glMultMatrixd(GLmat);
+                    if (id==-1){
+                        //glColor3ub(100,50,50);
+                        glCallList(backgroundList[layerNo-1]);
+                    }
+                    else{
+                        glColor3ub(1,0,0);
+                        glCallList(cloudsListLayers[layerNo-1][id]);
+                    }
+                glPopMatrix();*/
+                Vec3 posPart(part.partsPosNorm[n][m].mean.block<3,1>(0,0));
+                //double GLmat1[16]={estTrans(0,0), estTrans(1,0), estTrans(2,0), 0, estTrans(0,1), estTrans(1,1), estTrans(2,1), 0, estTrans(0,2), estTrans(1,2), estTrans(2,2), 0, posPart(0), posPart(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), posPart(2), 1};
+                double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1), posPart(2), 1};
+                glPushMatrix();
+                    glMultMatrixd(GLmat1);
+                    if (id==-1){
+                        //glColor3ub(100,50,50);
+                        glCallList(backgroundList[layerNo-1]);
+                    }
+                    else{
+                        glColor3d(0.5,0.0,0.0);
+                        drawPatch(Vec3(part.partsPosNorm[n][m].mean.block<3,1>(3,0)));
+                    }
+                glPopMatrix();
+            }
+        }
+        glPopMatrix();
         componentNo++;
     }
     glPopMatrix();

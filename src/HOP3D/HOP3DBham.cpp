@@ -133,6 +133,33 @@ void HOP3DBham::learn(){
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
+
+    /*for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            hierarchy.get()->viewDependentLayers[0].front().partIds[i][j]=i;
+        }
+    }
+    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[0][0].mean << -0.021,-0.02,0,0,0,1;    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[0][1].mean << 0,-0.02,0,0,0,1;    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[0][2].mean << 0.02,-0.02,0,0,0,1;
+    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[1][0].mean << -0.02,0.0,0,0,0,1;    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[1][1].mean << 0,0.0,0,0,0,1;    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[1][2].mean << 0.02,0.0,0.0,0,0,1;
+    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[2][0].mean << -0.0205,0.02,0,0,0,1;    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[2][1].mean << 0,0.02,0,0,0,1;    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[2][2].mean << 0.02,0.02,0,0,0,1;
+    Mat34 t(Mat34::Identity());
+    t = Eigen::AngleAxisd(0.1, Eigen::Vector3d::UnitZ())* Eigen::AngleAxisd(0.5, Eigen::Vector3d::UnitY())* Eigen::AngleAxisd(-0.3, Eigen::Vector3d::UnitZ());
+
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            Vec3 pos(hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[i][j].mean(0),hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[i][j].mean(1),hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[i][j].mean(2));
+            Mat34 pose(Mat34::Identity());
+            pose(0,3)=pos(0); pose(1,3)=pos(1); pose(2,3)=pos(2);
+            pose = t*pose;
+            hierarchy.get()->viewDependentLayers[0].front().group.front().partsPosNorm[i][j].mean(0)=pose(0,3); hierarchy.get()->viewDependentLayers[0].front().group.front().partsPosNorm[i][j].mean(1)=pose(1,3); hierarchy.get()->viewDependentLayers[0].front().group.front().partsPosNorm[i][j].mean(2)=pose(2,3);
+            hierarchy.get()->viewDependentLayers[0].front().group.front().partsPosNorm[i][j].mean(3)=pose(0,2); hierarchy.get()->viewDependentLayers[0].front().group.front().partsPosNorm[i][j].mean(4)=pose(1,2); hierarchy.get()->viewDependentLayers[0].front().group.front().partsPosNorm[i][j].mean(5)=pose(2,2);
+        }
+    }
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            hierarchy.get()->viewDependentLayers[0].front().group.front().partIds[i][j]=j+i+1;
+        }
+    }*/
     //represent all images in parts from 3rd layer
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
         for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
@@ -225,7 +252,7 @@ void HOP3DBham::learn(){
     }
     //visualization
     notify(*hierarchy);
-    for (int layerNo=0;layerNo<3;layerNo++){
+    for (int layerNo=0;layerNo<config.viewDependentLayersNo+1;layerNo++){
         for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
             for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
                 for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
@@ -241,7 +268,13 @@ void HOP3DBham::learn(){
                         depthCameraModel.get()->getPoint(filterCoord.coords.u, filterCoord.coords.v, filterCoord.coords.depth, point3d);
                         Mat34 pointPose(Mat34::Identity());
                         pointPose.translation() = point3d;
-                        pointPose = cameraPose * pointPose;
+                        if (layerNo==1){
+                            pointPose = cameraPose * (pointPose*filterCoord.offset.inverse());
+                            //std::cout << "layer no " << layerNo << filterCoord.offset.matrix() << "\n";
+                            //std::cout << filterCoord.offset.matrix() << "\n";
+                        }
+                        else
+                            pointPose = cameraPose * pointPose;
                         filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
                     }
                     notify(filtersPoses,(int)objectNo,layerNo);

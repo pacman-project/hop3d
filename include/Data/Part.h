@@ -91,13 +91,13 @@ public:
     }
 
     ///find optimal transformation between normals
-    static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, Mat34& transOpt);
+    static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& transOpt);
 
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters, int distanceMetric);
 
     /// compute distance between view dependent parts
-    static double distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric);
+    static double distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& estimatedTransform);
 
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters, int distanceMetric);

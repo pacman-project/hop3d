@@ -26,8 +26,17 @@ void ViewDependentPart::print() const{
         for (size_t j=0; j<gaussians.size();j++){
             std::cout << "mean(" << i << ", " << j << "): ";
             std::cout << gaussians[i][j].mean.transpose() << "\n";
-            std::cout << "covariance(" << i << ", " << j << "):\n";
-            std::cout << gaussians[i][j].covariance << "\n";
+            //std::cout << "covariance(" << i << ", " << j << "):\n";
+            //std::cout << gaussians[i][j].covariance << "\n";
+        }
+    }
+    std::cout << "Gaussians SE3:\n";
+    for (size_t i=0; i<partsPosNorm.size();i++){
+        for (size_t j=0; j<partsPosNorm.size();j++){
+            std::cout << "mean(" << i << ", " << j << "): ";
+            std::cout << partsPosNorm[i][j].mean.transpose() << "\n";
+            //std::cout << "covariance(" << i << ", " << j << "):\n";
+            //std::cout << gaussians[i][j].covariance << "\n";
         }
     }
 }
@@ -312,7 +321,7 @@ Mat33 ViewIndependentPart::coordinateFromNormal(const Vec3& _normal){
 }
 
 ///find optimal transformation between normals
-double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, Mat34& transOpt){
+double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& transOpt){
     std::vector<std::pair<int, int>> pointCorrespondence = {{0,0}, {0,1}, {0,2}, {1,2}, {2,2}, {2,1}, {2,0}, {1,0}};
     double minDist = std::numeric_limits<double>::max();
     Mat34 trans;
@@ -323,6 +332,8 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
         for (size_t j=0;j<pointCorrespondence.size();j++){
             int coordA[2]={pointCorrespondence[j].first, pointCorrespondence[j].second};//partA is not rotated
             int coordB[2]={pointCorrespondence[idx%(pointCorrespondence.size())].first, pointCorrespondence[idx%(pointCorrespondence.size())].second};//partA is not rotated
+            //std::cout << coordA[0] << " -> " << coordA[1] << "\n";
+            //std::cout << coordB[0] << " -> " << coordB[1] << "\n";
             if ((partA.partIds[coordA[0]][coordA[1]]!=-1)&&(partB.partIds[coordB[0]][coordB[1]]!=-1)){
                 pairsNo++;
                 setA.push_back(partA.partsPosNorm[coordA[0]][coordA[1]].mean.block<3,1>(0,0));
@@ -330,12 +341,12 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
             }
             idx++;
         }
-        if ((partA.partIds[1][1]!=-1)&&(partB.partIds[1][1]!=-1)){
+        /*if ((partA.partIds[1][1]!=-1)&&(partB.partIds[1][1]!=-1)){
             pairsNo++;
             setA.push_back(partA.partsPosNorm[1][1].mean.block<3,1>(0,0));
             setB.push_back(partB.partsPosNorm[1][1].mean.block<3,1>(0,0));
-        }
-        if (pairsNo>2){ // possible to find SE3 transformation
+        }*/
+        if (pairsNo>2){ // it's possible to find SE3 transformation
             Eigen::MatrixXd pointsA(pairsNo,3);
             Eigen::MatrixXd pointsB(pairsNo,3);
             for (int pairNo=0;pairNo<pairsNo;pairNo++){
@@ -344,8 +355,14 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
                     pointsB(pairNo,col) = setB[pairNo](col);
                 }
             }
-            trans = putslam::KabschEst::computeTrans(pointsA, pointsB);
-            double error = computeError(partA, partB, trans, 3, 0.05);
+            //std::cout << pointsA << "A\n";
+            //std::cout << pointsB << "B\n";
+            Eigen::Matrix4d trans1 = Eigen::umeyama(pointsA.transpose(),pointsB.transpose(),false);
+            trans.matrix()=trans1;
+            trans(2,3)=0;
+            //trans = putslam::KabschEst::computeTrans(pointsA, pointsB);
+            //std::cout << "transss\n" << trans.matrix() << "\n";
+            double error = computeError(partA, partB, trans, distanceMetric, 0.05);
             if (error<minDist){
                 minDist=error;
                 transOpt = trans;
@@ -390,10 +407,11 @@ double ViewDependentPart::computeError(const ViewDependentPart& partA, const Vie
 }
 
 /// compute distance between view dependent parts (invariant version)
-double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric){
-    if (partA.partIds==partB.partIds)//fast
+double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& estimatedTransform){
+    if (partA.partIds==partB.partIds){//fast
+        estimatedTransform=Mat34::Identity();
         return 0;
-    Mat34 transOpt;
+    }
     /*ViewDependentPart partC;
     ViewDependentPart partD;
     for (int i=0;i<3;i++){
@@ -402,27 +420,71 @@ double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, cons
             partD.partIds[i][j]=j+i+1;
         }
     }
-    partC.partsPosNorm[0][0].mean << -0.1,-0.1,0,0,0,1;    partC.partsPosNorm[0][1].mean << 0,0.1,0,0,0,1;    partC.partsPosNorm[0][2].mean << 0.1,0.1,0,0,0,1;
-    partD.partsPosNorm[0][0].mean << -0.0,0.1,0,0,-0.78,0.78;    partD.partsPosNorm[0][1].mean << 0.1,0.1,0,0,0,1;    partD.partsPosNorm[0][2].mean << 0.2,0.1,0,0,-0.78,0.78;
+    partC.partsPosNorm[0][0].mean << -0.021,-0.02,0,0,0,1;    partC.partsPosNorm[0][1].mean << 0,-0.02,0,0,0,1;    partC.partsPosNorm[0][2].mean << 0.02,-0.02,0,0,0,1;
+    //partD.partsPosNorm[0][0].mean << -0.07,-0.1,0.17,0,-0.78,0.78;    partD.partsPosNorm[0][1].mean << 0.0,-0.1,0.1,0,0,1;    partD.partsPosNorm[0][2].mean << 0.07,-0.1,0.03,0,-0.78,0.78;
 
-    partC.partsPosNorm[1][0].mean << -0.1,0.0,0,0,0,1;    partC.partsPosNorm[1][1].mean << 0,0.0,0,0,0,1;    partC.partsPosNorm[1][2].mean << 0.1,0.0,0,0,0,1;
-    partD.partsPosNorm[1][0].mean << -0.0,0.1,0,0,-0.78,0.78;    partD.partsPosNorm[1][1].mean << 0.1,0.0,0,0,0,1;    partD.partsPosNorm[1][2].mean << 0.2,0.0,0,0,-0.78,0.78;
+    partC.partsPosNorm[1][0].mean << -0.02,0.0,0,0,0,1;    partC.partsPosNorm[1][1].mean << 0,0.0,0,0,0,1;    partC.partsPosNorm[1][2].mean << 0.02,0.0,0.0,0,0,1;
+    //partD.partsPosNorm[1][0].mean << -0.07,0.0,0.17,0,-0.78,0.78;    partD.partsPosNorm[1][1].mean << 0.0,0.0,0.1,0,0,1;    partD.partsPosNorm[1][2].mean << 0.07,0.0,0.03,0,-0.78,0.78;
 
-    partC.partsPosNorm[2][0].mean << -0.1,-0.1,0,0,0,1;    partC.partsPosNorm[2][1].mean << 0,-0.1,0,0,0,1;    partC.partsPosNorm[2][2].mean << 0.1,-0.1,0,0,0,1;
-    partD.partsPosNorm[2][0].mean << -0.0,0.1,0,0,-0.78,0.78;    partD.partsPosNorm[2][1].mean << 0.1,-0.1,0,0,0,1;    partD.partsPosNorm[2][2].mean << 0.2,-0.1,0,0,-0.78,0.78;
+    partC.partsPosNorm[2][0].mean << -0.0205,0.02,0,0,0,1;    partC.partsPosNorm[2][1].mean << 0,0.02,0,0,0,1;    partC.partsPosNorm[2][2].mean << 0.02,0.02,0,0,0,1;
+    //partD.partsPosNorm[2][0].mean << -0.07,0.1,0.17,0,-0.78,0.78;    partD.partsPosNorm[2][1].mean << 0.0,0.1,0.1,0,0,1;    partD.partsPosNorm[2][2].mean << 0.07,0.1,0.03,0,-0.78,0.78;
+
+    Mat34 t(Mat34::Identity());
+    t = Eigen::AngleAxisd(0.1, Eigen::Vector3d::UnitZ())* Eigen::AngleAxisd(0.5, Eigen::Vector3d::UnitY())* Eigen::AngleAxisd(-0.3, Eigen::Vector3d::UnitZ());
 
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
-            std::cout << partC.partsPosNorm[i][j].mean.transpose() << "\n";
+            Vec3 pos(partC.partsPosNorm[i][j].mean(0),partC.partsPosNorm[i][j].mean(1),partC.partsPosNorm[i][j].mean(2));
+            Mat34 pose(Mat34::Identity());
+            pose(0,3)=pos(0); pose(1,3)=pos(1); pose(2,3)=pos(2);
+            pose = t*pose;
+            partD.partsPosNorm[i][j].mean(0)=pose(0,3); partD.partsPosNorm[i][j].mean(1)=pose(1,3); partD.partsPosNorm[i][j].mean(2)=pose(2,3);
+            partD.partsPosNorm[i][j].mean(3)=pose(0,2); partD.partsPosNorm[i][j].mean(4)=pose(1,2); partD.partsPosNorm[i][j].mean(5)=pose(2,2);
+        }
+    }
+
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            //std::cout << partC.partsPosNorm[i][j].mean.transpose() << "\n";
+            std::cout << "plot3(" << partC.partsPosNorm[i][j].mean(0) << ", "<< partC.partsPosNorm[i][j].mean(1) << ", "<< partC.partsPosNorm[i][j].mean(2) <<",'xb'); hold on;\n";
         }
     }
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
-            std::cout << partD.partsPosNorm[i][j].mean.transpose() << "\n";
+            //std::cout << partD.partsPosNorm[i][j].mean.transpose() << "\n";
+            std::cout << "plot3(" << partD.partsPosNorm[i][j].mean(0) << ", "<< partD.partsPosNorm[i][j].mean(1) << ", "<< partD.partsPosNorm[i][j].mean(2) <<",'or'); hold on; \n";
         }
     }*/
-    double sum = findOptimalTransformation(partA, partB, transOpt);
-    /*std::cout << "optimal transformation: \n" << transOpt.matrix() << "\n";
+    estimatedTransform=Mat34::Identity();
+    double sum = findOptimalTransformation(partA, partB, distanceMetric, estimatedTransform);
+    /*for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            Vec3 pos(partD.partsPosNorm[i][j].mean(0),partD.partsPosNorm[i][j].mean(1),partD.partsPosNorm[i][j].mean(2));
+            Mat34 pose(Mat34::Identity());
+            pose(0,3)=pos(0); pose(1,3)=pos(1); pose(2,3)=pos(2);
+            pose = t*pose;
+            std::cout << "plot3(" << pose(0,3) << ", "<< pose(1,3) << ", "<< pose(2,3) <<",'.r'); hold on; \n";
+        }
+    }
+std::cout << "ref transform\n" << t.matrix()<<"\n";
+std::cout << "est transform\n" << estimatedTransform.matrix()<<"\n";
+for (int i=0;i<3;i++){
+    for (int j=0;j<3;j++){
+        std::cout << "C " << partC.partsPosNorm[i][j].mean(0) << ", " << partC.partsPosNorm[i][j].mean(1)<< ", " << partC.partsPosNorm[i][j].mean(2) << "\n";
+        std::cout << "D " << partD.partsPosNorm[i][j].mean(0) << ", " << partD.partsPosNorm[i][j].mean(1)<< ", " << partD.partsPosNorm[i][j].mean(2) << "\n";
+    }
+}
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            Mat34 pointpos(Mat34::Identity());
+            pointpos(0,3)=partC.partsPosNorm[i][j].mean(0); pointpos(1,3)=partC.partsPosNorm[i][j].mean(1); pointpos(2,3)=partC.partsPosNorm[i][j].mean(2);
+            //std::cout << "point \n" << pointpos.matrix() << "\n";
+            //std::cout << "trans \n" << estimatedTransform.matrix() << "\n";
+            pointpos = estimatedTransform*pointpos;
+            std::cout << "FFFF  " << pointpos(0,3) << ", " << pointpos(1,3) << ", " << pointpos(2,3) << "\n";
+        }
+    }
+    std::cout << "optimal transformation: \n" << estimatedTransform.matrix() << "\n";
     std::cout << "error " << sum << "\n";
     getchar();*/
     return sum;

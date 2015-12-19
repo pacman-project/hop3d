@@ -158,11 +158,14 @@ public:
     /// coordinates
     ImageCoordsDepth coords;
 
+    /// SE3 offset
+    Mat34 offset;
+
     /// Construction
     PartCoords(){}
 
     /// Construction
-    PartCoords(int _filterId, ImageCoordsDepth _coords) : filterId(_filterId), coords(_coords) {}
+    PartCoords(int _filterId, ImageCoordsDepth _coords, Mat34 _offset) : filterId(_filterId), coords(_coords), offset(_offset) {}
 };
 
 
@@ -217,6 +220,11 @@ public:
     std::array<std::array<Vec3,3>,3> partsPosEucl;
     /// position and normal
     std::array<std::array<GaussianSE3,3>,3> partsPosNorm;
+    /// SE3 offset betwen part realization and word from dictionary
+    std::array<std::array<Mat34,3>,3> offsets;
+
+    /// id of the word from dictionary
+    int parentId;
     /// camera pose Id
     int poseId;
     ///is background
