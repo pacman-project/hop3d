@@ -728,7 +728,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
         Mat34 estTrans;
         //part.print();
         //itComp->print();
-        ViewDependentPart::distanceInvariant(part,*itComp,1,estTrans);
+        ViewDependentPart::distanceInvariant(part,*itComp,3,estTrans);
         //std::cout << estTrans.matrix() << "\n";
         //getchar();
         for (size_t n = 0; n < itComp->partIds.size(); n++){

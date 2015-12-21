@@ -269,7 +269,16 @@ void HOP3DBham::learn(){
                         Mat34 pointPose(Mat34::Identity());
                         pointPose.translation() = point3d;
                         if (layerNo==1){
-                            pointPose = cameraPose * (pointPose*filterCoord.offset.inverse());
+                            pointPose = cameraPose * pointPose*filterCoord.offset;
+                            /*if (!filterCoord.offset.matrix().isIdentity()){
+                                Mat34 offset(filterCoord.offset.inverse());
+                                Mat34 rot(Mat34::Identity());
+                                rot = offset.rotation();
+                                pointPose = pointPose*rot;
+                                Mat34 trans(Mat34::Identity());
+                                trans(0,3) = offset(0,3); trans(1,3) = offset(1,3); trans(2,3) = offset(2,3);
+                                pointPose = pointPose*trans;
+                            }*/
                             //std::cout << "layer no " << layerNo << filterCoord.offset.matrix() << "\n";
                             //std::cout << filterCoord.offset.matrix() << "\n";
                         }
@@ -415,7 +424,7 @@ void HOP3DBham::createPartClouds(){
                             if (!std::isnan(point3D(0))){
                                 Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(point3D(0),point3D(1),point3D(2)));
                                 Mat34 pointWorld = cameraPose*pointCam;
-                                pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(1)=pointWorld(1,3); pointRGBA.position(2)=pointWorld(2,3);
+                                pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(1)=pointWorld(1,3)+imageNo*0.2; pointRGBA.position(2)=pointWorld(2,3);
                                 objsTmp[layerNo].pointCloudRGBA.push_back(pointRGBA);
                             }
                         }

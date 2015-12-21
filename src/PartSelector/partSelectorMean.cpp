@@ -231,7 +231,7 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
             if (it->layerId==2){//compute distance from centroid
                 if (config.distanceMetric==3){
                     Mat34 transform;
-                    dist=ViewDependentPart::distanceInvariant(*it,dictionary[*itCentr], 1, transform);
+                    dist=ViewDependentPart::distanceInvariant(*it,dictionary[*itCentr], 3, transform);
                 }
                 else
                     dist = ViewDependentPart::distance(*it,dictionary[*itCentr],hierarchy.firstLayer, config.distanceMetric);
@@ -313,7 +313,7 @@ int PartSelectorMean::centerOfCluster(const std::set<int>& cluster, const ViewDe
             if (vocabulary[id].layerId==2){
                 if (config.distanceMetric==3){
                     Mat34 transform;
-                    dist=ViewDependentPart::distanceInvariant(vocabulary[id],vocabulary[id2], 1, transform);
+                    dist=ViewDependentPart::distanceInvariant(vocabulary[id],vocabulary[id2], 3, transform);
                 }
                 else
                     dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2],hierarchy.firstLayer, config.distanceMetric);
@@ -344,7 +344,7 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
                 if (itPart->layerId==2){
                     if (config.distanceMetric==3){
                         Mat34 transform;
-                        dist=ViewDependentPart::distanceInvariant(*itPart,*itPart2, 1, transform);
+                        dist=ViewDependentPart::distanceInvariant(*itPart,*itPart2, 3, transform);
                     }
                     else
                         dist=ViewDependentPart::distance(*itPart,*itPart2,hierarchy.firstLayer, config.distanceMetric);

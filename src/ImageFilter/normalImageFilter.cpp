@@ -307,6 +307,18 @@ bool NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >&
         }
     }
     if (elementsNo>config.minOctetSize){//set relative position for octets
+        double minDist = std::numeric_limits<double>::max();
+        double maxDist = std::numeric_limits<double>::min();
+        for (int i=0;i<3;i++){//detect two surfaces
+            for (int j=0;j<3;j++){
+                if (octet.partsPosNorm[i][j].mean(2)>maxDist)
+                    maxDist=octet.partsPosNorm[i][j].mean(2);
+                if (octet.partsPosNorm[i][j].mean(2)<minDist)
+                    minDist=octet.partsPosNorm[i][j].mean(2);
+            }
+        }
+        if ((maxDist-minDist)>config.PCADistThreshold)
+            return false;
         if (octet.partIds[1][1]==-1){
             octet.filterPos[1][1].u = v;
             octet.filterPos[1][1].v = u;
@@ -643,11 +655,15 @@ int NormalImageFilter::findId(const ViewDependentPart::Seq& dictionary, const Oc
     ViewDependentPart partVD;
     partVD.partsPosNorm = octet.partsPosNorm;
     partVD.partIds = octet.partIds;
+    Mat34 offsetTmp;
     for (auto & part : dictionary){
-        double dist = ViewDependentPart::distanceInvariant(part, partVD, 1, offset);
-        if (dist==0)
+        double dist = ViewDependentPart::distanceInvariant(part, partVD, 3, offsetTmp);
+        if (dist==0){
+            offset = offsetTmp;
             return id;
+        }
         if (dist<minDist){
+            offset=offsetTmp;
             minDist = dist;
             foundId = id;
         }
@@ -754,6 +770,7 @@ void NormalImageFilter::computeNormal(int u, int v, std::vector< std::vector<hop
 
 /// try to extract two clusters. If clusters are well separated (PCARelDistClusters parameter) return true
 bool NormalImageFilter::extractGroup(const std::vector<hop3d::PointNormal>& points, std::vector<hop3d::PointNormal>& pointGroup) const{
+/// do not use clustersw
     int clustersNo=2;//its written for two clusters only
     std::vector<int> centroids={0,1};
     std::vector<std::vector<int>> clusters; clusters.resize(clustersNo);
@@ -811,6 +828,8 @@ bool NormalImageFilter::extractGroup(const std::vector<hop3d::PointNormal>& poin
     else{
         bigger=1; smaller=0;
     }
+    if (clusters[bigger].size()<=config.minOctetSize)
+        return false;
     if ((double(clusters[smaller].size())/double(clusters[bigger].size()))<0.75)
         return false;
 
@@ -819,7 +838,8 @@ bool NormalImageFilter::extractGroup(const std::vector<hop3d::PointNormal>& poin
         pointGroup.clear();
         for (auto& id : clusters[clusterNo])
             pointGroup.push_back(points[id]);
-        return true;
+        //return true;
+        return false;// we don't want groups
     }
     return false;
 }

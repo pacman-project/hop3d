@@ -320,10 +320,68 @@ Mat33 ViewIndependentPart::coordinateFromNormal(const Vec3& _normal){
     return R;
 }
 
+/// remove elements which belong to "second surface"
+void ViewDependentPart::removeSecondSurface(ViewDependentPart& part) {
+    bool has2surfs(false);
+    //part.print();
+    double distThreshold = 0.03;
+    double minDist = std::numeric_limits<double>::max();
+    double maxDist = std::numeric_limits<double>::min();
+    for (int i=0;i<3;i++){//detect two surfaces
+        for (int j=0;j<3;j++){
+            //if (sqrt(pow(part.partsPosNorm[1][1].mean(2)-part.partsPosNorm[i][j].mean(2),2.0))>distThreshold)
+            //    has2surfs = true;
+            if (part.partsPosNorm[i][j].mean(2)>maxDist)
+                maxDist=part.partsPosNorm[i][j].mean(2);
+            if (part.partsPosNorm[i][j].mean(2)<minDist)
+                minDist=part.partsPosNorm[i][j].mean(2);
+        }
+    }
+    if ((maxDist-minDist)>distThreshold)
+        has2surfs = true;
+    else
+        return;
+    if (!has2surfs)
+        return;
+    int surf1count=0, surf2count=0;
+    for (int i=0;i<3;i++){// count elements in both surfaces
+        for (int j=0;j<3;j++){
+            if (fabs(minDist-part.partsPosNorm[i][j].mean(2))>distThreshold)
+                surf2count++;
+            else
+                surf1count++;
+        }
+    }
+    for (int i=0;i<3;i++){// remove smaller surface
+        for (int j=0;j<3;j++){
+            if (((fabs(maxDist-part.partsPosNorm[i][j].mean(2))>distThreshold)>distThreshold)&&(surf2count>surf1count)){
+                part.partIds[i][j]=-1;
+            }
+            if (((fabs(minDist-part.partsPosNorm[i][j].mean(2))>distThreshold)>distThreshold)&&(surf2count<surf1count)){
+                part.partIds[i][j]=-1;
+            }
+        }
+    }
+    int elno=0;
+    for (int i=0;i<3;i++){// remove smaller surface
+        for (int j=0;j<3;j++){
+            if (part.partIds[i][j]>0)
+                elno++;
+        }
+    }
+    /*if (elno<3){
+        part.print();
+        getchar();
+    }*/
+}
+
 ///find optimal transformation between normals
 double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& transOpt){
     std::vector<std::pair<int, int>> pointCorrespondence = {{0,0}, {0,1}, {0,2}, {1,2}, {2,2}, {2,1}, {2,0}, {1,0}};
     double minDist = std::numeric_limits<double>::max();
+    ViewDependentPart partC(partA);
+    ViewDependentPart partD(partB);
+    removeSecondSurface(partC); removeSecondSurface(partD);
     Mat34 trans;
     for (size_t i=0;i<pointCorrespondence.size();i++){
         int pairsNo=0;
@@ -334,10 +392,10 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
             int coordB[2]={pointCorrespondence[idx%(pointCorrespondence.size())].first, pointCorrespondence[idx%(pointCorrespondence.size())].second};//partA is not rotated
             //std::cout << coordA[0] << " -> " << coordA[1] << "\n";
             //std::cout << coordB[0] << " -> " << coordB[1] << "\n";
-            if ((partA.partIds[coordA[0]][coordA[1]]!=-1)&&(partB.partIds[coordB[0]][coordB[1]]!=-1)){
+            if ((partC.partIds[coordA[0]][coordA[1]]!=-1)&&(partD.partIds[coordB[0]][coordB[1]]!=-1)){
                 pairsNo++;
-                setA.push_back(partA.partsPosNorm[coordA[0]][coordA[1]].mean.block<3,1>(0,0));
-                setB.push_back(partB.partsPosNorm[coordB[0]][coordB[1]].mean.block<3,1>(0,0));
+                setA.push_back(partC.partsPosNorm[coordA[0]][coordA[1]].mean.block<3,1>(0,0));
+                setB.push_back(partD.partsPosNorm[coordB[0]][coordB[1]].mean.block<3,1>(0,0));
             }
             idx++;
         }
@@ -362,7 +420,7 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
             trans(2,3)=0;
             //trans = putslam::KabschEst::computeTrans(pointsA, pointsB);
             //std::cout << "transss\n" << trans.matrix() << "\n";
-            double error = computeError(partA, partB, trans, distanceMetric, 0.05);
+            double error = computeError(partC, partD, trans, distanceMetric, 0.05);
             if (error<minDist){
                 minDist=error;
                 transOpt = trans;
@@ -393,8 +451,8 @@ double ViewDependentPart::computeError(const ViewDependentPart& partA, const Vie
                 }
             }
             else if ((partA.partIds[i][j]==-1)||(partB.partIds[i][j]==-1)){
-                errorPos+=coeff;
-                errorRot+=coeff;
+                errorPos+=1.0;
+                errorRot+=1.0;
             }
         }
     }
