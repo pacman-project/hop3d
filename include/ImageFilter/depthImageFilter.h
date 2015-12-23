@@ -56,19 +56,19 @@ public:
     void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName);
 
     /// define 2rd layer octet images using selected words from third layer
-    void computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary);
+    void computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo);
 
     /// get last view dependent layer parts from the image
     void getLastVDLayerParts(int categoryNo, int objectNo, int imageNo, std::vector<ViewDependentPart>& parts) const;
 
     /// get set of ids for the given input point
-    void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart);
+    void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart, int layersNo);
 
     /// returs filter ids and their position on the image
     void getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const;
 
     /// returs parts ids and their position on the image
-    void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const;
+    void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords, int viewDependentLayersNo) const;
 
     class Config{
       public:

@@ -84,7 +84,13 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const H
             std::cout << "\n";
         }
         fit2clusters(centroids, dictionary, hierarchy, clusters);
+        std::vector<int> oldCentroids(centroids);
         computeCentroids(clusters, centroids, dictionary, hierarchy);
+        if (oldCentroids==centroids){
+            if (config.verbose>0)
+                std::cout << "Nothing has changed. Finish clustering after " << i+1 << " iterations\n";
+            i=config.maxIter;
+        }
         if (config.verbose==2){
             std::cout << "centroids new: ";
             for (size_t j=0;j<centroids.size();j++){
@@ -146,7 +152,13 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, const Hie
             std::cout << "\n";
         }
         fit2clusters(centroids, dictionary, hierarchy, clusters);
+        std::vector<int> oldCentroids(centroids);
         computeCentroids(clusters, centroids, dictionary, hierarchy);
+        if (oldCentroids==centroids){
+            if (config.verbose>0)
+                std::cout << "Nothing has changed. Finish clustering after " << i+1 << " iterations\n";
+            i=config.maxIter;
+        }
         if (config.verbose==2){
             std::cout << "centroids new: ";
             for (size_t j=0;j<centroids.size();j++){
@@ -331,7 +343,7 @@ int PartSelectorMean::centerOfCluster(const std::set<int>& cluster, const ViewDe
     return centerId;
 }
 
-/// compute centroids for give clusters
+/// compute centroids for given clusters
 void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy){
     int clusterNo=0;
     for (auto& cluster : clusters){ //for each cluster

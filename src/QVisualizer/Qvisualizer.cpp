@@ -526,19 +526,21 @@ GLuint QGLVisualizer::createPartObjList(const std::vector<hop3d::PointCloudRGBA>
     int objectsNo = (int)objects.size();
     int objectNo=0;
     for (auto& cloud : objects){
-        double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.partObjectsPos[0]*double(objectNo)-(objectsNo/2)*config.partObjectsPos[0])-cloud.pointCloudRGBA.front().position(0), config.partObjectsPos[1]-cloud.pointCloudRGBA.front().position(1), config.partObjectsPos[2]-cloud.pointCloudRGBA.front().position(2), 1};
-        glPushMatrix();
-        glMultMatrixd(GLmat);
-        glBegin(GL_POINTS);
-        for (auto& point: cloud.pointCloudRGBA){
-            glPointSize((float)config.cloudPointSize);
-            glColor3f((float)point.color[0], (float)point.color[1], (float)point.color[2]);
-            //glNormal3d(-normal(0), -normal(1), -normal(2));
-            glVertex3d(point.position(0), point.position(1), point.position(2));
+        if (cloud.pointCloudRGBA.size()>0){
+            double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.partObjectsPos[0]*double(objectNo)-(objectsNo/2)*config.partObjectsPos[0])-cloud.pointCloudRGBA.front().position(0), config.partObjectsPos[1]-cloud.pointCloudRGBA.front().position(1), config.partObjectsPos[2]-cloud.pointCloudRGBA.front().position(2), 1};
+            glPushMatrix();
+            glMultMatrixd(GLmat);
+            glBegin(GL_POINTS);
+            for (auto& point: cloud.pointCloudRGBA){
+                glPointSize((float)config.cloudPointSize);
+                glColor3f((float)point.color[0], (float)point.color[1], (float)point.color[2]);
+                //glNormal3d(-normal(0), -normal(1), -normal(2));
+                glVertex3d(point.position(0), point.position(1), point.position(2));
+            }
+            glEnd();
+            glPopMatrix();
+            objectNo++;
         }
-        glEnd();
-        glPopMatrix();
-        objectNo++;
     }
     glPopMatrix();
     glEndList();

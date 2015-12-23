@@ -80,6 +80,9 @@ public:
     /// part aggregated from the same level vocabulary
     std::vector<ViewDependentPart> group;
 
+    /// SE3 offset betwen part realization and word from dictionary
+    Mat34 offset;
+
     /// Construction
     inline ViewDependentPart(){
         type = PART_VIEW_DEP;

@@ -164,7 +164,7 @@ void HOP3DBham::learn(){
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
         for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
             for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
-                imageFilterer->computeImagesLastLayer((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDependentLayers.back());
+                imageFilterer->computeImagesLastLayer((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDependentLayers.back(), config.viewDependentLayersNo);
             }
         }
     }
@@ -180,7 +180,7 @@ void HOP3DBham::learn(){
                 std::vector<ViewDependentPart> parts;
                 //get parts of the 3rd layers
                 imageFilterer->getLastVDLayerParts((int)categoryNo, (int)objectNo, (int)imageNo, parts);
-                //std::cout << "parts size: " << parts.size() << "\n\n\n\n\n";
+                //std::cout << "parts size: " << parts.size() << "\n";
                 //hierarchy.get()->printIds(parts[0]);
                 //hierarchy.get()->printIds(parts[1]);
                 //move octets into 3D space and update octree representation of the object
@@ -189,9 +189,9 @@ void HOP3DBham::learn(){
                 objects[categoryNo][objectNo].update(0, parts, cameraPose, *depthCameraModel, *hierarchy);
             }
             std::vector< std::set<int>> clustersTmp;
-            std::cout << "get clusters\n";
+            //std::cout << "get clusters\n";
             objects[categoryNo][objectNo].getClusters(0,clustersTmp);
-            std::cout << " clusters size: " << clustersTmp.size() << "\n";
+            //std::cout << " clusters size: " << clustersTmp.size() << "\n";
             std::cout << "finish get clusters\n";
             clusters.reserve( clusters.size() + clustersTmp.size() ); // preallocate memory
             clusters.insert( clusters.end(), clustersTmp.begin(), clustersTmp.end() );
@@ -252,7 +252,7 @@ void HOP3DBham::learn(){
     }
     //visualization
     notify(*hierarchy);
-    for (int layerNo=0;layerNo<config.viewDependentLayersNo+1;layerNo++){
+    for (int layerNo=0;layerNo<config.viewDependentLayersNo+1;layerNo++){//create objects from parts
         for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
             for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
                 for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
@@ -260,7 +260,7 @@ void HOP3DBham::learn(){
                     if (layerNo==0)
                         imageFilterer->getResponseFilters((int)categoryNo, (int)objectNo, (int)imageNo, partCoords);
                     else
-                        imageFilterer->getParts3D((int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoords);
+                        imageFilterer->getParts3D((int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoords, config.viewDependentLayersNo);
                     Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                     std::vector<std::pair<int, Mat34>> filtersPoses;
                     for (auto& filterCoord : partCoords){
@@ -270,15 +270,6 @@ void HOP3DBham::learn(){
                         pointPose.translation() = point3d;
                         if (layerNo==1){
                             pointPose = cameraPose * pointPose*filterCoord.offset;
-                            /*if (!filterCoord.offset.matrix().isIdentity()){
-                                Mat34 offset(filterCoord.offset.inverse());
-                                Mat34 rot(Mat34::Identity());
-                                rot = offset.rotation();
-                                pointPose = pointPose*rot;
-                                Mat34 trans(Mat34::Identity());
-                                trans(0,3) = offset(0,3); trans(1,3) = offset(1,3); trans(2,3) = offset(2,3);
-                                pointPose = pointPose*trans;
-                            }*/
                             //std::cout << "layer no " << layerNo << filterCoord.offset.matrix() << "\n";
                             //std::cout << filterCoord.offset.matrix() << "\n";
                         }
@@ -362,12 +353,12 @@ void HOP3DBham::load(std::string filename){
 void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids) const{
     ids.clear();
     ViewDependentPart lastVDpart;
-    imageFilterer->getPartsIds(categoryNo, objectNo, imageNo, u, v, ids, lastVDpart);
+    imageFilterer->getPartsIds(categoryNo, objectNo, imageNo, u, v, ids, lastVDpart, config.viewDependentLayersNo);
     //ids.push_back(hierarchy.get()->interpreter2to3[ids.back()]);
     Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
     //std::cout << cameraPose.matrix() << " \n";
     if (ids.back()<0){
-        for (int i=0;i<3;i++) ids.push_back(-1);
+        for (int i=0;i<config.viewIndependentLayersNo-1;i++) ids.push_back(-1);
     }
     else {
         objects[categoryNo][objectNo].getPartsIds(lastVDpart, cameraPose, *depthCameraModel, *hierarchy, ids);

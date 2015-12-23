@@ -324,7 +324,7 @@ Mat33 ViewIndependentPart::coordinateFromNormal(const Vec3& _normal){
 bool ViewDependentPart::removeSecondSurface(ViewDependentPart& part) {
     bool has2surfs(false);
     //part.print();
-    double distThreshold = 0.01;
+    double distThreshold = 0.015;
     std::vector<double> depth;
     for (int i=0;i<3;i++){//detect two surfaces
         for (int j=0;j<3;j++){
@@ -535,7 +535,14 @@ double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, cons
         }
     }*/
     estimatedTransform=Mat34::Identity();
-    double sum = findOptimalTransformation(partA, partB, distanceMetric, estimatedTransform);
+    double sum = 9;
+    sum = findOptimalTransformation(partA, partB, distanceMetric, estimatedTransform);
+    /*if (sum>10000){
+        partA.print();
+        partB.print();
+        std::cout << "dist " << sum << ", ";
+        getchar();
+    }*/
     /*for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             Vec3 pos(partD.partsPosNorm[i][j].mean(0),partD.partsPosNorm[i][j].mean(1),partD.partsPosNorm[i][j].mean(2));

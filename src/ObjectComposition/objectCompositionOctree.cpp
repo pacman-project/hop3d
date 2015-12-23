@@ -65,7 +65,7 @@ void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependen
             camModel.getPoint(position, pos3d);
             part3D.translation() = pos3d;//set position of the part
             //std::cout << "normal " << normal.transpose() << "\n";
-    //std::cout << "part " << part.id << "\n" << part3D.matrix() << "\n";
+            //std::cout << "part " << part.id << "\n" << part3D.matrix() << "\n";
             partPosition = cameraPose * part3D;//global position of the part
             int x,y,z;
             toCoordinate(partPosition(0,3),x, layerNo);

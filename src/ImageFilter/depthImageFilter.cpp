@@ -204,8 +204,8 @@ void DepthImageFilter::setFilters(std::string patchesFileName, std::string norma
 }
 
 /// define 2rd layer octet images using selected words from third layer
-void DepthImageFilter::computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary){
-    std::cout << categoryNo << " " << objectNo << " " << imageNo << "\n";
+void DepthImageFilter::computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo){
+    std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << layersNo << "\n";
     dictionary.size();
 }
 
@@ -216,11 +216,11 @@ void DepthImageFilter::getLastVDLayerParts(int categoryNo, int objectNo, int ima
 }
 
 /// get set of ids for the given input point
-void DepthImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart){
+void DepthImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart, int layersNo){
     std::cout << "not implemented\n";
     ids.clear();
     std::cout << lastVDpart.id << "\n";
-    std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v << "\n";
+    std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << layersNo << "\n";
 }
 
 /// returs filter ids and their position on the image
@@ -230,8 +230,8 @@ void DepthImageFilter::getResponseFilters(int categoryNo, int objectNo, int imag
 }
 
 /// returs parts ids and their position on the image
-void DepthImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const{
-    std::cout << categoryNo << objectNo << imageNo << layerNo << "\n";
+void DepthImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords, int viewDependentLayersNo) const{
+    std::cout << categoryNo << objectNo << imageNo << layerNo << viewDependentLayersNo << "\n";
     partCoords.clear();
 }
 

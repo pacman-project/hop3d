@@ -150,7 +150,8 @@ void Hierarchy::computeMeanVector(const ViewDependentPart& part, Vec3& normal) c
                     mean += normTmp;
                 }
                 else
-                    mean += firstLayer[part.partIds[i][j]].normal;
+                    mean += part.partsPosNorm[i][j].mean.block<3,1>(3,0);
+                    //mean += firstLayer[part.partIds[i][j]].normal;
             }
         }
     }
