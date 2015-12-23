@@ -118,6 +118,29 @@ namespace hop3d {
         }
     }
 
+    /// check if the octet contains double surface
+    bool Octet::hasDoubleSurface(double distThreshold, int& groupSize){
+        std::vector<double> depth;
+        for (int i=0;i<3;i++){//detect two surfaces
+            for (int j=0;j<3;j++){
+                if (partIds[i][j]!=-1)
+                    depth.push_back(partsPosNorm[i][j].mean(2));
+            }
+        }
+        std::sort(depth.begin(),depth.end());
+        for (size_t i=0;i<depth.size()-1;i++){
+            if (depth[i+1]-depth[i]>distThreshold){
+                if (i+1>depth.size()-i)
+                    groupSize = i+1;
+                else
+                    groupSize = depth.size()-i;
+                return true;
+            }
+        }
+        groupSize = depth.size();
+        return false;
+    }
+
     /// compute distance between octets -- dot product for normals for each filter
     double Octet::distance(const Octet& octetA, const Octet& octetB, const Filter::Seq& filters){
         if (filters.size()==0){

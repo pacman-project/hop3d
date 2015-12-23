@@ -307,17 +307,9 @@ bool NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >&
         }
     }
     if (elementsNo>config.minOctetSize){//set relative position for octets
-        double minDist = std::numeric_limits<double>::max();
-        double maxDist = std::numeric_limits<double>::min();
-        for (int i=0;i<3;i++){//detect two surfaces
-            for (int j=0;j<3;j++){
-                if (octet.partsPosNorm[i][j].mean(2)>maxDist)
-                    maxDist=octet.partsPosNorm[i][j].mean(2);
-                if (octet.partsPosNorm[i][j].mean(2)<minDist)
-                    minDist=octet.partsPosNorm[i][j].mean(2);
-            }
-        }
-        if ((maxDist-minDist)>config.PCADistThreshold)
+        int biggerGroupSize;
+        bool hasDoubleSurface = octet.hasDoubleSurface(config.PCADistThreshold,biggerGroupSize);
+        if (hasDoubleSurface && biggerGroupSize<4)
             return false;
         if (octet.partIds[1][1]==-1){
             octet.filterPos[1][1].u = v;
@@ -342,18 +334,24 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
     //double globU=0, globV=0;
     if (octet.partIds[1][1]==-1){
         int depthNo=0;
+        ViewDependentPart part;
+        part.partIds = octet.partIds;
+        part.partsPosNorm = octet.partsPosNorm;
+        ViewDependentPart::removeSecondSurface(part);
+        Octet octetTmp(octet);
+        octetTmp.partIds=part.partIds;
         for (int i=0;i<3;i++){//compute mean depth
             for (int j=0;j<3;j++){
-                if (octet.partIds[i][j]!=-1){
-                    meanDepth+= octet.filterPos[i][j].depth;
-                    meanPosNorm+=octet.partsPosNorm[i][j].mean;
-                    if (min>octet.filterPos[i][j].depth){
-                        min = octet.filterPos[i][j].depth;
+                if (octetTmp.partIds[i][j]!=-1){
+                    meanDepth+= octetTmp.filterPos[i][j].depth;
+                    meanPosNorm+=octetTmp.partsPosNorm[i][j].mean;
+                    if (min>octetTmp.filterPos[i][j].depth){
+                        min = octetTmp.filterPos[i][j].depth;
                         //globU = octet.filterPos[i][j].u;
                         //globV = octet.filterPos[i][j].v;
                     }
-                    if (max<octet.filterPos[i][j].depth){
-                        max = octet.filterPos[i][j].depth;
+                    if (max<octetTmp.filterPos[i][j].depth){
+                        max = octetTmp.filterPos[i][j].depth;
                     }
                     depthNo++;
                 }
@@ -556,7 +554,7 @@ bool NormalImageFilter::isBackground(OctetsImage& octetsImage, int u, int v) con
 }
 
 /// define 2rd layer octet images using selected words from third layer
-void NormalImageFilter::computeImages3rdLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary){
+void NormalImageFilter::computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary){
     PartsImage partsImage (octetsImages2ndLayer[categoryNo][objectNo][imageNo].size(), std::vector<ViewDependentPart> (octetsImages2ndLayer[categoryNo][objectNo][imageNo].back().size()));
     OctetsImage octetsImage = octetsImages2ndLayer[categoryNo][objectNo][imageNo];
     int partsNo = 0;
@@ -770,7 +768,6 @@ void NormalImageFilter::computeNormal(int u, int v, std::vector< std::vector<hop
 
 /// try to extract two clusters. If clusters are well separated (PCARelDistClusters parameter) return true
 bool NormalImageFilter::extractGroup(const std::vector<hop3d::PointNormal>& points, std::vector<hop3d::PointNormal>& pointGroup) const{
-/// do not use clustersw
     int clustersNo=2;//its written for two clusters only
     std::vector<int> centroids={0,1};
     std::vector<std::vector<int>> clusters; clusters.resize(clustersNo);
@@ -828,7 +825,7 @@ bool NormalImageFilter::extractGroup(const std::vector<hop3d::PointNormal>& poin
     else{
         bigger=1; smaller=0;
     }
-    if (clusters[bigger].size()<=config.minOctetSize)
+    if (clusters[bigger].size()<=(size_t)config.minOctetSize)
         return false;
     if ((double(clusters[smaller].size())/double(clusters[bigger].size()))<0.75)
         return false;
@@ -838,8 +835,8 @@ bool NormalImageFilter::extractGroup(const std::vector<hop3d::PointNormal>& poin
         pointGroup.clear();
         for (auto& id : clusters[clusterNo])
             pointGroup.push_back(points[id]);
-        //return true;
-        return false;// we don't want groups
+        return true;
+        //return false;// we don't want groups
     }
     return false;
 }

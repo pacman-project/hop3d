@@ -45,7 +45,7 @@ public:
     virtual void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName) = 0;
 
     /// define 2rd layer octet images using selected words from third layer
-    virtual void computeImages3rdLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary) = 0;
+    virtual void computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary) = 0;
 
     /// get last view dependent layer parts from the image
     virtual void getLastVDLayerParts(int categoryNo, int objectNo, int imageNo, std::vector<ViewDependentPart>& parts) const = 0;

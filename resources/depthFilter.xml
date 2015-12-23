@@ -17,6 +17,6 @@
     PCARelDistClusters - create two clusters and check distance between them. If distance is PCARelDistClusters times larger than width of the front cluster run PCA
     background threshold - compute response if points no in filter window is bigger than threshold
     -->
-    <PCA PCAWindowSize="7" PCADistThreshold="0.025" PCAbackgroundThreshold="40" PCAuseClustering="false" PCARelDistClusters="4.0"></PCA>
+    <PCA PCAWindowSize="7" PCADistThreshold="0.01" PCAbackgroundThreshold="40" PCAuseClustering="false" PCARelDistClusters="4.0"></PCA>
     <imageFiltering useMedianFilter="true" kernelSize="7"></imageFiltering>
   </NormalFilterer>

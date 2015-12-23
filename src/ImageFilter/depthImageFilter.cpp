@@ -204,7 +204,7 @@ void DepthImageFilter::setFilters(std::string patchesFileName, std::string norma
 }
 
 /// define 2rd layer octet images using selected words from third layer
-void DepthImageFilter::computeImages3rdLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary){
+void DepthImageFilter::computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary){
     std::cout << categoryNo << " " << objectNo << " " << imageNo << "\n";
     dictionary.size();
 }

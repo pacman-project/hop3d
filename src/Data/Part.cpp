@@ -321,58 +321,68 @@ Mat33 ViewIndependentPart::coordinateFromNormal(const Vec3& _normal){
 }
 
 /// remove elements which belong to "second surface"
-void ViewDependentPart::removeSecondSurface(ViewDependentPart& part) {
+bool ViewDependentPart::removeSecondSurface(ViewDependentPart& part) {
     bool has2surfs(false);
     //part.print();
-    double distThreshold = 0.03;
-    double minDist = std::numeric_limits<double>::max();
-    double maxDist = std::numeric_limits<double>::min();
+    double distThreshold = 0.01;
+    std::vector<double> depth;
     for (int i=0;i<3;i++){//detect two surfaces
         for (int j=0;j<3;j++){
-            //if (sqrt(pow(part.partsPosNorm[1][1].mean(2)-part.partsPosNorm[i][j].mean(2),2.0))>distThreshold)
-            //    has2surfs = true;
-            if (part.partsPosNorm[i][j].mean(2)>maxDist)
-                maxDist=part.partsPosNorm[i][j].mean(2);
-            if (part.partsPosNorm[i][j].mean(2)<minDist)
-                minDist=part.partsPosNorm[i][j].mean(2);
+            if (part.partIds[i][j]!=-1){
+                if (i==1&&j==1)
+                    depth.push_back(0);
+                else
+                    depth.push_back(part.partsPosNorm[i][j].mean(2));
+            }
         }
     }
-    if ((maxDist-minDist)>distThreshold)
-        has2surfs = true;
-    else
-        return;
-    if (!has2surfs)
-        return;
-    int surf1count=0, surf2count=0;
-    for (int i=0;i<3;i++){// count elements in both surfaces
-        for (int j=0;j<3;j++){
-            if (fabs(minDist-part.partsPosNorm[i][j].mean(2))>distThreshold)
-                surf2count++;
+    std::sort(depth.begin(),depth.end());
+    double distBorder;
+    int groupSize;
+    bool removeBack=false;
+    for (size_t i=0;i<depth.size()-1;i++){
+        if (depth[i+1]-depth[i]>distThreshold){
+            if (i+1>=depth.size()-i){
+                groupSize = i+1;
+                removeBack=true;
+            }
             else
-                surf1count++;
+                groupSize = depth.size()-i;
+            distBorder = depth[i]+std::numeric_limits<double>::epsilon();
+            has2surfs = true;
         }
     }
+    if (!has2surfs)
+        return false;
     for (int i=0;i<3;i++){// remove smaller surface
         for (int j=0;j<3;j++){
-            if (((fabs(maxDist-part.partsPosNorm[i][j].mean(2))>distThreshold)>distThreshold)&&(surf2count>surf1count)){
-                part.partIds[i][j]=-1;
+            if (removeBack) {//remove back surface
+                if (i==1&&j==1){
+                    if (0>distBorder)
+                        part.partIds[i][j]=-1;
+                }
+                else {
+                    if (part.partsPosNorm[i][j].mean(2)>distBorder)
+                        part.partIds[i][j]=-1;
+                }
             }
-            if (((fabs(minDist-part.partsPosNorm[i][j].mean(2))>distThreshold)>distThreshold)&&(surf2count<surf1count)){
-                part.partIds[i][j]=-1;
+            else {//remove front surface
+                if (i==1&&j==1){
+                    if (0<distBorder)
+                        part.partIds[i][j]=-1;
+                }
+                else {
+                    if (part.partsPosNorm[i][j].mean(2)<distBorder)
+                        part.partIds[i][j]=-1;
+                }
             }
         }
     }
-    int elno=0;
-    for (int i=0;i<3;i++){// remove smaller surface
-        for (int j=0;j<3;j++){
-            if (part.partIds[i][j]>0)
-                elno++;
-        }
-    }
-    /*if (elno<3){
-        part.print();
+    if (groupSize<4){
+        std::cout << "small number of points in group";
         getchar();
-    }*/
+    }
+    return true;
 }
 
 ///find optimal transformation between normals
@@ -381,7 +391,17 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
     double minDist = std::numeric_limits<double>::max();
     ViewDependentPart partC(partA);
     ViewDependentPart partD(partB);
-    removeSecondSurface(partC); removeSecondSurface(partD);
+    if(removeSecondSurface(partC)||removeSecondSurface(partD)){
+        /*std::cout << "partC przed\n";
+        partA.print();
+        std::cout << "partC po\n";
+        partC.print();
+        std::cout << "partD przed\n";
+        partB.print();
+        std::cout << "partD po\n";
+        partD.print();
+        getchar();*/
+    }
     Mat34 trans;
     for (size_t i=0;i<pointCorrespondence.size();i++){
         int pairsNo=0;
@@ -399,12 +419,12 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
             }
             idx++;
         }
-        /*if ((partA.partIds[1][1]!=-1)&&(partB.partIds[1][1]!=-1)){
+        if ((partA.partIds[1][1]!=-1)&&(partB.partIds[1][1]!=-1)){
             pairsNo++;
-            setA.push_back(partA.partsPosNorm[1][1].mean.block<3,1>(0,0));
-            setB.push_back(partB.partsPosNorm[1][1].mean.block<3,1>(0,0));
-        }*/
-        if (pairsNo>2){ // it's possible to find SE3 transformation
+            setA.push_back(Vec3(0,0,0));
+            setB.push_back(Vec3(0,0,0));
+        }
+        if (pairsNo>3){ // it's possible to find SE3 transformation
             Eigen::MatrixXd pointsA(pairsNo,3);
             Eigen::MatrixXd pointsB(pairsNo,3);
             for (int pairNo=0;pairNo<pairsNo;pairNo++){
@@ -420,7 +440,8 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
             trans(2,3)=0;
             //trans = putslam::KabschEst::computeTrans(pointsA, pointsB);
             //std::cout << "transss\n" << trans.matrix() << "\n";
-            double error = computeError(partC, partD, trans, distanceMetric, 0.05);
+            double error = computeError(partA, partB, trans, distanceMetric, 0.05);
+            trans(2,3)=trans1(2,3);
             if (error<minDist){
                 minDist=error;
                 transOpt = trans;

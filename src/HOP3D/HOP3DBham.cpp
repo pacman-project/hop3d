@@ -164,7 +164,7 @@ void HOP3DBham::learn(){
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
         for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
             for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
-                imageFilterer->computeImages3rdLayer((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDependentLayers.back());
+                imageFilterer->computeImagesLastLayer((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDependentLayers.back());
             }
         }
     }

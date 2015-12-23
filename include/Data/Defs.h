@@ -239,6 +239,9 @@ public:
     /// compute distance between octets -- dot product for normals for each filter
     static double distance(const Octet& octetA, const Octet& octetB, const Filter::Seq& filters);
 
+    /// check if the octet contains double surface
+    bool hasDoubleSurface(double distThreshold, int& groupSize);
+
     /// Print
     void print() const;
 };
