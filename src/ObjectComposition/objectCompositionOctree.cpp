@@ -32,10 +32,10 @@ ObjectCompositionOctree::~ObjectCompositionOctree(void) {
 ///config class constructor
 ObjectCompositionOctree::Config::Config(std::string configFilename){
     tinyxml2::XMLDocument config;
-    std::string filename = "../../resources/" + configFilename;
+    std::string filename = configFilename;
     config.LoadFile(filename.c_str());
     if (config.ErrorID())
-        std::cout << "unable to load Object Composition octree config file.\n";
+		throw std::runtime_error("unable to load Object Composition octree config file: " + filename);
     tinyxml2::XMLElement * group = config.FirstChildElement( "ObjectComposition" );
     group->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     if (verbose == 1) {

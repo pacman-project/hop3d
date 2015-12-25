@@ -87,11 +87,11 @@ int hop3d::Reader::readPlyFile(std::string fileName, PointCloud& outputPointClou
 
 int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName, hop3d::Filter::Seq &filters)
 {
-    std::string filenamePatches = "../../resources/" + patchesFileName;
+    std::string filenamePatches = patchesFileName;
     tinyxml2::XMLDocument patchesFile;
     patchesFile.LoadFile(filenamePatches.c_str());
     if (patchesFile.ErrorID())
-        std::cout << "unable to load depth filter data.\n";
+		throw std::runtime_error("unable to load depth filter data: " + filenamePatches);
 
     int filtersNumber = 0;
     int arraySize = 0;
@@ -130,11 +130,11 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
         }
     }
 
-    std::string filenameMasks = "../../resources/" + masksFileName;
+    std::string filenameMasks = masksFileName;
     tinyxml2::XMLDocument masksFile;
     masksFile.LoadFile(filenameMasks.c_str());
     if (masksFile.ErrorID())
-        std::cout << "unable to load depth filter data.\n";
+		throw std::runtime_error("unable to load depth filter data: " + filenameMasks);
 
     int masksNumber = 0;
     int arrayMSize = 0;
@@ -182,10 +182,10 @@ int hop3d::Reader::readFilters(std::string patchesFileName, std::string normalsF
 
 
     tinyxml2::XMLDocument normalsFile;
-    std::string filenameNormals = "../../resources/" + normalsFileName;
+    std::string filenameNormals = normalsFileName;
     normalsFile.LoadFile(filenameNormals.c_str());
     if (normalsFile.ErrorID())
-        std::cout << "unable to load depth filter data.\n";
+		throw std::runtime_error("unable to load depth filter data: " + filenameNormals);
     int normalsNumber = 0;
     int normalSize = 0;
     tinyxml2::XMLElement * normalParse = normalsFile.FirstChildElement( "octave" );

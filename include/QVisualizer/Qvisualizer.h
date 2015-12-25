@@ -41,10 +41,11 @@ public:
         }
         Config(std::string configFilename){
             tinyxml2::XMLDocument config;
-            std::string filename = "../../resources/" + configFilename;
+            std::string filename = configFilename;
             config.LoadFile(filename.c_str());
             if (config.ErrorID())
-                std::cout << "unable to load Visualizer config file.\n";
+				throw std::runtime_error("unable to load Visualizer config file: " + filename);
+
             tinyxml2::XMLElement * model = config.FirstChildElement( "VisualizerConfig" );
             model->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
             double rgba[4]={0,0,0,0};

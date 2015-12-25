@@ -22,10 +22,10 @@ PartSelectorMean::~PartSelectorMean(void) {
 ///config class constructor
 PartSelectorMean::Config::Config(std::string configFilename){
     tinyxml2::XMLDocument config;
-    std::string filename = "../../resources/" + configFilename;
+    std::string filename = configFilename;
     config.LoadFile(filename.c_str());
     if (config.ErrorID())
-        std::cout << "unable to load part selector config file.\n";
+		throw std::runtime_error("unable to load part selector config file: " + filename);
     tinyxml2::XMLElement * group = config.FirstChildElement( "PartSelector" );
     group->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     if (verbose == 1) {

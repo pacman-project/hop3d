@@ -20,11 +20,11 @@ UnbiasedStatsBuilder::~UnbiasedStatsBuilder(void) {
 ///config class constructor
 UnbiasedStatsBuilder::Config::Config(std::string configFilename){
     tinyxml2::XMLDocument config;
-    std::string filename = "../../resources/" + configFilename;
+    std::string filename = configFilename;
     config.LoadFile(filename.c_str());
     if (config.ErrorID())
-        std::cout << "unable to load unbiased stats builder config file.\n";
-    tinyxml2::XMLElement * group = config.FirstChildElement( "StatsBuilder" );
+		throw std::runtime_error("unable to load unbiased stats builder config file: " + filename);
+	tinyxml2::XMLElement * group = config.FirstChildElement("StatsBuilder");
     group->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     group->FirstChildElement( "parameters" )->QueryBoolAttribute("useEuclideanCoordinates", &useEuclideanCoordinates);
     if (verbose == 1) {

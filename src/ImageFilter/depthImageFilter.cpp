@@ -20,10 +20,10 @@ DepthImageFilter::~DepthImageFilter(void) {
 ///config class constructor
 DepthImageFilter::Config::Config(std::string configFilename){
     tinyxml2::XMLDocument config;
-    std::string filename = "../../resources/" + configFilename;
+    std::string filename = configFilename;
     config.LoadFile(filename.c_str());
     if (config.ErrorID())
-        std::cout << "unable to load depth filter config file.\n";
+		throw std::runtime_error("unable to load depth filter config file: " + filename);
     tinyxml2::XMLElement * model = config.FirstChildElement( "Filterer" );
     model->FirstChildElement( "parameters" )->QueryIntAttribute("filtersNo", &filtersNo);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("filterSize", &filterSize);
