@@ -54,10 +54,10 @@ class DepthSensorModel {
         }
         Config(std::string configFilename){
             tinyxml2::XMLDocument config;
-            std::string filename = "../../resources/" + configFilename;
+            std::string filename = configFilename;
             config.LoadFile(filename.c_str());
             if (config.ErrorID())
-                std::cout << "unable to load sensor config file (" << filename <<"): error = " << config.ErrorID() << std::endl;;
+				throw std::runtime_error("unable to load sensor config file: " + filename + ", error: " + std::to_string(config.ErrorID()));
 
             tinyxml2::XMLElement * model = config.FirstChildElement( "Model" );
             model->FirstChildElement( "focalLength" )->QueryDoubleAttribute("fu", &focalLength[0]);

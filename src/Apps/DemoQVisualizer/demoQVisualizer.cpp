@@ -29,7 +29,7 @@ int main(int argc, char** argv)
         }
         std::string configFile(config.FirstChildElement( "QVisualizer" )->Attribute( "configFilename" ));
 
-        lhop3d = hop3d::createHOP3DBham("configGlobal.xml");
+        lhop3d = hop3d::createHOP3DBham("../../resources/configGlobal.xml");
 
         QGLVisualizer::Config configVis(configFile);//something is wrong with QApplication when Qapplication
         //object is created. libTinyxml can read only ints from xml file
@@ -40,6 +40,7 @@ int main(int argc, char** argv)
         glutInit(&argc, argv);
 
         QGLVisualizer visu(configVis);
+		visu.update(hop3d::Hierarchy("../../resources/configGlobal.xml"));
 
         visu.setWindowTitle("HOP3D hierarchy viewer");
         // Make the viewer window visible on screen.

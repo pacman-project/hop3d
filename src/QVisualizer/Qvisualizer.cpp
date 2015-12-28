@@ -89,7 +89,7 @@ QGLVisualizer::QGLVisualizer(void) {
 
 /// Construction
 QGLVisualizer::QGLVisualizer(Config _config): config(_config), updateHierarchyFlag(false){
-    hierarchy.reset(new Hierarchy("configGlobal.xml"));
+    hierarchy.reset(new Hierarchy());
     cloudsListLayers.resize(7);
     clustersList.resize(7);
     linksLists.resize(7);
@@ -103,10 +103,10 @@ QGLVisualizer::QGLVisualizer(Config _config): config(_config), updateHierarchyFl
 QGLVisualizer::QGLVisualizer(std::string configFile) :
         config(configFile), updateHierarchyFlag(false) {
     tinyxml2::XMLDocument configXML;
-    std::string filename = "../../resources/" + configFile;
+    std::string filename = configFile;
     configXML.LoadFile(filename.c_str());
     if (configXML.ErrorID())
-        std::cout << "unable to load visualizer config file.\n";
+		throw std::runtime_error("unable to load visualizer config file: " + filename);
 }
 
 /// Destruction

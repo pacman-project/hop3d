@@ -23,10 +23,10 @@ NormalImageFilter::~NormalImageFilter(void) {
 ///config class constructor
 NormalImageFilter::Config::Config(std::string configFilename){
     tinyxml2::XMLDocument config;
-    std::string filename = "../../resources/" + configFilename;
+    std::string filename = configFilename;
     config.LoadFile(filename.c_str());
     if (config.ErrorID())
-        std::cout << "unable to load depth filter (normal) config file.\n";
+		throw std::runtime_error("unable to load depth filter (normal) config file: " + filename);
     tinyxml2::XMLElement * model = config.FirstChildElement( "NormalFilterer" );
     model->FirstChildElement( "parameters" )->QueryIntAttribute("ringsNo", &ringsNo);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("filterSize", &filterSize);
@@ -79,7 +79,7 @@ uint16_t NormalImageFilter::median(const cv::Mat& inputImg, int u, int v, int ke
 
 ///Apply median filter on the image
 void NormalImageFilter::medianFilter(const cv::Mat& inputImg, cv::Mat& outputImg, int kernelSize){
-    for (int i=0;i<inputImg.rows;i++){
+	for (int i = 0; i<inputImg.rows; i++){
         for (int j=0;j<inputImg.cols;j++){
             outputImg.at<uint16_t>(i,j)=median(inputImg, i, j, kernelSize);
         }

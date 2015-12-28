@@ -6,11 +6,10 @@ namespace hop3d {
 /// Construction
 Hierarchy::Hierarchy(std::string configFilename) {
     tinyxml2::XMLDocument config;
-    std::string filename = "../../resources/" + configFilename;
+    std::string filename = configFilename;
     config.LoadFile(filename.c_str());
-    if (config.ErrorID()){
-        std::cout << "unable to load hierarchy config file.\n";
-    }
+    if (config.ErrorID())
+		throw std::runtime_error("unable to load hierarchy config file: " + filename);
     tinyxml2::XMLElement *params = config.FirstChildElement("Hierarchy")->FirstChildElement("parameters");
     int VDLayersNo, VIndLayersNo;
     params->QueryIntAttribute("viewDependentLayersNo", &VDLayersNo);

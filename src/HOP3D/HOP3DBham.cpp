@@ -18,11 +18,10 @@ HOP3DBham::HOP3DBham(std::string _config) :
     depthCameraModel.reset(new DepthSensorModel(config.cameraConfig));
 
     tinyxml2::XMLDocument configXML;
-    std::string filename = "../../resources/" + _config;
+    std::string filename = _config;
     configXML.LoadFile(filename.c_str());
-    if (configXML.ErrorID()){
-        std::cout << "unable to load global config file.\n";
-    }
+    if (configXML.ErrorID())
+		throw std::runtime_error("unable to load global config file: " + filename);
 
     if (config.filterType==hop3d::ImageFilter::FILTER_DEPTH){
         imageFilterer = hop3d::createDepthImageFilter(config.filtererConfig);
@@ -53,10 +52,10 @@ HOP3DBham::~HOP3DBham(void) {
 ///config class constructor
 HOP3DBham::Config::Config(std::string configFilename){
     tinyxml2::XMLDocument config;
-    std::string filename = "../../resources/" + configFilename;
+    std::string filename = configFilename;
     config.LoadFile(filename.c_str());
     if (config.ErrorID())
-        std::cout << "unable to load unbiased stats builder config file.\n";
+		throw std::runtime_error("unable to load unbiased stats builder config file: " + filename);
     tinyxml2::XMLElement * group = config.FirstChildElement( "Hierarchy" );
     group->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     if (verbose == 1) {

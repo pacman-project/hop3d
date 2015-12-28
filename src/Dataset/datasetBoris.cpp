@@ -24,10 +24,10 @@ BorisDataset::~BorisDataset(void) {
 ///config class constructor
 BorisDataset::Config::Config(std::string configFilename){
     tinyxml2::XMLDocument config;
-    std::string filename = "../../resources/" + configFilename;
+    std::string filename = configFilename;
     config.LoadFile(filename.c_str());
     if (config.ErrorID())
-        std::cout << "unable to load Boris dataset config file: " << filename << ".\n";
+		throw std::runtime_error("unable to load Boris dataset config file: " + filename);
     tinyxml2::XMLElement * model = config.FirstChildElement( "Dataset" );
     model->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     int categoriesNo;
