@@ -40,7 +40,6 @@ int main(int argc, char** argv)
         glutInit(&argc, argv);
 
         QGLVisualizer visu(configVis);
-		visu.update(hop3d::Hierarchy("../../resources/configGlobal.xml"));
 
         visu.setWindowTitle("HOP3D hierarchy viewer");
         // Make the viewer window visible on screen.

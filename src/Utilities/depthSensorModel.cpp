@@ -26,6 +26,19 @@ void DepthSensorModel::getPoint(const Eigen::Vector3d& depthImageCoord, Eigen::V
     point3D = depthImageCoord(2)*PHCPModel*point;
 }
 
+/// get point cloud
+void DepthSensorModel::getCloud(const cv::Mat& depthImage, std::vector<Eigen::Vector3d>& cloud) const{
+    cloud.clear();
+    for (int i=0;i<depthImage.rows;i++){
+        for (int j=0;j<depthImage.cols;j++){
+            Eigen::Vector3d point;
+            getPoint(i, j, depthImage.at<uint16_t>(i,j)*config.depthImageScale, point);
+            if (!std::isnan(point(0)))
+                cloud.push_back(point);
+        }
+    }
+}
+
 Eigen::Vector3d DepthSensorModel::inverseModel(double x, double y, double z) const {
     Eigen::Vector3d point(((config.focalLength[0]*x)/z)+config.focalAxis[0], ((config.focalLength[1]*y)/z)+config.focalAxis[1], z);
     if (point(0)<0||point(0)>config.imageSize[0]||point(1)<0||point(1)>config.imageSize[1]||z<0.4||z>6.0){

@@ -85,6 +85,18 @@ void HOP3DBham::getPartsIds(const std::string& path, int u, int v, std::vector<i
     getPartsIds(categoryNo, objectNo, imageNo, u, v, ids);
 }
 
+/// get training dataset info
+void HOP3DBham::getDatasetInfo(hop3d::DatasetInfo& _dataset) const{
+    dataset->getDatasetInfo(_dataset);
+}
+
+/// get cloud from dataset
+void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, std::vector<Vec3>& cloud) const{
+    cv::Mat depthImage;
+    dataset->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+    depthCameraModel->getCloud(depthImage, cloud);
+}
+
 /// learining from the dataset
 void HOP3DBham::learn(){
     imageFilterer->getFilters(hierarchy.get()->firstLayer);

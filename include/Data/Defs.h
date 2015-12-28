@@ -312,7 +312,7 @@ public:
 
     DatasetInfo(int categoriesNo) {
         categories.resize(categoriesNo);
-    };
+    }
 };
 }
 #endif /* DATA_DEFS_H */

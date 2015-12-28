@@ -49,6 +49,12 @@ public:
     /// get set of ids from hierarchy for the given input point
     void getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const;
 
+    /// get training dataset info
+    void getDatasetInfo(hop3d::DatasetInfo& _dataset) const;
+
+    /// get cloud from dataset
+    void getCloud(int categoryNo, int objectNo, int imageNo, std::vector<Vec3>& cloud) const;
+
     #ifdef QVisualizerBuild
         ///Attach visualizer
         void attachVisualizer(QGLVisualizer* visualizer);
@@ -111,7 +117,7 @@ private:
     /// Image Filterer
     ImageFilter *imageFilterer;
 
-    /// Image Filterer
+    /// dataset
     Dataset *dataset;
 
     /// structure which stores info about dataset

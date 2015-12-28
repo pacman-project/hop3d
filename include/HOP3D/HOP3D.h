@@ -37,6 +37,15 @@ public:
     /// load hierarchy from the file
     virtual void load(std::string filename) = 0;
 
+    /// get set of ids from hierarchy for the given input point
+    virtual void getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const = 0;
+
+    /// get training dataset info
+    virtual void getDatasetInfo(hop3d::DatasetInfo& dataset) const = 0;
+
+    /// get cloud from dataset
+    virtual void getCloud(int categoryNo, int objectNo, int imageNo, std::vector<Vec3>& cloud) const = 0;
+
     /// Virtual descrutor
     virtual ~HOP3D() {
     }

@@ -26,6 +26,9 @@ class DepthSensorModel {
     /// compute 3D point from image coordinates
     void getPoint(const Eigen::Vector3d& depthImageCoord, Eigen::Vector3d& point3D) const;
 
+    /// get point cloud
+    void getCloud(const cv::Mat& depthImage, std::vector<Eigen::Vector3d>& cloud) const;
+
     /// inverse model of the sensor
     Eigen::Vector3d inverseModel(double x, double y, double z) const;
 
