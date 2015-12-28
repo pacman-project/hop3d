@@ -36,6 +36,9 @@ public:
     /// update composition from octets (words from last view-independent layer's vocabulary)
     virtual void update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, Hierarchy& hierarchy) = 0;
 
+    /// update voxel grid which contains point and normals
+    virtual void updatePCLGrid(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose) = 0;
+
     /// get clusters of parts id stored in octree (one cluster per voxel)
     virtual void getClusters(int layerNo, std::vector< std::set<int>>& clusters) = 0;
 
@@ -43,7 +46,7 @@ public:
     virtual void createNextLayerVocabulary(int destLayerNo, const Hierarchy& hierarchy, std::vector<ViewIndependentPart>& vocabulary) = 0;
 
     /// get octree in layer layerNo
-    virtual void getParts(int layerNo, std::vector<ViewIndependentPart>& parts) const = 0;
+    virtual void getParts(int layerNo, std::vector<ViewIndependentPart>& parts) = 0;
 
     /// update ids in the octree using new vocabulary
     virtual void updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy) = 0;

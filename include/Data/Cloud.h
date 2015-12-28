@@ -41,37 +41,9 @@ public:
     PointColor(Vec3 _position, std::array<double,4> _color) : position(_position), color(_color) {}
 };
 
-class Cloud{
-public:
-    /// Pointer
-    typedef std::unique_ptr<Cloud> Ptr;
-    int id;
-protected:
+typedef std::vector<hop3d::PointNormal> PointCloud;
 
-private:
-
-};
-
-class PointCloud{
-public:
-    /// Pointer
-    typedef std::unique_ptr<PointCloud> Ptr;
-    std::vector<hop3d::PointNormal> pointCloudNormal;
-
-protected:
-
-private:
-
-};
-
-class PointCloudRGBA{
-public:
-    /// Pointer
-    typedef std::unique_ptr<PointCloudRGBA> Ptr;
-    std::vector<hop3d::PointColor> pointCloudRGBA;
-protected:
-private:
-};
+typedef std::vector<hop3d::PointColor> PointCloudRGBA;
 
 }
 

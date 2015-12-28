@@ -18,6 +18,7 @@ ObjectCompositionOctree::ObjectCompositionOctree(std::string _config) :
     octrees[1].reset(new Octree<ViewIndependentPart>(config.voxelsNo/2)); // cellSize1=cellSize0*3;
     octrees[2].reset(new Octree<ViewIndependentPart>(config.voxelsNo/4)); // cellSize2=cellSize1*3=cellSize0*9;
     octrees[3].reset(new Octree<ViewIndependentPart>(config.voxelsNo/8)); // cellSize2=cellSize1*3=cellSize0*9;
+    octreeGrid.reset(new Octree<hop3d::PointCloud>(config.voxelsNoGrid));
 }
 
 /// Destruction
@@ -27,6 +28,7 @@ ObjectCompositionOctree::~ObjectCompositionOctree(void) {
     octrees[1].reset(new Octree<ViewIndependentPart>(4)); // cellSize1=cellSize0*3;
     octrees[2].reset(new Octree<ViewIndependentPart>(8)); // cellSize2=cellSize1*3=cellSize0*9;
     octrees[3].reset(new Octree<ViewIndependentPart>(16)); // cellSize2=cellSize1*3=cellSize0*9;
+    octreeGrid.reset(new Octree<hop3d::PointCloud>(config.voxelsNoGrid));
 }
 
 ///config class constructor
@@ -43,47 +45,135 @@ ObjectCompositionOctree::Config::Config(std::string configFilename){
     }
     group->FirstChildElement( "parameters" )->QueryDoubleAttribute("voxelSize", &voxelSize);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("voxelsNo", &voxelsNo);
-    group->FirstChildElement( "parameters" )->QueryDoubleAttribute("maxAngle", &maxAngle);
+    group->FirstChildElement( "pointCloudGrid" )->QueryDoubleAttribute("maxAngleGrid", &maxAngleGrid);
+    group->FirstChildElement( "pointCloudGrid" )->QueryIntAttribute("voxelsNoGrid", &voxelsNoGrid);
+    group->FirstChildElement( "pointCloudGrid" )->QueryDoubleAttribute("voxelSizeGrid", &voxelSizeGrid);
 }
 
 /// update composition from octets (words from last view-independent layer's vocabulary)
 void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, Hierarchy& hierarchy){
     for (auto & part : parts){
-        Mat34 partPosition(Mat34::Identity());
-        Vec3 pos3d;
         if (config.verbose==1){
             std::cout << "update octree, part.id: " << part.id << " layer id" << part.layerId << "\n";
         }
-        Mat34 part3D(Mat34::Identity());
-        Vec3 normal; hierarchy.getNormal(part, normal);
-        if (normal(2)==-1){
-
+        Mat34 partPosition(Mat34::Identity());
+        partPosition.translation() = part.locationEucl;
+        partPosition = cameraPose * partPosition*part.offset;
+        int x,y,z;
+        toCoordinate(partPosition(0,3),x, layerNo);
+        toCoordinate(partPosition(1,3),y, layerNo);
+        toCoordinate(partPosition(2,3),z, layerNo);
+        if (config.verbose==1){
+            std::cout << "Update octree, xyz: " << x << ", " << y << ", " << z << "\n";
         }
-        else{
-            part3D = NormalImageFilter::coordinateFromNormal(normal);
-            Vec3 position(part.location.u, part.location.v, part.location.depth);
-            camModel.getPoint(position, pos3d);
-            part3D.translation() = pos3d;//set position of the part
-            //std::cout << "normal " << normal.transpose() << "\n";
-            //std::cout << "part " << part.id << "\n" << part3D.matrix() << "\n";
-            partPosition = cameraPose * part3D;//global position of the part
-            int x,y,z;
-            toCoordinate(partPosition(0,3),x, layerNo);
-            toCoordinate(partPosition(1,3),y, layerNo);
-            toCoordinate(partPosition(2,3),z, layerNo);
-            if (config.verbose==1){
-                std::cout << "Update octree, xyz: " << x << ", " << y << ", " << z << "\n";
-            }
             //std::cout << "part.id " << part.id << "\n";
             //std::cout << "partPosition: \n" << partPosition.matrix() << "\n";
             //getchar();
-            ViewIndependentPart::Part3D viewIndependentPart(partPosition, part.id);
-            (*octrees[layerNo])(x,y,z).pose = partPosition;
-            (*octrees[layerNo])(x,y,z).parts.push_back(viewIndependentPart);
-            (*octrees[layerNo])(x,y,z).layerId=4;
-            (*octrees[layerNo])(x,y,z).id=part.id;//its temporary id only
+        ViewIndependentPart::Part3D viewIndependentPart(partPosition, part.id);
+        (*octrees[layerNo])(x,y,z).pose = partPosition;
+        (*octrees[layerNo])(x,y,z).parts.push_back(viewIndependentPart);
+        (*octrees[layerNo])(x,y,z).layerId=4;
+        (*octrees[layerNo])(x,y,z).id=part.id;//its temporary id only
+    }
+}
+
+/// update composition from octets (words from last view-independent layer's vocabulary)
+void ObjectCompositionOctree::updatePCLGrid(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose){
+    for (auto & part : parts){
+        if (config.verbose==1){
+            std::cout << "update octree, part.id: " << part.id << " layer id" << part.layerId << "\n";
+        }
+        Mat34 partPosition(Mat34::Identity());
+        partPosition.translation() = part.locationEucl;
+        partPosition = cameraPose * partPosition*part.offset;
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                if (part.partIds[i][j]!=-1){
+                    PointNormal pointNorm;
+                    Vec4 position(part.partsPosNorm[i][j].mean(0),part.partsPosNorm[i][j].mean(1),part.partsPosNorm[i][j].mean(2),1.0);
+                    if (i==1&&j==1)
+                        position = Vec4(0,0,0,1.0);
+                    pointNorm.position = (partPosition*position).block<3,1>(0,0);
+                    Vec3 normal(part.partsPosNorm[i][j].mean(3),part.partsPosNorm[i][j].mean(4),part.partsPosNorm[i][j].mean(5));
+                    pointNorm.normal = (partPosition.rotation()*normal).block<3,1>(0,0);
+                    int x,y,z;
+                    toCoordinatePCLGrid(pointNorm.position(0),x);
+                    toCoordinatePCLGrid(pointNorm.position(1),y);
+                    toCoordinatePCLGrid(pointNorm.position(2),z);
+                    if (config.verbose==1){
+                        std::cout << "(" << pointNorm.position(0) << ", " << pointNorm.position(1) << ", " << pointNorm.position(2) << ") Update octree, xyz: " << x << ", " << y << ", " << z << "\n";
+                    }
+                    (*octreeGrid)(x,y,z).push_back(pointNorm);
+                }
+            }
         }
     }
+}
+
+/// filter voxel grid
+void ObjectCompositionOctree::filterPCLGrid(void){
+    for (int idX=0; idX<(*octreeGrid).size(); idX++){///to do z-slicing
+        for (int idY=0; idY<(*octreeGrid).size(); idY++){
+            for (int idZ=0; idZ<(*octreeGrid).size(); idZ++){
+                if ((*octreeGrid).at(idX,idY,idZ).size()>1){//compute mean point and normal
+                    std::vector<hop3d::PointCloud> groups;
+                    hop3d::PointCloud means;
+                    //std::cout << idX << ", " << idY << ", " << idZ << " = " << (*octreeGrid).at(idX,idY,idZ).size() << " before\n";
+                    //for (auto& point : (*octreeGrid)(idX,idY,idZ)){
+                    //    std::cout << "element " << point.position.transpose() << "     " << point.normal.transpose() << "\n";
+                    //}
+                    for (auto& pointNorm : (*octreeGrid).at(idX,idY,idZ)){
+                        if (groups.size()==0){// first element
+                            groups.resize(1);
+                            groups[0].push_back(pointNorm);
+                            means.push_back(pointNorm);
+                        }
+                        else{
+                            int groupNo=-1;
+                            int iterNo=0;
+                            for (auto point : means){//compute angle between vectors and add select group
+                                double angle = fabs(acos(point.normal.adjoint()*pointNorm.normal));
+                                if (angle<config.maxAngleGrid)
+                                    groupNo=iterNo;
+                                iterNo++;
+                            }
+                            if (groupNo==-1){
+                                groups.resize(groups.size()+1);
+                                groups[groups.size()-1].push_back(pointNorm);
+                                means.push_back(pointNorm);
+                            }
+                            else{
+                                groups[groupNo].push_back(pointNorm);
+                                means[groupNo] = computeMeanPosNorm(groups[groupNo]);
+                            }
+                        }
+                    }
+                    (*octreeGrid)(idX,idY,idZ) = means;
+                    //std::cout << idX << ", " << idY << ", " << idZ << " = " << (*octreeGrid).at(idX,idY,idZ).size() << " after\n";
+                    //for (auto& point : (*octreeGrid)(idX,idY,idZ)){
+                    //    std::cout << "element " << point.position.transpose() << "     " << point.normal.transpose() << "\n";
+                    //}
+                }
+            }
+        }
+    }
+}
+
+/// compute mean value of normal and position
+PointNormal ObjectCompositionOctree::computeMeanPosNorm(PointCloud cloud){
+    Vec3 meanPos(0,0,0);
+    Vec3 meanNorm(0,0,0);
+    for (auto& point : cloud){
+        meanPos+=point.position;
+        meanNorm+=point.normal;
+    }
+    PointNormal mean;
+    meanNorm/=double(cloud.size());
+    meanNorm.normalize();
+    meanPos/=double(cloud.size());
+    mean.normal = meanNorm;
+    mean.position = meanPos;
+    return mean;
 }
 
 /// upodate voxel poses using new vocabulary
@@ -137,12 +227,21 @@ void ObjectCompositionOctree::getPartsIds(const ViewDependentPart& part, const M
 /// convert global coordinates to octree coordinates
 void ObjectCompositionOctree::toCoordinate(double pos, int& coord, int layerNo) const{
     coord = int(pos/(pow(3.0,layerNo)*config.voxelSize))+(int)(config.voxelsNo/(2*pow(3.0,layerNo)));
-    //coord = int(pos/scale)+config.voxelsNo/2;
+}
+
+/// convert global coordinates to octree coordinates
+void ObjectCompositionOctree::toCoordinatePCLGrid(double pos, int& coord) const{
+    coord = int(pos/(config.voxelSizeGrid))+(int)(config.voxelsNoGrid/2);
 }
 
 /// convert octree coordinates to global coordinates
 void ObjectCompositionOctree::fromCoordinate(int coord, double& pos, int layerNo) const{
     pos = (pow(3.0,layerNo)*config.voxelSize)*(coord-config.voxelsNo/(2*pow(3.0,layerNo)))+((pow(3.0,layerNo)*config.voxelSize)/2.0);
+}
+
+/// convert octree coordinates to global coordinates
+void ObjectCompositionOctree::fromCoordinatePCLGrid(int coord, double& pos) const{
+    pos = (config.voxelSizeGrid)*(coord-config.voxelsNoGrid/(2))+(config.voxelSizeGrid/2.0);
 }
 
 /// update ids in the octree using new vocabulary
@@ -195,13 +294,18 @@ int ObjectCompositionOctree::findIdInVocabulary(const ViewIndependentPart& part,
 }
 
 /// get octree in layer layerNo
-void ObjectCompositionOctree::getParts(int layerNo, std::vector<ViewIndependentPart>& parts) const{
+void ObjectCompositionOctree::getParts(int layerNo, std::vector<ViewIndependentPart>& parts){
     parts.clear();
-    for (int idX=0; idX<(*octrees[layerNo]).size(); idX++){///to do z-slicing
-        for (int idY=0; idY<(*octrees[layerNo]).size(); idY++){
-            for (int idZ=0; idZ<(*octrees[layerNo]).size(); idZ++){
-                if ((*octrees[layerNo]).at(idX,idY,idZ).id>=0){
-                    parts.push_back((*octrees[layerNo]).at(idX,idY,idZ));
+    if (layerNo==-1){
+        filterPCLGrid();
+    }
+    else{
+        for (int idX=0; idX<(*octrees[layerNo]).size(); idX++){///to do z-slicing
+            for (int idY=0; idY<(*octrees[layerNo]).size(); idY++){
+                for (int idZ=0; idZ<(*octrees[layerNo]).size(); idZ++){
+                    if ((*octrees[layerNo]).at(idX,idY,idZ).id>=0){
+                        parts.push_back((*octrees[layerNo]).at(idX,idY,idZ));
+                    }
                 }
             }
         }
@@ -222,7 +326,7 @@ void ObjectCompositionOctree::getClusters(int layerNo, std::vector< std::set<int
                             Vec3 norm2 = part.pose.matrix().block(0,2,3,1);
                             //compute angle between normals
                             double dp = norm1.adjoint()*norm2;
-                            if (fabs(acos(dp))>config.maxAngle)// if angle between normals is bigger than threshold add to another cluster
+                            if (fabs(acos(dp))>config.maxAngleGrid)// if angle between normals is bigger than threshold add to another cluster
                                 partIds2.insert(part.id);
                             else
                                 partIds1.insert(part.id);

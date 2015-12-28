@@ -133,33 +133,6 @@ void HOP3DBham::learn(){
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
-
-    /*for (int i=0;i<3;i++){
-        for (int j=0;j<3;j++){
-            hierarchy.get()->viewDependentLayers[0].front().partIds[i][j]=i;
-        }
-    }
-    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[0][0].mean << -0.021,-0.02,0,0,0,1;    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[0][1].mean << 0,-0.02,0,0,0,1;    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[0][2].mean << 0.02,-0.02,0,0,0,1;
-    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[1][0].mean << -0.02,0.0,0,0,0,1;    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[1][1].mean << 0,0.0,0,0,0,1;    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[1][2].mean << 0.02,0.0,0.0,0,0,1;
-    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[2][0].mean << -0.0205,0.02,0,0,0,1;    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[2][1].mean << 0,0.02,0,0,0,1;    hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[2][2].mean << 0.02,0.02,0,0,0,1;
-    Mat34 t(Mat34::Identity());
-    t = Eigen::AngleAxisd(0.1, Eigen::Vector3d::UnitZ())* Eigen::AngleAxisd(0.5, Eigen::Vector3d::UnitY())* Eigen::AngleAxisd(-0.3, Eigen::Vector3d::UnitZ());
-
-    for (int i=0;i<3;i++){
-        for (int j=0;j<3;j++){
-            Vec3 pos(hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[i][j].mean(0),hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[i][j].mean(1),hierarchy.get()->viewDependentLayers[0].front().partsPosNorm[i][j].mean(2));
-            Mat34 pose(Mat34::Identity());
-            pose(0,3)=pos(0); pose(1,3)=pos(1); pose(2,3)=pos(2);
-            pose = t*pose;
-            hierarchy.get()->viewDependentLayers[0].front().group.front().partsPosNorm[i][j].mean(0)=pose(0,3); hierarchy.get()->viewDependentLayers[0].front().group.front().partsPosNorm[i][j].mean(1)=pose(1,3); hierarchy.get()->viewDependentLayers[0].front().group.front().partsPosNorm[i][j].mean(2)=pose(2,3);
-            hierarchy.get()->viewDependentLayers[0].front().group.front().partsPosNorm[i][j].mean(3)=pose(0,2); hierarchy.get()->viewDependentLayers[0].front().group.front().partsPosNorm[i][j].mean(4)=pose(1,2); hierarchy.get()->viewDependentLayers[0].front().group.front().partsPosNorm[i][j].mean(5)=pose(2,2);
-        }
-    }
-    for (int i=0;i<3;i++){
-        for (int j=0;j<3;j++){
-            hierarchy.get()->viewDependentLayers[0].front().group.front().partIds[i][j]=j+i+1;
-        }
-    }*/
     //represent all images in parts from 3rd layer
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
         for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
@@ -187,10 +160,13 @@ void HOP3DBham::learn(){
                 Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                 //std::cout << cameraPose.matrix() << " \n";
                 objects[categoryNo][objectNo].update(0, parts, cameraPose, *depthCameraModel, *hierarchy);
+                objects[categoryNo][objectNo].updatePCLGrid(parts, cameraPose);
             }
             std::vector< std::set<int>> clustersTmp;
             //std::cout << "get clusters\n";
             objects[categoryNo][objectNo].getClusters(0,clustersTmp);
+            std::vector<ViewIndependentPart> VIparts;
+            objects[categoryNo][objectNo].getParts(-1,VIparts);
             //std::cout << " clusters size: " << clustersTmp.size() << "\n";
             std::cout << "finish get clusters\n";
             clusters.reserve( clusters.size() + clustersTmp.size() ); // preallocate memory
@@ -285,10 +261,9 @@ void HOP3DBham::learn(){
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
         for (auto & object : objects[categoryNo]){
             std::vector<ViewIndependentPart> objectParts;
-            int viewIndLayers = 2;
-            for (int i=0;i<viewIndLayers;i++){
+            for (size_t i=0;i<hierarchy.get()->viewIndependentLayers.size()-2;i++){
                 object.getParts(i, objectParts);
-                notify(objectParts, i+3);
+                notify(objectParts, i+hierarchy.get()->viewDependentLayers.size()+1);
             }
         }
     }
@@ -416,7 +391,7 @@ void HOP3DBham::createPartClouds(){
                                 Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(point3D(0),point3D(1),point3D(2)));
                                 Mat34 pointWorld = cameraPose*pointCam;
                                 pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(1)=pointWorld(1,3)+imageNo*0.2; pointRGBA.position(2)=pointWorld(2,3);
-                                objsTmp[layerNo].pointCloudRGBA.push_back(pointRGBA);
+                                objsTmp[layerNo].push_back(pointRGBA);
                             }
                         }
                     }

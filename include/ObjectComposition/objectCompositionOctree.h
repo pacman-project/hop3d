@@ -10,6 +10,7 @@
 #include "ObjectComposition/objectComposition.h"
 #include "../../external/tinyXML/tinyxml2.h"
 #include "octree.h"
+#include "Data/Cloud.h"
 
 namespace hop3d {
     /// create a single part selector
@@ -23,6 +24,7 @@ public:
     /// Pointer
     typedef std::unique_ptr<ObjectCompositionOctree> Ptr;
     typedef std::shared_ptr< Octree<ViewIndependentPart> > OctreePtr;
+    typedef std::shared_ptr< Octree<hop3d::PointCloud> > OctreeCloudPtr;
 
     /// Construction
     ObjectCompositionOctree(void);
@@ -33,6 +35,9 @@ public:
     /// update composition from octets (words from last view-independent layer's vocabulary)
     void update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, Hierarchy& hierarchy);
 
+    /// update voxel grid which contains point and normals
+    void updatePCLGrid(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose);
+
     /// get clusters of parts id stored in octree (one cluster per voxel)
     void getClusters(int layerNo, std::vector< std::set<int>>& clusters);
 
@@ -40,7 +45,7 @@ public:
     void createNextLayerVocabulary(int destLayerNo, const Hierarchy& hierarchy, std::vector<ViewIndependentPart>& vocabulary);
 
     /// get octree in layer layerNo
-    void getParts(int layerNo, std::vector<ViewIndependentPart>& parts) const;
+    void getParts(int layerNo, std::vector<ViewIndependentPart>& parts);
 
     /// update ids in the octree using new vocabulary
     void updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy);
@@ -113,7 +118,11 @@ public:
             /// Clusters no -- second layer
             int voxelsNo;
             /// max angle between two parts (normals), if current angle is bigger than max second cluster is created
-            double maxAngle;
+            double maxAngleGrid;
+            /// Point cloud grid -- size
+            double voxelSizeGrid;
+            /// Point cloud grid -- voxelsNo
+            int voxelsNoGrid;
     };
 
 private:
@@ -121,6 +130,8 @@ private:
     Config config;
     /// Octree
     std::vector<OctreePtr> octrees;
+    /// points with normals grid
+    OctreeCloudPtr octreeGrid;
 
     /// compute rotation matrix from normal vector ('y' axis is vetical)
     //void normal2rot(const Vec3& normal, Mat33& rot);
@@ -134,8 +145,20 @@ private:
     /// convert global coordinates to octree coordinates
     void toCoordinate(double pos, int& coord, int layerNo) const;
 
+    /// convert global coordinates to octree coordinates
+    void toCoordinatePCLGrid(double pos, int& coord) const;
+
     /// convert octree coordinates to global coordinates
     void fromCoordinate(int coord, double& pos, int layero) const;
+
+    /// convert octree coordinates to global coordinates
+    void fromCoordinatePCLGrid(int coord, double& pos) const;
+
+    /// filter voxel grid
+    void filterPCLGrid(void);
+
+    /// compute mean value of normal and position
+    PointNormal computeMeanPosNorm(PointCloud cloud);
 };
 }
 #endif // OBJECT_COMPOSITION_OCTREE_H_INCLUDED

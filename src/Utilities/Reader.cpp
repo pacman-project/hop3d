@@ -57,10 +57,10 @@ int hop3d::Reader::readPlyFile(std::string fileName, PointCloud& outputPointClou
             hop3d::PointNormal tempPointNormal;
             tempPointNormal.position = vecPoint;
             tempPointNormal.normal = vecNorm;
-            outputPointCloud.pointCloudNormal.push_back(tempPointNormal);
+            outputPointCloud.push_back(tempPointNormal);
         }
         std::cout << "Points and normals successfuly loaded from " << fileName << std::endl;
-        std::cout << "The data occupies " << (2*(sizeof(std::vector<Eigen::Vector3d>) + (sizeof(Eigen::Vector3d) * outputPointCloud.pointCloudNormal.size())))/1024/1024 << " MB" << std::endl;
+        std::cout << "The data occupies " << (2*(sizeof(std::vector<Eigen::Vector3d>) + (sizeof(Eigen::Vector3d) * outputPointCloud.size())))/1024/1024 << " MB" << std::endl;
         for(unsigned long  i=0; i < faceElements; i++ ){
         getline (myfile,line);
         line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());

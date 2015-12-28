@@ -55,6 +55,8 @@ typedef Eigen::Vector2d Vec2;
 /// 3 element vector class
 typedef Eigen::Vector3d Vec3;
 /// 6 element vector class
+typedef Eigen::Matrix<double, 4, 1, Eigen::ColMajor> Vec4;
+/// 6 element vector class
 typedef Eigen::Matrix<double, 6, 1, Eigen::ColMajor> Vec6;
 /// Matrix representation of SO(2) group of rotations or other 2D matrices
 typedef Eigen::Matrix<double, 2, 2> Mat22;
