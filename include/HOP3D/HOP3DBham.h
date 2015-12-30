@@ -55,6 +55,15 @@ public:
     /// get cloud from dataset
     void getCloud(int categoryNo, int objectNo, int imageNo, std::vector<Vec3>& cloud) const;
 
+    /// get number of points in the point cloud
+    size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo) const;
+
+    /// get point from the point cloud
+    void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const;
+
+    /// get camera pose
+    void getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose) const;
+
     #ifdef QVisualizerBuild
         ///Attach visualizer
         void attachVisualizer(QGLVisualizer* visualizer);

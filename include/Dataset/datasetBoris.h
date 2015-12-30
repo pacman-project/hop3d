@@ -44,6 +44,12 @@ public:
     /// translate path to filename into category, object, image numbers
     void translateString(const std::string& path, int& categoryNo, int& objectNo, int& imageNo) const;
 
+    /// read number of point for the point cloud dataset
+    size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo) const;
+
+    /// get point from the point cloud
+    void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const;
+
     /// Destruction
     ~BorisDataset(void);
 

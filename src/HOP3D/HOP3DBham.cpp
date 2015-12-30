@@ -97,6 +97,21 @@ void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, std::vector<
     depthCameraModel->getCloud(depthImage, cloud);
 }
 
+/// get number of points in the point cloud
+size_t HOP3DBham::getNumOfPoints(int categoryNo, int objectNo, int imageNo) const {
+    return dataset->getNumOfPoints(categoryNo, objectNo, imageNo);
+}
+
+/// get point from the point cloud
+void HOP3DBham::getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const{
+    dataset->getPoint(categoryNo, objectNo, imageNo, pointNo, point);
+}
+
+/// get camera pose
+void HOP3DBham::getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose) const{
+    cameraPose = dataset->getCameraPose(categoryNo, objectNo, imageNo);
+}
+
 /// learining from the dataset
 void HOP3DBham::learn(){
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
@@ -106,6 +121,8 @@ void HOP3DBham::learn(){
     //hop3d::Reader reader;
     //reader.readMultipleImages("../../resources/depthImages",vecImages);
     dataset->getDatasetInfo(datasetInfo);
+    Mat34 cameraPose1;
+    getSensorFrame(0,0,0, cameraPose1);
     std::vector<hop3d::Octet> octets;
     std::vector<hop3d::Octet> octets2nd;
     int startId = (int)hierarchy.get()->firstLayer.size();

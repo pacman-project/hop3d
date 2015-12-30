@@ -145,6 +145,51 @@ void BorisDataset::readDepthImage(int categoryNo, int objectNo, int imageNo, cv:
     depthImage = image;
 }
 
+/// read number of point for the point cloud dataset
+size_t BorisDataset::getNumOfPoints(int categoryNo, int objectNo, int imageNo) const{
+    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
+    std::string path = config.path + "/" + config.dataset.categories[categoryNo].objects[objectNo].name + "/" + config.dataset.categories[categoryNo].objects[objectNo].images[imageNo];
+    if (config.verbose>1)
+        std::cout << "load " << path << "\n";
+    if (pcl::io::loadPCDFile<pcl::PointXYZRGBNormal> (path, *cloud) == -1){//* load the file
+        PCL_ERROR ("Couldn't read pcd file \n");
+    }
+    size_t pointsNo=0;
+    for (size_t i = 0; i < cloud->points.size(); ++i){
+        if (!std::isnan(double(cloud->points[i].x))){
+            pointsNo++;
+        }
+    }
+    return pointsNo;
+}
+
+/// get point from the point cloud
+void BorisDataset::getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const{
+    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
+    std::string path = config.path + "/" + config.dataset.categories[categoryNo].objects[objectNo].name + "/" + config.dataset.categories[categoryNo].objects[objectNo].images[imageNo];
+    if (config.verbose>1)
+        std::cout << "load " << path << "\n";
+    if (pcl::io::loadPCDFile<pcl::PointXYZRGBNormal> (path, *cloud) == -1){//* load the file
+        PCL_ERROR ("Couldn't read pcd file \n");
+    }
+    size_t pointIter = 0;
+    bool found = false;
+    Mat34 cameraPose(Eigen::Translation<double, 3>(cloud->sensor_origin_(0), cloud->sensor_origin_(1), cloud->sensor_origin_(2))*Quaternion(cloud->sensor_orientation_));
+    for (size_t i = 0; i < cloud->points.size(); ++i){
+        if (!std::isnan(double(cloud->points[i].x))){
+            if (pointIter==pointNo){
+                Mat34 pointTmp(Eigen::Translation<double, 3>(cloud->points[i].x,cloud->points[i].y,cloud->points[i].z)*Mat33::Identity());
+                Mat34 pointCam=cameraPose.inverse()*pointTmp;
+                point(0)=pointCam(0,3); point(1)=pointCam(1,3); point(2)=pointCam(2,3);
+                found=true;
+                break;
+            }
+            pointIter++;
+        }
+    }
+    if (!found)
+        point = Vec3(NAN, NAN, NAN);
+}
 /// read camera pose from file
 Mat34 BorisDataset::getCameraPose(int categoryNo, int objectNo, int imageNo) const{
     return config.dataset.categories[categoryNo].objects[objectNo].poses[imageNo];

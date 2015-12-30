@@ -41,6 +41,12 @@ public:
     /// translate path to filename into category, object, image numbers
     virtual void translateString(const std::string& path, int& categoryNo, int& objectNo, int& imageNo) const = 0;
 
+    /// read number of point for the point cloud dataset
+    virtual size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo) const = 0;
+
+    /// get point from the point cloud
+    virtual void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const = 0;
+
     /// Virtual descrutor
     virtual ~Dataset() {
     }

@@ -46,6 +46,15 @@ public:
     /// get cloud from dataset
     virtual void getCloud(int categoryNo, int objectNo, int imageNo, std::vector<Vec3>& cloud) const = 0;
 
+    /// get number of points in the point cloud
+    virtual size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo) const = 0;
+
+    /// get point from the point cloud
+    virtual void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const = 0;
+
+    /// get camera pose
+    virtual void getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose) const = 0;
+
     /// Virtual descrutor
     virtual ~HOP3D() {
     }
