@@ -115,7 +115,7 @@ void ObjectCompositionOctree::filterPCLGrid(void){
     for (int idX=0; idX<(*octreeGrid).size(); idX++){///to do z-slicing
         for (int idY=0; idY<(*octreeGrid).size(); idY++){
             for (int idZ=0; idZ<(*octreeGrid).size(); idZ++){
-                if ((*octreeGrid).at(idX,idY,idZ).size()>1){//compute mean point and normal
+                if ((*octreeGrid).at(idX,idY,idZ).size()>0){//compute mean point and normal
                     std::vector<hop3d::PointCloud> groups;
                     hop3d::PointCloud means;
                     //std::cout << idX << ", " << idY << ", " << idZ << " = " << (*octreeGrid).at(idX,idY,idZ).size() << " before\n";
@@ -149,10 +149,16 @@ void ObjectCompositionOctree::filterPCLGrid(void){
                         }
                     }
                     (*octreeGrid)(idX,idY,idZ) = means;
+                    for (auto& point : means){//update parts octree
+                        int x,y,z;
+                        toCoordinate(point.position(0),x,0); toCoordinate(point.position(1),y,0); toCoordinate(point.position(2),z,0);
+                        (*octrees[0])(x,y,z).cloud.push_back(point);
+                    }
                     //std::cout << idX << ", " << idY << ", " << idZ << " = " << (*octreeGrid).at(idX,idY,idZ).size() << " after\n";
                     //for (auto& point : (*octreeGrid)(idX,idY,idZ)){
                     //    std::cout << "element " << point.position.transpose() << "     " << point.normal.transpose() << "\n";
                     //}
+                    //getchar();
                 }
             }
         }
@@ -182,13 +188,13 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
         for (int idY=0; idY<(*octrees[layerNo]).size(); idY++){
             for (int idZ=0; idZ<(*octrees[layerNo]).size(); idZ++){
                 if ((*octrees[layerNo]).at(idX,idY,idZ).id>=0){
+                    int wordId=0;
                     for (auto& word: vocabulary){
-                        int representativeId = word.group.begin()->id;//id of the VD representative part
-                        for (auto& part : (*octrees[layerNo])(idX,idY,idZ).parts){ //find representative id in the voxel
-                            if (part.id==representativeId){// and update the pose part by pose of the representative part
-                                (*octrees[layerNo])(idX,idY,idZ).pose = part.pose;
-                            }
+                        if (word.cloud.front().position(0) == (*octrees[layerNo]).at(idX,idY,idZ).cloud.front().position(0)){//find min distance
+                            (*octrees[layerNo])(idX,idY,idZ).id = wordId;
+                            (*octrees[layerNo])(idX,idY,idZ).offset=Mat34::Identity();
                         }
+                        wordId++;
                     }
                 }
             }
@@ -296,16 +302,11 @@ int ObjectCompositionOctree::findIdInVocabulary(const ViewIndependentPart& part,
 /// get octree in layer layerNo
 void ObjectCompositionOctree::getParts(int layerNo, std::vector<ViewIndependentPart>& parts){
     parts.clear();
-    if (layerNo==-1){
-        filterPCLGrid();
-    }
-    else{
-        for (int idX=0; idX<(*octrees[layerNo]).size(); idX++){///to do z-slicing
-            for (int idY=0; idY<(*octrees[layerNo]).size(); idY++){
-                for (int idZ=0; idZ<(*octrees[layerNo]).size(); idZ++){
-                    if ((*octrees[layerNo]).at(idX,idY,idZ).id>=0){
-                        parts.push_back((*octrees[layerNo]).at(idX,idY,idZ));
-                    }
+    for (int idX=0; idX<(*octrees[layerNo]).size(); idX++){///to do z-slicing
+        for (int idY=0; idY<(*octrees[layerNo]).size(); idY++){
+            for (int idZ=0; idZ<(*octrees[layerNo]).size(); idZ++){
+                if ((*octrees[layerNo]).at(idX,idY,idZ).id>=0){
+                    parts.push_back((*octrees[layerNo]).at(idX,idY,idZ));
                 }
             }
         }
@@ -360,32 +361,124 @@ void ObjectCompositionOctree::getClusters(int layerNo, std::vector< std::set<int
     rot.block(0,2,3,1) = _normal;
 }*/
 
+/// get all patches from the voxel grid
+int ObjectCompositionOctree::getCorrespondingPatches(hop3d::PointCloud& patches, int centerX, int centerY, int centerZ, int coeff){
+    patches.clear();
+    for (int i=-int(coeff/2); i<int(coeff/2);i++){
+        for (int j=-int(coeff/2); j<int(coeff/2);j++){
+            for (int k=-int(coeff/2); k<int(coeff/2);k++){
+                if ((*octreeGrid).at(centerX+i, centerY+j, centerZ+k).size()>0){
+                    std::cout << "get grid " << centerX << " " << centerY << " " << centerZ << "\n";
+                    patches.insert(patches.end(),(*octreeGrid).at(centerX+i, centerY+j, centerZ+k).begin(), (*octreeGrid).at(centerX+i, centerY+j, centerZ+k).end());
+                }
+            }
+        }
+    }
+    return patches.size();
+}
+
+/// assign neighbouring parts to new part
+int ObjectCompositionOctree::createFirstLayerPart(ViewIndependentPart& newPart, int x, int y, int z){
+    int partsNo=0;
+    //||||||||||
+    //|  |  |  |
+    //|||||||||||||
+    //|   |   |   |
+    double center[3];
+    fromCoordinate(x,center[0],0); fromCoordinate(y,center[1],0); fromCoordinate(z,center[2],0);
+    for (int i=-1; i<2;i++){
+        for (int j=-1; j<2;j++){
+            for (int k=-1; k<2;k++){
+                if ((*octrees[0]).at(x+i,y+j,z+k).cloud.size()>0){
+                    for (auto& patch : (*octrees[0])(x+i,y+j,z+k).cloud){
+                        //std::cout << "config.voxelSize " << config.voxelSize << "\n";
+                        //std::cout << "config.voxelSizeGrid " << config.voxelSizeGrid << "\n";
+                        //std::cout << config.voxelSize / config.voxelSizeGrid << "\n";
+                        //std::cout << "coeff " << coeff << "\n";
+                        //std::cout << "xyz " << x << " " << y << " " << z << "\n";
+                        //std::cout << "grid coord " << gridCoord[0] << " " << gridCoord[1] << " " << gridCoord[2] << "\n";
+                        //std::cout << "center oct " << center[0] << " " << center[1] << " " << center[2] << "\n";
+                        //fromCoordinatePCLGrid(gridCoord[0],center[0]); fromCoordinatePCLGrid(gridCoord[1],center[1]); fromCoordinatePCLGrid(gridCoord[2],center[2]);
+                        //std::cout << "center grid " << center[0] << " " << center[1] << " " << center[2] << "\n";
+                        //std::cout << patch.position.transpose() << " bef\n";
+                        for (int coord = 0; coord<3; coord++)
+                            patch.position(coord)-=center[coord];
+                        //std::cout << patch.position.transpose() << " aft\n";
+                        //getchar();
+                        newPart.cloud.push_back(patch);
+                        partsNo++;
+                    }
+                    //newPart.cloud.insert(newPart.cloud.end(),newPatches.begin(), newPatches.end());
+                    newPart.partIds[i+1][j+1][k+1] = 1;
+                }
+                else
+                    newPart.partIds[i+1][j+1][k+1] = -1;
+            }
+        }
+    }
+    if (partsNo>0){
+        Mat34 partPosition(Mat34::Identity());
+        partPosition(0,3) = center[0]; partPosition(1,3) = center[1]; partPosition(2,3) = center[2];
+        newPart.pose = partPosition;
+    }
+    return partsNo;
+}
+
+/// create first layer vocabulary from voxel grid
+void ObjectCompositionOctree::createFirstLayer(std::vector<ViewIndependentPart>& vocabulary){
+    int tempId=0;
+    // update next layer octree
+    for (int idX=1; idX<(*octrees[0]).size()-1; idX+=3){///to do z-slicing
+        for (int idY=1; idY<(*octrees[0]).size()-1; idY+=3){
+            for (int idZ=1; idZ<(*octrees[0]).size()-1; idZ+=3){
+                ViewIndependentPart newPart;
+                newPart.layerId=3;
+                // add neighbouring parts into structure
+                if (createFirstLayerPart(newPart, idX, idY, idZ)>0){
+                    newPart.id = tempId;//hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
+                    (*octrees[0])(idX, idY, idZ) = newPart;//update octree
+                    vocabulary.push_back(newPart);
+                    tempId++;
+                }
+            }
+        }
+    }
+}
+
 /// create next layer vocabulary
 void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const Hierarchy& hierarchy, std::vector<ViewIndependentPart>& vocabulary){
     vocabulary.clear();
     //for no reason take the middle part. In the feature it should be max, or weighted combination
-    int iterx=0;
-    int tempId=0;
-    // update next layer octree
-    for (int idX=1; idX<(*octrees[destLayerNo-1]).size()-1; idX+=3){///to do z-slicing
-        int itery=0;
-        for (int idY=1; idY<(*octrees[destLayerNo-1]).size()-1; idY+=3){
-            int iterz=0;
-            for (int idZ=1; idZ<(*octrees[destLayerNo-1]).size()-1; idZ+=3){
-                ViewIndependentPart newPart;
-                newPart.layerId=destLayerNo+4;
-                // add neighbouring parts into structure
-                if (assignPartNeighbours(newPart, hierarchy, destLayerNo-1, idX, idY, idZ)>0){
-                    newPart.id = tempId;//hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
-                    (*octrees[destLayerNo])(iterx,itery,iterz) = newPart;//update octree
-                    vocabulary.push_back(newPart);
-                    tempId++;
+    if (destLayerNo==0){
+        std::cout << "create first layer vocabulary\n";
+        filterPCLGrid();
+        createFirstLayer(vocabulary);
+        std::cout << "create first layer vocabulary finished\n";
+    }
+    else{
+        int tempId=0;
+        int iterx=0;
+        // update next layer octree
+        for (int idX=1; idX<(*octrees[destLayerNo-1]).size()-1; idX+=3){///to do z-slicing
+            int itery=0;
+            for (int idY=1; idY<(*octrees[destLayerNo-1]).size()-1; idY+=3){
+                int iterz=0;
+                for (int idZ=1; idZ<(*octrees[destLayerNo-1]).size()-1; idZ+=3){
+                    ViewIndependentPart newPart;
+                    newPart.layerId=destLayerNo+4;
+                    // add neighbouring parts into structure
+                    if (assignPartNeighbours(newPart, hierarchy, destLayerNo-1, idX, idY, idZ)>0){
+                        newPart.id = tempId;//hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
+                        (*octrees[destLayerNo])(iterx,itery,iterz) = newPart;//update octree
+                        vocabulary.push_back(newPart);
+                        tempId++;
+                    }
+                    iterz++;
                 }
-                iterz++;
+                itery++;
             }
-            itery++;
+            iterx++;
         }
-        iterx++;
     }
 }
 

@@ -154,6 +154,7 @@ void HOP3DBham::learn(){
     }
     std::vector< std::set<int>> clusters;
     objects.resize(datasetInfo.categories.size());
+    std::vector<ViewIndependentPart> vocabulary;
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
         for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
             std::cout << "Create object composition\n";
@@ -170,10 +171,10 @@ void HOP3DBham::learn(){
                 //move octets into 3D space and update octree representation of the object
                 Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                 //std::cout << cameraPose.matrix() << " \n";
-                objects[categoryNo][objectNo].update(0, parts, cameraPose, *depthCameraModel, *hierarchy);
+                //objects[categoryNo][objectNo].update(0, parts, cameraPose, *depthCameraModel, *hierarchy);
                 objects[categoryNo][objectNo].updatePCLGrid(parts, cameraPose);
             }
-            std::vector< std::set<int>> clustersTmp;
+            /*std::vector< std::set<int>> clustersTmp;
             //std::cout << "get clusters\n";
             objects[categoryNo][objectNo].getClusters(0,clustersTmp);
             std::vector<ViewIndependentPart> VIparts;
@@ -181,14 +182,17 @@ void HOP3DBham::learn(){
             //std::cout << " clusters size: " << clustersTmp.size() << "\n";
             std::cout << "finish get clusters\n";
             clusters.reserve( clusters.size() + clustersTmp.size() ); // preallocate memory
-            clusters.insert( clusters.end(), clustersTmp.begin(), clustersTmp.end() );
+            clusters.insert( clusters.end(), clustersTmp.begin(), clustersTmp.end() );*/
+            std::vector<ViewIndependentPart> voc;
+            objects[categoryNo][objectNo].createNextLayerVocabulary(0, *hierarchy, voc);
+            vocabulary.insert( vocabulary.end(), voc.begin(), voc.end() );
         }
     }
-    std::cout << "clusters size: " << clusters.size() << "\n";
-    std::vector<ViewIndependentPart> vocabulary;
-    std::cout << "create unique clusters:\n";
-    partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
-    std::cout << "4th layer vocabulary size: " << vocabulary.size() << "\n";
+    //std::cout << "clusters size: " << clusters.size() << "\n";
+    //std::vector<ViewIndependentPart> vocabulary;
+    //std::cout << "create unique clusters:\n";
+    //partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
+    std::cout << "3rd layer init vocabulary size: " << vocabulary.size() << "\n";
     /// First view-independent layer (three and a half layer)
     hierarchy.get()->viewIndependentLayers[0]=vocabulary;
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
@@ -200,7 +204,7 @@ void HOP3DBham::learn(){
 //        word.print();
 //        getchar();
 //    }
-    for (int layerNo=0;layerNo<config.viewIndependentLayersNo-1;layerNo++){
+    /*for (int layerNo=0;layerNo<config.viewIndependentLayersNo-1;layerNo++){
         ///select part for ith layer
         vocabulary.clear();
         for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
@@ -225,7 +229,7 @@ void HOP3DBham::learn(){
                 object.updateIds(layerNo+1, hierarchy.get()->viewIndependentLayers[layerNo+1], *hierarchy);
             }
         }
-    }
+    }*/
     // save hierarchy to file
     if(config.save2file){
         std::ofstream ofsHierarchy(config.filename2save);
@@ -272,7 +276,7 @@ void HOP3DBham::learn(){
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
         for (auto & object : objects[categoryNo]){
             std::vector<ViewIndependentPart> objectParts;
-            for (size_t i=0;i<hierarchy.get()->viewIndependentLayers.size()-2;i++){
+            for (size_t i=0;i<1;i++){//hierarchy.get()->viewIndependentLayers.size()-2;i++){
                 object.getParts(i, objectParts);
                 notify(objectParts, i+hierarchy.get()->viewDependentLayers.size()+1);
             }

@@ -139,6 +139,9 @@ private:
     /// assign neighbouring parts to new part
     int assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z);
 
+    /// assign neighbouring parts to new part
+    int createFirstLayerPart(ViewIndependentPart& newPart, int x, int y, int z);
+
     /// find part in the vocabulary and return new id
     int findIdInVocabulary(const ViewIndependentPart& part, const std::vector<ViewIndependentPart>& vocabulary);
 
@@ -159,6 +162,12 @@ private:
 
     /// compute mean value of normal and position
     PointNormal computeMeanPosNorm(PointCloud cloud);
+
+    /// create first layer vocabulary from voxel grid
+    void createFirstLayer(std::vector<ViewIndependentPart>& vocabulary);
+
+    /// get all patches from the voxel grid
+    int getCorrespondingPatches(hop3d::PointCloud& patches, int centerX, int centerY, int centerZ, int coeff);
 };
 }
 #endif // OBJECT_COMPOSITION_OCTREE_H_INCLUDED

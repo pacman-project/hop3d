@@ -6,7 +6,6 @@
 #include <array>
 
 #include "Data/Defs.h"
-#include "Data/Part.h"
 
 namespace hop3d {
 

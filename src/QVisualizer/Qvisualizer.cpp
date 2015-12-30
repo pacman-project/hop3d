@@ -218,7 +218,7 @@ void QGLVisualizer::update3Dobjects(void){
     if (update3DModelsFlag){
         update3DModelsFlag = false;
         int layerNo=0;
-        for (auto & layer : layersOfObjects){
+        for (auto & layer : layersOfObjects){//view independent layers
             int objectNo=0;
             for (auto & object : layer){
                 objects3Dlist[layerNo].push_back(createObjList(object,layerNo+hierarchy.get()->viewDependentLayers.size()));
@@ -265,13 +265,13 @@ void QGLVisualizer::updateHierarchy(){
         }
         for (size_t i=0;i<hierarchy->viewIndependentLayers.size();i++){//view-independent
             if (config.verbose==1){
-                std::cout << "layer "<< i+4 << " size: " << hierarchy->viewIndependentLayers[i].size() << "\n";
+                std::cout << "layer "<< i+3 << " size: " << hierarchy->viewIndependentLayers[i].size() << "\n";
             }
             for (auto it = hierarchy->viewIndependentLayers[i].begin(); it!=hierarchy->viewIndependentLayers[i].end(); it++){
-                cloudsListLayers[i+3].push_back(createVIPartList(*it, int(i+4)));
-                clustersList[i+3].push_back(createVIClustersList(*it, int(i+4)));
+                cloudsListLayers[i+2].push_back(createVIPartList(*it, int(i+4)));
+                clustersList[i+2].push_back(createVIClustersList(*it, int(i+4)));
             }
-            linksLists[i+3].push_back(createVILinksList(int(i+4)));
+            //linksLists[i+3].push_back(createVILinksList(int(i+4)));
         }
         mtxHierarchy.unlock();
     }
@@ -397,7 +397,18 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
     glPushMatrix();
-    if (layerNo==4){
+    //int id = part.group.begin()->id;
+    Mat34 pose = Mat34::Identity();//part.pose.inverse();
+    double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, 0, 0, 0, 1};
+    for (auto& patch : part.cloud){
+        glPushMatrix();
+        GLmat[12] = patch.position(0); GLmat[13] = patch.position(1); GLmat[14] = patch.position(2);
+        glMultMatrixd(GLmat);
+        glColor3ub(200,200,200);
+        drawPatch(patch.normal);
+        glPopMatrix();
+    }
+    /*if (layerNo==4){
         int id = part.group.begin()->id;
         Mat34 pose = Mat34::Identity();//part.pose.inverse();
         double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, 0, 0, 0, 1};
@@ -438,10 +449,10 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
                     glPushMatrix();
                         glMultMatrixd(GLmatrot);
                         if (id==-1){
-                            /*glColor3ub(200,200,200);
-                            glBegin(GL_POINTS);
-                                glVertex3d(pos(0), pos(1), pos(2));
-                            glEnd();*/
+                            glColor3ub(200,200,200);
+                            //glBegin(GL_POINTS);
+                            //    glVertex3d(pos(0), pos(1), pos(2));
+                            //glEnd();
                         }
                         else{
                             //this->drawAxis(0.5);
@@ -454,7 +465,7 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
                 }
             }
         }
-    }
+    }*/
     glPopMatrix();
     glEndList();
     return index;
@@ -574,31 +585,19 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
     glPushMatrix();
-    if (layerNo==3){
-        Vec3 initPose(parts.begin()->parts.begin()->pose(0,3), parts.begin()->parts.begin()->pose(1,3), parts.begin()->parts.begin()->pose(2,3));
+    if (parts.size()>0){
+        Vec3 initPose(parts.begin()->pose(0,3), parts.begin()->pose(1,3), parts.begin()->pose(2,3));
         for (auto & part : parts){
-            /*for (auto & partL : part.parts){
-                Vec3 pos(partL.pose(0,3), partL.pose(1,3), partL.pose(2,3));
-                double GLmat[16]={partL.pose(0,0), partL.pose(1,0), partL.pose(2,0), 0,
-                                  partL.pose(0,1), partL.pose(1,1), partL.pose(2,1), 0,
-                                  partL.pose(0,2), partL.pose(1,2), partL.pose(2,2), 0,
-                                  pos(0)-initPose(0), pos(1)-initPose(1), pos(2)-initPose(2), 1};
-                glPushMatrix();
-                    glMultMatrixd(GLmat);
-                    glCallList(cloudsListLayers[2][partL.id]);
-                glPopMatrix();
-            }*/
-
             /// if first view-independent parts are used
             Vec3 pos(part.pose(0,3), part.pose(1,3), part.pose(2,3));
             double GLmat[16]={part.pose(0,0), part.pose(1,0), part.pose(2,0), 0, part.pose(0,1), part.pose(1,1), part.pose(2,1), 0, part.pose(0,2), part.pose(1,2), part.pose(2,2), 0, pos(0)-initPose(0), pos(1)-initPose(1), pos(2)-initPose(2), 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
-                glCallList(cloudsListLayers[3][hierarchy.get()->interpreter[part.id]]);
+                glCallList(cloudsListLayers[layerNo-1][part.id]);
             glPopMatrix();
         }
     }
-    if (layerNo==4){
+    /*if (layerNo==4&&parts.size()>0){
         Vec3 initPose(parts.begin()->pose(0,3), parts.begin()->pose(1,3), parts.begin()->pose(2,3));
         int partNo=0;
         for (auto & part : parts){
@@ -612,7 +611,7 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
                 glCallList(cloudsListLayers[4][part.id]);
             glPopMatrix();
         }
-    }
+    }*/
     /*for (size_t n = 0; n < part.partIds.size(); n++){
         for (size_t m = 0; m < part.partIds[n].size(); m++){
             Vec3 pos(config.pixelSize*part.gaussians[n][m].mean(0), config.pixelSize*part.gaussians[n][m].mean(1), part.gaussians[n][m].mean(2));

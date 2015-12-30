@@ -2,6 +2,7 @@
 #define DATA_PART_H
 
 #include "Data/Defs.h"
+#include "Data/Cloud.h"
 #include "Utilities/kabschEst.h"
 
 #include <memory>
@@ -162,6 +163,8 @@ public:
     int layerId;
     /// part aggregated from the same level vocabulary
     std::vector<ViewIndependentPart> group;
+    /// point cloud
+    hop3d::PointCloud cloud;
 
     /// id of neighbouring parts
     std::array<std::array<std::array<int,3>,3>,3> partIds;
