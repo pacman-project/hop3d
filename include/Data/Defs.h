@@ -277,6 +277,8 @@ public:
 
     /// prefix
     std::vector<std::string> images;
+    /// full path
+    std::vector<std::string> fullPaths;
     /// camera poses
     std::vector<Mat34> poses;
 

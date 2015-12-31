@@ -95,6 +95,13 @@ void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::Point
     imageFilterer->getCloud(categoryNo, objectNo, imageNo, cloud);
 }
 
+/// get cloud from dataset
+void HOP3DBham::getCloud(const std::string& path, hop3d::PointCloud& cloud) const{
+    int categoryNo(0), objectNo(0), imageNo(0);
+    dataset->translateString(path, categoryNo, objectNo, imageNo);
+    getCloud(categoryNo, objectNo, imageNo, cloud);
+}
+
 /// get number of points in the point cloud
 size_t HOP3DBham::getNumOfPoints(int categoryNo, int objectNo, int imageNo) const {
     return dataset->getNumOfPoints(categoryNo, objectNo, imageNo);
@@ -119,6 +126,8 @@ void HOP3DBham::learn(){
     //hop3d::Reader reader;
     //reader.readMultipleImages("../../resources/depthImages",vecImages);
     dataset->getDatasetInfo(datasetInfo);
+    std::vector<std::string> names;
+
     Mat34 cameraPose1;
     getSensorFrame(0,0,0, cameraPose1);
     std::vector<hop3d::Octet> octets;

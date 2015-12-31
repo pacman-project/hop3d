@@ -55,6 +55,9 @@ public:
     /// get cloud from dataset
     void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const;
 
+    /// get cloud from dataset
+    void getCloud(const std::string& path, hop3d::PointCloud& cloud) const;
+
     /// get number of points in the point cloud
     size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo) const;
 

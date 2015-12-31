@@ -55,6 +55,7 @@ BorisDataset::Config::Config(std::string configFilename){
             int imagesNo;
             model->FirstChildElement( categoryName.str().c_str() )->FirstChildElement( objectName.str().c_str() )->QueryIntAttribute("imagesNo", &imagesNo);
             dataset.categories[categoryNo].objects[objectNo].images.resize(imagesNo);
+            dataset.categories[categoryNo].objects[objectNo].fullPaths.resize(imagesNo);
             dataset.categories[categoryNo].objects[objectNo].poses.resize(imagesNo);
             for (int imageNo=0;imageNo<imagesNo; imageNo++){
                 std::stringstream imageName;
@@ -62,6 +63,7 @@ BorisDataset::Config::Config(std::string configFilename){
                 dataset.categories[categoryNo].objects[objectNo].images[imageNo] = model->FirstChildElement( categoryName.str().c_str() )->FirstChildElement( objectName.str().c_str() )->FirstChildElement( imageName.str().c_str() )->Attribute( "name" );
                 images.insert(std::make_pair(dataset.categories[categoryNo].objects[objectNo].images[imageNo],imageNo));
                 std::string filePath(path + "/" + dataset.categories[categoryNo].objects[objectNo].name + "/" + dataset.categories[categoryNo].objects[objectNo].images[imageNo]);
+                dataset.categories[categoryNo].objects[objectNo].fullPaths[imageNo] = filePath;
                 dataset.categories[categoryNo].objects[objectNo].poses[imageNo] = readCameraPose(filePath);
                 if (verbose>1)
                     std::cout << dataset.categories[categoryNo].objects[objectNo].images[imageNo] <<"\n";
