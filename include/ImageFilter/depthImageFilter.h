@@ -70,6 +70,9 @@ public:
     /// returs parts ids and their position on the image
     void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords, int viewDependentLayersNo) const;
 
+    /// get cloud from dataset
+    void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const;
+
     class Config{
       public:
         Config() {

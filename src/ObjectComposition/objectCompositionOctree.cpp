@@ -190,6 +190,21 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
                 if ((*octrees[layerNo]).at(idX,idY,idZ).id>=0){
                     int wordId=0;
                     for (auto& word: vocabulary){
+                        /*Mat34 estTransform;
+                        ViewIndependentPart partA = word;
+                        //transform
+                        Vec3 trans(0.1,0.2,0.3);
+                        double rot[3]={0,0,0};
+                        Eigen::Matrix3d m;
+                        m = Eigen::AngleAxisd(rot[0], Eigen::Vector3d::UnitZ())* Eigen::AngleAxisd(rot[1], Eigen::Vector3d::UnitY())* Eigen::AngleAxisd(rot[2], Eigen::Vector3d::UnitZ());
+                        for (auto& patch : partA.cloud){
+                            patch.position = m*patch.position + trans;
+                            patch.normal = (m*patch.normal).block<3,1>(0,0);
+                        }
+                        std::cout << "ref rot\n" << m << "\n";
+                        ViewIndependentPart::distanceGICP(word,partA,estTransform);
+                        std::cout << "estTransform\n" << estTransform.matrix() << "\n";
+                        getchar();*/
                         if (word.cloud.front().position(0) == (*octrees[layerNo]).at(idX,idY,idZ).cloud.front().position(0)){//find min distance
                             (*octrees[layerNo])(idX,idY,idZ).id = wordId;
                             (*octrees[layerNo])(idX,idY,idZ).offset=Mat34::Identity();

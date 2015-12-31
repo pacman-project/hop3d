@@ -58,6 +58,11 @@ const std::string& NormalImageFilter::getName() const {
     return name;
 }
 
+/// get cloud from dataset
+void NormalImageFilter::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const{
+    cloud = inputClouds[categoryNo][objectNo][imageNo];
+}
+
 /// compute median
 uint16_t NormalImageFilter::median(const cv::Mat& inputImg, int u, int v, int kernelSize){
     int size = kernelSize/2;
@@ -152,6 +157,7 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
     }*/
     OctetsImage octetsImage = extractOctets(responseImage, cloudOrd, octets);
     updateOctetsImages1stLayer(categoryNo, objectNo, imageNo, octetsImage);
+    saveCloud(categoryNo, objectNo, imageNo, cloudOrd);
 
     if (config.verbose>0){
         std::chrono::steady_clock::time_point end=std::chrono::steady_clock::now();
@@ -177,6 +183,28 @@ void NormalImageFilter::updateOctetsImages1stLayer(int categoryNo, int objectNo,
         octetsImages1stLayer[categoryNo][objectNo].resize(imageNo+1);
     }
     octetsImages1stLayer[categoryNo][objectNo][imageNo] = octetsImage;
+}
+
+/// update structure which holds octets images
+void NormalImageFilter::saveCloud(int categoryNo, int objectNo, int imageNo, const std::vector<std::vector<hop3d::PointNormal>>& octetsImage){
+    if((int)inputClouds.size()<=categoryNo){
+        inputClouds.resize(categoryNo+1);
+    }
+    if ((int)inputClouds[categoryNo].size()<=objectNo){
+        inputClouds[categoryNo].resize(objectNo+1);
+    }
+    if ((int)inputClouds[categoryNo][objectNo].size()<=imageNo){
+        inputClouds[categoryNo][objectNo].resize(imageNo+1);
+    }
+    hop3d::PointCloud cloud;
+    for (auto& row : octetsImage){
+        for (auto& point : row){
+            if ((!std::isnan(double(point.position(2))))&&(!std::isnan(double(point.normal(2))))){
+                cloud.push_back(point);
+            }
+        }
+    }
+    inputClouds[categoryNo][objectNo][imageNo] = cloud;
 }
 
 /// returs filter ids and their position on the image

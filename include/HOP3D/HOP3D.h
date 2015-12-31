@@ -44,7 +44,7 @@ public:
     virtual void getDatasetInfo(hop3d::DatasetInfo& dataset) const = 0;
 
     /// get cloud from dataset
-    virtual void getCloud(int categoryNo, int objectNo, int imageNo, std::vector<Vec3>& cloud) const = 0;
+    virtual void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const = 0;
 
     /// get number of points in the point cloud
     virtual size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo) const = 0;

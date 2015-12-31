@@ -1,5 +1,9 @@
 #include "Data/Part.h"
 #include "Data/Vocabulary.h"
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/registration/gicp.h>
 
 namespace hop3d {
 
@@ -233,6 +237,39 @@ double ViewIndependentPart::distance(const ViewIndependentPart& partA, const Vie
     }
     sum+=fabs((double)partBSeq.size()-(double)partASeq.size())*81.0;//on 5th layer each part contain 81 points
     return sum;
+}
+
+/// compute distance between view-independent parts
+double ViewIndependentPart::distanceGICP(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset){
+    //pcl::PointCloud<pcl::PointNormal> sourceCloud;
+    pcl::PointCloud<pcl::PointNormal>::Ptr sourceCloud (new pcl::PointCloud<pcl::PointNormal>);
+    for (auto& point : partA.cloud){
+        pcl::PointNormal pointPCL;
+        pointPCL.x = (float)point.position(0);    pointPCL.y = (float)point.position(1);    pointPCL.z = (float)(float)point.position(2);
+        pointPCL.normal_x=(float)point.normal(0); pointPCL.normal_y=(float)point.normal(1);   pointPCL.normal_z=(float)point.normal(2);
+        sourceCloud->push_back(pointPCL);
+    }
+
+    //pcl::PointCloud<pcl::PointNormal> targetCloud;
+    pcl::PointCloud<pcl::PointNormal>::Ptr targetCloud (new pcl::PointCloud<pcl::PointNormal>);
+    for (auto& point : partB.cloud){
+        pcl::PointNormal pointPCL;
+        pointPCL.x = (float)point.position(0);    pointPCL.y = (float)point.position(1);    pointPCL.z = (float)point.position(2);
+        pointPCL.normal_x=(float)point.normal(0); pointPCL.normal_y=(float)point.normal(1);   pointPCL.normal_z=(float)point.normal(2);
+        targetCloud->push_back(pointPCL);
+    }
+    // setup Generalized-ICP
+    pcl::GeneralizedIterativeClosestPoint<pcl::PointNormal, pcl::PointNormal> gicp;
+    gicp.setMaxCorrespondenceDistance(1);
+    gicp.setInputSource(sourceCloud);
+    gicp.setInputTarget(targetCloud);
+    //gicp.setSourceCovariances(source_covariances);
+    //gicp.setTargetCovariances(target_covariances);
+    // run registration and get transformation
+    pcl::PointCloud<pcl::PointNormal> output;
+    gicp.align(output);
+    Eigen::Matrix4f transform = gicp.getFinalTransformation();
+    offset.matrix() = transform.cast<double>();
 }
 
 /// compute distance between view-independent parts

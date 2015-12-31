@@ -75,6 +75,9 @@ public:
     /// returs parts ids and their position on the image
     void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords, int viewDependentLayersNo) const;
 
+    /// get cloud from dataset
+    void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const;
+
     class Config{
       public:
         Config() {
@@ -125,6 +128,8 @@ private:
     std::vector<std::vector< std::vector<OctetsImage>>> octetsImages2ndLayer;
     /// parts images
     std::vector<std::vector< std::vector<PartsImage>>> partsImages;
+    /// input clouds
+    std::vector<std::vector< std::vector<hop3d::PointCloud>>> inputClouds;
 
     /// discretization: convert normal vector to id
     int toId(const Vec3& normal) const;
@@ -194,6 +199,9 @@ private:
 
     /// compute max response in the window
     bool computeNormalStats(const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Vec6& mean, Mat66& cov) const;
+
+    /// update structure which holds octets images
+    void saveCloud(int categoryNo, int objectNo, int imageNo, const std::vector<std::vector<hop3d::PointNormal>>& octetsImage);
 };
 
 }

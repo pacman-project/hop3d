@@ -235,6 +235,12 @@ void DepthImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int
     partCoords.clear();
 }
 
+/// get cloud from dataset
+void DepthImageFilter::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const{
+    cloud.clear();
+    std::cout << categoryNo << " " << objectNo << imageNo << "\n";
+}
+
 int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, Filter &filter, cv::Mat &filteredImage)
 {
 

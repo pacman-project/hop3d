@@ -59,6 +59,9 @@ public:
     /// returs parts ids and their position on the image
     virtual void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords, int viewDependentLayersNo) const = 0;
 
+    /// get cloud from dataset
+    virtual void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const = 0;
+
     /// Virtual descrutor
     virtual ~ImageFilter() {
     }

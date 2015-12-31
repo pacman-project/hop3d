@@ -196,6 +196,9 @@ public:
     static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset);
 
     /// compute distance between view-independent parts
+    static double distanceGICP(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset);
+
+    /// compute distance between view-independent parts
     static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary, Mat34& offset);
 
     /// compute distance between view-independent parts (7th layer)
