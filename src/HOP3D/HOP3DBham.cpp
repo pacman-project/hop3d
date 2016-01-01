@@ -92,6 +92,7 @@ void HOP3DBham::getDatasetInfo(hop3d::DatasetInfo& _dataset) const{
 
 /// get cloud from dataset
 void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const{
+    std::cout << "get cloud\n";
     imageFilterer->getCloud(categoryNo, objectNo, imageNo, cloud);
 }
 
@@ -263,6 +264,7 @@ void HOP3DBham::learn(){
                 ofsHierarchy << objects[categoryNo][objectNo];
             }
         }
+        ((NormalImageFilter*)imageFilterer)->save2file(ofsHierarchy);
         ofsHierarchy.close();
     }
     //visualization
@@ -345,21 +347,21 @@ void HOP3DBham::load(std::string filename){
             ifsHierarchy >> objects[categoryNo][objectNo];
         }
     }
+    ((NormalImageFilter*)imageFilterer)->loadFromfile(ifsHierarchy);
     ifsHierarchy.close();
     //visualization
     notify(*hierarchy);
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
         for (auto & object : objects[categoryNo]){
             std::vector<ViewIndependentPart> objectParts;
-            int viewIndLayers = 2;
-            for (int i=0;i<viewIndLayers;i++){
+            for (size_t i=0;i<1;i++){//hierarchy.get()->viewIndependentLayers.size()-2;i++){
                 object.getParts(i, objectParts);
-                notify(objectParts, i);
+                notify(objectParts, i+hierarchy.get()->viewDependentLayers.size()+1);
             }
         }
     }
     notify3Dmodels();
-    createPartClouds();
+    //createPartClouds();
     std::cout << "Finished\n";
 }
 

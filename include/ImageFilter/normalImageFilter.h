@@ -78,6 +78,18 @@ public:
     /// get cloud from dataset
     void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const;
 
+    /// Insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const NormalImageFilter& filter);
+
+    // Extraction operator
+    friend std::istream& operator>>(std::istream& is, NormalImageFilter& filter);
+
+    /// save to file
+    void save2file(std::ostream& os) const;
+
+    /// load from file
+    void loadFromfile(std::istream& is);
+
     class Config{
       public:
         Config() {

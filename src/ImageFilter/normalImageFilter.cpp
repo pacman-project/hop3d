@@ -58,6 +58,68 @@ const std::string& NormalImageFilter::getName() const {
     return name;
 }
 
+/// Insertion operator
+std::ostream& operator<<(std::ostream& os, const NormalImageFilter& filter){
+    filter.save2file(os);
+    return os;
+}
+
+/// save to file
+void NormalImageFilter::save2file(std::ostream& os) const{
+    os << inputClouds.size() << " ";
+    for (auto &category : inputClouds){
+        os << category.size() << " ";
+        for (auto &object : category){
+            os << object.size() << " ";
+            for (auto &cloud : object){
+                os << cloud.size() << " ";
+                for (auto &point : cloud){
+                    os << point.position(0) << " " << point.position(1) << " " << point.position(2) << " ";
+                    os << point.normal(0) << " " << point.normal(1) << " " << point.normal(2) << " ";
+                }
+            }
+        }
+    }
+    os << "\n";
+}
+
+// Extraction operator
+std::istream& operator>>(std::istream& is, NormalImageFilter& filter){
+    filter.loadFromfile(is);
+    return is;
+}
+
+/// load from file
+void NormalImageFilter::loadFromfile(std::istream& is){
+    // read categories no
+    int categoriesNo;
+    is >> categoriesNo;
+    inputClouds.clear();
+    inputClouds.resize(categoriesNo);
+    for (int catNo = 0; catNo<categoriesNo; catNo++){
+        int objectsNo;
+        is >> objectsNo;
+        inputClouds[catNo].resize(objectsNo);
+        for (int objNo=0;objNo<objectsNo; objNo++){
+            int cloudsNo;
+            is >> cloudsNo;
+            inputClouds[catNo][objNo].resize(cloudsNo);
+            for (int cloudNo=0;cloudNo<cloudsNo;cloudNo++){
+                int pointsNo;
+                is >> pointsNo;
+                PointCloud cloud;
+                //cloud.reserve(pointsNo);
+                for (int pointNo=0;pointNo<pointsNo;pointNo++){
+                    hop3d::PointNormal point;
+                    is >> point.position(0) >> point.position(1) >> point.position(2);
+                    is >> point.normal(0) >> point.normal(1) >> point.normal(2);
+                    cloud.push_back(point);
+                }
+                inputClouds[catNo][objNo][cloudNo] = cloud;
+            }
+        }
+    }
+}
 /// get cloud from dataset
 void NormalImageFilter::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const{
     cloud = inputClouds[categoryNo][objectNo][imageNo];
