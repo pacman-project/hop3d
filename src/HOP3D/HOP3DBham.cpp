@@ -92,7 +92,6 @@ void HOP3DBham::getDatasetInfo(hop3d::DatasetInfo& _dataset) const{
 
 /// get cloud from dataset
 void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const{
-    std::cout << "get cloud\n";
     imageFilterer->getCloud(categoryNo, objectNo, imageNo, cloud);
 }
 
@@ -115,6 +114,13 @@ void HOP3DBham::getPoint(int categoryNo, int objectNo, int imageNo, size_t point
 
 /// get camera pose
 void HOP3DBham::getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose) const{
+    cameraPose = dataset->getCameraPose(categoryNo, objectNo, imageNo);
+}
+
+/// get camera pose
+void HOP3DBham::getSensorFrame(const std::string& path, Mat34& cameraPose) const{
+    int categoryNo(0), objectNo(0), imageNo(0);
+    dataset->translateString(path, categoryNo, objectNo, imageNo);
     cameraPose = dataset->getCameraPose(categoryNo, objectNo, imageNo);
 }
 

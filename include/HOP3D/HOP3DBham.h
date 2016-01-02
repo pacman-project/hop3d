@@ -67,6 +67,9 @@ public:
     /// get camera pose
     void getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose) const;
 
+    /// get camera pose
+    void getSensorFrame(const std::string& path, Mat34& cameraPose) const;
+
     #ifdef QVisualizerBuild
         ///Attach visualizer
         void attachVisualizer(QGLVisualizer* visualizer);
