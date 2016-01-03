@@ -139,12 +139,9 @@ void HOP3DBham::learn(){
     //hop3d::Reader reader;
     //reader.readMultipleImages("../../resources/depthImages",vecImages);
     dataset->getDatasetInfo(datasetInfo);
-    std::vector<std::string> names;
-
-    Mat34 cameraPose1;
-    getSensorFrame(0,0,0, cameraPose1);
+    //Mat34 cameraPose1;
+    //getSensorFrame(0,0,0, cameraPose1);
     std::vector<hop3d::Octet> octets;
-    std::vector<hop3d::Octet> octets2nd;
     int startId = (int)hierarchy.get()->firstLayer.size();
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
         if (layerNo==0){
@@ -159,7 +156,6 @@ void HOP3DBham::learn(){
                     }
                 }
             }
-            octets2nd = octets;
         }
         else if (layerNo==1){
             octets.clear();

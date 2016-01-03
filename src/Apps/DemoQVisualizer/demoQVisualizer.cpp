@@ -30,7 +30,6 @@ int main(int argc, char** argv)
         std::string configFile(config.FirstChildElement( "QVisualizer" )->Attribute( "configFilename" ));
 
         lhop3d = hop3d::createHOP3DBham("../../resources/configGlobal.xml");
-
         QGLVisualizer::Config configVis(configFile);//something is wrong with QApplication when Qapplication
         //object is created. libTinyxml can read only ints from xml file
         // found: Qt changes locale settings use
@@ -38,7 +37,6 @@ int main(int argc, char** argv)
         QApplication application(argc,argv);
         setlocale(LC_NUMERIC,"C");
         glutInit(&argc, argv);
-
         QGLVisualizer visu(configVis);
 
         visu.setWindowTitle("HOP3D hierarchy viewer");
