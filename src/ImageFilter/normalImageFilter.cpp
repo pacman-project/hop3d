@@ -184,7 +184,6 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
             medianFilter(depthImage, filteredImg, config.kernelSize);
         }
     }
-    bool first(true);
     for (int i=0;i<filteredImg.rows;i++){
         for (int j=0;j<filteredImg.cols;j++){
             sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
