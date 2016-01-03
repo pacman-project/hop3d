@@ -744,7 +744,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                     }
                     else{
                         glColor3d(0.5,0.5,0.5);
-                        drawPatch(posPart);
+                        drawPatch(itComp->partsPosNorm[n][m].mean.block<3,1>(3,0));
                     }
                 glPopMatrix();
             }

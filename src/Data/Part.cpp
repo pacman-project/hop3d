@@ -461,7 +461,7 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
             setA.push_back(Vec3(0,0,0));
             setB.push_back(Vec3(0,0,0));
         }
-        if (pairsNo>3){ // it's possible to find SE3 transformation
+        if (pairsNo>=3){ // it's possible to find SE3 transformation
             Eigen::MatrixXd pointsA(pairsNo,3);
             Eigen::MatrixXd pointsB(pairsNo,3);
             for (int pairNo=0;pairNo<pairsNo;pairNo++){

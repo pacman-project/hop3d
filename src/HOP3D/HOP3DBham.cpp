@@ -93,12 +93,12 @@ void HOP3DBham::getDatasetInfo(hop3d::DatasetInfo& _dataset) const{
 /// get cloud from dataset
 void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const{
     imageFilterer->getCloud(categoryNo, objectNo, imageNo, cloud);
-    //transform cloud
-    Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+    //transform cloud to global frame
+    /*Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
     for (auto &point : cloud){
         point.position = (cameraPose * Vec4(point.position(0),point.position(1),point.position(2),1.0)).block<3,1>(0,3);
         point.normal = cameraPose.rotation()*point.normal;
-    }
+    }*/
 }
 
 /// get cloud from dataset
