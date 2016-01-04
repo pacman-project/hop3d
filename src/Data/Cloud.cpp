@@ -1,5 +1,4 @@
-#include "Data/Cloud.h"
-
+#include "hop3d/Data/Cloud.h"
 
 /// Euclidean distance
 double hop3d::PointNormal::euclideanDistance(const hop3d::Vec3& vec) const{

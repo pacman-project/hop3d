@@ -170,9 +170,12 @@ SET( PROJ_INCLUDES  "${PROJECT_PATH}/include/" )
 ###############################################################################
 
 IF (WIN32)
-	add_library(tinyxml2 STATIC ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.h ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.cpp)
+        add_library(tinyxml2 STATIC ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyXML/tinyxml2.h ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.cpp)
 ELSE (UNIX)
-	add_library(tinyxml2 SHARED ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.h ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.cpp)
+        #add_library(tinyxml2 SHARED ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyXML/tinyxml2.h ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.cpp)
+        add_library(tinyxml2 STATIC ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyXML/tinyxml2.h ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyXML/tinyxml2.cpp)
+        INSTALL(TARGETS tinyxml2 RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
+        INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/tinyXML/tinyxml2.h DESTINATION include/tinyXML)
 ENDIF()
 
 ###############################################################################
@@ -181,7 +184,12 @@ ENDIF()
 #
 ###############################################################################
 
-include_directories(${CMAKE_SOURCE_DIR}/external/octree)
+include_directories(${CMAKE_SOURCE_DIR}/include/octree)
+file(GLOB OCTREE_HEADERS
+    "${CMAKE_SOURCE_DIR}/include/octree/*.h"
+    "${CMAKE_SOURCE_DIR}/include/octree/*.tcc"
+)
+INSTALL(FILES ${OCTREE_HEADERS} DESTINATION include/octree)
 
 ###############################################################################
 #
@@ -194,7 +202,7 @@ if(BUILD_HOP3D)
             "${CMAKE_SOURCE_DIR}/src/Data/*.cpp"
         )
         file(GLOB DATA_HEADERS
-            "${CMAKE_SOURCE_DIR}/include/Data/*.h"
+            "${CMAKE_SOURCE_DIR}/include/hop3d/Data/*.h"
         )
         ADD_LIBRARY(hop3dData STATIC ${DATA_SOURCES} ${DATA_HEADERS})
         target_link_libraries(hop3dData Utilities ${PCL_LIBRARIES})# tinyxml2 opencv_core opencv_highgui opencv_contrib boost_filesystem boost_system)
@@ -213,7 +221,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_UTILITIES)
             "${CMAKE_SOURCE_DIR}/src/Utilities/*.cpp"
         )
         file(GLOB UTILITIES_HEADERS
-            "${CMAKE_SOURCE_DIR}/include/Utilities/*.h"
+            "${CMAKE_SOURCE_DIR}/include/hop3d/Utilities/*.h"
         )
 
         ADD_LIBRARY(Utilities STATIC ${UTILITIES_SOURCES} ${UTILITIES_HEADERS})
@@ -233,7 +241,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_FILTER)
             "${CMAKE_SOURCE_DIR}/src/ImageFilter/*.cpp"
         )
         file(GLOB FILTER_HEADERS
-            "${CMAKE_SOURCE_DIR}/include/ImageFilter/*.h"
+            "${CMAKE_SOURCE_DIR}/include/hop3d/ImageFilter/*.h"
         )
 
         ADD_LIBRARY(imageFilter STATIC ${FILTER_SOURCES} ${FILTER_HEADERS})
@@ -253,7 +261,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_STATISTICS)
             "${CMAKE_SOURCE_DIR}/src/StatisticsBuilder/*.cpp"
         )
         file(GLOB STATISTICS_HEADERS
-            "${CMAKE_SOURCE_DIR}/include/StatisticsBuilder/*.h"
+            "${CMAKE_SOURCE_DIR}/include/hop3d/StatisticsBuilder/*.h"
         )
 
         ADD_LIBRARY(statisticsBuilder STATIC ${STATISTICS_SOURCES} ${STATISTICS_HEADERS})
@@ -273,7 +281,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_PART_SELECTOR)
             "${CMAKE_SOURCE_DIR}/src/PartSelector/*.cpp"
         )
         file(GLOB SELECTOR_HEADERS
-            "${CMAKE_SOURCE_DIR}/include/PartSelector/*.h"
+            "${CMAKE_SOURCE_DIR}/include/hop3d/PartSelector/*.h"
         )
 
         ADD_LIBRARY(partSelector STATIC ${SELECTOR_SOURCES} ${SELECTOR_HEADERS})
@@ -293,7 +301,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_OBJECT_COMPOSITION)
             "${CMAKE_SOURCE_DIR}/src/ObjectComposition/*.cpp"
         )
         file(GLOB OBJ_COMPOSITION_HEADERS
-            "${CMAKE_SOURCE_DIR}/include/ObjectComposition/*.h"
+            "${CMAKE_SOURCE_DIR}/include/hop3d/ObjectComposition/*.h"
         )
 
         ADD_LIBRARY(objectComposition STATIC ${OBJ_COMPOSITION_SOURCES} ${OBJ_COMPOSITION_HEADERS})
@@ -314,7 +322,7 @@ if(BUILD_HOP3D AND BUILD_VISUALIZATION_QT)
             "${CMAKE_SOURCE_DIR}/src/QVisualizer/*.cpp"
         )
         file(GLOB QVISUALIZER_HEADERS
-            "${CMAKE_SOURCE_DIR}/include/QVisualizer/*.h"
+            "${CMAKE_SOURCE_DIR}/include/hop3d/QVisualizer/*.h"
         )
         ADD_LIBRARY(QVisualizer STATIC ${QVISUALIZER_SOURCES} ${QVISUALIZER_HEADERS})
         if (WIN32)
@@ -338,7 +346,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_DATASET)
             "${CMAKE_SOURCE_DIR}/src/Dataset/*.cpp"
         )
         file(GLOB DATASET_HEADERS
-            "${CMAKE_SOURCE_DIR}/include/Dataset/*.h"
+            "${CMAKE_SOURCE_DIR}/include/hop3d/Dataset/*.h"
         )
         ADD_LIBRARY(Dataset STATIC ${DATASET_SOURCES} ${DATASET_HEADERS})
         TARGET_LINK_LIBRARIES(Dataset tinyxml2 ${PCL_LIBRARIES})
@@ -357,12 +365,12 @@ if(BUILD_HOP3D)
             "${CMAKE_SOURCE_DIR}/src/HOP3D/*.cpp"
         )
         file(GLOB LIBHOP3D_HEADERS
-            "${CMAKE_SOURCE_DIR}/include/HOP3D/*.h"
+            "${CMAKE_SOURCE_DIR}/include/hop3d/HOP3D/*.h"
         )
         ADD_LIBRARY(LIBHOP3D STATIC ${LIBHOP3D_SOURCES} ${LIBHOP3D_HEADERS})
         TARGET_LINK_LIBRARIES(LIBHOP3D Dataset statisticsBuilder Utilities partSelector imageFilter objectComposition ${QT_LIBRARIES})
         INSTALL(TARGETS LIBHOP3D RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
-        INSTALL(FILES ${LIBHOP3D_HEADERS} DESTINATION include/hop3D/HOP3D/)
+        INSTALL(FILES ${LIBHOP3D_HEADERS} DESTINATION include/hop3d/HOP3D/)
 endif(BUILD_HOP3D)
 
 

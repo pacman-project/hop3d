@@ -1,4 +1,4 @@
-#include "Utilities/depthSensorModel.h"
+#include "hop3d/Utilities/depthSensorModel.h"
 
 /// Construction
 DepthSensorModel::DepthSensorModel(std::string configFile) : config(configFile){

@@ -1,8 +1,8 @@
 #include <iostream>
-#include "Data/Defs.h"
-#include "Utilities/Reader.h"
-#include "ImageFilter/depthImageFilter.h"
-#include "Data/Graph.h"
+#include "hop3d/Data/Defs.h"
+#include "hop3d/Utilities/Reader.h"
+#include "hop3d/ImageFilter/depthImageFilter.h"
+#include "hop3d/Data/Graph.h"
 
 int main(void){
     try {

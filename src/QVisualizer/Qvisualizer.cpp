@@ -1,5 +1,5 @@
-#include "../include/QVisualizer/Qvisualizer.h"
-#include "../include/ImageFilter/normalImageFilter.h"
+#include "hop3d/QVisualizer/Qvisualizer.h"
+#include "hop3d/ImageFilter/normalImageFilter.h"
 #include <memory>
 #include <cmath>
 #include <stdexcept>

@@ -1,6 +1,6 @@
-#include "ObjectComposition/objectCompositionOctree.h"
+#include "hop3d/ObjectComposition/objectCompositionOctree.h"
 #include <ctime>
-#include "ImageFilter/normalImageFilter.h"
+#include "hop3d/ImageFilter/normalImageFilter.h"
 
 using namespace hop3d;
 

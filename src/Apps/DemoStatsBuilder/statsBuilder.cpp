@@ -1,9 +1,8 @@
-
-#include "StatisticsBuilder/unbiasedStatsBuilder.h"
-#include "ImageFilter/depthImageFilter.h"
-#include "Data/Graph.h"
-#include "Data/Vocabulary.h"
-#include "PartSelector/partSelectorMean.h"
+#include "hop3d/StatisticsBuilder/unbiasedStatsBuilder.h"
+#include "hop3d/ImageFilter/depthImageFilter.h"
+#include "hop3d/Data/Graph.h"
+#include "hop3d/Data/Vocabulary.h"
+#include "hop3d/PartSelector/partSelectorMean.h"
 #include <iostream>
 #include <random>
 

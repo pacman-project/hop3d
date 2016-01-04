@@ -1,4 +1,4 @@
-#include "../include/ImageFilter/depthImageFilter.h"
+#include "hop3d/ImageFilter/depthImageFilter.h"
 
 using namespace hop3d;
 

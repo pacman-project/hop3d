@@ -1,7 +1,7 @@
-#include "Data/Defs.h"
-#include "../external/tinyXML/tinyxml2.h"
-#include "QVisualizer/Qvisualizer.h"
-#include "HOP3D/HOP3DBham.h"
+#include "hop3d/Data/Defs.h"
+#include "tinyXML/tinyxml2.h"
+#include "hop3d/QVisualizer/Qvisualizer.h"
+#include "hop3d/HOP3D/HOP3DBham.h"
 #include <GL/glut.h>
 #include <qapplication.h>
 #include <iostream>

@@ -1,4 +1,4 @@
-#include "ImageFilter/normalImageFilter.h"
+#include "hop3d/ImageFilter/normalImageFilter.h"
 #include <chrono>
 
 using namespace hop3d;
@@ -184,10 +184,15 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
             medianFilter(depthImage, filteredImg, config.kernelSize);
         }
     }
+    bool first(true);
     for (int i=0;i<filteredImg.rows;i++){
         for (int j=0;j<filteredImg.cols;j++){
             sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
             sensorModel.getPoint(j, i, filteredImg.at<uint16_t>(i,j)*scale, cloudGrasp[i][j].position);
+            if (first&&(!std::isnan(double(cloudOrd[i][j].position(2))))){
+                first = false;
+                std::cout << "filt: " << cloudGrasp[i][j].position.transpose() << "\n";
+            }
         }
     }
     cv::Mat idsImage(filteredImg.rows,filteredImg.cols, cv::DataType<int>::type,cv::Scalar(0));

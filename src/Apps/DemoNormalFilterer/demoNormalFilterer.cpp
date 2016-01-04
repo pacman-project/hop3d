@@ -1,11 +1,11 @@
 #include <iostream>
 #include <vector>
 
-#include "Data/Defs.h"
-#include "Data/Cloud.h"
-#include "ImageFilter/imageFilter.h"
-#include "ImageFilter/normalImageFilter.h"
-#include "Dataset/datasetBoris.h"
+#include "hop3d/Data/Defs.h"
+#include "hop3d/Data/Cloud.h"
+#include "hop3d/ImageFilter/imageFilter.h"
+#include "hop3d/ImageFilter/normalImageFilter.h"
+#include "hop3d/Dataset/datasetBoris.h"
 
 using namespace std;
 

@@ -1,5 +1,5 @@
-#include "Data/Graph.h"
-#include "../../external/tinyXML/tinyxml2.h"
+#include "hop3d/Data/Graph.h"
+#include "tinyXML/tinyxml2.h"
 
 namespace hop3d {
 

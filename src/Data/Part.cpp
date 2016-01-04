@@ -1,5 +1,5 @@
-#include "Data/Part.h"
-#include "Data/Vocabulary.h"
+#include "hop3d/Data/Part.h"
+#include "hop3d/Data/Vocabulary.h"
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl/io/pcd_io.h>

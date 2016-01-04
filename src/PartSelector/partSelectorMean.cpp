@@ -1,5 +1,5 @@
-#include "PartSelector/partSelectorMean.h"
-#include "ImageFilter/normalImageFilter.h"
+#include "hop3d/PartSelector/partSelectorMean.h"
+#include "hop3d/ImageFilter/normalImageFilter.h"
 #include <ctime>
 
 using namespace hop3d;

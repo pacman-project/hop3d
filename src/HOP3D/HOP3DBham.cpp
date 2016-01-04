@@ -1,4 +1,4 @@
-#include "HOP3D/HOP3DBham.h"
+#include "hop3d/HOP3D/HOP3DBham.h"
 #include <random>
 
 using namespace hop3d;
