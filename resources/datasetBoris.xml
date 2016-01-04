@@ -9,7 +9,7 @@
     <parameters verbose="1" categoriesNo="1" type="pcl" path="../../../Datasets/ObjectDB-2014-Boris-v7"></parameters>
     <Category0 name="mug" objectsNo="1">
       <Object0 name="mug1" imagesNo="1">
-	<Image0 name="data-points_raw-mug1-2.pcd" />
+	<Image0 name="data-points_raw-mug1-3.pcd" />
 	<Image1 name="data-points_raw-mug1-2.pcd" />
 	<Image2 name="data-points_raw-mug1-3.pcd" />
 	<Image3 name="data-points_raw-mug1-4.pcd" />

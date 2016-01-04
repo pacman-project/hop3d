@@ -181,11 +181,11 @@ void HOP3DBham::learn(){
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
         for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
             for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
-                imageFilterer->computeImagesLastLayer((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDependentLayers.back(), config.viewDependentLayersNo);
+                imageFilterer->computeImagesLastLayer((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDependentLayers[hierarchy.get()->viewDepPartsFromLayerNo-1], hierarchy.get()->viewDepPartsFromLayerNo);
             }
         }
     }
-    std::vector< std::set<int>> clusters;
+    //std::vector< std::set<int>> clusters;
     objects.resize(datasetInfo.categories.size());
     std::vector<ViewIndependentPart> vocabulary;
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
@@ -277,6 +277,7 @@ void HOP3DBham::learn(){
     }
     //visualization
     notify(*hierarchy);
+    std::cout << "DF1\n";
     for (int layerNo=0;layerNo<config.viewDependentLayersNo+1;layerNo++){//create objects from parts
         for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
             for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
@@ -307,17 +308,21 @@ void HOP3DBham::learn(){
             }
         }
     }
+    std::cout << "DF2\n";
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
         for (auto & object : objects[categoryNo]){
             std::vector<ViewIndependentPart> objectParts;
             for (size_t i=0;i<1;i++){//hierarchy.get()->viewIndependentLayers.size()-2;i++){
-                object.getParts(i, objectParts);
-                notify(objectParts, i+hierarchy.get()->viewDependentLayers.size()+1);
+                object.getParts((int)i, objectParts);
+                notify(objectParts, (int)(i+hierarchy.get()->viewDependentLayers.size()+1));
             }
         }
     }
-    notify3Dmodels();
-    createPartClouds();
+    std::cout << "DF3\n";
+    //notify3Dmodels();
+    std::cout << "DF4\n";
+    //createPartClouds();
+    std::cout << "DF5\n";
     /*std::cout << "octets size: " << octets2nd.size() << "\n";
     std::cout << "vocabulary size: " << hierarchy.get()->viewDependentLayers[0].size() << "\n";
     for (auto& octet : octets2nd){
@@ -363,8 +368,8 @@ void HOP3DBham::load(std::string filename){
         for (auto & object : objects[categoryNo]){
             std::vector<ViewIndependentPart> objectParts;
             for (size_t i=0;i<1;i++){//hierarchy.get()->viewIndependentLayers.size()-2;i++){
-                object.getParts(i, objectParts);
-                notify(objectParts, i+hierarchy.get()->viewDependentLayers.size()+1);
+                object.getParts((int)i, objectParts);
+                notify(objectParts, int(i+hierarchy.get()->viewDependentLayers.size()+1));
             }
         }
     }
@@ -439,7 +444,7 @@ void HOP3DBham::createPartClouds(){
                             if (!std::isnan(point3D(0))){
                                 Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(point3D(0),point3D(1),point3D(2)));
                                 Mat34 pointWorld = cameraPose*pointCam;
-                                pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(1)=pointWorld(1,3)+imageNo*0.2; pointRGBA.position(2)=pointWorld(2,3);
+                                pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(1)=pointWorld(1,3)+0.2*double(imageNo); pointRGBA.position(2)=pointWorld(2,3);
                                 objsTmp[layerNo].push_back(pointRGBA);
                             }
                         }

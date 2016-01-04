@@ -184,15 +184,10 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
             medianFilter(depthImage, filteredImg, config.kernelSize);
         }
     }
-    bool first(true);
     for (int i=0;i<filteredImg.rows;i++){
         for (int j=0;j<filteredImg.cols;j++){
             sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
             sensorModel.getPoint(j, i, filteredImg.at<uint16_t>(i,j)*scale, cloudGrasp[i][j].position);
-            if (first&&(!std::isnan(double(cloudOrd[i][j].position(2))))){
-                first = false;
-                std::cout << "filt: " << cloudGrasp[i][j].position.transpose() << "\n";
-            }
         }
     }
     cv::Mat idsImage(filteredImg.rows,filteredImg.cols, cv::DataType<int>::type,cv::Scalar(0));
@@ -407,7 +402,7 @@ bool NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >&
     if (elementsNo>config.minOctetSize){//set relative position for octets
         int biggerGroupSize;
         bool hasDoubleSurface = octet.hasDoubleSurface(config.PCADistThreshold,biggerGroupSize);
-        if (hasDoubleSurface && biggerGroupSize<4)
+        if (hasDoubleSurface && biggerGroupSize<config.minOctetSize)
             return false;
         if (octet.partIds[1][1]==-1){
             octet.filterPos[1][1].u = v;
@@ -626,11 +621,16 @@ void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, con
         for (size_t j=1; j<octetsImage[0].size()-1;j=j+3){
             Octet octet;
             if (!isBackground(octetsImage, (int)i, (int)j)){
-                fillInOctet(octetsImage, dictionary, (int)i, (int)j, octet);
-                computeRelativePositions(octet,2);
-                octet.isBackground=false;
-                octets.push_back(octet);
-                nextLayerOctetsImg[u][v]=octet;
+                if (!(fillInOctet(octetsImage, dictionary, (int)i, (int)j, octet)<config.PCADistThreshold)){
+                    int biggerGroupSize;
+                    bool hasDoubleSurface = octet.hasDoubleSurface(config.PCADistThreshold,biggerGroupSize);
+                    if (!(hasDoubleSurface && biggerGroupSize<config.minOctetSize)){
+                        computeRelativePositions(octet,2);
+                        octet.isBackground=false;
+                        octets.push_back(octet);
+                        nextLayerOctetsImg[u][v]=octet;
+                    }
+                }
             }
             v++;
         }
@@ -706,8 +706,9 @@ void NormalImageFilter::getLastVDLayerParts(int categoryNo, int objectNo, int im
 }
 
 /// Fill in octet
-void NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDependentPart::Seq& dictionary, int u, int v, Octet& octet) const{
-    for (int i=-1; i<2;i++){
+int NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDependentPart::Seq& dictionary, int u, int v, Octet& octet) const{
+    int elementsNo=0;
+    for (int i=-1;i<2;i++){
         for (int j=-1;j<2;j++){
             Mat34 offset;
             int id = findId(dictionary, octetsImage[u+i][v+j], offset);
@@ -720,13 +721,22 @@ void NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDe
                     sensorModel.getPoint(octet.filterPos[i+1][j+1].u, octet.filterPos[i+1][j+1].u, 1.0, octet.partsPosEucl[i+1][j+1]);
             }
             else {
+                elementsNo++;
                 octet.filterPos[i+1][j+1]=octetsImage[u+i][v+j].filterPos[1][1];
                 if (config.useEuclideanCoordinates)
-                    sensorModel.getPoint(octet.filterPos[i+1][j+1].u, octet.filterPos[i+1][j+1].u, octet.filterPos[i+1][j+1].depth, octet.partsPosEucl[i+1][j+1]);
+                    sensorModel.getPoint(octet.filterPos[i+1][j+1].u, octet.filterPos[i+1][j+1].v, octet.filterPos[i+1][j+1].depth, octet.partsPosEucl[i+1][j+1]);
+                octet.partsPosNorm[i+1][j+1].mean.block<3,1>(0,0)=octet.partsPosEucl[i+1][j+1];
+                /*std::cout << i << ", " << j << " " << octet.partsPosEucl[i+1][j+1].transpose() << " pos\n";
+                std::cout << i << ", " << j << " " << octet.partsPosEucl[i+1][j+1].transpose() << " pos\n";
+                getchar();*/
+                octet.partsPosNorm[i+1][j+1].mean.block<3,1>(3,0)=dictionary[id].partsPosNorm[1][1].mean.block<3,1>(3,0);
+                //octet.partsPosNorm[i+1][j+1].mean.block<3,1>(0,0)=(offset*Vec4(octet.partsPosEucl[i+1][j+1](0),octet.partsPosEucl[i+1][j+1](1),octet.partsPosEucl[i+1][j+1](2),1.0)).block<3,1>(0,3);
+                //octet.partsPosNorm[i+1][j+1].mean.block<3,1>(3,0)=offset.rotation()*dictionary[id].partsPosNorm[1][1].mean.block<3,1>(3,0);
             }
             octet.responses[i+1][j+1]=octetsImage[u+i][v+j].responses[1][1];
         }
     }
+    return elementsNo;
 }
 
 /// determine id of the part using dictionary

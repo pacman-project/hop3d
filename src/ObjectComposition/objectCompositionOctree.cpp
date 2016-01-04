@@ -389,7 +389,7 @@ int ObjectCompositionOctree::getCorrespondingPatches(hop3d::PointCloud& patches,
             }
         }
     }
-    return patches.size();
+    return (int)patches.size();
 }
 
 /// assign neighbouring parts to new part

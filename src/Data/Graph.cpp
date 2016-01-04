@@ -14,6 +14,7 @@ Hierarchy::Hierarchy(std::string configFilename) {
     int VDLayersNo, VIndLayersNo;
     params->QueryIntAttribute("viewDependentLayersNo", &VDLayersNo);
     params->QueryIntAttribute("viewIndependentLayersNo", &VIndLayersNo);
+    params->QueryIntAttribute("viewDepPartsFromLayerNo", &viewDepPartsFromLayerNo);
 
     this->viewDependentLayers.resize(VDLayersNo);
     this->viewIndependentLayers.resize(VIndLayersNo);

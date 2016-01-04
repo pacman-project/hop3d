@@ -415,7 +415,7 @@ bool ViewDependentPart::removeSecondSurface(ViewDependentPart& part) {
             }
         }
     }
-    if (groupSize<4){
+    if (groupSize<3){
         std::cout << "small number of points in group";
         getchar();
     }
