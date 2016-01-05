@@ -12,9 +12,9 @@ public:
     /// View independent layers
     std::vector<VILayerVocabulary> viewIndependentLayers;
 
-    typedef std::vector<std::uint32_t> IndexSeq;
+    typedef std::vector<unsigned int> IndexSeq;
     /** Index sequence map */
-    typedef std::map<std::uint32_t, IndexSeq> IndexSeqMap;
+    typedef std::map<unsigned int, IndexSeq> IndexSeqMap;
 
     /// first layer -- filters
     Filter::Seq firstLayer;

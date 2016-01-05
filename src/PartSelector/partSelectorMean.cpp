@@ -249,7 +249,12 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
                     dist = ViewDependentPart::distance(*it,dictionary[*itCentr],hierarchy.firstLayer, config.distanceMetric);
             }
             else if (it->layerId==3){//compute distance from centroid
-                dist = ViewDependentPart::distance(*it,dictionary[*itCentr], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
+                if (config.distanceMetric==3){
+                    Mat34 transform;
+                    dist=ViewDependentPart::distanceInvariant(*it,dictionary[*itCentr], 3, transform);
+                }
+                else
+                    dist = ViewDependentPart::distance(*it,dictionary[*itCentr], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
             }
             if (dist<minDist){
                 minDist = dist;
@@ -362,7 +367,12 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
                         dist=ViewDependentPart::distance(*itPart,*itPart2,hierarchy.firstLayer, config.distanceMetric);
                 }
                 else if (itPart->layerId==3){
-                    dist=ViewDependentPart::distance(*itPart,*itPart2, hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
+                    if (config.distanceMetric==3){
+                        Mat34 transform;
+                        dist=ViewDependentPart::distanceInvariant(*itPart,*itPart2, 3, transform);
+                    }
+                    else
+                        dist=ViewDependentPart::distance(*itPart,*itPart2, hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
                 }
                 distSum+=dist;
             }

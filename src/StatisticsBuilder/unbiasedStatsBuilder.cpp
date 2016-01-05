@@ -64,6 +64,28 @@ void UnbiasedStatsBuilder::computeStatistics(const std::vector<Octet>& octets, i
 }
 
 /// compute statistics for the set of octets
+void UnbiasedStatsBuilder::vocabularyFromOctets(const std::vector<Octet>& octets, int layerNo, int startId, ViewDependentPart::Seq& dictionary){
+    dictionary.clear();
+    size_t partId=startId;
+    for (const auto &octet : octets){ //compute statistics
+        ViewDependentPart part;
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                part.gaussians[i][j].mean = octet.partsPosEucl[i][j];
+                part.gaussians[i][j].covariance = Mat33::Identity();
+            }
+        }
+        part.partsPosNorm = octet.partsPosNorm;//todo compute statistic
+        part.offsets = octet.offsets;//todo compute statistic
+        part.partIds=octet.partIds;//copy octet
+        part.layerId = layerNo;
+        part.id = (int)partId;
+        partId++;
+        dictionary.push_back(part);
+    }
+}
+
+/// compute statistics for the set of octets
 void UnbiasedStatsBuilder::computeStatistics(const std::vector<ViewIndependentPart>& elements, int layerNo, int startId, ViewIndependentPart::Seq& dictionary){
     dictionary.clear();
     std::vector<ViewIndependentPart::Seq> groups;

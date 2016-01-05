@@ -260,9 +260,6 @@ void QGLVisualizer::updateHierarchy(){
             for (auto &part : hierarchy->viewDependentLayers[i]){
                 cloudsListLayers[i+1].push_back(createPartList(part, int(i+1)));
                 clustersList[i+1].push_back(createClustersList(part, int(i+1)));
-                if (i==1){
-                    part.print();
-                }
             }
             linksLists[i+1].push_back(createLinksList(int(i+1)));
         }
@@ -475,7 +472,7 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
 }
 
 /// draw part
-void QGLVisualizer::drawPart(const ViewDependentPart& part, int layerNo){
+void QGLVisualizer::drawPart(const ViewDependentPart& part, int layerNo, double r, double g, double b){
     glPushMatrix();
     //flipIds(part.partIds);// because it's more natural for user
     //flipGaussians(part.gaussians);
@@ -493,7 +490,7 @@ void QGLVisualizer::drawPart(const ViewDependentPart& part, int layerNo){
                     glCallList(backgroundList[layerNo-1]);
                 }
                 else{
-                    glColor3d(0.5,0.5,0.5);
+                    glColor3d(r, g, b);
                     drawPatch(Vec3(part.partsPosNorm[n][m].mean.block<3,1>(3,0)));
                 }
             glPopMatrix();
@@ -508,7 +505,8 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
     if (layerNo==1){
-        drawPart(part, layerNo);
+        glColor3d(0.5,0.5,0.5);
+        drawPart(part, layerNo,0.5,0.5,0.5);
     }
     else if (layerNo==2){
         for (size_t n = 0; n < part.partIds.size(); n++){
@@ -534,7 +532,7 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
                             double GLmat2[16]={offset(0,0), offset(1,0), offset(2,0), 0, offset(0,1), offset(1,1), offset(2,1), 0, offset(0,2), offset(1,2), offset(2,2), 0, offset(0,3), offset(1,3), offset(2,3), 1};
                             glMultMatrixd(GLmat2);
                             glPushMatrix();
-                                drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1);
+                                drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, 0.5,0.5,0.5);
                             glPopMatrix();
                         }
                     }
@@ -763,7 +761,12 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                             drawPatch(itComp->partsPosNorm[n][m].mean.block<3,1>(3,0));
                         }
                         else{
-                            glCallList(cloudsListLayers[layerNo-1][id]);
+                            Mat34 offset = part.offsets[n][m];
+                            double GLmat2[16]={offset(0,0), offset(1,0), offset(2,0), 0, offset(0,1), offset(1,1), offset(2,1), 0, offset(0,2), offset(1,2), offset(2,2), 0, offset(0,3), offset(1,3), offset(2,3), 1};
+                            glMultMatrixd(GLmat2);
+                            glPushMatrix();
+                                drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, 0.5,0.5,0.5);
+                            glPopMatrix();
                         }
                     }
                 glPopMatrix();
@@ -774,7 +777,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
         glPushMatrix();
             glMultMatrixd(GLmat2);
             if (layerNo==1){
-                drawPart(part, layerNo);
+                drawPart(part, layerNo,0.5,0,0);
             }
             else if (layerNo==2){
                 for (size_t n = 0; n < part.partIds.size(); n++){
@@ -801,7 +804,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                                     double GLmat2[16]={offset(0,0), offset(1,0), offset(2,0), 0, offset(0,1), offset(1,1), offset(2,1), 0, offset(0,2), offset(1,2), offset(2,2), 0, offset(0,3), offset(1,3), offset(2,3), 1};
                                     glMultMatrixd(GLmat2);
                                     glPushMatrix();
-                                        drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1);
+                                        drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, 0.5,0,0);
                                     glPopMatrix();
                                 }
                             }

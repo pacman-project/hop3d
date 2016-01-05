@@ -171,7 +171,8 @@ void HOP3DBham::learn(){
             }
         }
         std::cout << "Compute statistics for " << octets.size() << " octets (" << layerNo+2 << " layer)\n";
-        statsBuilder->computeStatistics(octets, layerNo+2, startId, dictionary);
+        //statsBuilder->computeStatistics(octets, layerNo+2, startId, dictionary);
+        statsBuilder->vocabularyFromOctets(octets, layerNo+2, startId, dictionary);
         std::cout << "Dictionary size (" << layerNo+2 << " layer): " << dictionary.size() << "\n";
         partSelector->selectParts(dictionary, *hierarchy, layerNo+2);
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";

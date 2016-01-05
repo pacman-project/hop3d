@@ -35,6 +35,9 @@ public:
     /// compute statistics for the set of octets
     void computeStatistics(const std::vector<ViewIndependentPart>& elements, int layerNo, int startId, ViewIndependentPart::Seq& dictionary);
 
+    /// compute statistics for the set of octets
+    void vocabularyFromOctets(const std::vector<Octet>& octets, int layerNo, int startId, ViewDependentPart::Seq& dictionary);
+
     /// Destruction
     ~UnbiasedStatsBuilder(void);
 

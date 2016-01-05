@@ -621,7 +621,7 @@ void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, con
         for (size_t j=1; j<octetsImage[0].size()-1;j=j+3){
             Octet octet;
             if (!isBackground(octetsImage, (int)i, (int)j)){
-                if (!(fillInOctet(octetsImage, dictionary, (int)i, (int)j, octet)<config.PCADistThreshold)){
+                if (fillInOctet(octetsImage, dictionary, (int)i, (int)j, octet)>=config.minOctetSize){
                     int biggerGroupSize;
                     bool hasDoubleSurface = octet.hasDoubleSurface(config.PCADistThreshold,biggerGroupSize);
                     if (!(hasDoubleSurface && biggerGroupSize<config.minOctetSize)){

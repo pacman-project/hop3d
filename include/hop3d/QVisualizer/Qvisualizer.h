@@ -357,7 +357,7 @@ private:
     void drawEllipsoid(const hop3d::Vec3& pos, const hop3d::Mat33& covariance) const;
 
     /// draw part
-    void drawPart(const hop3d::ViewDependentPart& part, int layerNo);
+    void drawPart(const hop3d::ViewDependentPart& part, int layerNo, double r, double g, double b);
 };
 
 #endif // QVISUALIZER_H_INCLUDED
