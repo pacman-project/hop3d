@@ -1096,7 +1096,7 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
             Octet octet2nd = octetsImages2ndLayer[categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
           //  std::cout << "coord 2st id " << (v/(config.filterSize*3))%3 << ", " << (u/(config.filterSize*3))%3 << " -> " << octet2nd.partIds[(v/(config.filterSize*3))%3][(u/(config.filterSize*3))%3] << "\n";
             ids.push_back(octet2nd.partIds[(u/(config.filterSize*3))%3][(v/(config.filterSize*3))%3]);
-            lastVDpart = partsImages[0][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
+            lastVDpart = partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
             ids.push_back(lastVDpart.id);
         }
         else{
@@ -1107,7 +1107,7 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
     }
     else{
         if (octetCoords[0]<partsImages[categoryNo][objectNo][imageNo].size()&&octetCoords[1]<partsImages[categoryNo][objectNo][imageNo][0].size()){
-            lastVDpart = partsImages[1][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
+            lastVDpart = partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
             ids.push_back(lastVDpart.id);
         }
         else{

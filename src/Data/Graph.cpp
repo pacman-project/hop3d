@@ -1,5 +1,6 @@
 #include "hop3d/Data/Graph.h"
 #include "tinyXML/tinyxml2.h"
+#include <set>
 
 namespace hop3d {
 
@@ -165,6 +166,44 @@ void Hierarchy::getPoints(const ViewDependentPart& part, std::vector<Vec3>& poin
     else
         normal = firstLayer[part.partIds[1][1]].normal;
         */
+}
+
+/// compute graph from hierarchy structure
+void Hierarchy::computeGraph(IndexSeqMap& hierarchyGraph){
+    int layerInc = 10000;
+    graph.clear();
+    graph.insert(std::make_pair(0,std::vector<unsigned int>()));
+    int layerNo = 0;
+    for (const auto &layer : viewDependentLayers){//graph for view-dependent layers
+        int wordId = 0;
+        for (const auto &word : layer){
+            if (layerNo==0){
+                graph.insert(std::make_pair(((layerNo+1)*layerInc)+wordId,std::vector<unsigned int>(1,0)));
+            }
+            else {
+                std::set<std::uint32_t> incomingIds;
+                for (int i=0;i<3;i++){
+                    for (int j=0;j<3;j++){
+                        if (word.partIds[i][j]!=-1)
+                            incomingIds.insert(incomingIds.end(),((layerNo)*layerInc)+word.partIds[i][j]);
+                    }
+                }
+                std::vector<std::uint32_t> inputIds(incomingIds.begin(), incomingIds.end());
+                graph.insert(std::make_pair(((layerNo+1)*layerInc)+wordId,inputIds));
+            }
+            wordId++;
+        }
+        layerNo++;
+    }
+    /*for (auto &node : graph){
+        std::cout << "part id " << node.first << "\n";
+        std::cout << "is buld from parts: ";
+        for (auto &incId : node.second){
+            std::cout << incId << ", ";
+        }
+        std::cout << "\n";
+    }*/
+    hierarchyGraph = graph;
 }
 
 /// print ids

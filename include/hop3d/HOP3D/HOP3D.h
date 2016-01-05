@@ -49,6 +49,15 @@ public:
     /// get cloud from dataset
     virtual void getCloud(const std::string& path, hop3d::PointCloud& cloud) const = 0;
 
+    /// get hierarchy graph
+    virtual void getHierarchy(Hierarchy::IndexSeqMap& hierarchyGraph) const = 0;
+
+    /// get parts realization
+    virtual void getPartsRealisation(const std::string& path, std::vector<ViewIndependentPart::Part3D>& parts) const = 0;
+
+    /// get parts realization
+    virtual void getPartsRealisation(int categoryNo, int objectNo, int imageNo, std::vector<ViewIndependentPart::Part3D>& parts) const = 0;
+
     /// get number of points in the point cloud
     virtual size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo) const = 0;
 
@@ -57,6 +66,9 @@ public:
 
     /// get camera pose
     virtual void getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose) const = 0;
+
+    /// get camera pose
+    virtual void getSensorFrame(const std::string& path, Mat34& cameraPose) const = 0;
 
     /// Virtual descrutor
     virtual ~HOP3D() {

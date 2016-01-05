@@ -2,6 +2,7 @@
 #define DATA_GRAPH_H
 #include <iostream>
 #include "Vocabulary.h"
+#include <cstdint>
 
 namespace hop3d {
 
@@ -12,9 +13,9 @@ public:
     /// View independent layers
     std::vector<VILayerVocabulary> viewIndependentLayers;
 
-    typedef std::vector<unsigned int> IndexSeq;
+    typedef std::vector<std::uint32_t> IndexSeq;
     /** Index sequence map */
-    typedef std::map<unsigned int, IndexSeq> IndexSeqMap;
+    typedef std::map<std::uint32_t, IndexSeq> IndexSeqMap;
 
     /// first layer -- filters
     Filter::Seq firstLayer;
@@ -52,8 +53,14 @@ public:
     /// compute mean vector for 2nd layer part
     void computeMeanVector(const ViewDependentPart& part, Vec3& normal) const;
 
+    /// compute graph from hierarchy structure
+    void computeGraph(IndexSeqMap& hierarchyGraph);
+
     /// Construction
     Hierarchy(std::string configFilename);
+
+private:
+    IndexSeqMap graph;
 };
 
 }

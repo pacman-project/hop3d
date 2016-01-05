@@ -58,6 +58,15 @@ public:
     /// get cloud from dataset
     void getCloud(const std::string& path, hop3d::PointCloud& cloud) const;
 
+    /// get hierarchy graph
+    void getHierarchy(Hierarchy::IndexSeqMap& hierarchyGraph) const;
+
+    /// get parts realization
+    void getPartsRealisation(const std::string& path, std::vector<ViewIndependentPart::Part3D>& parts) const;
+
+    /// get parts realization
+    void getPartsRealisation(int categoryNo, int objectNo, int imageNo, std::vector<ViewIndependentPart::Part3D>& parts) const;
+
     /// get number of points in the point cloud
     size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo) const;
 

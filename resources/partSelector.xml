@@ -13,7 +13,7 @@
     -->
     <parameters verbose="1" distanceMetric="3" layersNo="7" maxIter="10"></parameters>
     <layer1 clusters="-1" useCompressionRate="false" compressionRate="-1"></layer1> <!--constant size-->
-    <layer2 clusters="430" useCompressionRate="true" compressionRate="1.0"></layer2>
+    <layer2 clusters="430" useCompressionRate="true" compressionRate="0.15"></layer2>
     <layer3 clusters="100" useCompressionRate="true" compressionRate="1.0"></layer3>
     <layer4 clusters="-1" useCompressionRate="false" compressionRate="-1"></layer4> <!--constant size-->
     <layer5 clusters="43" useCompressionRate="true" compressionRate="1.0"></layer5>
