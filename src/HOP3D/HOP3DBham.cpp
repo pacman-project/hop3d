@@ -1,5 +1,7 @@
 #include "hop3d/HOP3D/HOP3DBham.h"
 #include <random>
+#include <thread>
+#include <chrono>
 
 using namespace hop3d;
 
@@ -357,8 +359,7 @@ void HOP3DBham::learn(){
             }
         }
     }
-
-    usleep(1000000);
+    std::this_thread::sleep_for (std::chrono::seconds(1));
     notify3Dmodels();
 
     createPartClouds();
