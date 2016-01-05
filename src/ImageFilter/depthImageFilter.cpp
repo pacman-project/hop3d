@@ -204,14 +204,20 @@ void DepthImageFilter::setFilters(std::string patchesFileName, std::string norma
 }
 
 /// define 2rd layer octet images using selected words from third layer
-void DepthImageFilter::computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo){
+/*void DepthImageFilter::computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo){
     std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << layersNo << "\n";
+    dictionary.size();
+}*/
+
+/// define ith layer octet images using selected words from i+1 layer
+void DepthImageFilter::computePartsImage(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layerNo){
+    std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << layerNo << "\n";
     dictionary.size();
 }
 
 /// get last view dependent layer parts from the image
-void DepthImageFilter::getLastVDLayerParts(int categoryNo, int objectNo, int imageNo, std::vector<ViewDependentPart>& parts) const{
-    std::cout << categoryNo << " " << objectNo << " " << imageNo << "\n";
+void DepthImageFilter::getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const{
+    std::cout << categoryNo << " " << objectNo << " " << imageNo << layerNo << "\n";
     parts.clear();
 }
 
@@ -230,8 +236,8 @@ void DepthImageFilter::getResponseFilters(int categoryNo, int objectNo, int imag
 }
 
 /// returs parts ids and their position on the image
-void DepthImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords, int viewDependentLayersNo) const{
-    std::cout << categoryNo << objectNo << imageNo << layerNo << viewDependentLayersNo << "\n";
+void DepthImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const{
+    std::cout << categoryNo << objectNo << imageNo << layerNo << "\n";
     partCoords.clear();
 }
 

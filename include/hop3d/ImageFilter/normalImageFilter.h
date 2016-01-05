@@ -60,8 +60,11 @@ public:
     /// define 2rd layer octet images using selected words from third layer
     void computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo);
 
+    /// define ith layer octet images using selected words from i+1 layer
+    void computePartsImage(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layerNo);
+
     /// get last view dependent layer parts from the image
-    void getLastVDLayerParts(int categoryNo, int objectNo, int imageNo, std::vector<ViewDependentPart>& parts) const;
+    void getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
 
     /// compute coordinate system from normal vector
     static Mat33 coordinateFromNormal(const Vec3& _normal);
@@ -73,7 +76,7 @@ public:
     void getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const;
 
     /// returs parts ids and their position on the image
-    void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords, int viewDependentLayersNo) const;
+    void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const;
 
     /// get cloud from dataset
     void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const;
@@ -139,7 +142,9 @@ private:
     /// octets images -- second layer
     std::vector<std::vector< std::vector<OctetsImage>>> octetsImages2ndLayer;
     /// parts images
-    std::vector<std::vector< std::vector<PartsImage>>> partsImages;
+    //std::vector<std::vector< std::vector<PartsImage>>> partsImages;
+    /// parts images
+    std::vector<std::vector<std::vector< std::vector<PartsImage>>>> partsImages;
     /// input clouds
     std::vector<std::vector< std::vector<hop3d::PointCloud>>> inputClouds;
 
@@ -195,7 +200,7 @@ private:
     void updateOctetsImages2ndLayer(int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage);
 
     /// update structure which holds parts images
-    void updatePartsImages(int categoryNo, int objectNo, int imageNo, const PartsImage& partsImage);
+    void updatePartsImages(int categoryNo, int objectNo, int imageNo, int layerNo, const PartsImage& partsImage);
 
     /// Apply median filter on the image
     void medianFilter(const cv::Mat& inputImg, cv::Mat& outputImg, int kernelSize);

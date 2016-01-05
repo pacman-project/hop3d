@@ -7,7 +7,7 @@
 	<layer1 dist="0.03" posZ="0.1"></layer1>
 	<layer2 dist="0.25" posZ="0.5"></layer2>
 	<layer3 dist="0.25" posZ="1.0"></layer3>
-	<layer4 dist="0.35" posZ="2.0"></layer4>
+	<layer4 dist="0.35" posZ="1.5"></layer4>
 	<layer5 dist="0.45" posZ="3.0"></layer5>
 	<layer6 dist="0.55" posZ="4.0"></layer6>
 	<layer7 dist="0.65" posZ="5.0"></layer7>

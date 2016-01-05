@@ -221,7 +221,7 @@ void QGLVisualizer::update3Dobjects(void){
         for (auto & layer : layersOfObjects){//view independent layers
             int objectNo=0;
             for (auto & object : layer){
-                objects3Dlist[layerNo].push_back(createObjList(object,layerNo+(int)hierarchy.get()->viewDependentLayers.size()));
+                objects3Dlist[layerNo].push_back(createObjList(object,layerNo+(int)hierarchy.get()->viewDepPartsFromLayerNo));
                 objectNo++;
             }
             layerNo++;
@@ -584,6 +584,8 @@ GLuint QGLVisualizer::createObjList(const std::vector<Part3D>& parts, int layerN
             double GLmat[16]={part.pose(0,0), part.pose(1,0), part.pose(2,0), 0, part.pose(0,1), part.pose(1,1), part.pose(2,1), 0, part.pose(0,2), part.pose(1,2), part.pose(2,2), 0, part.pose(0,3)-initPose(0), part.pose(1,3)-initPose(1), part.pose(2,3)-initPose(2), 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
+                //std::cout << "layerNo " << layerNo << " part id " << part.id << "\n";
+                //std::cout << "cloudsListLayers[layerNo]  " << cloudsListLayers[layerNo].size() << "\n";
                 glCallList(cloudsListLayers[layerNo][part.id]);
             glPopMatrix();
         }

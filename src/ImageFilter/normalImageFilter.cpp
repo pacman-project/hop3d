@@ -298,9 +298,9 @@ void NormalImageFilter::getResponseFilters(int categoryNo, int objectNo, int ima
 }
 
 /// returs parts ids and their position on the image
-void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords, int viewDependentLayersNo) const{
+void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const{
     partCoords.clear();
-    if (layerNo==1&&viewDependentLayersNo!=1){
+    if (layerNo==1){
         for (auto& row : octetsImages2ndLayer[categoryNo][objectNo][imageNo]){
             for (auto& octet : row){
                 if (!octet.isBackground){
@@ -322,8 +322,8 @@ void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, in
             }
         }
     }
-    if (layerNo==2||viewDependentLayersNo==1){
-        for (auto& row : partsImages[categoryNo][objectNo][imageNo]){
+    else{
+        for (auto& row : partsImages[layerNo-1][categoryNo][objectNo][imageNo]){
             for (auto& part : row){
                 if (!part.isBackground()){
                     PartCoords fcoords(part.id, part.location, part.offset);
@@ -349,17 +349,20 @@ void NormalImageFilter::updateOctetsImages2ndLayer(int categoryNo, int objectNo,
 }
 
 /// update structure which holds parts images
-void NormalImageFilter::updatePartsImages(int categoryNo, int objectNo, int imageNo, const PartsImage& partsImage){
-    if((int)partsImages.size()<=categoryNo){
-        partsImages.resize(categoryNo+1);
+void NormalImageFilter::updatePartsImages(int categoryNo, int objectNo, int imageNo, int layerNo, const PartsImage& partsImage){
+    if((int)partsImages.size()<=layerNo){
+        partsImages.resize(layerNo+1);
     }
-    if ((int)partsImages[categoryNo].size()<=objectNo){
-        partsImages[categoryNo].resize(objectNo+1);
+    if((int)partsImages[layerNo].size()<=categoryNo){
+        partsImages[layerNo].resize(categoryNo+1);
     }
-    if ((int)partsImages[categoryNo][objectNo].size()<=imageNo){
-        partsImages[categoryNo][objectNo].resize(imageNo+1);
+    if ((int)partsImages[layerNo][categoryNo].size()<=objectNo){
+        partsImages[layerNo][categoryNo].resize(objectNo+1);
     }
-    partsImages[categoryNo][objectNo][imageNo] = partsImage;
+    if ((int)partsImages[layerNo][categoryNo][objectNo].size()<=imageNo){
+        partsImages[layerNo][categoryNo][objectNo].resize(imageNo+1);
+    }
+    partsImages[layerNo][categoryNo][objectNo][imageNo] = partsImage;
 }
 
 ///extract octets from response image
@@ -652,7 +655,7 @@ bool NormalImageFilter::isBackground(OctetsImage& octetsImage, int u, int v) con
 }
 
 /// define 2rd layer octet images using selected words from third layer
-void NormalImageFilter::computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo){
+/*void NormalImageFilter::computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo){
     OctetsImage octetsImage;
     if (layersNo==1)
         octetsImage = octetsImages1stLayer[categoryNo][objectNo][imageNo];
@@ -690,12 +693,43 @@ void NormalImageFilter::computeImagesLastLayer(int categoryNo, int objectNo, int
         //std::cout << "\n";
     }
     updatePartsImages(categoryNo, objectNo, imageNo, partsImage);
+}*/
+
+/// define 2rd layer octet images using selected words from third layer
+void NormalImageFilter::computePartsImage(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layerNo){
+    OctetsImage octetsImage;
+    if (layerNo==0)
+        octetsImage = octetsImages1stLayer[categoryNo][objectNo][imageNo];
+    else if (layerNo==1)
+        octetsImage = octetsImages2ndLayer[categoryNo][objectNo][imageNo];
+    PartsImage partsImage (octetsImage.size(), std::vector<ViewDependentPart> (octetsImage.back().size()));
+    int partsNo = 0;
+    for (size_t i=0; i<octetsImage.size();i++){
+        for (size_t j=0; j<octetsImage.back().size();j++){
+            ViewDependentPart part;
+            part.id=-1;
+            if (!octetsImage[i][j].isBackground){
+                Mat34 offset;
+                int id = findId(dictionary,octetsImage[i][j], offset);
+                part = dictionary[id];
+                part.offset = offset;
+                part.id = id;
+                part.layerId=layerNo+1;
+                part.location = octetsImage[i][j].filterPos[1][1];
+                part.locationEucl = octetsImage[i][j].partsPosEucl[1][1];
+                part.gaussians[1][1].mean=Vec3(octetsImage[i][j].filterPos[1][1].u, octetsImage[i][j].filterPos[1][1].v, octetsImage[i][j].filterPos[1][1].depth);
+                partsNo++;
+            }
+            partsImage[i][j]=part;
+        }
+    }
+    updatePartsImages(categoryNo, objectNo, imageNo, layerNo, partsImage);
 }
 
 /// get last view dependent layer parts from the image
-void NormalImageFilter::getLastVDLayerParts(int categoryNo, int objectNo, int imageNo, std::vector<ViewDependentPart>& parts) const{
+void NormalImageFilter::getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const{
     parts.clear();
-    PartsImage partsImage = partsImages[categoryNo][objectNo][imageNo];
+    PartsImage partsImage = partsImages[layerNo][categoryNo][objectNo][imageNo];
     for (size_t i=0; i<partsImage.size();i++){
         for (size_t j=0; j<partsImage.back().size();j++){
             if (!partsImage[i][j].isBackground()){
@@ -1062,7 +1096,7 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
             Octet octet2nd = octetsImages2ndLayer[categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
           //  std::cout << "coord 2st id " << (v/(config.filterSize*3))%3 << ", " << (u/(config.filterSize*3))%3 << " -> " << octet2nd.partIds[(v/(config.filterSize*3))%3][(u/(config.filterSize*3))%3] << "\n";
             ids.push_back(octet2nd.partIds[(u/(config.filterSize*3))%3][(v/(config.filterSize*3))%3]);
-            lastVDpart = partsImages[categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
+            lastVDpart = partsImages[0][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
             ids.push_back(lastVDpart.id);
         }
         else{
@@ -1073,7 +1107,7 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
     }
     else{
         if (octetCoords[0]<partsImages[categoryNo][objectNo][imageNo].size()&&octetCoords[1]<partsImages[categoryNo][objectNo][imageNo][0].size()){
-            lastVDpart = partsImages[categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
+            lastVDpart = partsImages[1][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
             ids.push_back(lastVDpart.id);
         }
         else{

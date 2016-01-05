@@ -179,10 +179,12 @@ void HOP3DBham::learn(){
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
     //represent all images in parts from 3rd layer
-    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
-        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
-            for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
-                imageFilterer->computeImagesLastLayer((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDependentLayers[hierarchy.get()->viewDepPartsFromLayerNo-1], hierarchy.get()->viewDepPartsFromLayerNo);
+    for (size_t layerNo=0; layerNo< hierarchy.get()->viewDependentLayers.size();layerNo++){
+        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
+            for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
+                for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                    imageFilterer->computePartsImage((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDependentLayers[layerNo], (int)layerNo);
+                }
             }
         }
     }
@@ -198,7 +200,7 @@ void HOP3DBham::learn(){
                 //int layerNo=3;
                 std::vector<ViewDependentPart> parts;
                 //get parts of the 3rd layers
-                imageFilterer->getLastVDLayerParts((int)categoryNo, (int)objectNo, (int)imageNo, parts);
+                imageFilterer->getLayerParts((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDepPartsFromLayerNo-1, parts);
                 //std::cout << "parts size: " << parts.size() << "\n";
                 //hierarchy.get()->printIds(parts[0]);
                 //hierarchy.get()->printIds(parts[1]);
@@ -278,7 +280,6 @@ void HOP3DBham::learn(){
     }
     //visualization
     notify(*hierarchy);
-    std::cout << "DF1\n";
     for (int layerNo=0;layerNo<config.viewDependentLayersNo+1;layerNo++){//create objects from parts
         for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
             for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
@@ -287,7 +288,7 @@ void HOP3DBham::learn(){
                     if (layerNo==0)
                         imageFilterer->getResponseFilters((int)categoryNo, (int)objectNo, (int)imageNo, partCoords);
                     else
-                        imageFilterer->getParts3D((int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoords, config.viewDependentLayersNo);
+                        imageFilterer->getParts3D((int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoords);
                     Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                     std::vector<std::pair<int, Mat34>> filtersPoses;
                     for (auto& filterCoord : partCoords){
@@ -309,7 +310,6 @@ void HOP3DBham::learn(){
             }
         }
     }
-    std::cout << "DF2\n";
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
         for (auto & object : objects[categoryNo]){
             std::vector<ViewIndependentPart> objectParts;
@@ -320,7 +320,8 @@ void HOP3DBham::learn(){
         }
     }
     std::cout << "DF3\n";
-    //notify3Dmodels();
+    usleep(1000000);
+    notify3Dmodels();
     std::cout << "DF4\n";
     //createPartClouds();
     std::cout << "DF5\n";

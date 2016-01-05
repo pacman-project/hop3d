@@ -45,10 +45,12 @@ public:
     virtual void setFilters(std::string patchesFileName, std::string normalsFileName, std::string masksFileName) = 0;
 
     /// define 2rd layer octet images using selected words from third layer
-    virtual void computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo) = 0;
+    //virtual void computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo) = 0;
+    /// define ith layer octet images using selected words from i+1 layer
+    virtual void computePartsImage(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layerNo) = 0;
 
     /// get last view dependent layer parts from the image
-    virtual void getLastVDLayerParts(int categoryNo, int objectNo, int imageNo, std::vector<ViewDependentPart>& parts) const = 0;
+    virtual void getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const = 0;
 
     /// get set of ids for the given input point
     virtual void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart, int layersNo) = 0;
@@ -57,7 +59,7 @@ public:
     virtual void getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const = 0;
 
     /// returs parts ids and their position on the image
-    virtual void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords, int viewDependentLayersNo) const = 0;
+    virtual void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const = 0;
 
     /// get cloud from dataset
     virtual void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const = 0;
