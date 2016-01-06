@@ -93,7 +93,7 @@ void HOP3DBham::getDatasetInfo(hop3d::DatasetInfo& _dataset) const{
 }
 
 /// returns paths for each cloud/image
-void HOP3DBham::getCloudPaths(std::vector<std::string> paths) const{
+void HOP3DBham::getCloudPaths(std::vector<std::string>& paths) const{
     paths.clear();
     hop3d::DatasetInfo info;
     dataset->getDatasetInfo(info);

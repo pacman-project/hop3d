@@ -44,7 +44,7 @@ public:
     virtual void getDatasetInfo(hop3d::DatasetInfo& dataset) const = 0;
 
     /// returns paths for each cloud/image
-    virtual void getCloudPaths(std::vector<std::string> paths) const = 0;
+    virtual void getCloudPaths(std::vector<std::string>& paths) const = 0;
 
     /// get cloud from dataset
     virtual void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const = 0;
