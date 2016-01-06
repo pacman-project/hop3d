@@ -375,7 +375,7 @@ bool ViewDependentPart::removeSecondSurface(ViewDependentPart& part) {
     }
     std::sort(depth.begin(),depth.end());
     double distBorder;
-    int groupSize;
+    size_t groupSize;
     bool removeBack=false;
     for (size_t i=0;i<depth.size()-1;i++){
         if (depth[i+1]-depth[i]>distThreshold){
@@ -443,7 +443,7 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
     for (size_t i=0;i<pointCorrespondence.size();i++){
         int pairsNo=0;
         std::vector<Vec3> setA; std::vector<Vec3> setB;
-        int idx=i;
+        size_t idx=i;
         for (size_t j=0;j<pointCorrespondence.size();j++){
             int coordA[2]={pointCorrespondence[j].first, pointCorrespondence[j].second};//partA is not rotated
             int coordB[2]={pointCorrespondence[idx%(pointCorrespondence.size())].first, pointCorrespondence[idx%(pointCorrespondence.size())].second};//partA is not rotated
@@ -701,7 +701,7 @@ void ViewDependentPart::getNormal(Vec3& normal, const ViewDependentPart::Seq& la
 
 // Insertion operator
 std::ostream& operator<<(std::ostream& os, const ViewDependentPart& part){
-    os << part.id << " " << static_cast<unsigned int>(part.type) << " " << part.layerId << " " << part.cameraPoseId << " " << part.location;
+    os << part.id << " " << static_cast<unsigned int>(part.type) << " " << part.realisationId << " " << part.layerId << " " << part.cameraPoseId << " " << part.location << " " << part.offset;
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             os << part.partIds[i][j] << " ";
@@ -710,6 +710,16 @@ std::ostream& operator<<(std::ostream& os, const ViewDependentPart& part){
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             os << part.gaussians[i][j];
+        }
+    }
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            os << part.partsPosNorm[i][j];
+        }
+    }
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            os << part.offsets[i][j];
         }
     }
     os << part.group.size() << "\n";
@@ -723,7 +733,7 @@ std::ostream& operator<<(std::ostream& os, const ViewDependentPart& part){
 // Extraction operator
 std::istream& operator>>(std::istream& is, ViewDependentPart& part){
     unsigned int type;
-    is >> part.id >> type >> part.layerId >> part.cameraPoseId >> part.location;
+    is >> part.id >> type >> part.realisationId >> part.layerId >> part.cameraPoseId >> part.location >> part.offset;
     part.type = static_cast<Part::Type>(type);
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
@@ -733,6 +743,16 @@ std::istream& operator>>(std::istream& is, ViewDependentPart& part){
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             is >> part.gaussians[i][j];
+        }
+    }
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            is >> part.partsPosNorm[i][j];
+        }
+    }
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            is >> part.offsets[i][j];
         }
     }
     int groupSize;

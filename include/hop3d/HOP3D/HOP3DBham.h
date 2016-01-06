@@ -52,6 +52,9 @@ public:
     /// get training dataset info
     void getDatasetInfo(hop3d::DatasetInfo& _dataset) const;
 
+    /// returns paths for each cloud/image
+    void getCloudPaths(std::vector<std::string> paths) const;
+
     /// get cloud from dataset
     void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const;
 
@@ -66,6 +69,12 @@ public:
 
     /// get parts realization
     void getPartsRealisation(int categoryNo, int objectNo, int imageNo, std::vector<ViewIndependentPart::Part3D>& parts) const;
+
+    /// get maps from point to part realisation
+    void getCloud2PartsMap(const std::string& path, Hierarchy::IndexSeqMap& points2parts) const;
+
+    /// get maps from point to part realisation
+    void getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSeqMap& points2parts) const;
 
     /// get number of points in the point cloud
     size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo) const;

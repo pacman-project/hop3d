@@ -81,6 +81,9 @@ public:
     /// get cloud from dataset
     void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const;
 
+    /// returs parts ids and their position on the image
+    void getPartsRealisation(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
+
     /// Insertion operator
     friend std::ostream& operator<<(std::ostream& os, const NormalImageFilter& filter);
 
@@ -147,6 +150,8 @@ private:
     std::vector<std::vector<std::vector< std::vector<PartsImage>>>> partsImages;
     /// input clouds
     std::vector<std::vector< std::vector<hop3d::PointCloud>>> inputClouds;
+    /// part realisation counter
+    int partRealisationsCounter;
 
     /// discretization: convert normal vector to id
     int toId(const Vec3& normal) const;

@@ -43,6 +43,9 @@ public:
     /// get training dataset info
     virtual void getDatasetInfo(hop3d::DatasetInfo& dataset) const = 0;
 
+    /// returns paths for each cloud/image
+    virtual void getCloudPaths(std::vector<std::string> paths) const = 0;
+
     /// get cloud from dataset
     virtual void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const = 0;
 
@@ -69,6 +72,12 @@ public:
 
     /// get camera pose
     virtual void getSensorFrame(const std::string& path, Mat34& cameraPose) const = 0;
+
+    /// get maps from point to part realisation
+    virtual void getCloud2PartsMap(const std::string& path, Hierarchy::IndexSeqMap& points2parts) const = 0;
+
+    /// get maps from point to part realisation
+    virtual void getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSeqMap& points2parts) const = 0;
 
     /// Virtual descrutor
     virtual ~HOP3D() {

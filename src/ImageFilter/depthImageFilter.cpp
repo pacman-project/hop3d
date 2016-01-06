@@ -247,6 +247,12 @@ void DepthImageFilter::getCloud(int categoryNo, int objectNo, int imageNo, hop3d
     std::cout << categoryNo << " " << objectNo << imageNo << "\n";
 }
 
+/// returs parts ids and their position on the image
+void DepthImageFilter::getPartsRealisation(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const{
+    parts.clear();
+    std::cout << categoryNo << " " << objectNo << imageNo << layerNo << "\n";
+}
+
 int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, Filter &filter, cv::Mat &filteredImage)
 {
 

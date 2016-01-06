@@ -8,12 +8,14 @@ NormalImageFilter::Ptr filterNorm;
 
 NormalImageFilter::NormalImageFilter(void) : ImageFilter("Depth image filter using normals", FILTER_NORMAL) {
     generateFilters();
+    partRealisationsCounter = 0;
 }
 
 /// Construction
 NormalImageFilter::NormalImageFilter(std::string config, std::string sensorConfig) :
         ImageFilter("Depth image filter using normals", FILTER_NORMAL), config(config), sensorModel(sensorConfig) {
     generateFilters();
+    partRealisationsCounter = 0;
 }
 
 /// Destruction
@@ -80,6 +82,25 @@ void NormalImageFilter::save2file(std::ostream& os) const{
             }
         }
     }
+    os << partsImages.size() << " ";
+    for (auto &layer : partsImages){
+        os << layer.size() << " ";
+        for (auto &category : layer){
+            os << category.size() << " ";
+            for (auto &object : category){
+                os << object.size() << " ";
+                for (auto &image : object){
+                    os << image.size() << " ";
+                    for (auto &row : image){
+                        os << row.size() << " ";
+                        for (auto &part : row){
+                            os << part << " ";
+                        }
+                    }
+                }
+            }
+        }
+    }
     os << "\n";
 }
 
@@ -116,6 +137,40 @@ void NormalImageFilter::loadFromfile(std::istream& is){
                     cloud.push_back(point);
                 }
                 inputClouds[catNo][objNo][cloudNo] = cloud;
+            }
+        }
+    }
+    int layersNo;
+    is >> layersNo;
+    partsImages.clear();
+    partsImages.resize(layersNo);
+    for (int layNo = 0; layNo<layersNo; layNo++){
+        int catsNo;
+        is >> catsNo;
+        partsImages[layNo].resize(catsNo);
+        for (int catNo = 0; catNo<catsNo; catNo++){
+            int objectsNo;
+            is >> objectsNo;
+            partsImages[layNo][catNo].resize(objectsNo);
+            for (int objNo=0;objNo<objectsNo; objNo++){
+                int imgsNo;
+                is >> imgsNo;
+                partsImages[layNo][catNo][objNo].resize(imgsNo);
+                for (int imgNo=0;imgNo<imgsNo;imgNo++){
+                    int rowsNo;
+                    is >> rowsNo;
+                    partsImages[layNo][catNo][objNo][imgNo].resize(rowsNo);
+                    for (int rowNo=0;rowNo<rowsNo;rowNo++){
+                        int partsNo;
+                        is >> partsNo;
+                        partsImages[layNo][catNo][objNo][imgNo][rowNo].resize(partsNo);
+                        for (int partNo=0;partNo<partsNo;partNo++){
+                            ViewDependentPart part;
+                            is >> part;
+                            partsImages[layNo][catNo][objNo][imgNo][rowNo][partNo] = part;
+                        }
+                    }
+                }
             }
         }
     }
@@ -292,6 +347,18 @@ void NormalImageFilter::getResponseFilters(int categoryNo, int objectNo, int ima
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/// returs parts ids and their position on the image
+void NormalImageFilter::getPartsRealisation(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const{
+    parts.clear();
+    for (auto& row : partsImages[layerNo][categoryNo][objectNo][imageNo]){
+        for (auto& part : row){
+            if (!part.isBackground()){
+                parts.push_back(part);
             }
         }
     }
@@ -714,6 +781,8 @@ void NormalImageFilter::computePartsImage(int categoryNo, int objectNo, int imag
                 part = dictionary[id];
                 part.offset = offset;
                 part.id = id;
+                part.realisationId = partRealisationsCounter;
+                partRealisationsCounter++;
                 part.layerId=layerNo+1;
                 part.location = octetsImage[i][j].filterPos[1][1];
                 part.locationEucl = octetsImage[i][j].partsPosEucl[1][1];

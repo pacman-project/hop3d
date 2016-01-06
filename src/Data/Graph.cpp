@@ -1,6 +1,7 @@
 #include "hop3d/Data/Graph.h"
 #include "tinyXML/tinyxml2.h"
 #include <set>
+#include <fstream>
 
 namespace hop3d {
 
@@ -23,6 +24,7 @@ Hierarchy::Hierarchy(std::string configFilename) {
 
 // Insertion operator
 std::ostream& operator<<(std::ostream& os, const Hierarchy& hierarchy){
+    os << hierarchy.viewDepPartsFromLayerNo << "\n";
     //save filters no
     os << hierarchy.firstLayer.size() << "\n";
     for (auto& filter : hierarchy.firstLayer){
@@ -41,12 +43,6 @@ std::ostream& operator<<(std::ostream& os, const Hierarchy& hierarchy){
         os << element.first << " " << element.second << " ";
     }
     os << "\n";
-    // interpreter size
-   // os << hierarchy.interpreter2to3.size() << "\n";
-    //for (auto& element : hierarchy.interpreter2to3){
-   //     os << element.first << " " << element.second << " ";
-   // }
-    //os << "\n";
     os << hierarchy.viewIndependentLayers.size() << "\n";
     for (size_t i = 0;i<hierarchy.viewIndependentLayers.size();i++){
         os << hierarchy.viewIndependentLayers[i].size() << "\n";
@@ -54,12 +50,24 @@ std::ostream& operator<<(std::ostream& os, const Hierarchy& hierarchy){
             os << part;
         }
     }
+    os << "\n";
+    os << hierarchy.graph.size() << "\n";
+    for (auto &node : hierarchy.graph){
+            os << node.first << "\n";
+            os << node.second.size() << "\n";
+            for (auto &incId : node.second){
+                os << incId << " ";
+            }
+            std::cout << "\n";
+    }
+    os << "\n";
     return os;
 }
 
 // Extraction operator
 std::istream& operator>>(std::istream& is, Hierarchy& hierarchy){
     // read filters no
+    is >> hierarchy.viewDepPartsFromLayerNo;
     int filtersNo;
     is >> filtersNo;
     hierarchy.firstLayer.clear();
@@ -91,13 +99,6 @@ std::istream& operator>>(std::istream& is, Hierarchy& hierarchy){
         is >> firstId >> secondId;
         hierarchy.interpreter.insert(std::make_pair(firstId, secondId));
     }
-    // interpreter size
-    //is >> interpreterSize;
-    //for (int i=0;i<interpreterSize;i++){
-    //    int firstId, secondId;
-    //    is >> firstId >> secondId;
-    //    hierarchy.interpreter2to3.insert(std::make_pair(firstId, secondId));
-    //}
     int viewIndepLayersNo;
     is >> viewIndepLayersNo;
     hierarchy.viewIndependentLayers.clear();
@@ -110,6 +111,22 @@ std::istream& operator>>(std::istream& is, Hierarchy& hierarchy){
             is >> part;
             hierarchy.viewIndependentLayers[i].push_back(part);
         }
+    }
+    hierarchy.graph.clear();
+    int graphSize;
+    is >> graphSize;
+    for (int i=0;i<graphSize; i++){
+        std::uint32_t partId;
+        is >> partId;
+        int elementsNo;
+        is >> elementsNo;
+        std::vector<std::uint32_t> elementsIds(elementsNo,0);
+        for (int j=0;j<elementsNo;j++){
+            std::uint32_t compId;
+            is >> compId;
+            elementsIds[j] = compId;
+        }
+        hierarchy.graph.insert(std::make_pair(partId,elementsIds));
     }
     return is;
 }

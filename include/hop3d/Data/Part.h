@@ -35,6 +35,8 @@ public:
     int id;
     /// Layer id
     int layerId;
+    /// realisation id
+    int realisationId;
     /// Type of the part
     Type type;
 
@@ -142,6 +144,8 @@ public:
         Mat34 pose;
         /// id of the part
         int id;
+        /// realisation id
+        int realisationId;
 
         Part3D(void){}
 
