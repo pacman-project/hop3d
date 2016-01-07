@@ -77,7 +77,42 @@ void NormalImageFilter::save2file(std::ostream& os) const{
                 os << cloud.size() << " ";
                 for (auto &point : cloud){
                     os << point.position(0) << " " << point.position(1) << " " << point.position(2) << " ";
-                    os << point.normal(0) << " " << point.normal(1) << " " << point.normal(2) << " ";
+                    if (std::isnan(point.normal(0))||std::isnan(point.normal(1))||std::isnan(point.normal(2)))
+                        os << -2 << " " << -2 << " " << -2 << " ";
+                    else
+                        os << point.normal(0) << " " << point.normal(1) << " " << point.normal(2) << " ";
+                    os << point.u << " " << point.v << " ";
+                }
+            }
+        }
+    }
+    os << octetsImages1stLayer.size() << " ";
+    for (auto &category : octetsImages1stLayer){
+        os << category.size() << " ";
+        for (auto &object : category){
+            os << object.size() << " ";
+            for (auto &image : object){
+                os << image.size() << " ";
+                for (auto &row : image){
+                    os << row.size() << " ";
+                    for (auto &octet : row){
+                        os << octet;
+                    }
+                }
+            }
+        }
+    }
+    os << octetsImages2ndLayer.size() << " ";
+    for (const auto &category : octetsImages2ndLayer){
+        os << category.size() << " ";
+        for (const auto &object : category){
+            os << object.size() << " ";
+            for (const auto &image : object){
+                os << image.size() << " ";
+                for (const auto &row : image){
+                    os << row.size() << " ";
+                    for (const auto &octet : row)
+                        os << octet;
                 }
             }
         }
@@ -128,15 +163,69 @@ void NormalImageFilter::loadFromfile(std::istream& is){
             for (int cloudNo=0;cloudNo<cloudsNo;cloudNo++){
                 int pointsNo;
                 is >> pointsNo;
-                PointCloud cloud;
+                PointCloudUV cloud;
                 //cloud.reserve(pointsNo);
                 for (int pointNo=0;pointNo<pointsNo;pointNo++){
-                    hop3d::PointNormal point;
+                    hop3d::PointNormalUV point;
                     is >> point.position(0) >> point.position(1) >> point.position(2);
                     is >> point.normal(0) >> point.normal(1) >> point.normal(2);
+                    if (point.normal(0)==-2){
+                        point.normal = Vec3(NAN,NAN,NAN);
+                    }
+                    is >> point.u >> point.v;
                     cloud.push_back(point);
                 }
                 inputClouds[catNo][objNo][cloudNo] = cloud;
+            }
+        }
+    }
+    is >> categoriesNo;
+    octetsImages1stLayer.resize(categoriesNo);
+    for (int catNo = 0; catNo<categoriesNo; catNo++){
+        int objectsNo;
+        is >> objectsNo;
+        octetsImages1stLayer[catNo].resize(objectsNo);
+        for (int objNo=0;objNo<objectsNo; objNo++){
+            int imgsNo;
+            is >> imgsNo;
+            octetsImages1stLayer[catNo][objNo].resize(imgsNo);
+            for (int imgNo=0;imgNo<imgsNo;imgNo++){
+                int rowsNo;
+                is >> rowsNo;
+                octetsImages1stLayer[catNo][objNo][imgNo].resize(rowsNo);
+                for (int rowNo=0;rowNo<rowsNo;rowNo++){
+                    int octetsNo;
+                    is >> octetsNo;
+                    octetsImages1stLayer[catNo][objNo][imgNo][rowNo].resize(octetsNo);
+                    for (int octetNo=0;octetNo<octetsNo;octetNo++){
+                        is >> octetsImages1stLayer[catNo][objNo][imgNo][rowNo][octetNo];
+                    }
+                }
+            }
+        }
+    }
+    is >> categoriesNo;
+    octetsImages2ndLayer.resize(categoriesNo);
+    for (int catNo = 0; catNo<categoriesNo; catNo++){
+        int objectsNo;
+        is >> objectsNo;
+        octetsImages2ndLayer[catNo].resize(objectsNo);
+        for (int objNo=0;objNo<objectsNo; objNo++){
+            int imgsNo;
+            is >> imgsNo;
+            octetsImages2ndLayer[catNo][objNo].resize(imgsNo);
+            for (int imgNo=0;imgNo<imgsNo;imgNo++){
+                int rowsNo;
+                is >> rowsNo;
+                octetsImages2ndLayer[catNo][objNo][imgNo].resize(rowsNo);
+                for (int rowNo=0;rowNo<rowsNo;rowNo++){
+                    int octetsNo;
+                    is >> octetsNo;
+                    octetsImages2ndLayer[catNo][objNo][imgNo][rowNo].resize(octetsNo);
+                    for (int octetNo=0;octetNo<octetsNo;octetNo++){
+                        is >> octetsImages2ndLayer[catNo][objNo][imgNo][rowNo][octetNo];
+                    }
+                }
             }
         }
     }
@@ -176,7 +265,7 @@ void NormalImageFilter::loadFromfile(std::istream& is){
     }
 }
 /// get cloud from dataset
-void NormalImageFilter::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const{
+void NormalImageFilter::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloudUV& cloud) const{
     cloud = inputClouds[categoryNo][objectNo][imageNo];
 }
 
@@ -225,7 +314,7 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     /// compute point cloud, keep order
     std::vector< std::vector<hop3d::PointNormal> > cloudOrd(depthImage.rows, std::vector<hop3d::PointNormal> (depthImage.cols));
-    std::vector< std::vector<hop3d::PointNormal> > cloudGrasp(depthImage.rows, std::vector<hop3d::PointNormal> (depthImage.cols));
+    PointCloudUV cloudGrasp;
     /// response: id, response value
     std::vector< std::vector<Response> > responseImage(depthImage.rows, std::vector<Response>(depthImage.cols,std::make_pair<int, double>(-1,-1.0)));
     double scale = 1/sensorModel.config.depthImageScale;
@@ -242,15 +331,21 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
     for (int i=0;i<filteredImg.rows;i++){
         for (int j=0;j<filteredImg.cols;j++){
             sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
-            sensorModel.getPoint(j, i, filteredImg.at<uint16_t>(i,j)*scale, cloudGrasp[i][j].position);
+            if (!std::isnan(double(cloudOrd[i][j].position(2)))){
+                PointNormalUV puv;
+                puv.position = cloudOrd[i][j].position;
+                puv.u=i; puv.v=j;
+                cloudGrasp.push_back(puv);
+            }
         }
     }
+    int pointIdx = 0;
     cv::Mat idsImage(filteredImg.rows,filteredImg.cols, cv::DataType<int>::type,cv::Scalar(0));
     for (int i=config.filterSize/2;i<filteredImg.rows-(config.filterSize/2);i++){
         for (int j=config.filterSize/2;j<filteredImg.cols-(config.filterSize/2);j++){
-			if (!std::isnan(double(cloudOrd[i][j].position(2)))){
+            if (!std::isnan(double(cloudOrd[i][j].position(2)))){
                 computeNormal(i, j, cloudOrd);
-                cloudGrasp[i][j].normal = cloudOrd[i][j].normal;
+                cloudGrasp[pointIdx].normal = cloudOrd[i][j].normal;
                 //compute id 
 				if (!std::isnan(double(cloudOrd[i][j].normal(2)))){
                     responseImage[i][j].first = toId(cloudOrd[i][j].normal);
@@ -263,6 +358,7 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
                     if (config.verbose==2)
                         idsImage.at<uchar>(i,j)=(uchar)(toId(cloudOrd[i][j].normal)*2);
                 }
+                pointIdx++;
             }
         }
     }
@@ -306,7 +402,7 @@ void NormalImageFilter::updateOctetsImages1stLayer(int categoryNo, int objectNo,
 }
 
 /// update structure which holds octets images
-void NormalImageFilter::saveCloud(int categoryNo, int objectNo, int imageNo, const std::vector<std::vector<hop3d::PointNormal>>& octetsImage){
+void NormalImageFilter::saveCloud(int categoryNo, int objectNo, int imageNo, const hop3d::PointCloudUV& cloud){
     if((int)inputClouds.size()<=categoryNo){
         inputClouds.resize(categoryNo+1);
     }
@@ -315,14 +411,6 @@ void NormalImageFilter::saveCloud(int categoryNo, int objectNo, int imageNo, con
     }
     if ((int)inputClouds[categoryNo][objectNo].size()<=imageNo){
         inputClouds[categoryNo][objectNo].resize(imageNo+1);
-    }
-    hop3d::PointCloud cloud;
-    for (auto& row : octetsImage){
-        for (auto& point : row){
-            if ((!std::isnan(double(point.position(2))))&&(!std::isnan(double(point.normal(2))))){
-                cloud.push_back(point);
-            }
-        }
     }
     inputClouds[categoryNo][objectNo][imageNo] = cloud;
 }

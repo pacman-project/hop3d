@@ -79,7 +79,7 @@ public:
     void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const;
 
     /// get cloud from dataset
-    void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const;
+    void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloudUV& cloud) const;
 
     /// returs parts ids and their position on the image
     void getPartsRealisation(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
@@ -149,7 +149,7 @@ private:
     /// parts images
     std::vector<std::vector<std::vector< std::vector<PartsImage>>>> partsImages;
     /// input clouds
-    std::vector<std::vector< std::vector<hop3d::PointCloud>>> inputClouds;
+    std::vector<std::vector< std::vector<hop3d::PointCloudUV>>> inputClouds;
     /// part realisation counter
     int partRealisationsCounter;
 
@@ -223,7 +223,7 @@ private:
     bool computeNormalStats(const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Vec6& mean, Mat66& cov) const;
 
     /// update structure which holds octets images
-    void saveCloud(int categoryNo, int objectNo, int imageNo, const std::vector<std::vector<hop3d::PointNormal>>& octetsImage);
+    void saveCloud(int categoryNo, int objectNo, int imageNo, const hop3d::PointCloudUV& cloud);
 };
 
 }

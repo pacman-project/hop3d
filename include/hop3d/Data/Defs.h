@@ -246,6 +246,12 @@ public:
 
     /// Print
     void print() const;
+
+    // Insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const Octet& gaussian);
+
+    // Extraction operator
+    friend std::istream& operator>>(std::istream& is, Octet& gaussian);
 };
 
 /// 3D Gaussian

@@ -105,7 +105,15 @@ void HOP3DBham::getCloudPaths(std::vector<std::string>& paths) const{
 
 /// get cloud from dataset
 void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const{
-    imageFilterer->getCloud(categoryNo, objectNo, imageNo, cloud);
+    hop3d::PointCloudUV cloudUV;
+    imageFilterer->getCloud(categoryNo, objectNo, imageNo, cloudUV);
+    cloud.clear();
+    cloud.reserve(cloudUV.size());
+    for (auto &point : cloudUV){
+        hop3d::PointNormal p3d;
+        p3d=point;
+        cloud.push_back(p3d);
+    }
     //transform cloud to global frame
     /*Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
     for (auto &point : cloud){
@@ -172,28 +180,21 @@ void HOP3DBham::getPartsRealisation(int categoryNo, int objectNo, int imageNo, s
 /// get maps from point to part realisation
 void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSeqMap& points2parts) const{
     points2parts.clear();
-    cv::Mat depthImg;
-    dataset->getDepthImage(categoryNo, objectNo, imageNo, depthImg);
+    PointCloudUV cloud;
+    imageFilterer->getCloud(categoryNo, objectNo, imageNo, cloud);
     std::uint32_t pointIdx=0;
-    double scale = 1/depthCameraModel.get()->config.depthImageScale;
-    for (int i=0;i<depthImg.rows;i++){
-        for (int j=0;j<depthImg.cols;j++){
-            Vec3 point;
-            depthCameraModel.get()->getPoint(i, j, depthImg.at<uint16_t>(i,j)*scale, point);
-            if (!std::isnan(double(point(2)))){
-                std::vector<int> ids;
-                getPartsIds(categoryNo,objectNo,imageNo,i,j,ids);
-                std::vector<std::uint32_t> idsParts;
-                for (size_t layerNo=0;layerNo<3;layerNo++){
-                    if (ids[i]>=0){
-                        idsParts.push_back((((std::uint32_t)layerNo+1)*10000)+(std::uint32_t)ids[i]);
-                        std::cout << "point " << pointIdx << " -> " << ids[i] << " lay no " << layerNo << "\n";
-                    }
-                }
-                points2parts.insert(std::make_pair(pointIdx,idsParts));
+    for (auto &point : cloud){
+        std::vector<int> ids;
+        getPartsIds(categoryNo,objectNo,imageNo,point.u,point.v,ids);
+        std::vector<std::uint32_t> idsParts;
+        for (size_t layerNo=1;layerNo<3;layerNo++){
+            if (ids[layerNo]>=0){
+                idsParts.push_back((((std::uint32_t)layerNo+1)*10000)+(std::uint32_t)ids[layerNo]);
+                //std::cout << "point " << pointIdx << " -> " << (((std::uint32_t)layerNo)*10000)+(std::uint32_t)ids[layerNo] << " lay no " << layerNo << "\n";
             }
-            pointIdx++;
         }
+        points2parts.insert(std::make_pair(pointIdx,idsParts));
+        pointIdx++;
     }
 }
 
@@ -411,13 +412,13 @@ void HOP3DBham::learn(){
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;
     getPartsRealisation(0,0,0, parts);
-    for (auto &part : parts){
+    /*for (auto &part : parts){
         std::cout << "part id " << part.id << "\n";
         std::cout << "part realisation id " << part.realisationId << "\n";
         std::cout << "part pose\n" << part.pose.matrix() << "\n";
-    }
+    }*/
     Hierarchy::IndexSeqMap points2parts;
-    getCloud2PartsMap(0,0,0, points2parts);
+    getCloud2PartsMap(0,0,1, points2parts);
     /*std::cout << "octets size: " << octets2nd.size() << "\n";
     std::cout << "vocabulary size: " << hierarchy.get()->viewDependentLayers[0].size() << "\n";
     for (auto& octet : octets2nd){
@@ -471,15 +472,17 @@ void HOP3DBham::load(std::string filename){
         }
     }
     notify3Dmodels();*/
-    /*Hierarchy::IndexSeqMap hierarchyGraph;
+    Hierarchy::IndexSeqMap hierarchyGraph;
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;
     getPartsRealisation(0,0,0, parts);
-    for (auto &part : parts){
+    /*for (auto &part : parts){
         std::cout << "part id " << part.id << "\n";
         std::cout << "part realisation id " << part.realisationId << "\n";
         std::cout << "part pose\n" << part.pose.matrix() << "\n";
     }*/
+    Hierarchy::IndexSeqMap points2parts;
+    getCloud2PartsMap(0,0,1, points2parts);
     //createPartClouds();
     std::cout << "Finished\n";
 }

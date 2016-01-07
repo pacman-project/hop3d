@@ -159,6 +159,28 @@ namespace hop3d {
     }
 
     // Insertion operator
+    std::ostream& operator<<(std::ostream& os, const Octet& octet){
+        //save octet
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                os << octet.partIds[i][j] << " ";
+            }
+        }
+        os << "\n";
+        return os;
+    }
+
+    // Extraction operator
+    std::istream& operator>>(std::istream& is, Octet& octet){
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                is >> octet.partIds[i][j];
+            }
+        }
+        return is;
+    }
+
+    // Insertion operator
     std::ostream& operator<<(std::ostream& os, const Gaussian3D& gaussian){
         //save gaussian 3d
         for (int i=0;i<3;i++){

@@ -26,6 +26,19 @@ public:
     PointNormal(Vec3 _position, Vec3 _normal) : position(_position), normal(_normal) {}
 };
 
+class PointNormalUV : public PointNormal{
+public:
+    /// image coordinates
+    unsigned int u;
+    unsigned int v;
+
+    ///Construction
+    PointNormalUV(){}
+
+    ///Construction
+    PointNormalUV(Vec3 _position, Vec3 _normal, unsigned int _u, unsigned int _v) : PointNormal(_position, _normal), u(_u), v(_v) {}
+};
+
 class PointColor{
 public:
     /// position
@@ -41,6 +54,8 @@ public:
 };
 
 typedef std::vector<hop3d::PointNormal> PointCloud;
+
+typedef std::vector<hop3d::PointNormalUV> PointCloudUV;
 
 typedef std::vector<hop3d::PointColor> PointCloudRGBA;
 
