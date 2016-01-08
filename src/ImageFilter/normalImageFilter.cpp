@@ -60,210 +60,6 @@ const std::string& NormalImageFilter::getName() const {
     return name;
 }
 
-/// Insertion operator
-std::ostream& operator<<(std::ostream& os, const NormalImageFilter& filter){
-    filter.save2file(os);
-    return os;
-}
-
-/// save to file
-void NormalImageFilter::save2file(std::ostream& os) const{
-    os << inputClouds.size() << " ";
-    for (auto &category : inputClouds){
-        os << category.size() << " ";
-        for (auto &object : category){
-            os << object.size() << " ";
-            for (auto &cloud : object){
-                os << cloud.size() << " ";
-                for (auto &point : cloud){
-                    os << point.position(0) << " " << point.position(1) << " " << point.position(2) << " ";
-                    if (std::isnan(point.normal(0))||std::isnan(point.normal(1))||std::isnan(point.normal(2)))
-                        os << -2 << " " << -2 << " " << -2 << " ";
-                    else
-                        os << point.normal(0) << " " << point.normal(1) << " " << point.normal(2) << " ";
-                    os << point.u << " " << point.v << " ";
-                }
-            }
-        }
-    }
-    os << octetsImages1stLayer.size() << " ";
-    for (auto &category : octetsImages1stLayer){
-        os << category.size() << " ";
-        for (auto &object : category){
-            os << object.size() << " ";
-            for (auto &image : object){
-                os << image.size() << " ";
-                for (auto &row : image){
-                    os << row.size() << " ";
-                    for (auto &octet : row){
-                        os << octet;
-                    }
-                }
-            }
-        }
-    }
-    os << octetsImages2ndLayer.size() << " ";
-    for (const auto &category : octetsImages2ndLayer){
-        os << category.size() << " ";
-        for (const auto &object : category){
-            os << object.size() << " ";
-            for (const auto &image : object){
-                os << image.size() << " ";
-                for (const auto &row : image){
-                    os << row.size() << " ";
-                    for (const auto &octet : row)
-                        os << octet;
-                }
-            }
-        }
-    }
-    os << partsImages.size() << " ";
-    for (auto &layer : partsImages){
-        os << layer.size() << " ";
-        for (auto &category : layer){
-            os << category.size() << " ";
-            for (auto &object : category){
-                os << object.size() << " ";
-                for (auto &image : object){
-                    os << image.size() << " ";
-                    for (auto &row : image){
-                        os << row.size() << " ";
-                        for (auto &part : row){
-                            os << part << " ";
-                        }
-                    }
-                }
-            }
-        }
-    }
-    os << "\n";
-}
-
-// Extraction operator
-std::istream& operator>>(std::istream& is, NormalImageFilter& filter){
-    filter.loadFromfile(is);
-    return is;
-}
-
-/// load from file
-void NormalImageFilter::loadFromfile(std::istream& is){
-    // read categories no
-    int categoriesNo;
-    is >> categoriesNo;
-    inputClouds.clear();
-    inputClouds.resize(categoriesNo);
-    for (int catNo = 0; catNo<categoriesNo; catNo++){
-        int objectsNo;
-        is >> objectsNo;
-        inputClouds[catNo].resize(objectsNo);
-        for (int objNo=0;objNo<objectsNo; objNo++){
-            int cloudsNo;
-            is >> cloudsNo;
-            inputClouds[catNo][objNo].resize(cloudsNo);
-            for (int cloudNo=0;cloudNo<cloudsNo;cloudNo++){
-                int pointsNo;
-                is >> pointsNo;
-                PointCloudUV cloud;
-                //cloud.reserve(pointsNo);
-                for (int pointNo=0;pointNo<pointsNo;pointNo++){
-                    hop3d::PointNormalUV point;
-                    is >> point.position(0) >> point.position(1) >> point.position(2);
-                    is >> point.normal(0) >> point.normal(1) >> point.normal(2);
-                    if (point.normal(0)==-2){
-                        point.normal = Vec3(NAN,NAN,NAN);
-                    }
-                    is >> point.u >> point.v;
-                    cloud.push_back(point);
-                }
-                inputClouds[catNo][objNo][cloudNo] = cloud;
-            }
-        }
-    }
-    is >> categoriesNo;
-    octetsImages1stLayer.resize(categoriesNo);
-    for (int catNo = 0; catNo<categoriesNo; catNo++){
-        int objectsNo;
-        is >> objectsNo;
-        octetsImages1stLayer[catNo].resize(objectsNo);
-        for (int objNo=0;objNo<objectsNo; objNo++){
-            int imgsNo;
-            is >> imgsNo;
-            octetsImages1stLayer[catNo][objNo].resize(imgsNo);
-            for (int imgNo=0;imgNo<imgsNo;imgNo++){
-                int rowsNo;
-                is >> rowsNo;
-                octetsImages1stLayer[catNo][objNo][imgNo].resize(rowsNo);
-                for (int rowNo=0;rowNo<rowsNo;rowNo++){
-                    int octetsNo;
-                    is >> octetsNo;
-                    octetsImages1stLayer[catNo][objNo][imgNo][rowNo].resize(octetsNo);
-                    for (int octetNo=0;octetNo<octetsNo;octetNo++){
-                        is >> octetsImages1stLayer[catNo][objNo][imgNo][rowNo][octetNo];
-                    }
-                }
-            }
-        }
-    }
-    is >> categoriesNo;
-    octetsImages2ndLayer.resize(categoriesNo);
-    for (int catNo = 0; catNo<categoriesNo; catNo++){
-        int objectsNo;
-        is >> objectsNo;
-        octetsImages2ndLayer[catNo].resize(objectsNo);
-        for (int objNo=0;objNo<objectsNo; objNo++){
-            int imgsNo;
-            is >> imgsNo;
-            octetsImages2ndLayer[catNo][objNo].resize(imgsNo);
-            for (int imgNo=0;imgNo<imgsNo;imgNo++){
-                int rowsNo;
-                is >> rowsNo;
-                octetsImages2ndLayer[catNo][objNo][imgNo].resize(rowsNo);
-                for (int rowNo=0;rowNo<rowsNo;rowNo++){
-                    int octetsNo;
-                    is >> octetsNo;
-                    octetsImages2ndLayer[catNo][objNo][imgNo][rowNo].resize(octetsNo);
-                    for (int octetNo=0;octetNo<octetsNo;octetNo++){
-                        is >> octetsImages2ndLayer[catNo][objNo][imgNo][rowNo][octetNo];
-                    }
-                }
-            }
-        }
-    }
-    int layersNo;
-    is >> layersNo;
-    partsImages.clear();
-    partsImages.resize(layersNo);
-    for (int layNo = 0; layNo<layersNo; layNo++){
-        int catsNo;
-        is >> catsNo;
-        partsImages[layNo].resize(catsNo);
-        for (int catNo = 0; catNo<catsNo; catNo++){
-            int objectsNo;
-            is >> objectsNo;
-            partsImages[layNo][catNo].resize(objectsNo);
-            for (int objNo=0;objNo<objectsNo; objNo++){
-                int imgsNo;
-                is >> imgsNo;
-                partsImages[layNo][catNo][objNo].resize(imgsNo);
-                for (int imgNo=0;imgNo<imgsNo;imgNo++){
-                    int rowsNo;
-                    is >> rowsNo;
-                    partsImages[layNo][catNo][objNo][imgNo].resize(rowsNo);
-                    for (int rowNo=0;rowNo<rowsNo;rowNo++){
-                        int partsNo;
-                        is >> partsNo;
-                        partsImages[layNo][catNo][objNo][imgNo][rowNo].resize(partsNo);
-                        for (int partNo=0;partNo<partsNo;partNo++){
-                            ViewDependentPart part;
-                            is >> part;
-                            partsImages[layNo][catNo][objNo][imgNo][rowNo][partNo] = part;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 /// get cloud from dataset
 void NormalImageFilter::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloudUV& cloud) const{
     cloud = inputClouds[categoryNo][objectNo][imageNo];
@@ -333,7 +129,9 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
             sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
             if (!std::isnan(double(cloudOrd[i][j].position(2)))){
                 PointNormalUV puv;
-                puv.position = cloudOrd[i][j].position;
+                Vec3 p3d;
+                sensorModel.getPoint(j, i, filteredImg.at<uint16_t>(i,j)*scale, p3d);
+                puv.position = p3d;
                 puv.u=i; puv.v=j;
                 cloudGrasp.push_back(puv);
             }
@@ -1270,6 +1068,211 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
         else{
             lastVDpart=ViewDependentPart();
             ids.push_back(-2);
+        }
+    }
+}
+
+/// Insertion operator
+std::ostream& operator<<(std::ostream& os, const NormalImageFilter& filter){
+    filter.save2file(os);
+    return os;
+}
+
+/// save to file
+void NormalImageFilter::save2file(std::ostream& os) const{
+    os << inputClouds.size() << " ";
+    for (auto &category : inputClouds){
+        os << category.size() << " ";
+        for (auto &object : category){
+            os << object.size() << " ";
+            for (auto &cloud : object){
+                os << cloud.size() << " ";
+                for (auto &point : cloud){
+                    os << point.position(0) << " " << point.position(1) << " " << point.position(2) << " ";
+                    if (std::isnan(point.normal(0))||std::isnan(point.normal(1))||std::isnan(point.normal(2)))
+                        os << -2 << " " << -2 << " " << -2 << " ";
+                    else
+                        os << point.normal(0) << " " << point.normal(1) << " " << point.normal(2) << " ";
+                    os << point.u << " " << point.v << " ";
+                }
+            }
+        }
+    }
+    os << octetsImages1stLayer.size() << " ";
+    for (auto &category : octetsImages1stLayer){
+        os << category.size() << " ";
+        for (auto &object : category){
+            os << object.size() << " ";
+            for (auto &image : object){
+                os << image.size() << " ";
+                for (auto &row : image){
+                    os << row.size() << " ";
+                    for (auto &octet : row){
+                        os << octet;
+                    }
+                }
+            }
+        }
+    }
+    os << octetsImages2ndLayer.size() << " ";
+    for (const auto &category : octetsImages2ndLayer){
+        os << category.size() << " ";
+        for (const auto &object : category){
+            os << object.size() << " ";
+            for (const auto &image : object){
+                os << image.size() << " ";
+                for (const auto &row : image){
+                    os << row.size() << " ";
+                    for (const auto &octet : row)
+                        os << octet;
+                }
+            }
+        }
+    }
+    os << partsImages.size() << " ";
+    for (auto &layer : partsImages){
+        os << layer.size() << " ";
+        for (auto &category : layer){
+            os << category.size() << " ";
+            for (auto &object : category){
+                os << object.size() << " ";
+                for (auto &image : object){
+                    os << image.size() << " ";
+                    for (auto &row : image){
+                        os << row.size() << " ";
+                        for (auto &part : row){
+                            os << part << " ";
+                        }
+                    }
+                }
+            }
+        }
+    }
+    os << "\n";
+}
+
+// Extraction operator
+std::istream& operator>>(std::istream& is, NormalImageFilter& filter){
+    filter.loadFromfile(is);
+    return is;
+}
+
+/// load from file
+void NormalImageFilter::loadFromfile(std::istream& is){
+    // read categories no
+    int categoriesNo;
+    is >> categoriesNo;
+    inputClouds.clear();
+    inputClouds.resize(categoriesNo);
+    for (int catNo = 0; catNo<categoriesNo; catNo++){
+        int objectsNo;
+        is >> objectsNo;
+        inputClouds[catNo].resize(objectsNo);
+        for (int objNo=0;objNo<objectsNo; objNo++){
+            int cloudsNo;
+            is >> cloudsNo;
+            inputClouds[catNo][objNo].resize(cloudsNo);
+            for (int cloudNo=0;cloudNo<cloudsNo;cloudNo++){
+                int pointsNo;
+                is >> pointsNo;
+                PointCloudUV cloud;
+                //cloud.reserve(pointsNo);
+                for (int pointNo=0;pointNo<pointsNo;pointNo++){
+                    hop3d::PointNormalUV point;
+                    is >> point.position(0) >> point.position(1) >> point.position(2);
+                    is >> point.normal(0) >> point.normal(1) >> point.normal(2);
+                    if (point.normal(0)==-2){
+                        point.normal = Vec3(NAN,NAN,NAN);
+                    }
+                    is >> point.u >> point.v;
+                    cloud.push_back(point);
+                }
+                inputClouds[catNo][objNo][cloudNo] = cloud;
+            }
+        }
+    }
+    is >> categoriesNo;
+    octetsImages1stLayer.resize(categoriesNo);
+    for (int catNo = 0; catNo<categoriesNo; catNo++){
+        int objectsNo;
+        is >> objectsNo;
+        octetsImages1stLayer[catNo].resize(objectsNo);
+        for (int objNo=0;objNo<objectsNo; objNo++){
+            int imgsNo;
+            is >> imgsNo;
+            octetsImages1stLayer[catNo][objNo].resize(imgsNo);
+            for (int imgNo=0;imgNo<imgsNo;imgNo++){
+                int rowsNo;
+                is >> rowsNo;
+                octetsImages1stLayer[catNo][objNo][imgNo].resize(rowsNo);
+                for (int rowNo=0;rowNo<rowsNo;rowNo++){
+                    int octetsNo;
+                    is >> octetsNo;
+                    octetsImages1stLayer[catNo][objNo][imgNo][rowNo].resize(octetsNo);
+                    for (int octetNo=0;octetNo<octetsNo;octetNo++){
+                        is >> octetsImages1stLayer[catNo][objNo][imgNo][rowNo][octetNo];
+                    }
+                }
+            }
+        }
+    }
+    is >> categoriesNo;
+    octetsImages2ndLayer.resize(categoriesNo);
+    for (int catNo = 0; catNo<categoriesNo; catNo++){
+        int objectsNo;
+        is >> objectsNo;
+        octetsImages2ndLayer[catNo].resize(objectsNo);
+        for (int objNo=0;objNo<objectsNo; objNo++){
+            int imgsNo;
+            is >> imgsNo;
+            octetsImages2ndLayer[catNo][objNo].resize(imgsNo);
+            for (int imgNo=0;imgNo<imgsNo;imgNo++){
+                int rowsNo;
+                is >> rowsNo;
+                octetsImages2ndLayer[catNo][objNo][imgNo].resize(rowsNo);
+                for (int rowNo=0;rowNo<rowsNo;rowNo++){
+                    int octetsNo;
+                    is >> octetsNo;
+                    octetsImages2ndLayer[catNo][objNo][imgNo][rowNo].resize(octetsNo);
+                    for (int octetNo=0;octetNo<octetsNo;octetNo++){
+                        is >> octetsImages2ndLayer[catNo][objNo][imgNo][rowNo][octetNo];
+                    }
+                }
+            }
+        }
+    }
+    int layersNo;
+    is >> layersNo;
+    partsImages.clear();
+    partsImages.resize(layersNo);
+    for (int layNo = 0; layNo<layersNo; layNo++){
+        int catsNo;
+        is >> catsNo;
+        partsImages[layNo].resize(catsNo);
+        for (int catNo = 0; catNo<catsNo; catNo++){
+            int objectsNo;
+            is >> objectsNo;
+            partsImages[layNo][catNo].resize(objectsNo);
+            for (int objNo=0;objNo<objectsNo; objNo++){
+                int imgsNo;
+                is >> imgsNo;
+                partsImages[layNo][catNo][objNo].resize(imgsNo);
+                for (int imgNo=0;imgNo<imgsNo;imgNo++){
+                    int rowsNo;
+                    is >> rowsNo;
+                    partsImages[layNo][catNo][objNo][imgNo].resize(rowsNo);
+                    for (int rowNo=0;rowNo<rowsNo;rowNo++){
+                        int partsNo;
+                        is >> partsNo;
+                        partsImages[layNo][catNo][objNo][imgNo][rowNo].resize(partsNo);
+                        for (int partNo=0;partNo<partsNo;partNo++){
+                            ViewDependentPart part;
+                            is >> part;
+                            partsImages[layNo][catNo][objNo][imgNo][rowNo][partNo] = part;
+                        }
+                    }
+                }
+            }
         }
     }
 }
