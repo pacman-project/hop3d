@@ -313,6 +313,8 @@ void HOP3DBham::learn(){
     //std::cout << "create unique clusters:\n";
     //partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
     std::cout << "3rd layer init vocabulary size: " << vocabulary.size() << "\n";
+    partSelector->selectParts(vocabulary, *hierarchy, 4);
+    std::cout << "Dictionary size (" << 4 << "-th layer): " << vocabulary.size() << "\n";
     /// First view-independent layer (three and a half layer)
     hierarchy.get()->viewIndependentLayers[0]=vocabulary;
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category

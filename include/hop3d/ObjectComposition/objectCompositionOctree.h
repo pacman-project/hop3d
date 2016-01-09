@@ -123,6 +123,10 @@ public:
             double voxelSizeGrid;
             /// Point cloud grid -- voxelsNo
             int voxelsNoGrid;
+            /// min number of patches in the cloud
+            int minPatchesNo;
+            /// config GICP
+            ConfigGICP configGICP;
     };
 
 private:

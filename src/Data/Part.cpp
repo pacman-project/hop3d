@@ -1,9 +1,11 @@
 #include "hop3d/Data/Part.h"
 #include "hop3d/Data/Vocabulary.h"
+#include "hop3d/ImageFilter/normalImageFilter.h"
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/registration/gicp.h>
+#include <chrono>
 
 namespace hop3d {
 
@@ -239,17 +241,40 @@ double ViewIndependentPart::distance(const ViewIndependentPart& partA, const Vie
     return sum;
 }
 
+/// compute coordinate system from normal vector
+Mat33 ViewIndependentPart::coordinateFromNormal(const Vec3& _normal){
+    Vec3 x(1,0,0); Vec3 y;
+    Vec3 normal(_normal);
+    y = normal.cross(x);
+    y.normalize();
+    x = y.cross(normal);
+    x.normalize();
+    Mat33 R;
+    R.block(0,0,3,1) = x;
+    R.block(0,1,3,1) = y;
+    R.block(0,2,3,1) = normal;
+    return R;
+}
+
 /// compute distance between view-independent parts
-double ViewIndependentPart::distanceGICP(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset){
+double ViewIndependentPart::distanceGICP(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ConfigGICP& configGICP, Mat34& offset){
     //pcl::PointCloud<pcl::PointNormal> sourceCloud;
+    if (!configGICP.verbose){
+        pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
+    }
+    auto startTime = std::chrono::high_resolution_clock::now();
     pcl::PointCloud<pcl::PointNormal>::Ptr sourceCloud (new pcl::PointCloud<pcl::PointNormal>);
+    //pcl::IterativeClosestPointWithNormals sourceCovariance (new pcl::PointCloud<pcl::PointNormal>);
     for (auto& point : partA.cloud){
         pcl::PointNormal pointPCL;
         pointPCL.x = (float)point.position(0);    pointPCL.y = (float)point.position(1);    pointPCL.z = (float)(float)point.position(2);
         pointPCL.normal_x=(float)point.normal(0); pointPCL.normal_y=(float)point.normal(1);   pointPCL.normal_z=(float)point.normal(2);
         sourceCloud->push_back(pointPCL);
+        /*Mat33 rot = coordinateFromNormal(point.normal);
+        Mat33 S(Mat33::Identity()); S(0,0)=0.2; S(1,1)=0.2;
+        Mat33 sigma = rot*S*S*rot.inverse();*/
     }
-
+    //std::cout << "courceCloud.size() " << sourceCloud->size() <<"\n";
     //pcl::PointCloud<pcl::PointNormal> targetCloud;
     pcl::PointCloud<pcl::PointNormal>::Ptr targetCloud (new pcl::PointCloud<pcl::PointNormal>);
     for (auto& point : partB.cloud){
@@ -258,18 +283,50 @@ double ViewIndependentPart::distanceGICP(const ViewIndependentPart& partA, const
         pointPCL.normal_x=(float)point.normal(0); pointPCL.normal_y=(float)point.normal(1);   pointPCL.normal_z=(float)point.normal(2);
         targetCloud->push_back(pointPCL);
     }
+    //std::cout << "targetCloud.size() " << targetCloud->size() <<"\n";
     // setup Generalized-ICP
-    pcl::GeneralizedIterativeClosestPoint<pcl::PointNormal, pcl::PointNormal> gicp;
-    gicp.setMaxCorrespondenceDistance(1);
+    pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal> gicp;
+    gicp.setMaxCorrespondenceDistance(configGICP.correspondenceDist);
     gicp.setInputSource(sourceCloud);
     gicp.setInputTarget(targetCloud);
-    //gicp.setSourceCovariances(source_covariances);
-    //gicp.setTargetCovariances(target_covariances);
-    // run registration and get transformation
-    pcl::PointCloud<pcl::PointNormal> output;
-    gicp.align(output);
-    Eigen::Matrix4f transform = gicp.getFinalTransformation();
+    Eigen::Matrix4f transform(Eigen::Matrix4f::Identity());
+    double errorMin=1;
+    std::chrono::high_resolution_clock::duration d = std::chrono::high_resolution_clock::now() - startTime;
+    unsigned seed2 = (unsigned)d.count();
+    std::default_random_engine generator;
+    generator.seed(seed2);
+    std::uniform_real_distribution<double> distributionAlpha(configGICP.alpha.first,configGICP.alpha.second);
+    std::uniform_real_distribution<double> distributionBeta(configGICP.beta.first,configGICP.beta.second);
+    std::uniform_real_distribution<double> distributionGamma(configGICP.gamma.first,configGICP.gamma.second);
+    for (int iter=0;iter<configGICP.guessesNo;iter++){
+        double rot[3]={distributionAlpha(generator),distributionBeta(generator),distributionGamma(generator)};
+        if (iter==0)
+            std::fill(rot, rot+3, 0);
+        Eigen::Matrix3d m;
+        m = Eigen::AngleAxisd(rot[0], Eigen::Vector3d::UnitZ())* Eigen::AngleAxisd(rot[1], Eigen::Vector3d::UnitY())* Eigen::AngleAxisd(rot[2], Eigen::Vector3d::UnitZ());
+        Eigen::Matrix4f initEst(Eigen::Matrix4f::Identity());
+        initEst.block<3,3>(0,0)=m.cast<float>();
+        //gicp.transformation_ = initEst;
+        //gicp.setSourceCovariances(sourceCovariances);
+        //gicp.setTargetCovariances(targetCovariances);
+        // run registration and get transformation
+        pcl::PointCloud<pcl::PointNormal> output;
+        Eigen::Matrix<float, 4, 4> estM = initEst;
+        gicp.align(output, estM);
+        if (gicp.hasConverged()){
+            if (gicp.getFitnessScore()<errorMin&&fabs(gicp.getFinalTransformation()(0,3))<0.5&&fabs(gicp.getFinalTransformation()(1,3))<0.5&&fabs(gicp.getFinalTransformation()(2,3))<0.5){
+                transform = gicp.getFinalTransformation();
+                errorMin = gicp.getFitnessScore();
+            }
+        }
+    }
     offset.matrix() = transform.cast<double>();
+    if (configGICP.verbose){
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto time = endTime - startTime;
+        std::cout << "It took " << std::chrono::duration_cast<std::chrono::microseconds>(time).count() << " us to run.\n";
+    }
+    return errorMin;
 }
 
 /// compute distance between view-independent parts
@@ -340,21 +397,6 @@ double ViewIndependentPart::nearestNeighbour(const Mat34& pose, std::vector<std:
         partId++;
     }
     return minDist;
-}
-
-/// compute coordinate system from normal vector
-Mat33 ViewIndependentPart::coordinateFromNormal(const Vec3& _normal){
-    Vec3 x(1,0,0); Vec3 y;
-    Vec3 normal(_normal);
-    y = normal.cross(x);
-    y.normalize();
-    x = y.cross(normal);
-    x.normalize();
-    Mat33 R;
-    R.block(0,0,3,1) = x;
-    R.block(0,1,3,1) = y;
-    R.block(0,2,3,1) = normal;
-    return R;
 }
 
 /// remove elements which belong to "second surface"

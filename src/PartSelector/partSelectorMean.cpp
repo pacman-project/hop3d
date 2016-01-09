@@ -45,6 +45,15 @@ PartSelectorMean::Config::Config(std::string configFilename){
         group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("compressionRate", &compressionRate[i]);
         group->FirstChildElement( layerName.c_str() )->QueryIntAttribute("clusters", &clustersNo[i]);
     }
+    group->FirstChildElement( "GICP" )->QueryIntAttribute("verbose", &configGICP.verbose);
+    group->FirstChildElement( "GICP" )->QueryIntAttribute("guessesNo", &configGICP.guessesNo);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("correspondenceDist", &configGICP.correspondenceDist);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMin", &configGICP.alpha.first);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMax", &configGICP.alpha.second);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMin", &configGICP.beta.first);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMax", &configGICP.beta.second);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMin", &configGICP.gamma.first);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMax", &configGICP.gamma.second);
 }
 
 /// Select parts from the initial vocabulary
@@ -194,6 +203,9 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
         for (auto itCentr = centroids.begin();itCentr!=centroids.end();itCentr++){//for each cluster
             double dist = 0;
             Mat34 offset;
+            if (it->layerId==3){//compute distance from centroid
+                dist = ViewIndependentPart::distanceGICP(*it, dictionary[*itCentr],config.configGICP, offset);
+            }
             if (it->layerId==5){//compute distance from centroid
                 dist = ViewIndependentPart::distance(*it, dictionary[*itCentr], offset);
             }
@@ -293,6 +305,9 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::S
             double distSum = 0; //compute new centroid
             for (auto itPart2 = itClust->begin(); itPart2!=itClust->end();itPart2++){//compute mean dist for each part as a centroid
                 Mat34 offset;
+                if (itPart->layerId==3){//compute distance from centroid
+                    distSum += ViewIndependentPart::distanceGICP(*itPart, *itPart2, config.configGICP, offset);
+                }
                 if (itPart->layerId==5){//compute distance from centroid
                     distSum += ViewIndependentPart::distance(*itPart, *itPart2, offset);
                 }

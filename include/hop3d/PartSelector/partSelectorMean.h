@@ -62,6 +62,8 @@ public:
             std::vector<int> clustersNo;
             /// compressionRate
             std::vector<double> compressionRate;
+            /// config GICP
+            ConfigGICP configGICP;
     };
 
 private:

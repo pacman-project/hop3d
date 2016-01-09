@@ -665,6 +665,25 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
     glPushMatrix();
+    //int id = part.group.begin()->id;
+    Mat34 pose = Mat34::Identity();//part.pose.inverse();
+    int componentNo=0;
+    std::cout << "group size " << part.group.size() << "\n";
+    for (auto & component : part.group){
+        for (auto& patch : component.cloud){
+            glPushMatrix();
+            double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, patch.position(0), patch.position(1)+(double)(config.partDist[layerNo-1]*double(componentNo+1)), patch.position(2), 1};
+            glMultMatrixd(GLmat);
+            glColor3ub(200,200,200);
+            drawPatch(patch.normal);
+            glPopMatrix();
+        }
+        componentNo++;
+    }
+    // create one display list
+    /*GLuint index = glGenLists(1);
+    glNewList(index, GL_COMPILE);
+    glPushMatrix();
     int componentNo=0;
     if (layerNo==4){
         for (auto & partId : part.group){
@@ -711,10 +730,7 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
                             glPushMatrix();
                                 glMultMatrixd(GLmatrot);
                                 if (id==-1){
-                                    /*glColor3ub(200,200,200);
-                                    glBegin(GL_POINTS);
-                                        glVertex3d(pos(0), pos(1)+(double)(config.partDist[layerNo-1]*double(componentNo+1)), pos(2));
-                                    glEnd();*/
+
                                 }
                                 else{
                                     //this->drawAxis(0.5);
@@ -727,7 +743,7 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
                 }
                 componentNo++;
         }
-    }
+    }*/
     glPopMatrix();
     glEndList();
     return index;

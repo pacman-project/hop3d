@@ -17,6 +17,22 @@ bool isCloseToZero(T x)
     return std::abs(x) < std::numeric_limits<T>::epsilon();
 }
 
+class ConfigGICP{
+public:
+    ///verbose
+    int verbose;
+    /// number of trials with different transformation guess
+    int guessesNo;
+    /// correspondence distance
+    double correspondenceDist;
+    /// alpha range
+    std::pair<double,double> alpha;
+    /// beta range
+    std::pair<double,double> beta;
+    /// gamma range
+    std::pair<double,double> gamma;
+};
+
 class Part{
 public:
     /// Sequence
@@ -199,11 +215,14 @@ public:
     /// Print
     void print() const;
 
+    /// compute coordinate system from normal vector
+    static Mat33 coordinateFromNormal(const Vec3& _normal);
+
     /// compute distance between view-independent parts
     static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset);
 
     /// compute distance between view-independent parts
-    static double distanceGICP(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset);
+    static double distanceGICP(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ConfigGICP& configGICP, Mat34& offset);
 
     /// compute distance between view-independent parts
     static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary, Mat34& offset);
@@ -217,8 +236,6 @@ public:
         normal.x() /= norm;    normal.y() /= norm;    normal.z() /= norm;
     }*/
 
-    /// compute coordinate system from normal vector
-    static Mat33 coordinateFromNormal(const Vec3& _normal);
     /// compute the min distance to the set of parts
     static double nearestNeighbour(const Mat34& pose, std::vector<std::pair<Mat34, int>> parts, int& neighbourId);
 

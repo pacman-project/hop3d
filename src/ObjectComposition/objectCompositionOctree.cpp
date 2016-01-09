@@ -45,9 +45,20 @@ ObjectCompositionOctree::Config::Config(std::string configFilename){
     }
     group->FirstChildElement( "parameters" )->QueryDoubleAttribute("voxelSize", &voxelSize);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("voxelsNo", &voxelsNo);
+    group->FirstChildElement( "parameters" )->QueryIntAttribute("minPatchesNo", &minPatchesNo);
     group->FirstChildElement( "pointCloudGrid" )->QueryDoubleAttribute("maxAngleGrid", &maxAngleGrid);
     group->FirstChildElement( "pointCloudGrid" )->QueryIntAttribute("voxelsNoGrid", &voxelsNoGrid);
     group->FirstChildElement( "pointCloudGrid" )->QueryDoubleAttribute("voxelSizeGrid", &voxelSizeGrid);
+
+    group->FirstChildElement( "GICP" )->QueryIntAttribute("verbose", &configGICP.verbose);
+    group->FirstChildElement( "GICP" )->QueryIntAttribute("guessesNo", &configGICP.guessesNo);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("correspondenceDist", &configGICP.correspondenceDist);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMin", &configGICP.alpha.first);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMax", &configGICP.alpha.second);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMin", &configGICP.beta.first);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMax", &configGICP.beta.second);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMin", &configGICP.gamma.first);
+    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMax", &configGICP.gamma.second);
 }
 
 /// update composition from octets (words from last view-independent layer's vocabulary)
@@ -189,25 +200,32 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
             for (int idZ=0; idZ<(*octrees[layerNo]).size(); idZ++){
                 if ((*octrees[layerNo]).at(idX,idY,idZ).id>=0){
                     int wordId=0;
+                    double minDist=std::numeric_limits<double>::max();
                     for (auto& word: vocabulary){
-                        /*Mat34 estTransform;
-                        ViewIndependentPart partA = word;
+                        Mat34 estTransform;
+                        /*ViewIndependentPart partA = word;
                         //transform
-                        Vec3 trans(0.1,0.2,0.3);
-                        double rot[3]={0,0,0};
+                        Vec3 trans(0.0,0.0,0.0);
+                        double rot[3]={1.2,-0.7,0.6};
                         Eigen::Matrix3d m;
                         m = Eigen::AngleAxisd(rot[0], Eigen::Vector3d::UnitZ())* Eigen::AngleAxisd(rot[1], Eigen::Vector3d::UnitY())* Eigen::AngleAxisd(rot[2], Eigen::Vector3d::UnitZ());
+                        int itP = 0;
                         for (auto& patch : partA.cloud){
                             patch.position = m*patch.position + trans;
-                            patch.normal = (m*patch.normal).block<3,1>(0,0);
+                            patch.normal = m*patch.normal;
+                            std::cout << "word point poisition " << word.cloud[itP].position.transpose() << "\n";
+                            std::cout << "partA point poisition " << patch.position.transpose() << "\n";
+                            itP++;
                         }
-                        std::cout << "ref rot\n" << m << "\n";
-                        ViewIndependentPart::distanceGICP(word,partA,estTransform);
-                        std::cout << "estTransform\n" << estTransform.matrix() << "\n";
-                        getchar();*/
-                        if (word.cloud.front().position(0) == (*octrees[layerNo]).at(idX,idY,idZ).cloud.front().position(0)){//find min distance
+                        std::cout << "ref rot\n" << m << "\n";*/
+                        double fitness = ViewIndependentPart::distanceGICP(word,(*octrees[layerNo])(idX,idY,idZ),config.configGICP,estTransform);
+                        //std::cout << "estTransform\n" << estTransform.matrix() << "\n";
+                        //std::cout << "fitnes " << fitness << "\n";
+                        //getchar();
+                        if (fitness<minDist){//find min distance
+                            minDist=fitness;
                             (*octrees[layerNo])(idX,idY,idZ).id = wordId;
-                            (*octrees[layerNo])(idX,idY,idZ).offset=Mat34::Identity();
+                            (*octrees[layerNo])(idX,idY,idZ).offset=estTransform;
                         }
                         wordId++;
                     }
@@ -450,10 +468,12 @@ void ObjectCompositionOctree::createFirstLayer(std::vector<ViewIndependentPart>&
                 newPart.layerId=3;
                 // add neighbouring parts into structure
                 if (createFirstLayerPart(newPart, idX, idY, idZ)>0){
-                    newPart.id = tempId;//hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
-                    (*octrees[0])(idX, idY, idZ) = newPart;//update octree
-                    vocabulary.push_back(newPart);
-                    tempId++;
+                    if (newPart.cloud.size()>config.minPatchesNo){
+                        newPart.id = tempId;//hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
+                        (*octrees[0])(idX, idY, idZ) = newPart;//update octree
+                        vocabulary.push_back(newPart);
+                        tempId++;
+                    }
                 }
             }
         }
@@ -484,9 +504,11 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
                     // add neighbouring parts into structure
                     if (assignPartNeighbours(newPart, hierarchy, destLayerNo-1, idX, idY, idZ)>0){
                         newPart.id = tempId;//hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
-                        (*octrees[destLayerNo])(iterx,itery,iterz) = newPart;//update octree
-                        vocabulary.push_back(newPart);
-                        tempId++;
+                        if (newPart.cloud.size()>config.minPatchesNo){
+                            (*octrees[destLayerNo])(iterx,itery,iterz) = newPart;//update octree
+                            vocabulary.push_back(newPart);
+                            tempId++;
+                        }
                     }
                     iterz++;
                 }
