@@ -19,5 +19,5 @@
     <layer5 clusters="43" useCompressionRate="true" compressionRate="1.0"></layer5>
     <layer6 clusters="5" useCompressionRate="true" compressionRate="1.0"></layer6>
     <layer7 clusters="5" useCompressionRate="true" compressionRate="1.0"></layer7>
-    <GICP guessesNo="10" correspondenceDist="1" alphaMin="-1.57" alphaMax="1.57" betaMin="-1.57" betaMax="1.57" gammaMin="-1.57" gammaMax="1.57"></GICP>
+    <GICP verbose="0" guessesNo="50" correspondenceDist="1000" alphaMin="-1.57" alphaMax="1.57" betaMin="-0.57" betaMax="0.57" gammaMin="-0.57" gammaMax="0.57"></GICP>
   </PartSelector>

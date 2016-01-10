@@ -600,14 +600,19 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
     glPushMatrix();
+    std::cout << "objects from parts lay no " << layerNo << "\n";
     if (parts.size()>0){
         Vec3 initPose(parts.begin()->pose(0,3), parts.begin()->pose(1,3), parts.begin()->pose(2,3));
         for (auto & part : parts){
             /// if first view-independent parts are used
-            Vec3 pos(part.pose(0,3), part.pose(1,3), part.pose(2,3));
-            double GLmat[16]={part.pose(0,0), part.pose(1,0), part.pose(2,0), 0, part.pose(0,1), part.pose(1,1), part.pose(2,1), 0, part.pose(0,2), part.pose(1,2), part.pose(2,2), 0, pos(0)-initPose(0), pos(1)-initPose(1), pos(2)-initPose(2), 1};
+            //Vec3 pos(part.pose(0,3), part.pose(1,3), part.pose(2,3));
+            //std::cout << "part pose\n" << part.pose.matrix() << "\n";
+            //std::cout << "part offset\n" << part.offset.matrix() << "\n";
+            Mat34 pose = part.pose*part.offset;
+            double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, pose(0,3)-initPose(0), pose(1,3)-initPose(1), pose(2,3)-initPose(2), 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
+                glColor3ub(200,200,200);
                 glCallList(cloudsListLayers[layerNo-1][part.id]);
             glPopMatrix();
         }
@@ -668,7 +673,6 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
     //int id = part.group.begin()->id;
     Mat34 pose = Mat34::Identity();//part.pose.inverse();
     int componentNo=0;
-    std::cout << "group size " << part.group.size() << "\n";
     for (auto & component : part.group){
         for (auto& patch : component.cloud){
             glPushMatrix();
@@ -678,6 +682,19 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
             drawPatch(patch.normal);
             glPopMatrix();
         }
+        double GLmat2[16]={component.offset(0,0), component.offset(1,0), component.offset(2,0), 0, component.offset(0,1), component.offset(1,1), component.offset(2,1), 0, component.offset(0,2), component.offset(1,2), component.offset(2,2), 0, component.offset(0,3),component.offset(1,3)+(double)(config.partDist[layerNo-1]*double(componentNo+1)),component.offset(2,3), 1};
+        //double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), posPart(2), 1};
+        glPushMatrix();
+            glMultMatrixd(GLmat2);
+            for (auto& patch : part.cloud){
+                glPushMatrix();
+                double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, patch.position(0), patch.position(1), patch.position(2), 1};
+                glMultMatrixd(GLmat);
+                glColor3ub(200,0,0);
+                drawPatch(patch.normal);
+                glPopMatrix();
+            }
+        glPopMatrix();
         componentNo++;
     }
     // create one display list

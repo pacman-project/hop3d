@@ -24,4 +24,5 @@
 	<layer2layer drawLayer2Layer="false" red="0.0" green="0.0" blue="0.8" alpha="0.1" width="0.5"></layer2layer>
 	<clusters drawClusters="true" red="0.0" green="0.8" blue="0.0" alpha="0.1"></clusters>
 	<normals drawNormals="true" scale="0.015" red="1.0" green="0.0" blue="0.0" alpha="1.0"></normals>
+	<GICP verbose="0" guessesNo="50" correspondenceDist="1000" alphaMin="-1.57" alphaMax="1.57" betaMin="-0.57" betaMax="0.57" gammaMin="-0.57" gammaMax="0.57"></GICP>
   </VisualizerConfig>

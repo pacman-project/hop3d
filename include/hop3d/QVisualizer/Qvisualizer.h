@@ -8,6 +8,7 @@
 #define QVISUALIZER_H_INCLUDED
 
 #include "hop3d/Data/Defs.h"
+#include "hop3d/Data/Part.h"
 #include "hop3d/Data/Cloud.h"
 #include "hop3d/Utilities/observer.h"
 #include "tinyXML/tinyxml2.h"
@@ -123,6 +124,16 @@ public:
             model->FirstChildElement( "normals" )->QueryDoubleAttribute("scale", &normalsScale);
             normalsColor.setRedF(rgba[0]); normalsColor.setGreenF(rgba[1]);
             normalsColor.setBlueF(rgba[2]); normalsColor.setAlphaF(rgba[3]);
+
+            model->FirstChildElement( "GICP" )->QueryIntAttribute("verbose", &configGICP.verbose);
+            model->FirstChildElement( "GICP" )->QueryIntAttribute("guessesNo", &configGICP.guessesNo);
+            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("correspondenceDist", &configGICP.correspondenceDist);
+            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMin", &configGICP.alpha.first);
+            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMax", &configGICP.alpha.second);
+            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMin", &configGICP.beta.first);
+            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMax", &configGICP.beta.second);
+            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMin", &configGICP.gamma.first);
+            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMax", &configGICP.gamma.second);
         }
         public:
         /// Background color
@@ -183,6 +194,8 @@ public:
         /// distance parameters
         std::vector<double> partObjectsPos;
 
+        /// config GICP
+        hop3d::ConfigGICP configGICP;
     };
 
     /// Construction

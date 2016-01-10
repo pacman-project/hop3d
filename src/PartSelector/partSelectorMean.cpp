@@ -79,6 +79,7 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const H
         centroids[i] = partsIds[i];
     }
     std::vector<ViewIndependentPart::Seq> clusters(clustersNo);
+    std::vector<std::vector<Mat34>> offsets(clustersNo);
     for (int i=0;i<config.maxIter;i++){
         if (config.verbose==1){
             if ((config.maxIter>10)&&i%((config.maxIter+1)/10)==0){
@@ -92,9 +93,9 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const H
             }
             std::cout << "\n";
         }
-        fit2clusters(centroids, dictionary, hierarchy, clusters);
+        fit2clusters(centroids, dictionary, hierarchy, clusters, offsets);
         std::vector<int> oldCentroids(centroids);
-        computeCentroids(clusters, centroids, dictionary, hierarchy);
+        computeCentroids(clusters, centroids, dictionary, hierarchy, offsets);
         if (oldCentroids==centroids){
             if (config.verbose>0)
                 std::cout << "Nothing has changed. Finish clustering after " << i+1 << " iterations\n";
@@ -111,11 +112,14 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const H
     ViewIndependentPart::Seq newDictionary;
     //dictionary.clear();
     int centroidNo=0;
-    for (auto it = clusters.begin(); it!=clusters.end();it++){
-        if (it->size()>0){
+    for (auto &cluster : clusters){
+        if (cluster.size()>0){
             ViewIndependentPart part = dictionary[centroids[centroidNo]];
-            for (auto itPart = it->begin(); itPart!=it->end();itPart++){
-                part.group.push_back(*itPart);
+            int partNo = 0;
+            for (auto &partC : cluster){
+                partC.offset = offsets[centroidNo][partNo];
+                part.group.push_back(partC);
+                partNo++;
             }
             newDictionary.push_back(part);
             centroidNo++;
@@ -193,13 +197,16 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, const Hie
 }
 
 /// assign parts to clusters according to given cetroid
-void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewIndependentPart::Seq>& clusters){
-    for (size_t i=0;i<clusters.size();i++)
+void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewIndependentPart::Seq>& clusters, std::vector<std::vector<Mat34>>& offsets){
+    for (size_t i=0;i<clusters.size();i++){
         clusters[i].clear();
+        offsets[i].clear();
+    }
     for (auto it = dictionary.begin();it!=dictionary.end();it++){// for each part
         double minDist= std::numeric_limits<double>::max();
         int clusterNo = 0;
         int centroidId = 0;
+        Mat34 offsetMin;
         for (auto itCentr = centroids.begin();itCentr!=centroids.end();itCentr++){//for each cluster
             double dist = 0;
             Mat34 offset;
@@ -218,10 +225,12 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
             if (dist<minDist){
                 minDist = dist;
                 centroidId = clusterNo;
+                offsetMin = offset;
             }
             clusterNo++;
         }
         clusters[centroidId].push_back(*it);
+        offsets[centroidId].push_back(offsetMin);
     }
     if (config.verbose==2){
         std::cout << "Elements no in clusters: ";
@@ -296,17 +305,19 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
 }
 
 /// compute centroids for give clusters
-void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy){
+void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<Mat34>>& offsets){
     int clusterNo=0;
     for (auto itClust = clusters.begin(); itClust!=clusters.end();itClust++){ //for each cluster
         double distMin = std::numeric_limits<double>::max();
         int centerId=0;
         for (auto itPart = itClust->begin(); itPart!=itClust->end();itPart++){//for each part in cluster
             double distSum = 0; //compute new centroid
+            std::vector<Mat34> offsetsTmp;
             for (auto itPart2 = itClust->begin(); itPart2!=itClust->end();itPart2++){//compute mean dist for each part as a centroid
                 Mat34 offset;
                 if (itPart->layerId==3){//compute distance from centroid
                     distSum += ViewIndependentPart::distanceGICP(*itPart, *itPart2, config.configGICP, offset);
+                    offsetsTmp.push_back(offset);
                 }
                 if (itPart->layerId==5){//compute distance from centroid
                     distSum += ViewIndependentPart::distance(*itPart, *itPart2, offset);
@@ -321,6 +332,7 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::S
             if (distSum<distMin){
                 distMin=distSum;
                 centerId=itPart->id;
+                offsets[clusterNo] = offsetsTmp;
             }
         }
         //find part in vocabulary
