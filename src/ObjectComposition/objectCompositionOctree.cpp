@@ -224,6 +224,7 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
                         //getchar();
                         if (fitness<minDist){//find min distance
                             minDist=fitness;
+                            //std::cout << "update " << idX << " " << idY << " " << idZ << " " << (*octrees[layerNo]).at(idX,idY,idZ).id << "\n";
                             (*octrees[layerNo])(idX,idY,idZ).id = wordId;
                             (*octrees[layerNo])(idX,idY,idZ).offset=estTransform;
                         }
@@ -236,31 +237,20 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
 }
 
 /// get set of ids for the given input point
-void ObjectCompositionOctree::getPartsIds(const ViewDependentPart& part, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy, std::vector<int>& ids) const{
-    Mat34 partPosition(Mat34::Identity());
-    Mat34 part3D(Mat34::Identity());
-    Vec3 normal; hierarchy.getNormal(part, normal);
-    part3D = NormalImageFilter::coordinateFromNormal(normal);
-    //Vec3 position = Vec3(part.location.u, part.location.v, part.location.depth);
-    //Vec3 pos3d;
-    //camModel.getPoint(position, pos3d);
-    part3D.translation() = part.locationEucl;//set position of the part
-    partPosition = cameraPose * part3D;//global position of the part
+void ObjectCompositionOctree::getPartsIds(const Vec3& point, std::vector<int>& ids) const{
     int x,y,z;
-    toCoordinate(partPosition(0,3),x, 0);
-    toCoordinate(partPosition(1,3),y, 0);
-    toCoordinate(partPosition(2,3),z, 0);
-    int coord[3]={x/3,y/3,z/3};
-    int coordPart[3]={x%3,y%3,z%3};
-    ids.push_back((*octrees[1]).at(coord[0],coord[1],coord[2]).partIds[coordPart[0]][coordPart[1]][coordPart[2]]);//4th layer
-    //std::for_each(coord, coord+3, [](int &n){ n=n/3; });
-    for (int i=0;i<3;i++) coordPart[i]=coord[i]%3;
-    for (int i=0;i<3;i++) coord[i]=coord[i]/3;
-    ids.push_back((*octrees[2]).at(coord[0],coord[1],coord[2]).partIds[coordPart[0]][coordPart[1]][coordPart[2]]);//5th layer
-    //std::for_each(coord, coord+3, [](int &n){ n=n/3; });
-    for (int i=0;i<3;i++) coordPart[i]=coord[i]%3;
-    for (int i=0;i<3;i++) coord[i]=coord[i]/3;
-    ids.push_back((*octrees[3]).at(coord[0],coord[1],coord[2]).partIds[coordPart[0]][coordPart[1]][coordPart[2]]);//6th layer
+    for (int layNo=0;layNo<3;layNo++){
+        toCoordinate(point(0),x, layNo);    toCoordinate(point(1),y, layNo);    toCoordinate(point(2),z, layNo);
+        //std::cout << "coordinate " << x << " " << y << " " << z << "\n";
+        if (x%3==0) x+=1; else if (x%3==2) x-=1;
+        if (y%3==0) y+=1; else if (y%3==2) y-=1;
+        if (z%3==0) z+=1; else if (z%3==2) z-=1;
+        ids.push_back((*octrees[layNo]).at(x,y,z).id);//4th layer
+        /*if ((*octrees[layNo]).at(x,y,z).id>=0){
+            std::cout << "lay no id" << layNo << " " << (*octrees[layNo]).at(x,y,z).id << "\n";
+            getchar();
+        }*/
+    }
 }
 
 /// convert global coordinates to octree coordinates
@@ -468,7 +458,7 @@ void ObjectCompositionOctree::createFirstLayer(std::vector<ViewIndependentPart>&
                 newPart.layerId=3;
                 // add neighbouring parts into structure
                 if (createFirstLayerPart(newPart, idX, idY, idZ)>0){
-                    if (newPart.cloud.size()>config.minPatchesNo){
+                    if (newPart.cloud.size()>(unsigned)config.minPatchesNo){
                         newPart.id = tempId;//hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
                         (*octrees[0])(idX, idY, idZ) = newPart;//update octree
                         vocabulary.push_back(newPart);
@@ -504,7 +494,7 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
                     // add neighbouring parts into structure
                     if (assignPartNeighbours(newPart, hierarchy, destLayerNo-1, idX, idY, idZ)>0){
                         newPart.id = tempId;//hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
-                        if (newPart.cloud.size()>config.minPatchesNo){
+                        if (newPart.cloud.size()>(unsigned)config.minPatchesNo){
                             (*octrees[destLayerNo])(iterx,itery,iterz) = newPart;//update octree
                             vocabulary.push_back(newPart);
                             tempId++;

@@ -192,6 +192,7 @@ void BorisDataset::getPoint(int categoryNo, int objectNo, int imageNo, size_t po
     if (!found)
         point = Vec3(NAN, NAN, NAN);
 }
+
 /// read camera pose from file
 Mat34 BorisDataset::getCameraPose(int categoryNo, int objectNo, int imageNo) const{
     return config.dataset.categories[categoryNo].objects[objectNo].poses[imageNo];

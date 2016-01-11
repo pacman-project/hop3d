@@ -78,6 +78,9 @@ public:
     /// returs parts ids and their position on the image
     void getPartsRealisation(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
 
+    /// get input point
+    void getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const;
+
     class Config{
       public:
         Config() {

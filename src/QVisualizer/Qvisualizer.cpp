@@ -600,7 +600,6 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
     glPushMatrix();
-    std::cout << "objects from parts lay no " << layerNo << "\n";
     if (parts.size()>0){
         Vec3 initPose(parts.begin()->pose(0,3), parts.begin()->pose(1,3), parts.begin()->pose(2,3));
         for (auto & part : parts){

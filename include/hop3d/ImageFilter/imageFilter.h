@@ -67,6 +67,9 @@ public:
     /// returs parts ids and their position on the image
     virtual void getPartsRealisation(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const = 0;
 
+    /// get input point
+    virtual void getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const = 0;
+
     /// Virtual descrutor
     virtual ~ImageFilter() {
     }

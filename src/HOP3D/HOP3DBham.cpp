@@ -497,12 +497,28 @@ void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, in
     //ids.push_back(hierarchy.get()->interpreter2to3[ids.back()]);
     Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
     //std::cout << cameraPose.matrix() << " \n";
-    if (ids.back()<0){
-        for (int i=0;i<config.viewIndependentLayersNo-1;i++) ids.push_back(-1);
+    //if (ids.back()<0){
+    //    for (int i=0;i<config.viewIndependentLayersNo-1;i++) ids.push_back(-1);
+    //}
+    //else {
+    Vec3 point(Vec3(NAN,NAN,NAN));
+    imageFilterer->getPoint(categoryNo, objectNo, imageNo, u, v, point);
+    if ((!std::isnan(point(0)))&&(!std::isnan(point(1)))){
+        //std::cout << " uv " << u << " " << v << "\n";
+        //std::cout << point.transpose() << "\n";
+        //std::cout << cameraPose.matrix() << "\n";
+        //std::cout << "point " << point.transpose() << "\n";
+        //getchar();
+        point = (cameraPose*Vec4(point(0),point(1),point(2),1.0)).block<3,1>(0,0);
+        //std::cout << "point trnasformed " << point.transpose() << "\n";
+       // getchar();
+        objects[categoryNo][objectNo].getPartsIds(point, ids);
     }
-    else {
-        objects[categoryNo][objectNo].getPartsIds(lastVDpart, cameraPose, *depthCameraModel, *hierarchy, ids);
+    else{
+        std::vector<int> notUsed(3,-1);
+        ids.insert(std::end(ids), std::begin(notUsed), std::end(notUsed));
     }
+    //}
     /*std::cout << "ids: ";
     for (auto& id : ids){
         std::cout << id << ", ";
@@ -543,20 +559,24 @@ void HOP3DBham::createPartClouds(){
                 Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                 for (int u=0;u<depthImage.rows;u++){
                     for (int v=0;v<depthImage.cols;v++){
-                        getPartsIds((int)categoryNo, (int)objectNo, (int)imageNo, u, v, ids);
-                        //getPartsIds("../../../Datasets/ObjectDB-2014-Boris-v7/mug2/data-points_raw-mug2-3.pcd", u, v, ids);
-                        Vec3 point3D;
-                        depthCameraModel.get()->getPoint(v,u,depthImage.at<uint16_t>(u, v)/depthCameraModel.get()->config.depthImageScale,point3D);
-                        for (size_t layerNo=0;layerNo<ids.size();layerNo++){
-                            PointColor pointRGBA(point3D,std::array<double,4>({0.0,0.0,0.0,1.0}));
-                            if (ids[layerNo]>=0){
-                                pointRGBA.color = colors[layerNo][ids[layerNo]];
-                            }
-                            if (!std::isnan(point3D(0))){
-                                Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(point3D(0),point3D(1),point3D(2)));
-                                Mat34 pointWorld = cameraPose*pointCam;
-                                pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(1)=pointWorld(1,3)+0.2*double(imageNo); pointRGBA.position(2)=pointWorld(2,3);
-                                objsTmp[layerNo].push_back(pointRGBA);
+                        if (depthImage.at<uint16_t>(u, v)!=0){
+                            getPartsIds((int)categoryNo, (int)objectNo, (int)imageNo, u, v, ids);
+                            //getPartsIds("../../../Datasets/ObjectDB-2014-Boris-v7/mug2/data-points_raw-mug2-3.pcd", u, v, ids);
+                            Vec3 point3D;
+                            depthCameraModel.get()->getPoint(v,u,depthImage.at<uint16_t>(u, v)/depthCameraModel.get()->config.depthImageScale,point3D);
+                            //std::cout << "point 3D " << point3D.transpose() << "\n";
+                            //getchar();
+                            for (size_t layerNo=0;layerNo<ids.size();layerNo++){
+                                PointColor pointRGBA(point3D,std::array<double,4>({0.0,0.0,0.0,1.0}));
+                                if (ids[layerNo]>=0){
+                                    pointRGBA.color = colors[layerNo][ids[layerNo]];
+                                }
+                                if (!std::isnan(point3D(0))){
+                                    Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(point3D(0),point3D(1),point3D(2)));
+                                    Mat34 pointWorld = cameraPose*pointCam;
+                                    pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(1)=pointWorld(1,3)+0.2*double(imageNo); pointRGBA.position(2)=pointWorld(2,3);
+                                    objsTmp[layerNo].push_back(pointRGBA);
+                                }
                             }
                         }
                     }

@@ -51,7 +51,7 @@ public:
     void updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy);
 
     /// get set of ids for the given input point
-    void getPartsIds(const ViewDependentPart& part, const Mat34& cameraPose, const DepthSensorModel& camModel, const Hierarchy& hierarchy, std::vector<int>& ids) const;
+    void getPartsIds(const Vec3& point, std::vector<int>& ids) const;
 
     /// upodate voxel poses using new vocabulary
     void updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary);

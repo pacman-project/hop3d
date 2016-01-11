@@ -65,6 +65,21 @@ void NormalImageFilter::getCloud(int categoryNo, int objectNo, int imageNo, hop3
     cloud = inputClouds[categoryNo][objectNo][imageNo];
 }
 
+/// get point from dataset
+void NormalImageFilter::getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const{
+  //  std::cout << "search for " << u << ", " << v << "\n";
+    for (auto &pointUV : inputClouds[categoryNo][objectNo][imageNo]){
+//        std::cout << "uv " << pointUV.u << ", " << pointUV.v << "\n";
+        if ((pointUV.u==(unsigned int)u)&&(pointUV.v==(unsigned int)v)){
+    //        getchar();
+            sensorModel.getPoint(v,u,pointUV.position(2),point);
+            //std::cout << "found " << point.transpose() << "\n";
+            return;
+        }
+    }
+    point = Vec3(NAN,NAN,NAN);
+}
+
 /// compute median
 uint16_t NormalImageFilter::median(const cv::Mat& inputImg, int u, int v, int kernelSize){
     int size = kernelSize/2;
@@ -93,6 +108,17 @@ void NormalImageFilter::medianFilter(const cv::Mat& inputImg, cv::Mat& outputImg
     }
 }
 
+/// filter depth image
+void NormalImageFilter::filterDepthImage(const cv::Mat& input, cv::Mat& output){
+    if (config.useMedianFilter){
+        if (config.kernelSize<6)
+            cv::medianBlur(input, output, config.kernelSize);
+        else {
+            medianFilter(input, output, config.kernelSize);
+        }
+    }
+}
+
 ///compute set of octets from set of the depth images
 void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets){
     octets.clear();
@@ -117,13 +143,7 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
     if (config.verbose>1)
         imshow( "Input image", depthImage );
     cv::Mat filteredImg = depthImage.clone();
-    if (config.useMedianFilter){
-        if (config.kernelSize<6)
-            cv::medianBlur(depthImage, filteredImg, config.kernelSize);
-        else {
-            medianFilter(depthImage, filteredImg, config.kernelSize);
-        }
-    }
+    filterDepthImage(depthImage, filteredImg);
     for (int i=0;i<filteredImg.rows;i++){
         for (int j=0;j<filteredImg.cols;j++){
             sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);

@@ -253,6 +253,12 @@ void DepthImageFilter::getPartsRealisation(int categoryNo, int objectNo, int ima
     std::cout << categoryNo << " " << objectNo << imageNo << layerNo << "\n";
 }
 
+/// get input point
+void DepthImageFilter::getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const{
+    std::cout << categoryNo << " " << objectNo << imageNo << u << v << "\n";
+    point=Vec3(NAN,NAN,NAN);
+}
+
 int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, Filter &filter, cv::Mat &filteredImage)
 {
 

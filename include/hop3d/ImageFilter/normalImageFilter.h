@@ -96,6 +96,9 @@ public:
     /// load from file
     void loadFromfile(std::istream& is);
 
+    /// get input point
+    void getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const;
+
     class Config{
       public:
         Config() {
@@ -224,6 +227,9 @@ private:
 
     /// update structure which holds octets images
     void saveCloud(int categoryNo, int objectNo, int imageNo, const hop3d::PointCloudUV& cloud);
+
+    /// filter depth image
+    void filterDepthImage(const cv::Mat& input, cv::Mat& output);
 };
 
 }
