@@ -68,18 +68,6 @@ private:
     ///Configuration of the module
     Config config;
 
-    /// assign parts to clusters according to given cetroid
-    void fit2clusters(const std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewDependentPart::Seq>& clusters);
-
-    /// assign parts to clusters according to given cetroid
-    void fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewIndependentPart::Seq>& clusters, std::vector<std::vector<Mat34>>& offsets);
-
-    /// compute centroids for give clusters
-    void computeCentroids(const std::vector<ViewDependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy);
-
-    /// compute centroids for give clusters
-    void computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchys, std::vector<std::vector<Mat34>>& offsets);
-
     /// get clusters of parts id stored in octree (one cluster per voxel)
     bool isInOctets(std::vector< std::set<int>>& clusters, int id, std::vector< std::set<int>>::iterator& iter);
 
@@ -87,7 +75,22 @@ private:
     int centerOfCluster(const std::set<int>& cluster, const ViewDependentPart::Seq& vocabulary, const Hierarchy& hierarchy) const;
 
     /// compute distance matrix
-    void computeDistanceMatrix(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix) const;
+    void computeDistanceMatrix(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) const;
+
+    /// compute distance matrix for view-independent parts
+    void computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) const;
+
+    /// find min distance int the distance matrix
+    double findMinDistance(const std::vector<std::vector<double>>& distanceMatrix, std::pair<int,int>& pairedIds) const;
+
+    /// find clusters ids to which contain specyfic parts (pairedIds)
+    void findPartsInClusters(const std::vector<std::vector<int>>& clusters, const std::pair<int,int>& pairedIds, std::pair<int,int>& clustersIds) const;
+
+    /// merge two clusters
+    void mergeTwoClusters(std::vector<std::vector<int>>& clusters, const std::pair<int,int>& clustersIds) const;
+
+    /// compute centroids using pre-computed distance in distance matrix
+    void computeCentroids(const std::vector<std::vector<int>>& clusters, const std::vector<std::vector<double>>& distanceMatrix, std::vector<int>& centroids) const;
 };
 }
 #endif // PART_SELECTOR_AGGLOMERATIVE_H_INCLUDED

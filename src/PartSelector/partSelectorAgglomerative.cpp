@@ -52,162 +52,72 @@ PartSelectorAgglomerative::Config::Config(std::string configFilename){
 
 /// Select parts from the initial vocabulary
 void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
-/*    int clustersNo;
-    if (config.useCompressionRate[layerNo-1])
-        clustersNo = (int)(config.compressionRate[layerNo-1]*(int)dictionary.size());
-    else
-        clustersNo = config.clustersNo[layerNo-1];
-    if ((size_t)clustersNo > dictionary.size())
-        clustersNo = (int)dictionary.size();
+    std::vector<std::vector<double>> distanceMatrix(dictionary.size(), std::vector<double>(dictionary.size()));
+    std::vector<std::vector<Mat34>> transformMatrix(dictionary.size(), std::vector<Mat34>(dictionary.size()));
+    std::cout << "compute distance matrix...";
+    computeDistanceMatrix(dictionary, hierarchy, distanceMatrix, transformMatrix);
     if (config.verbose>0){
+        std::cout << "done\n";
         std::cout << "Initial number of words in dictionary: " << dictionary.size() << "\n";
-        std::cout << "Desired number of words: " << clustersNo << "\n";
+        std::cout << "Max dist: " << config.maxDist[layerNo-1] << "\n";
     }
-    std::vector<int> centroids(clustersNo);//index in dictionary of part assigned to the centroid;
-    std::srand ( unsigned ( std::time(0) ) );
-    std::vector<int> partsIds(dictionary.size(), 0);
-    for (size_t i=0;i<dictionary.size();i++)
-        partsIds[i]=(int)i;
-    std::random_shuffle( partsIds.begin(), partsIds.end() );
-    for (size_t i=0;i<centroids.size();i++){//assign random centers of centroid
-        centroids[i] = partsIds[i];
+    std::vector<std::vector<int>> clusters(dictionary.size());
+    for (size_t i=0;i<clusters.size();i++){//assign centers of centroid
+        clusters[i].push_back((int)i);
     }
-    std::vector<ViewIndependentPart::Seq> clusters(clustersNo);
-    std::vector<std::vector<Mat34>> offsets(clustersNo);
-    for (int i=0;i<config.maxIter;i++){
+    for (size_t i=0;i<dictionary.size()*dictionary.size();i++){
         if (config.verbose==1){
-            if ((config.maxIter>1)&&i%((config.maxIter+1)/10)==0){
-                std::cout << "Iteration: " << i+1 << "/" << config.maxIter << "\n";
+            if ((dictionary.size()>1)&&i%((dictionary.size()*dictionary.size()+1)/10)==0){
+                std::cout << "Iteration: " << i+1 << "/" << dictionary.size()*dictionary.size() << " clusters no: " << clusters.size() << "\n";
             }
         }
+        std::pair<int,int> pairedIds;
+        double minDist = findMinDistance(distanceMatrix, pairedIds);
+        //std::cout << "find min dist between " << pairedIds.first << "->" << pairedIds.second << "\n";
+        distanceMatrix[pairedIds.first][pairedIds.second] = -1;
+        bool finishClusterization(false);
+        //std::cout << "dist " << minDist << " max dist " << config.maxDist[layerNo-1] << "\n";
+        if (minDist>config.maxDist[layerNo-1])
+            finishClusterization = true;
+        //merge two centroids
+        std::pair<int,int> clustersIds;
+        findPartsInClusters(clusters, pairedIds, clustersIds);
+        //std::cout << pairedIds.first << " is in cluster " << clustersIds.first << "\n";
+        //std::cout << pairedIds.second << " is in cluster " << clustersIds.second << "\n";
+        if (clustersIds.first!=clustersIds.second)
+            mergeTwoClusters(clusters, clustersIds);
+        if (finishClusterization)
+            break;
         if (config.verbose==2){
-            std::cout << "centroids: ";
-            for (size_t j=0;j<centroids.size();j++){
-                std::cout << dictionary[centroids[j]].id << ", ";
-            }
-            std::cout << "\n";
-        }
-        fit2clusters(centroids, dictionary, hierarchy, clusters, offsets);
-        std::vector<int> oldCentroids(centroids);
-        computeCentroids(clusters, centroids, dictionary, hierarchy, offsets);
-        if (oldCentroids==centroids){
-            if (config.verbose>0)
-                std::cout << "Nothing has changed. Finish clustering after " << i+1 << " iterations\n";
-            i=config.maxIter;
-        }
-        if (config.verbose==2){
-            std::cout << "centroids new: ";
-            for (size_t j=0;j<centroids.size();j++){
-                std::cout << dictionary[centroids[j]].id << ", ";
+            std::cout << "Elements no in clusters (clusters size: " << clusters.size() << "): ";
+            for (size_t i=0;i<clusters.size();i++)
+                std::cout << i << ":" << clusters[i].size() << ", ";
+            std::cout << "\nClusters: ";
+            for (size_t i=0;i<clusters.size();i++){
+                std::cout <<  i << ":{";
+                for (size_t j=0;j<clusters[i].size();j++)
+                    std::cout << clusters[i][j] << ", ";
+                std::cout << "},";
             }
             std::cout << "\n";
         }
     }
+    //compute centroids for each cluster
+    std::vector<int> centroids(dictionary.size());//index in dictionary of part assigned to the centroid;
+    computeCentroids(clusters, distanceMatrix, centroids);
+
+    /// generate new dictionary
     ViewIndependentPart::Seq newDictionary;
-    //dictionary.clear();
     int centroidNo=0;
-    for (auto &cluster : clusters){
+    for (const auto &cluster : clusters){
         if (cluster.size()>0){
             ViewIndependentPart part = dictionary[centroids[centroidNo]];
-            int partNo = 0;
-            for (auto &partC : cluster){
-                partC.offset = offsets[centroidNo][partNo];
-                part.group.push_back(partC);
-                partNo++;
-            }
-            newDictionary.push_back(part);
-            centroidNo++;
-        }
-    }
-    dictionary = newDictionary;*/
-}
-
-/// compute distance matrix
-void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix) const{
-    int idA=0;
-    for (auto &wordA : dictionary){
-        int idB=0;
-        for (auto &wordB : dictionary){
-            double dist(0); Mat34 transform;
-            if (wordA.layerId==2){//compute distance from centroid
-                if (config.distanceMetric==3){
-                    dist=ViewDependentPart::distanceInvariant(wordA, wordB, 3, transform);
-                }
+            for (const auto &partId : cluster){
+                part.group.push_back(dictionary[partId]);
+                if (centroids[centroidNo] == partId)
+                    part.group.back().offset = Mat34::Identity();
                 else
-                    dist = ViewDependentPart::distance(wordA, wordB,hierarchy.firstLayer, config.distanceMetric);
-            }
-            else if (wordA.layerId==3){//compute distance from centroid
-                if (config.distanceMetric==3){
-                    dist=ViewDependentPart::distanceInvariant(wordA, wordB, 3, transform);
-                }
-                else
-                    dist = ViewDependentPart::distance(wordA, wordB, hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
-            }
-            distanceMatrix[idA][idB]=dist;
-            distanceMatrix[idB][idA]=dist;
-            idB++;
-        }
-        idA++;
-    }
-}
-
-/// Select parts from the initial vocabulary
-void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
-    std::vector<std::vector<double>> distanceMatrix(dictionary.size(), std::vector<double>(dictionary.size()));
-    computeDistanceMatrix(dictionary, hierarchy, distanceMatrix);
-    int clustersNo = dictionary.size();
-
-    if (config.verbose>0){
-        std::cout << "Initial number of words in dictionary: " << dictionary.size() << "\n";
-        std::cout << "Max dist: " << config.maxDist[layerNo] << "\n";
-    }
-    std::vector<int> centroids(clustersNo);//index in dictionary of part assigned to the centroid;
-    std::srand ( unsigned ( std::time(0) ) );
-    std::vector<int> partsIds(dictionary.size(), 0);
-    for (size_t i=0;i<dictionary.size();i++)
-        partsIds[i]=(int)i;
-    std::random_shuffle( partsIds.begin(), partsIds.end() );
-    for (size_t i=0;i<centroids.size();i++){//assign random centers of centroid
-        centroids[i] = partsIds[i];
-    }
-    std::vector<ViewDependentPart::Seq> clusters(clustersNo);
-    for (int i=0;i<config.maxIter;i++){
-        if (config.verbose==1){
-            if ((config.maxIter>10)&&i%((config.maxIter+1)/10)==0){
-                std::cout << "Iteration: " << i+1 << "/" << config.maxIter << "\n";
-            }
-        }
-        if (config.verbose==2){
-            std::cout << "centroids: ";
-            for (size_t j=0;j<centroids.size();j++){
-                std::cout << dictionary[centroids[j]].id << ", ";
-            }
-            std::cout << "\n";
-        }
-        fit2clusters(centroids, dictionary, hierarchy, clusters);
-        std::vector<int> oldCentroids(centroids);
-        computeCentroids(clusters, centroids, dictionary, hierarchy);
-        if (oldCentroids==centroids){
-            if (config.verbose>0)
-                std::cout << "Nothing has changed. Finish clustering after " << i+1 << " iterations\n";
-            i=config.maxIter;
-        }
-        if (config.verbose==2){
-            std::cout << "centroids new: ";
-            for (size_t j=0;j<centroids.size();j++){
-                std::cout << dictionary[centroids[j]].id << ", ";
-            }
-            std::cout << "\n";
-        }
-    }
-    ViewDependentPart::Seq newDictionary;
-    //dictionary.clear();
-    int centroidNo=0;
-    for (auto it = clusters.begin(); it!=clusters.end();it++){
-        if (it->size()>0){
-            ViewDependentPart part = dictionary[centroids[centroidNo]];
-            for (auto itPart = it->begin(); itPart!=it->end();itPart++){
-                part.group.push_back(*itPart);
+                    part.group.back().offset = transformMatrix[centroids[centroidNo]][partId];
             }
             newDictionary.push_back(part);
             centroidNo++;
@@ -216,154 +126,199 @@ void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, 
     dictionary = newDictionary;
 }
 
-/// assign parts to clusters according to given cetroid
-void PartSelectorAgglomerative::fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewIndependentPart::Seq>& clusters, std::vector<std::vector<Mat34>>& offsets){
+/// compute distance matrix
+void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) const{
+    for (size_t idA=0;idA<dictionary.size();idA++){
+        for (size_t idB=idA+1;idB<dictionary.size();idB++){
+            double dist(0); Mat34 transform;
+            if (dictionary[idA].layerId==2){//compute distance from centroid
+                if (config.distanceMetric==3){
+                    dist=ViewDependentPart::distanceInvariant(dictionary[idA], dictionary[idB], 3, transform);
+                }
+                else
+                    dist = ViewDependentPart::distance(dictionary[idA], dictionary[idB], hierarchy.firstLayer, config.distanceMetric);
+            }
+            else if (dictionary[idA].layerId==3){//compute distance from centroid
+                if (config.distanceMetric==3){
+                    dist=ViewDependentPart::distanceInvariant(dictionary[idA], dictionary[idB], 3, transform);
+                }
+                else
+                    dist = ViewDependentPart::distance(dictionary[idA], dictionary[idB], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
+            }
+            distanceMatrix[idA][idB]=dist;
+            distanceMatrix[idB][idA]=dist;
+            transformMatrix[idA][idB] = transform;
+            transformMatrix[idB][idA] = transform;
+        }
+    }
+}
+
+/// compute distance matrix for view-independent parts
+void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) const{
+    for (size_t idA=0;idA<dictionary.size();idA++){
+        for (size_t idB=idA+1;idB<dictionary.size();idB++){
+            double dist(0); Mat34 transform;
+            if (dictionary[idA].layerId==3){//compute distance from centroid
+                dist = fabs(double(dictionary[idA].cloud.size())-double(dictionary[idB].cloud.size()))*ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
+            }
+            if (dictionary[idA].layerId==5){//compute distance from centroid
+                dist = ViewIndependentPart::distance(dictionary[idA], dictionary[idB], transform);
+            }
+            else if (dictionary[idA].layerId==6){//compute distance from centroid
+                dist = ViewIndependentPart::distance(dictionary[idA], dictionary[idB], hierarchy.viewIndependentLayers[1], transform);
+            }
+            else if (dictionary[idA].layerId==7){//compute distance from centroid
+                dist = ViewIndependentPart::distance(dictionary[idA], dictionary[idB], hierarchy.viewIndependentLayers[1], hierarchy.viewIndependentLayers[2], transform);
+            }
+            distanceMatrix[idA][idB]=dist;
+            distanceMatrix[idB][idA]=dist;
+            transformMatrix[idA][idB] = transform;
+            transformMatrix[idB][idA] = transform.inverse();
+        }
+    }
+}
+
+/// find min distance int the distance matrix
+double PartSelectorAgglomerative::findMinDistance(const std::vector<std::vector<double>>& distanceMatrix, std::pair<int,int>& pairedIds) const{
+    double minDist=std::numeric_limits<double>::max();
+    for (size_t idA=0;idA<distanceMatrix.size();idA++){
+        for (size_t idB=idA+1;idB<distanceMatrix.size();idB++){
+            if ((distanceMatrix[idA][idB]>=0)&&(distanceMatrix[idA][idB]<minDist)){
+                minDist=distanceMatrix[idA][idB];
+                pairedIds = std::make_pair(idA,idB);
+            }
+        }
+    }
+    return minDist;
+}
+
+/// find clusters ids to which contain specyfic parts (pairedIds)
+void PartSelectorAgglomerative::findPartsInClusters(const std::vector<std::vector<int>>& clusters, const std::pair<int,int>& pairedIds, std::pair<int,int>& clustersIds) const{
+    bool found[2]={false, false};
     for (size_t i=0;i<clusters.size();i++){
-        clusters[i].clear();
-        offsets[i].clear();
-    }
-    for (auto it = dictionary.begin();it!=dictionary.end();it++){// for each part
-        double minDist= std::numeric_limits<double>::max();
-        int clusterNo = 0;
-        int centroidId = 0;
-        Mat34 offsetMin;
-        for (auto itCentr = centroids.begin();itCentr!=centroids.end();itCentr++){//for each cluster
-            double dist = 0;
-            Mat34 offset;
-            if (it->layerId==3){//compute distance from centroid
-                dist = fabs(double(it->cloud.size())-double(dictionary[*itCentr].cloud.size()))*ViewIndependentPart::distanceGICP(*it, dictionary[*itCentr],config.configGICP, offset);
+        for (auto &id : clusters[i]){
+            if (id==pairedIds.first){
+                clustersIds.first = (int)i;
+                found[0]=true;
             }
-            if (it->layerId==5){//compute distance from centroid
-                dist = ViewIndependentPart::distance(*it, dictionary[*itCentr], offset);
+            if (id==pairedIds.second){
+                clustersIds.second = (int)i;
+                found[1]=true;
             }
-            else if (it->layerId==6){//compute distance from centroid
-                dist = ViewIndependentPart::distance(*it, dictionary[*itCentr], hierarchy.viewIndependentLayers[1], offset);
-            }
-            else if (it->layerId==7){//compute distance from centroid
-                dist = ViewIndependentPart::distance(*it, dictionary[*itCentr], hierarchy.viewIndependentLayers[1], hierarchy.viewIndependentLayers[2], offset);
-            }
-            if (dist<minDist){
-                minDist = dist;
-                centroidId = clusterNo;
-                offsetMin = offset;
-            }
-            clusterNo++;
+            if (found[0]&&found[1]) break;
         }
-        clusters[centroidId].push_back(*it);
-        offsets[centroidId].push_back(offsetMin);
-    }
-    if (config.verbose==2){
-        std::cout << "Elements no in clusters: ";
-        for (size_t i=0;i<clusters.size();i++){
-            std::cout << clusters[i].size() << ", ";
-        }
-        std::cout << "\n";
-        std::cout << "Clusters: ";
-        for (size_t i=0;i<clusters.size();i++){
-            std::cout << "{" << i << ": ";
-            for (size_t j=0;j<clusters[i].size();j++){
-                std::cout << clusters[i][j].id;
-                std::cout << ", ";
-            }
-            std::cout << "},";
-        }
-        std::cout << "\n";
+        if (found[0]&&found[1]) break;
     }
 }
 
-/// assign parts to clusters according to given centroid
-void PartSelectorAgglomerative::fit2clusters(const std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewDependentPart::Seq>& clusters){
-    for (size_t i=0;i<clusters.size();i++)
-        clusters[i].clear();
-    for (auto it = dictionary.begin();it!=dictionary.end();it++){// for each part
-        double minDist= std::numeric_limits<double>::max();
-        int clusterNo = 0;
-        int centroidId = 0;
-        for (auto itCentr = centroids.begin();itCentr!=centroids.end();itCentr++){//for each cluster
-            double dist = 0;
-            if (it->layerId==2){//compute distance from centroid
-                if (config.distanceMetric==3){
-                    Mat34 transform;
-                    dist=ViewDependentPart::distanceInvariant(*it,dictionary[*itCentr], 3, transform);
-                }
+/// merge two clusters
+void PartSelectorAgglomerative::mergeTwoClusters(std::vector<std::vector<int>>& clusters, const std::pair<int,int>& clustersIds) const{
+    /// merge clusters
+    clusters[clustersIds.first].insert(clusters[clustersIds.first].end(), clusters[clustersIds.second].begin(), clusters[clustersIds.second].end());
+    /// remove second cluster
+    clusters.erase(clusters.begin()+clustersIds.second);
+}
+
+/// compute centroids using pre-computed distance in distance matrix
+void PartSelectorAgglomerative::computeCentroids(const std::vector<std::vector<int>>& clusters, const std::vector<std::vector<double>>& distanceMatrix, std::vector<int>& centroids) const{
+    centroids.clear();
+    centroids.reserve(clusters.size());
+    for (const auto &cluster : clusters){
+        double minDist = std::numeric_limits<double>::max();
+        int centerId=cluster.front();
+        for (const auto &partIdA : cluster){
+            double sumDist = 0;
+            for (const auto &partIdB : cluster){
+                double dist;
+                if (partIdA>partIdB)//because up-triangle elements in distance matrix are cleaned
+                    dist = distanceMatrix[partIdA][partIdB];
                 else
-                    dist = ViewDependentPart::distance(*it,dictionary[*itCentr],hierarchy.firstLayer, config.distanceMetric);
+                    dist = distanceMatrix[partIdB][partIdA];
+                sumDist+=dist;
             }
-            else if (it->layerId==3){//compute distance from centroid
-                if (config.distanceMetric==3){
-                    Mat34 transform;
-                    dist=ViewDependentPart::distanceInvariant(*it,dictionary[*itCentr], 3, transform);
-                }
-                else
-                    dist = ViewDependentPart::distance(*it,dictionary[*itCentr], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
+            if (sumDist<minDist){
+                minDist = sumDist;
+                centerId = partIdA;
             }
-            if (dist<minDist){
-                minDist = dist;
-                centroidId = clusterNo;
-            }
-            clusterNo++;
         }
-        clusters[centroidId].push_back(*it);
-    }
-    if (config.verbose==2){
-        std::cout << "Elements no in clusters (clusters size: " << clusters.size() << "): ";
-        for (size_t i=0;i<clusters.size();i++){
-            std::cout << clusters[i].size() << ", ";
-        }
-        std::cout << "\n";
-        std::cout << "Clusters: ";
-        for (size_t i=0;i<clusters.size();i++){
-            std::cout << "{" << i << ": ";
-            for (size_t j=0;j<clusters[i].size();j++){
-                std::cout << clusters[i][j].id;
-                std::cout << ", ";
-            }
-            std::cout << "},";
-        }
-        std::cout << "\n";
+        centroids.push_back(centerId);
     }
 }
 
-/// compute centroids for give clusters
-void PartSelectorAgglomerative::computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<Mat34>>& offsets){
-    int clusterNo=0;
-    for (auto itClust = clusters.begin(); itClust!=clusters.end();itClust++){ //for each cluster
-        double distMin = std::numeric_limits<double>::max();
-        int centerId=0;
-        for (auto itPart = itClust->begin(); itPart!=itClust->end();itPart++){//for each part in cluster
-            double distSum = 0; //compute new centroid
-            std::vector<Mat34> offsetsTmp;
-            for (auto itPart2 = itClust->begin(); itPart2!=itClust->end();itPart2++){//compute mean dist for each part as a centroid
-                Mat34 offset;
-                if (itPart->layerId==3){//compute distance from centroid
-                    distSum += fabs(double(itPart->cloud.size())-double(itPart2->cloud.size()))*ViewIndependentPart::distanceGICP(*itPart, *itPart2, config.configGICP, offset);
-                    offsetsTmp.push_back(offset);
-                }
-                if (itPart->layerId==5){//compute distance from centroid
-                    distSum += ViewIndependentPart::distance(*itPart, *itPart2, offset);
-                }
-                else if (itPart->layerId==6){//compute distance from centroid
-                    distSum += ViewIndependentPart::distance(*itPart, *itPart2, hierarchy.viewIndependentLayers[1], offset);
-                }
-                else if (itPart->layerId==7){//compute distance from centroid
-                    distSum += ViewIndependentPart::distance(*itPart, *itPart2, hierarchy.viewIndependentLayers[1], hierarchy.viewIndependentLayers[2], offset);
-                }
-            }
-            if (distSum<distMin){
-                distMin=distSum;
-                centerId=itPart->id;
-                offsets[clusterNo] = offsetsTmp;
-            }
-        }
-        //find part in vocabulary
-        for (size_t i=0;i<dictionary.size();i++){
-            if (dictionary[i].id==centerId){
-                centroids[clusterNo]=(int)i;
-                break;
-            }
-        }
-        clusterNo++;
+/// Select parts from the initial vocabulary
+void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
+    std::vector<std::vector<double>> distanceMatrix(dictionary.size(), std::vector<double>(dictionary.size()));
+    std::vector<std::vector<Mat34>> transformMatrix(dictionary.size(), std::vector<Mat34>(dictionary.size()));
+    std::cout << "compute distance matrix...";
+    computeDistanceMatrix(dictionary, hierarchy, distanceMatrix, transformMatrix);
+    if (config.verbose>0){
+        std::cout << "done\n";
+        std::cout << "Initial number of words in dictionary: " << dictionary.size() << "\n";
+        std::cout << "Max dist: " << config.maxDist[layerNo-1] << "\n";
     }
+    std::vector<std::vector<int>> clusters(dictionary.size());
+    for (size_t i=0;i<clusters.size();i++){//assign centers of centroid
+        clusters[i].push_back((int)i);
+    }
+    for (size_t i=0;i<dictionary.size()*dictionary.size();i++){
+        if (config.verbose==1){
+            if ((dictionary.size()>1)&&i%((dictionary.size()*dictionary.size()+1)/10)==0){
+                std::cout << "Iteration: " << i+1 << "/" << dictionary.size()*dictionary.size() << " clusters no: " << clusters.size() << "\n";
+            }
+        }
+        std::pair<int,int> pairedIds;
+        double minDist = findMinDistance(distanceMatrix, pairedIds);
+        //std::cout << "find min dist between " << pairedIds.first << "->" << pairedIds.second << "\n";
+        distanceMatrix[pairedIds.first][pairedIds.second] = -1;
+        bool finishClusterization(false);
+        //std::cout << "dist " << minDist << " max dist " << config.maxDist[layerNo-1] << "\n";
+        if (minDist>config.maxDist[layerNo-1])
+            finishClusterization = true;
+        //merge two centroids
+        std::pair<int,int> clustersIds;
+        findPartsInClusters(clusters, pairedIds, clustersIds);
+        //std::cout << pairedIds.first << " is in cluster " << clustersIds.first << "\n";
+        //std::cout << pairedIds.second << " is in cluster " << clustersIds.second << "\n";
+        if (clustersIds.first!=clustersIds.second)
+            mergeTwoClusters(clusters, clustersIds);
+        if (finishClusterization)
+            break;
+        if (config.verbose==2){
+            std::cout << "Elements no in clusters (clusters size: " << clusters.size() << "): ";
+            for (size_t i=0;i<clusters.size();i++)
+                std::cout << i << ":" << clusters[i].size() << ", ";
+            std::cout << "\nClusters: ";
+            for (size_t i=0;i<clusters.size();i++){
+                std::cout <<  i << ":{";
+                for (size_t j=0;j<clusters[i].size();j++)
+                    std::cout << clusters[i][j] << ", ";
+                std::cout << "},";
+            }
+            std::cout << "\n";
+        }
+    }
+    //compute centroids for each cluster
+    std::vector<int> centroids(dictionary.size());//index in dictionary of part assigned to the centroid;
+    computeCentroids(clusters, distanceMatrix, centroids);
+
+    /// generate new dictionary
+    ViewDependentPart::Seq newDictionary;
+    int centroidNo=0;
+    for (const auto &cluster : clusters){
+        if (cluster.size()>0){
+            ViewDependentPart part = dictionary[centroids[centroidNo]];
+            for (const auto &partId : cluster){
+                part.group.push_back(dictionary[partId]);
+                if (centroids[centroidNo] == partId)
+                    part.group.back().offset = Mat34::Identity();
+                else
+                    part.group.back().offset = transformMatrix[partId][centroids[centroidNo]];
+            }
+            newDictionary.push_back(part);
+            centroidNo++;
+        }
+    }
+    dictionary = newDictionary;
 }
 
 ///find new center of cluster
@@ -393,61 +348,6 @@ int PartSelectorAgglomerative::centerOfCluster(const std::set<int>& cluster, con
         }
     }
     return centerId;
-}
-
-/// compute centroids for given clusters
-void PartSelectorAgglomerative::computeCentroids(const std::vector<ViewDependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy){
-    int clusterNo=0;
-    for (auto& cluster : clusters){ //for each cluster
-        double distMin = std::numeric_limits<double>::max();
-        int centerId=0;
-        for (auto itPart = cluster.begin(); itPart!=cluster.end();itPart++){//for each part in cluster
-            double distSum = 0; //compute new centroid
-            for (auto itPart2 = cluster.begin(); itPart2!=cluster.end();itPart2++){//compute mean dist for each part as a centroid
-                double dist=0;
-                if (itPart->layerId==2){
-                    if (config.distanceMetric==3){
-                        Mat34 transform;
-                        dist=ViewDependentPart::distanceInvariant(*itPart,*itPart2, 3, transform);
-                    }
-                    else
-                        dist=ViewDependentPart::distance(*itPart,*itPart2,hierarchy.firstLayer, config.distanceMetric);
-                }
-                else if (itPart->layerId==3){
-                    if (config.distanceMetric==3){
-                        Mat34 transform;
-                        dist=ViewDependentPart::distanceInvariant(*itPart,*itPart2, 3, transform);
-                    }
-                    else
-                        dist=ViewDependentPart::distance(*itPart,*itPart2, hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
-                }
-                distSum+=dist;
-            }
-            if (distSum<distMin){
-                distMin=distSum;
-                centerId=itPart->id;
-            }
-        }
-        //find part in vocabulary
-        for (size_t i=0;i<dictionary.size();i++){
-            if (dictionary[i].id==centerId){
-                centroids[clusterNo]=(int)i;
-                break;
-            }
-            if (i==dictionary.size()-1){
-                std::cout << "dictionary.size() " << dictionary.size() << "\n";
-                std::cout << "centerId3 " << centerId  << " does not exist \n";
-                std::cout << "parts in dictionary: ";
-                for (auto& part : dictionary){
-                    std::cout << part.id << " ";
-                }
-                std::cout << "\n";
-                std::cout << "Something is wrong with ids in clusterization\n";
-                getchar();
-            }
-        }
-        clusterNo++;
-    }
 }
 
 /// get clusters of parts id stored in octree (one cluster per voxel)

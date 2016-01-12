@@ -21,8 +21,8 @@
   <!--type:
 	0 - k-mean
 	1 - agglomerative hierarchical-->
-  <PartSelector type="0" configFilename="../../resources/partSelector.xml">
-<!--   <PartSelector selectorType="1" configFilename="../../resources/partSelectorAgglomerative.xml"> -->
+<!--   <PartSelector type="0" configFilename="../../resources/partSelector.xml"> -->
+  <PartSelector selectorType="1" configFilename="../../resources/partSelectorAgglomerative.xml">
   </PartSelector>
   
 <!--   Hierarchy configuration -->

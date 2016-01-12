@@ -226,14 +226,15 @@ void Hierarchy::computeGraph(IndexSeqMap& hierarchyGraph){
         }
         layerNo++;
     }
-    for (auto &node : graph){
+    // print hierarchy
+    /*for (auto &node : graph){
         std::cout << "part id " << node.first << "\n";
         std::cout << "is buld from parts: ";
         for (auto &incId : node.second){
             std::cout << incId << ", ";
         }
         std::cout << "\n";
-    }
+    }*/
     hierarchyGraph = graph;
 }
 

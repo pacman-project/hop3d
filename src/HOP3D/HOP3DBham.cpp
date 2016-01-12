@@ -413,11 +413,11 @@ void HOP3DBham::learn(){
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;
     getPartsRealisation(0,0,0, parts);
-    for (auto &part : parts){
+    /*for (auto &part : parts){
         std::cout << "part id " << part.id << "\n";
         std::cout << "part realisation id " << part.realisationId << "\n";
         std::cout << "part pose\n" << part.pose.matrix() << "\n";
-    }
+    }*/
     Hierarchy::IndexSeqMap points2parts;
     getCloud2PartsMap(0,0,0, points2parts);
     /*std::cout << "octets size: " << octets2nd.size() << "\n";
