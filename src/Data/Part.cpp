@@ -6,6 +6,7 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/registration/gicp.h>
 #include <chrono>
+#include <random>
 
 namespace hop3d {
 
