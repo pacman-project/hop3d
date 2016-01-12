@@ -22,12 +22,14 @@ public:
     enum Type {
         /// k-mean part selector
         SELECTOR_MEAN,
+        /// agglomerative hierarchical part selector
+        SELECTOR_AGGLOMERATIVE,
     };
 
     /// overloaded constructor
     PartSelector(const std::string _name, Type _type) :
             name(_name), type(_type) {
-    };
+    }
 
     /// Name of the part selector
     virtual const std::string& getName() const {return name;}
@@ -52,6 +54,6 @@ protected:
     /// Map type
     Type type;
 };
-};
+}
 
 #endif // _PART_SELECTOR_H_

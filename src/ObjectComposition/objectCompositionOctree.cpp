@@ -115,6 +115,8 @@ void ObjectCompositionOctree::updatePCLGrid(const std::vector<ViewDependentPart>
                         std::cout << "(" << pointNorm.position(0) << ", " << pointNorm.position(1) << ", " << pointNorm.position(2) << ") Update octree, xyz: " << x << ", " << y << ", " << z << "\n";
                     }
                     (*octreeGrid)(x,y,z).push_back(pointNorm);
+                    toCoordinate(pointNorm.position(0),x, 0); toCoordinate(pointNorm.position(1),y,0); toCoordinate(pointNorm.position(2),z,0);
+                    (*octrees[0])(x,y,z).incomingIds.insert(part.id);
                 }
             }
         }
@@ -218,7 +220,7 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
                             itP++;
                         }
                         std::cout << "ref rot\n" << m << "\n";*/
-                        double fitness = ViewIndependentPart::distanceGICP(word,(*octrees[layerNo])(idX,idY,idZ),config.configGICP,estTransform);
+                        double fitness = fabs(double(word.cloud.size())-double((*octrees[layerNo]).at(idX,idY,idZ).cloud.size()))*ViewIndependentPart::distanceGICP(word,(*octrees[layerNo])(idX,idY,idZ),config.configGICP,estTransform);
                         //std::cout << "estTransform\n" << estTransform.matrix() << "\n";
                         //std::cout << "fitnes " << fitness << "\n";
                         //getchar();
@@ -431,6 +433,7 @@ int ObjectCompositionOctree::createFirstLayerPart(ViewIndependentPart& newPart, 
                         newPart.cloud.push_back(patch);
                         partsNo++;
                     }
+                    newPart.incomingIds.insert((*octrees[0]).at(x+i,y+j,z+k).incomingIds.begin(), (*octrees[0]).at(x+i,y+j,z+k).incomingIds.end());
                     //newPart.cloud.insert(newPart.cloud.end(),newPatches.begin(), newPatches.end());
                     newPart.partIds[i+1][j+1][k+1] = 1;
                 }

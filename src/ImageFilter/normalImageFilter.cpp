@@ -1092,6 +1092,34 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
     }
 }
 
+/// get set of ids for the given input point
+void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart, int layersNo){
+    unsigned int octetCoords[2]={u/(config.filterSize*3),v/(config.filterSize*3)};
+    if (octetCoords[0]<partsImages[0][categoryNo][objectNo][imageNo].size()&&octetCoords[1]<partsImages[0][categoryNo][objectNo][imageNo][0].size()){
+        lastVDpart = partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
+        if (!lastVDpart.isBackground())
+            ids.push_back(lastVDpart.realisationId);
+        else
+            ids.push_back(-2);
+    }
+    else{
+        lastVDpart=ViewDependentPart();
+        ids.push_back(-2);
+    }
+    unsigned int octetCoords2nd[2]={u/(config.filterSize*3*3),v/(config.filterSize*3*3)};
+    if ((octetCoords2nd[0]<octetsImages2ndLayer[categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<octetsImages2ndLayer[categoryNo][objectNo][imageNo][0].size())){
+        lastVDpart = partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
+        if (!lastVDpart.isBackground())
+            ids.push_back(lastVDpart.realisationId);
+        else
+            ids.push_back(-2);
+    }
+    else{
+        ids.push_back(-2); //point wasn't used to create part (3rd layer)
+        lastVDpart.id = -2;
+    }
+}
+
 /// Insertion operator
 std::ostream& operator<<(std::ostream& os, const NormalImageFilter& filter){
     filter.save2file(os);

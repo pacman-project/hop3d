@@ -212,14 +212,28 @@ void Hierarchy::computeGraph(IndexSeqMap& hierarchyGraph){
         }
         layerNo++;
     }
-    /*for (auto &node : graph){
+    layerNo = (int)viewDependentLayers.size();
+    for (const auto &layer : viewIndependentLayers){//graph for view-dependent layers
+        int wordId = 0;
+        for (const auto &word : layer){
+            std::set<std::uint32_t> incomingIds;
+            for (auto &id : word.incomingIds){
+                incomingIds.insert(incomingIds.end(),((viewDepPartsFromLayerNo)*layerInc)+id);
+            }
+            std::vector<std::uint32_t> inputIds(incomingIds.begin(), incomingIds.end());
+            graph.insert(std::make_pair(((layerNo+1)*layerInc)+wordId,inputIds));
+            wordId++;
+        }
+        layerNo++;
+    }
+    for (auto &node : graph){
         std::cout << "part id " << node.first << "\n";
         std::cout << "is buld from parts: ";
         for (auto &incId : node.second){
             std::cout << incId << ", ";
         }
         std::cout << "\n";
-    }*/
+    }
     hierarchyGraph = graph;
 }
 

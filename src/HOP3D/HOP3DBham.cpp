@@ -16,7 +16,10 @@ HOP3DBham::HOP3DBham(std::string _config) :
         HOP3D("Unbiased Statistics Builder", HOP3D_BHAM), config(_config) {
     statsBuilder = hop3d::createUnbiasedStatsBuilder(config.statsConfig);
     hierarchy.reset(new Hierarchy(_config));
-    partSelector = hop3d::createPartSelectorMean(config.selectorConfig);
+    if (config.partSelectorType==hop3d::PartSelector::SELECTOR_MEAN)
+        partSelector = hop3d::createPartSelectorMean(config.selectorConfig);
+    else if (config.partSelectorType==hop3d::PartSelector::SELECTOR_AGGLOMERATIVE)
+        partSelector = hop3d::createPartSelectorAgglomerative(config.selectorConfig);
     depthCameraModel.reset(new DepthSensorModel(config.cameraConfig));
 
     tinyxml2::XMLDocument configXML;
@@ -70,6 +73,7 @@ HOP3DBham::Config::Config(std::string configFilename){
     filename2save = group->FirstChildElement( "save2file" )->Attribute( "filename2save" );
 
     statsConfig = (config.FirstChildElement( "StatisticsBuilder" )->Attribute( "configFilename" ));
+    config.FirstChildElement( "PartSelector" )->QueryIntAttribute("selectorType", &partSelectorType);
     selectorConfig = (config.FirstChildElement( "PartSelector" )->Attribute( "configFilename" ));
     filtererConfig = (config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
     compositionConfig = (config.FirstChildElement( "ObjectComposition" )->Attribute( "configFilename" ));
@@ -185,12 +189,13 @@ void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hie
     std::uint32_t pointIdx=0;
     for (auto &point : cloud){
         std::vector<int> ids;
-        getPartsIds(categoryNo,objectNo,imageNo,point.u,point.v,ids);
+        getRealisationsIds(categoryNo,objectNo,imageNo,point.u,point.v,ids);
         std::vector<std::uint32_t> idsParts;
-        for (size_t layerNo=1;layerNo<3;layerNo++){
+        for (size_t layerNo=0;layerNo<2;layerNo++){
             if (ids[layerNo]>=0){
-                idsParts.push_back((((std::uint32_t)layerNo+1)*10000)+(std::uint32_t)ids[layerNo]);
-                //std::cout << "point " << pointIdx << " -> " << (((std::uint32_t)layerNo)*10000)+(std::uint32_t)ids[layerNo] << " lay no " << layerNo << "\n";
+                idsParts.push_back((std::uint32_t)ids[layerNo]);
+                //idsParts.push_back((((std::uint32_t)layerNo)*10000)+(std::uint32_t)ids[layerNo]);//for model ids
+                //std::cout << "point " << pointIdx << " -> " << (std::uint32_t)ids[layerNo] << " lay no " << layerNo << "\n";
             }
         }
         points2parts.insert(std::make_pair(pointIdx,idsParts));
@@ -218,13 +223,7 @@ void HOP3DBham::getPartsRealisation(const std::string& path, std::vector<ViewInd
 void HOP3DBham::learn(){
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
     hop3d::ViewDependentPart::Seq dictionary;
-    /// 2nd layer
-    //std::vector<cv::Mat> vecImages;
-    //hop3d::Reader reader;
-    //reader.readMultipleImages("../../resources/depthImages",vecImages);
     dataset->getDatasetInfo(datasetInfo);
-    //Mat34 cameraPose1;
-    //getSensorFrame(0,0,0, cameraPose1);
     std::vector<hop3d::Octet> octets;
     int startId = (int)hierarchy.get()->firstLayer.size();
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
@@ -414,13 +413,13 @@ void HOP3DBham::learn(){
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;
     getPartsRealisation(0,0,0, parts);
-    /*for (auto &part : parts){
+    for (auto &part : parts){
         std::cout << "part id " << part.id << "\n";
         std::cout << "part realisation id " << part.realisationId << "\n";
         std::cout << "part pose\n" << part.pose.matrix() << "\n";
-    }*/
+    }
     Hierarchy::IndexSeqMap points2parts;
-    getCloud2PartsMap(0,0,1, points2parts);
+    getCloud2PartsMap(0,0,0, points2parts);
     /*std::cout << "octets size: " << octets2nd.size() << "\n";
     std::cout << "vocabulary size: " << hierarchy.get()->viewDependentLayers[0].size() << "\n";
     for (auto& octet : octets2nd){
@@ -484,7 +483,7 @@ void HOP3DBham::load(std::string filename){
         std::cout << "part pose\n" << part.pose.matrix() << "\n";
     }*/
     Hierarchy::IndexSeqMap points2parts;
-    getCloud2PartsMap(0,0,1, points2parts);
+    getCloud2PartsMap(0,0,0, points2parts);
     //createPartClouds();
     std::cout << "Finished\n";
 }
@@ -524,6 +523,25 @@ void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, in
         std::cout << id << ", ";
     }
     std::cout << "\n";*/
+}
+
+/// get realisations ids
+void HOP3DBham::getRealisationsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids) const{
+    ids.clear();
+    ViewDependentPart lastVDpart;
+    imageFilterer->getRealisationsIds(categoryNo, objectNo, imageNo, u, v, ids, lastVDpart, config.viewDependentLayersNo);
+    /// view independent ids
+    /*Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
+    Vec3 point(Vec3(NAN,NAN,NAN));
+    imageFilterer->getPoint(categoryNo, objectNo, imageNo, u, v, point);
+    if ((!std::isnan(point(0)))&&(!std::isnan(point(1)))){
+        point = (cameraPose*Vec4(point(0),point(1),point(2),1.0)).block<3,1>(0,0);
+        objects[categoryNo][objectNo].getPartsIds(point, ids);
+    }
+    else{
+        std::vector<int> notUsed(3,-1);
+        ids.insert(std::end(ids), std::begin(notUsed), std::end(notUsed));
+    }*/
 }
 
 /// create part-coloured point clouds
@@ -574,7 +592,9 @@ void HOP3DBham::createPartClouds(){
                                 if (!std::isnan(point3D(0))){
                                     Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(point3D(0),point3D(1),point3D(2)));
                                     Mat34 pointWorld = cameraPose*pointCam;
-                                    pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(1)=pointWorld(1,3)+0.2*double(imageNo); pointRGBA.position(2)=pointWorld(2,3);
+                                    pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(2)=pointWorld(2,3); pointRGBA.position(1)=pointWorld(1,3);
+                                    if (layerNo<3)
+                                        pointRGBA.position(1)+=0.2*double(imageNo);
                                     objsTmp[layerNo].push_back(pointRGBA);
                                 }
                             }

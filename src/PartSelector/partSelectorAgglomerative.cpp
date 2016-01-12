@@ -1,26 +1,26 @@
-#include "hop3d/PartSelector/partSelectorMean.h"
+#include "hop3d/PartSelector/partSelectorAgglomerative.h"
 #include "hop3d/ImageFilter/normalImageFilter.h"
 #include <ctime>
 
 using namespace hop3d;
 
 /// A single instance of part selector
-PartSelectorMean::Ptr selector;
+PartSelectorAgglomerative::Ptr selectorAgg;
 
-PartSelectorMean::PartSelectorMean(void) : PartSelector("k-mean Part Selector", SELECTOR_MEAN) {
+PartSelectorAgglomerative::PartSelectorAgglomerative(void) : PartSelector("Hierarchical agglomerative Part Selector", SELECTOR_AGGLOMERATIVE) {
 }
 
 /// Construction
-PartSelectorMean::PartSelectorMean(std::string config) :
-        PartSelector("k-mean Part Selector", SELECTOR_MEAN), config(config) {
+PartSelectorAgglomerative::PartSelectorAgglomerative(std::string config) :
+        PartSelector("Hierarchical agglomerative Part Selector", SELECTOR_AGGLOMERATIVE), config(config) {
 }
 
 /// Destruction
-PartSelectorMean::~PartSelectorMean(void) {
+PartSelectorAgglomerative::~PartSelectorAgglomerative(void) {
 }
 
 ///config class constructor
-PartSelectorMean::Config::Config(std::string configFilename){
+PartSelectorAgglomerative::Config::Config(std::string configFilename){
     tinyxml2::XMLDocument config;
     std::string filename = configFilename;
     config.LoadFile(filename.c_str());
@@ -34,16 +34,10 @@ PartSelectorMean::Config::Config(std::string configFilename){
     group->FirstChildElement( "parameters" )->QueryIntAttribute("maxIter", &maxIter);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("distanceMetric", &distanceMetric);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("layersNo", &layersNo);
-    useCompressionRate.resize(layersNo);
-    clustersNo.resize(layersNo);
-    compressionRate.resize(layersNo);
+    maxDist.resize(layersNo);
     for (int i=0;i<layersNo;i++){
         std::string layerName = "layer" + std::to_string(i+1);
-        bool ucr;
-        group->FirstChildElement( layerName.c_str() )->QueryBoolAttribute("useCompressionRate", &ucr);
-        useCompressionRate[i]=ucr;
-        group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("compressionRate", &compressionRate[i]);
-        group->FirstChildElement( layerName.c_str() )->QueryIntAttribute("clusters", &clustersNo[i]);
+        group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("maxDist", &maxDist[i]);
     }
     group->FirstChildElement( "GICP" )->QueryIntAttribute("verbose", &configGICP.verbose);
     group->FirstChildElement( "GICP" )->QueryIntAttribute("guessesNo", &configGICP.guessesNo);
@@ -57,8 +51,8 @@ PartSelectorMean::Config::Config(std::string configFilename){
 }
 
 /// Select parts from the initial vocabulary
-void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
-    int clustersNo;
+void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
+/*    int clustersNo;
     if (config.useCompressionRate[layerNo-1])
         clustersNo = (int)(config.compressionRate[layerNo-1]*(int)dictionary.size());
     else
@@ -125,21 +119,47 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const H
             centroidNo++;
         }
     }
-    dictionary = newDictionary;
+    dictionary = newDictionary;*/
+}
+
+/// compute distance matrix
+void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix) const{
+    int idA=0;
+    for (auto &wordA : dictionary){
+        int idB=0;
+        for (auto &wordB : dictionary){
+            double dist(0); Mat34 transform;
+            if (wordA.layerId==2){//compute distance from centroid
+                if (config.distanceMetric==3){
+                    dist=ViewDependentPart::distanceInvariant(wordA, wordB, 3, transform);
+                }
+                else
+                    dist = ViewDependentPart::distance(wordA, wordB,hierarchy.firstLayer, config.distanceMetric);
+            }
+            else if (wordA.layerId==3){//compute distance from centroid
+                if (config.distanceMetric==3){
+                    dist=ViewDependentPart::distanceInvariant(wordA, wordB, 3, transform);
+                }
+                else
+                    dist = ViewDependentPart::distance(wordA, wordB, hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
+            }
+            distanceMatrix[idA][idB]=dist;
+            distanceMatrix[idB][idA]=dist;
+            idB++;
+        }
+        idA++;
+    }
 }
 
 /// Select parts from the initial vocabulary
-void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
-    int clustersNo;
-    if (config.useCompressionRate[layerNo-1])
-        clustersNo = (int)(config.compressionRate[layerNo-1]*(int)dictionary.size());
-    else
-        clustersNo = config.clustersNo[layerNo-1];
-    if ((size_t)clustersNo > dictionary.size())
-        clustersNo = (int)dictionary.size();
+void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
+    std::vector<std::vector<double>> distanceMatrix(dictionary.size(), std::vector<double>(dictionary.size()));
+    computeDistanceMatrix(dictionary, hierarchy, distanceMatrix);
+    int clustersNo = dictionary.size();
+
     if (config.verbose>0){
         std::cout << "Initial number of words in dictionary: " << dictionary.size() << "\n";
-        std::cout << "Desired number of words: " << clustersNo << "\n";
+        std::cout << "Max dist: " << config.maxDist[layerNo] << "\n";
     }
     std::vector<int> centroids(clustersNo);//index in dictionary of part assigned to the centroid;
     std::srand ( unsigned ( std::time(0) ) );
@@ -197,7 +217,7 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, const Hie
 }
 
 /// assign parts to clusters according to given cetroid
-void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewIndependentPart::Seq>& clusters, std::vector<std::vector<Mat34>>& offsets){
+void PartSelectorAgglomerative::fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewIndependentPart::Seq>& clusters, std::vector<std::vector<Mat34>>& offsets){
     for (size_t i=0;i<clusters.size();i++){
         clusters[i].clear();
         offsets[i].clear();
@@ -252,7 +272,7 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
 }
 
 /// assign parts to clusters according to given centroid
-void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewDependentPart::Seq>& clusters){
+void PartSelectorAgglomerative::fit2clusters(const std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<ViewDependentPart::Seq>& clusters){
     for (size_t i=0;i<clusters.size();i++)
         clusters[i].clear();
     for (auto it = dictionary.begin();it!=dictionary.end();it++){// for each part
@@ -305,7 +325,7 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
 }
 
 /// compute centroids for give clusters
-void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<Mat34>>& offsets){
+void PartSelectorAgglomerative::computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<Mat34>>& offsets){
     int clusterNo=0;
     for (auto itClust = clusters.begin(); itClust!=clusters.end();itClust++){ //for each cluster
         double distMin = std::numeric_limits<double>::max();
@@ -347,7 +367,7 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::S
 }
 
 ///find new center of cluster
-int PartSelectorMean::centerOfCluster(const std::set<int>& cluster, const ViewDependentPart::Seq& vocabulary, const Hierarchy& hierarchy) const{
+int PartSelectorAgglomerative::centerOfCluster(const std::set<int>& cluster, const ViewDependentPart::Seq& vocabulary, const Hierarchy& hierarchy) const{
     double distMin = std::numeric_limits<double>::max();
     int centerId=0;
     for (auto& id : cluster){//for each part id in cluster
@@ -376,7 +396,7 @@ int PartSelectorMean::centerOfCluster(const std::set<int>& cluster, const ViewDe
 }
 
 /// compute centroids for given clusters
-void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy){
+void PartSelectorAgglomerative::computeCentroids(const std::vector<ViewDependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy){
     int clusterNo=0;
     for (auto& cluster : clusters){ //for each cluster
         double distMin = std::numeric_limits<double>::max();
@@ -431,7 +451,7 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
 }
 
 /// get clusters of parts id stored in octree (one cluster per voxel)
-void PartSelectorMean::createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy){
+void PartSelectorAgglomerative::createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy){
     vocabulary.clear();
     std::vector< std::set<int> > newClusters;
     for (auto & cluster : clusters){
@@ -489,7 +509,7 @@ void PartSelectorMean::createUniqueClusters(const std::vector< std::set<int>>& c
 }
 
 /// get clusters of parts id stored in octree (one cluster per voxel)
-bool PartSelectorMean::isInOctets(std::vector< std::set<int>>& clusters, int id, std::vector< std::set<int>>::iterator& iter){
+bool PartSelectorAgglomerative::isInOctets(std::vector< std::set<int>>& clusters, int id, std::vector< std::set<int>>::iterator& iter){
     for (std::vector< std::set<int>>::iterator cluster = clusters.begin(); cluster!=clusters.end(); cluster++){
         auto iter1 = std::find ((*cluster).begin(), (*cluster).end(), id);
         if (iter1!=(*cluster).end()){
@@ -500,13 +520,12 @@ bool PartSelectorMean::isInOctets(std::vector< std::set<int>>& clusters, int id,
     return false;
 }
 
-
-hop3d::PartSelector* hop3d::createPartSelectorMean(void) {
-    selector.reset(new PartSelectorMean());
-    return selector.get();
+hop3d::PartSelector* hop3d::createPartSelectorAgglomerative(void) {
+    selectorAgg.reset(new PartSelectorAgglomerative());
+    return selectorAgg.get();
 }
 
-hop3d::PartSelector* hop3d::createPartSelectorMean(std::string config) {
-    selector.reset(new PartSelectorMean(config));
-    return selector.get();
+hop3d::PartSelector* hop3d::createPartSelectorAgglomerative(std::string config) {
+    selectorAgg.reset(new PartSelectorAgglomerative(config));
+    return selectorAgg.get();
 }

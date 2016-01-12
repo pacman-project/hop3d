@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <set>
 
 namespace hop3d {
 
@@ -188,6 +189,8 @@ public:
     std::vector<ViewIndependentPart> group;
     /// point cloud
     hop3d::PointCloud cloud;
+    /// incoming ids
+    std::set<int> incomingIds;
 
     /// id of neighbouring parts
     std::array<std::array<std::array<int,3>,3>,3> partIds;

@@ -229,6 +229,14 @@ void DepthImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, un
     std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << layersNo << "\n";
 }
 
+/// get set of ids for the given input point
+void DepthImageFilter::getRealisationsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart, int layersNo){
+    std::cout << "not implemented\n";
+    ids.clear();
+    std::cout << lastVDpart.id << "\n";
+    std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << layersNo << "\n";
+}
+
 /// returs filter ids and their position on the image
 void DepthImageFilter::getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const{
     std::cout << categoryNo << objectNo << imageNo << "\n";

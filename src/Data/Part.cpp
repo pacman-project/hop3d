@@ -314,7 +314,7 @@ double ViewIndependentPart::distanceGICP(const ViewIndependentPart& partA, const
         Eigen::Matrix<float, 4, 4> estM = initEst;
         gicp.align(output, estM);
         if (gicp.hasConverged()){
-            if (gicp.getFitnessScore()<errorMin&&fabs(gicp.getFinalTransformation()(0,3))<0.5&&fabs(gicp.getFinalTransformation()(1,3))<0.5&&fabs(gicp.getFinalTransformation()(2,3))<0.5){
+            if (gicp.getFitnessScore()<errorMin&&fabs(gicp.getFinalTransformation()(0,3))<0.05&&fabs(gicp.getFinalTransformation()(1,3))<0.05&&fabs(gicp.getFinalTransformation()(2,3))<0.05){
                 transform = gicp.getFinalTransformation();
                 errorMin = gicp.getFitnessScore();
             }
@@ -834,6 +834,10 @@ std::ostream& operator<<(std::ostream& os, const ViewIndependentPart& part){
             }
         }
     }
+    os << part.incomingIds.size() << " ";
+    for (const auto &id : part.incomingIds){
+        os << id << " ";
+    }
     // gaussians
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
@@ -872,6 +876,12 @@ std::istream& operator>>(std::istream& is, ViewIndependentPart& part){
                 is >> part.partIds[i][j][k];
             }
         }
+    }
+    int incomingIdsSize;
+    is >> incomingIdsSize;
+    for (int i=0;i<incomingIdsSize;i++){
+        int id;        is >> id;
+        part.incomingIds.insert(id);
     }
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){

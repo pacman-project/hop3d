@@ -12,6 +12,7 @@
 #include "hop3d/StatisticsBuilder/unbiasedStatsBuilder.h"
 #include "hop3d/Data/Graph.h"
 #include "hop3d/PartSelector/partSelectorMean.h"
+#include "hop3d/PartSelector/partSelectorAgglomerative.h"
 #include "hop3d/ImageFilter/depthImageFilter.h"
 #include "hop3d/ImageFilter/normalImageFilter.h"
 #include "hop3d/Dataset/datasetBoris.h"
@@ -113,6 +114,8 @@ public:
             std::string statsConfig;
             /// part selector config filename
             std::string selectorConfig;
+            /// dataset type
+            int partSelectorType;
             /// image filterer config filename
             std::string filtererConfig;
             /// filter type
@@ -134,6 +137,9 @@ public:
 private:
     /// get set of ids from hierarchy for the given input point
     void getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids) const;
+
+    /// get set of ids from hierarchy for the given input point
+    void getRealisationsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids) const;
 
     /// create part-coloured point clouds
     void createPartClouds();
