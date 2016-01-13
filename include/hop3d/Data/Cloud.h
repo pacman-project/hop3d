@@ -26,6 +26,20 @@ public:
     PointNormal(Vec3 _position, Vec3 _normal) : position(_position), normal(_normal) {}
 };
 
+class PointPart{
+public:
+    /// position
+    Vec3 position;
+    /// pair: layerNo, realisation/model id
+    std::vector<std::pair<int,int>> partsIds;
+
+    ///Construction
+    PointPart(){}
+
+    ///Construction
+    PointPart(Vec3 _position, std::vector<std::pair<int,int>> _partsIds) : position(_position), partsIds(_partsIds) {}
+};
+
 class PointNormalUV : public PointNormal{
 public:
     /// image coordinates
@@ -54,6 +68,8 @@ public:
 };
 
 typedef std::vector<hop3d::PointNormal> PointCloud;
+
+typedef std::vector<hop3d::PointPart> PartsCloud;
 
 typedef std::vector<hop3d::PointNormalUV> PointCloudUV;
 

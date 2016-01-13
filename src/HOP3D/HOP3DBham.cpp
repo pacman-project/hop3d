@@ -110,7 +110,9 @@ void HOP3DBham::getCloudPaths(std::vector<std::string>& paths) const{
 /// get cloud from dataset
 void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const{
     hop3d::PointCloudUV cloudUV;
-    imageFilterer->getCloud(categoryNo, objectNo, imageNo, cloudUV);
+    cv::Mat depthImage;
+    dataset->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+    imageFilterer->getCloud(depthImage, cloudUV);
     cloud.clear();
     cloud.reserve(cloudUV.size());
     for (auto &point : cloudUV){
@@ -185,7 +187,9 @@ void HOP3DBham::getPartsRealisation(int categoryNo, int objectNo, int imageNo, s
 void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSeqMap& points2parts) const{
     points2parts.clear();
     PointCloudUV cloud;
-    imageFilterer->getCloud(categoryNo, objectNo, imageNo, cloud);
+    cv::Mat depthImage;
+    dataset->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+    imageFilterer->getCloud(depthImage, cloud);
     std::uint32_t pointIdx=0;
     for (auto &point : cloud){
         std::vector<int> ids;
@@ -497,36 +501,19 @@ void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, in
     ids.clear();
     ViewDependentPart lastVDpart;
     imageFilterer->getPartsIds(categoryNo, objectNo, imageNo, u, v, ids, lastVDpart, config.viewDependentLayersNo);
-    //ids.push_back(hierarchy.get()->interpreter2to3[ids.back()]);
+}
+
+/// get set of ids from hierarchy for the given input point (view-independent layers)
+void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids) const{
     Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
-    //std::cout << cameraPose.matrix() << " \n";
-    //if (ids.back()<0){
-    //    for (int i=0;i<config.viewIndependentLayersNo-1;i++) ids.push_back(-1);
-    //}
-    //else {
-    Vec3 point(Vec3(NAN,NAN,NAN));
-    imageFilterer->getPoint(categoryNo, objectNo, imageNo, u, v, point);
     if ((!std::isnan(point(0)))&&(!std::isnan(point(1)))){
-        //std::cout << " uv " << u << " " << v << "\n";
-        //std::cout << point.transpose() << "\n";
-        //std::cout << cameraPose.matrix() << "\n";
-        //std::cout << "point " << point.transpose() << "\n";
-        //getchar();
-        point = (cameraPose*Vec4(point(0),point(1),point(2),1.0)).block<3,1>(0,0);
-        //std::cout << "point trnasformed " << point.transpose() << "\n";
-       // getchar();
-        objects[categoryNo][objectNo].getPartsIds(point, ids);
+        Vec3 pointGlob = (cameraPose*Vec4(point(0),point(1),point(2),1.0)).block<3,1>(0,0);;
+        objects[categoryNo][objectNo].getPartsIds(pointGlob, ids);
     }
     else{
         std::vector<int> notUsed(3,-1);
         ids.insert(std::end(ids), std::begin(notUsed), std::end(notUsed));
     }
-    //}
-    /*std::cout << "ids: ";
-    for (auto& id : ids){
-        std::cout << id << ", ";
-    }
-    std::cout << "\n";*/
 }
 
 /// get realisations ids
@@ -546,6 +533,30 @@ void HOP3DBham::getRealisationsIds(int categoryNo, int objectNo, int imageNo, in
         std::vector<int> notUsed(3,-1);
         ids.insert(std::end(ids), std::begin(notUsed), std::end(notUsed));
     }*/
+}
+
+/// get points realisation for the cloud
+void HOP3DBham::getPointsModels(int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts) const{
+    cv::Mat depthImage;
+    dataset->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo, depthImage);
+    PointCloudUV cloudUV;
+    imageFilterer->getCloud(depthImage,cloudUV);
+    for (const auto &pointuv : cloudUV){
+        std::vector<int> ids;
+        getPartsIds(categoryNo, objectNo, imageNo, pointuv.u, pointuv.v, ids);
+        PointPart pointPart;
+        pointPart.position=pointuv.position;
+        for (int i=0;i<(int)ids.size();i++){
+            pointPart.partsIds.push_back(std::make_pair(i,ids[i]));
+        }
+        int idsSize = (int)ids.size();
+        ids.clear();
+        getPartsIds(categoryNo, objectNo, imageNo, pointuv.position, ids);
+        for (int i=0;i<(int)ids.size();i++){
+            pointPart.partsIds.push_back(std::make_pair(i+idsSize,ids[i]));
+        }
+        cloudParts.push_back(pointPart);
+    }
 }
 
 /// create part-coloured point clouds
@@ -575,6 +586,27 @@ void HOP3DBham::createPartClouds(){
             (datasetInfo.categories[categoryNo].objects.size());
             std::vector<hop3d::PointCloudRGBA> objsTmp(layersNo);
             for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                hop3d::PartsCloud cloudParts;
+                getPointsModels(categoryNo, objectNo, imageNo, cloudParts);
+                Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+                for (auto &pointPart : cloudParts){
+                    for (int el=0;el<pointPart.partsIds.size();el++){
+                        int layNo=pointPart.partsIds[el].first;
+                        PointColor pointRGBA(pointPart.position,std::array<double,4>({0.0,0.0,0.0,1.0}));
+                        if (pointPart.partsIds[layNo].second>=0){
+                            pointRGBA.color = colors[layNo][pointPart.partsIds[layNo].second];
+                        }
+                        if (!std::isnan(pointPart.position(0))){
+                            Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(pointPart.position(0),pointPart.position(1),pointPart.position(2)));
+                            Mat34 pointWorld = cameraPose*pointCam;
+                            pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(2)=pointWorld(2,3); pointRGBA.position(1)=pointWorld(1,3);
+                            if (layNo<3)
+                                pointRGBA.position(1)+=0.2*double(imageNo);
+                            objsTmp[layNo].push_back(pointRGBA);
+                        }
+                    }
+                }
+/*
                 std::vector<int> ids;
                 cv::Mat depthImage;
                 dataset->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo, depthImage);
@@ -605,6 +637,7 @@ void HOP3DBham::createPartClouds(){
                         }
                     }
                 }
+                */
             }
             for (size_t layerNo=0;layerNo<objsTmp.size();layerNo++){
                 cloudsObj[layerNo].push_back(objsTmp[layerNo]);

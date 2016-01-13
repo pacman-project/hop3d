@@ -250,9 +250,9 @@ void DepthImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int
 }
 
 /// get cloud from dataset
-void DepthImageFilter::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloudUV& cloud) const{
+void DepthImageFilter::getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& cloud) const{
     cloud.clear();
-    std::cout << categoryNo << " " << objectNo << imageNo << "\n";
+    std::cout << depthImage.rows << "\n";
 }
 
 /// returs parts ids and their position on the image
@@ -262,10 +262,10 @@ void DepthImageFilter::getPartsRealisation(int categoryNo, int objectNo, int ima
 }
 
 /// get input point
-void DepthImageFilter::getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const{
+/*void DepthImageFilter::getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const{
     std::cout << categoryNo << " " << objectNo << imageNo << u << v << "\n";
     point=Vec3(NAN,NAN,NAN);
-}
+}*/
 
 int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, Filter &filter, cv::Mat &filteredImage)
 {

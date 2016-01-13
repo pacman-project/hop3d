@@ -135,14 +135,20 @@ public:
     };
 
 private:
-    /// get set of ids from hierarchy for the given input point
+    /// get set of ids from hierarchy for the given input point (view-dependent layers)
     void getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids) const;
+
+    /// get set of ids from hierarchy for the given input point (view-independent layers)
+    void getPartsIds(int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids) const;
 
     /// get set of ids from hierarchy for the given input point
     void getRealisationsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids) const;
 
     /// create part-coloured point clouds
     void createPartClouds();
+
+    /// get points realisation for the cloud
+    void getPointsModels(int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts) const;
 
     /// Configuration of the module
     Config config;

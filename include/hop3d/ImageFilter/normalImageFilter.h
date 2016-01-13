@@ -82,7 +82,7 @@ public:
     void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const;
 
     /// get cloud from dataset
-    void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloudUV& cloud) const;
+    void getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& cloud) const;
 
     /// returs parts ids and their position on the image
     void getPartsRealisation(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
@@ -100,7 +100,7 @@ public:
     void loadFromfile(std::istream& is);
 
     /// get input point
-    void getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const;
+    //void getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const;
 
     class Config{
       public:
@@ -155,7 +155,7 @@ private:
     /// parts images
     std::vector<std::vector<std::vector< std::vector<PartsImage>>>> partsImages;
     /// input clouds
-    std::vector<std::vector< std::vector<hop3d::PointCloudUV>>> inputClouds;
+    //std::vector<std::vector< std::vector<hop3d::PointCloudUV>>> inputClouds;
     /// part realisation counter
     int partRealisationsCounter;
 
@@ -166,10 +166,10 @@ private:
     void toNormal(int id, Vec3& normal) const;
 
     /// compute normal on the image (filter size)
-    void computeNormal(int u, int v, std::vector< std::vector<hop3d::PointNormal> >& cloudOrd);
+    void computeNormal(int u, int v, std::vector< std::vector<hop3d::PointNormal> >& cloudOrd) const;
 
     /// Compute normal vector using PCA
-    void normalPCA(std::vector<hop3d::PointNormal>& points, hop3d::PointNormal& pointNormal);
+    void normalPCA(std::vector<hop3d::PointNormal>& points, hop3d::PointNormal& pointNormal) const;
 
     /// Generate filters
     void generateFilters(void);
@@ -214,10 +214,10 @@ private:
     void updatePartsImages(int categoryNo, int objectNo, int imageNo, int layerNo, const PartsImage& partsImage);
 
     /// Apply median filter on the image
-    void medianFilter(const cv::Mat& inputImg, cv::Mat& outputImg, int kernelSize);
+    void medianFilter(const cv::Mat& inputImg, cv::Mat& outputImg, int kernelSize) const;
 
     /// compute median
-    uint16_t median(const cv::Mat& inputImg, int u, int v, int kernelSize);
+    uint16_t median(const cv::Mat& inputImg, int u, int v, int kernelSize) const;
 
     /// try to extract two clusters. If clusters are well separated (PCARelDistClusters parameter) return true
     bool extractGroup(const std::vector<hop3d::PointNormal>& points, std::vector<hop3d::PointNormal>& pointGroup) const;
@@ -229,10 +229,10 @@ private:
     bool computeNormalStats(const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Vec6& mean, Mat66& cov) const;
 
     /// update structure which holds octets images
-    void saveCloud(int categoryNo, int objectNo, int imageNo, const hop3d::PointCloudUV& cloud);
+    //void saveCloud(int categoryNo, int objectNo, int imageNo, const hop3d::PointCloudUV& cloud);
 
     /// filter depth image
-    void filterDepthImage(const cv::Mat& input, cv::Mat& output);
+    void filterDepthImage(const cv::Mat& input, cv::Mat& output) const;
 };
 
 }

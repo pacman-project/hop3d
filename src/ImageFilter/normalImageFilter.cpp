@@ -61,12 +61,37 @@ const std::string& NormalImageFilter::getName() const {
 }
 
 /// get cloud from dataset
-void NormalImageFilter::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloudUV& cloud) const{
-    cloud = inputClouds[categoryNo][objectNo][imageNo];
+void NormalImageFilter::getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& cloud) const{
+    cloud.clear();
+    double scale = 1/sensorModel.config.depthImageScale;
+    cv::Mat filteredImg = depthImage.clone();
+    filterDepthImage(depthImage, filteredImg);
+    std::vector< std::vector<hop3d::PointNormal> > cloudOrd(depthImage.rows, std::vector<hop3d::PointNormal> (depthImage.cols));
+    for (int i=0;i<filteredImg.rows;i++){
+        for (int j=0;j<filteredImg.cols;j++){
+            PointNormalUV puv;
+            sensorModel.getPoint(j, i, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
+            sensorModel.getPoint(j, i, filteredImg.at<uint16_t>(i,j)*scale, puv.position);
+            if (!std::isnan(double(cloudOrd[i][j].position(2)))){
+                puv.u=i; puv.v=j;
+                cloud.push_back(puv);
+            }
+        }
+    }
+    int pointIdx=0;
+    for (int i=config.filterSize/2;i<filteredImg.rows-(config.filterSize/2);i++){
+        for (int j=config.filterSize/2;j<filteredImg.cols-(config.filterSize/2);j++){
+            if (!std::isnan(double(cloudOrd[i][j].position(2)))){
+                computeNormal(i, j, cloudOrd);
+                cloud[pointIdx].normal = cloudOrd[i][j].normal;
+                pointIdx++;
+            }
+        }
+    }
 }
 
 /// get point from dataset
-void NormalImageFilter::getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const{
+/*void NormalImageFilter::getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const{
   //  std::cout << "search for " << u << ", " << v << "\n";
     for (auto &pointUV : inputClouds[categoryNo][objectNo][imageNo]){
 //        std::cout << "uv " << pointUV.u << ", " << pointUV.v << "\n";
@@ -78,10 +103,10 @@ void NormalImageFilter::getPoint(int categoryNo, int objectNo, int imageNo, int 
         }
     }
     point = Vec3(NAN,NAN,NAN);
-}
+}*/
 
 /// compute median
-uint16_t NormalImageFilter::median(const cv::Mat& inputImg, int u, int v, int kernelSize){
+uint16_t NormalImageFilter::median(const cv::Mat& inputImg, int u, int v, int kernelSize) const{
     int size = kernelSize/2;
     std::vector<short unsigned int> values;
     for (int i=v-size;i<v+size+1;i++){
@@ -100,7 +125,7 @@ uint16_t NormalImageFilter::median(const cv::Mat& inputImg, int u, int v, int ke
 }
 
 ///Apply median filter on the image
-void NormalImageFilter::medianFilter(const cv::Mat& inputImg, cv::Mat& outputImg, int kernelSize){
+void NormalImageFilter::medianFilter(const cv::Mat& inputImg, cv::Mat& outputImg, int kernelSize) const{
 	for (int i = 0; i<inputImg.rows; i++){
         for (int j=0;j<inputImg.cols;j++){
             outputImg.at<uint16_t>(i,j)=median(inputImg, i, j, kernelSize);
@@ -109,7 +134,7 @@ void NormalImageFilter::medianFilter(const cv::Mat& inputImg, cv::Mat& outputImg
 }
 
 /// filter depth image
-void NormalImageFilter::filterDepthImage(const cv::Mat& input, cv::Mat& output){
+void NormalImageFilter::filterDepthImage(const cv::Mat& input, cv::Mat& output) const{
     if (config.useMedianFilter){
         if (config.kernelSize<6)
             cv::medianBlur(input, output, config.kernelSize);
@@ -220,7 +245,7 @@ void NormalImageFilter::updateOctetsImages1stLayer(int categoryNo, int objectNo,
 }
 
 /// update structure which holds octets images
-void NormalImageFilter::saveCloud(int categoryNo, int objectNo, int imageNo, const hop3d::PointCloudUV& cloud){
+/*void NormalImageFilter::saveCloud(int categoryNo, int objectNo, int imageNo, const hop3d::PointCloudUV& cloud){
     if((int)inputClouds.size()<=categoryNo){
         inputClouds.resize(categoryNo+1);
     }
@@ -231,7 +256,7 @@ void NormalImageFilter::saveCloud(int categoryNo, int objectNo, int imageNo, con
         inputClouds[categoryNo][objectNo].resize(imageNo+1);
     }
     inputClouds[categoryNo][objectNo][imageNo] = cloud;
-}
+}*/
 
 /// returs filter ids and their position on the image
 void NormalImageFilter::getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const {
@@ -848,7 +873,7 @@ void NormalImageFilter::toNormal(int id, Vec3& normal) const{
 }
 
 /// compute normal on the image (filter size)
-void NormalImageFilter::computeNormal(int u, int v, std::vector< std::vector<hop3d::PointNormal> >& cloudOrd){
+void NormalImageFilter::computeNormal(int u, int v, std::vector< std::vector<hop3d::PointNormal> >& cloudOrd) const{
     std::vector<hop3d::PointNormal> points;
     double min=std::numeric_limits<double>::max();
     double max=std::numeric_limits<double>::min();
@@ -968,7 +993,7 @@ bool NormalImageFilter::extractGroup(const std::vector<hop3d::PointNormal>& poin
 }
 
 /// Compute normal vector using PCA
-void NormalImageFilter::normalPCA(std::vector<hop3d::PointNormal>& points, hop3d::PointNormal& pointNormal){
+void NormalImageFilter::normalPCA(std::vector<hop3d::PointNormal>& points, hop3d::PointNormal& pointNormal) const{
     //compute mean
     Vec3 mean(0,0,0);
     for (auto & point : points){
@@ -1128,7 +1153,7 @@ std::ostream& operator<<(std::ostream& os, const NormalImageFilter& filter){
 
 /// save to file
 void NormalImageFilter::save2file(std::ostream& os) const{
-    os << inputClouds.size() << " ";
+   /* os << inputClouds.size() << " ";
     for (auto &category : inputClouds){
         os << category.size() << " ";
         for (auto &object : category){
@@ -1145,7 +1170,7 @@ void NormalImageFilter::save2file(std::ostream& os) const{
                 }
             }
         }
-    }
+    }*/
     os << octetsImages1stLayer.size() << " ";
     for (auto &category : octetsImages1stLayer){
         os << category.size() << " ";
@@ -1209,7 +1234,7 @@ std::istream& operator>>(std::istream& is, NormalImageFilter& filter){
 void NormalImageFilter::loadFromfile(std::istream& is){
     // read categories no
     int categoriesNo;
-    is >> categoriesNo;
+    /*is >> categoriesNo;
     inputClouds.clear();
     inputClouds.resize(categoriesNo);
     for (int catNo = 0; catNo<categoriesNo; catNo++){
@@ -1238,7 +1263,7 @@ void NormalImageFilter::loadFromfile(std::istream& is){
                 inputClouds[catNo][objNo][cloudNo] = cloud;
             }
         }
-    }
+    }*/
     is >> categoriesNo;
     octetsImages1stLayer.resize(categoriesNo);
     for (int catNo = 0; catNo<categoriesNo; catNo++){

@@ -65,13 +65,13 @@ public:
     virtual void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const = 0;
 
     /// get cloud from dataset
-    virtual void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloudUV& cloud) const = 0;
+    virtual void getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& cloud) const = 0;
 
     /// returs parts ids and their position on the image
     virtual void getPartsRealisation(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const = 0;
 
     /// get input point
-    virtual void getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const = 0;
+    //virtual void getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const = 0;
 
     /// Virtual descrutor
     virtual ~ImageFilter() {
