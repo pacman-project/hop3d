@@ -67,7 +67,7 @@ void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary
     }
     for (size_t i=0;i<dictionary.size()*dictionary.size();i++){
         if (config.verbose==1){
-            if ((dictionary.size()>1)&&i%((dictionary.size()*dictionary.size()+1)/10)==0){
+            if (((dictionary.size()*dictionary.size()+1)>10)&&i%((dictionary.size()*dictionary.size()+1)/10)==0){
                 std::cout << "Iteration: " << i+1 << "/" << dictionary.size()*dictionary.size() << " clusters no: " << clusters.size() << "\n";
             }
         }
@@ -76,7 +76,7 @@ void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary
         //std::cout << "find min dist between " << pairedIds.first << "->" << pairedIds.second << "\n";
         distanceMatrix[pairedIds.first][pairedIds.second] = -1;
         bool finishClusterization(false);
-        //std::cout << "dist " << minDist << " max dist " << config.maxDist[layerNo-1] << "\n";
+        std::cout << "dist " << minDist << " max dist " << config.maxDist[layerNo-1] << "\n";
         if (minDist>config.maxDist[layerNo-1])
             finishClusterization = true;
         //merge two centroids
@@ -158,17 +158,8 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart:
     for (size_t idA=0;idA<dictionary.size();idA++){
         for (size_t idB=idA+1;idB<dictionary.size();idB++){
             double dist(0); Mat34 transform;
-            if (dictionary[idA].layerId==3){//compute distance from centroid
+            if (dictionary[idA].layerId>2){//compute distance from centroid
                 dist = fabs(double(dictionary[idA].cloud.size())-double(dictionary[idB].cloud.size()))*ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
-            }
-            if (dictionary[idA].layerId==5){//compute distance from centroid
-                dist = ViewIndependentPart::distance(dictionary[idA], dictionary[idB], transform);
-            }
-            else if (dictionary[idA].layerId==6){//compute distance from centroid
-                dist = ViewIndependentPart::distance(dictionary[idA], dictionary[idB], hierarchy.viewIndependentLayers[1], transform);
-            }
-            else if (dictionary[idA].layerId==7){//compute distance from centroid
-                dist = ViewIndependentPart::distance(dictionary[idA], dictionary[idB], hierarchy.viewIndependentLayers[1], hierarchy.viewIndependentLayers[2], transform);
             }
             distanceMatrix[idA][idB]=dist;
             distanceMatrix[idB][idA]=dist;

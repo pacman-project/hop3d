@@ -505,17 +505,15 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
             setB.push_back(Vec3(0,0,0));
         }
         if (pairsNo>=3){ // it's possible to find SE3 transformation
-            Eigen::MatrixXd pointsA(pairsNo,3);
-            Eigen::MatrixXd pointsB(pairsNo,3);
+            Eigen::MatrixXd pointsA(3,pairsNo);
+            Eigen::MatrixXd pointsB(3,pairsNo);
             for (int pairNo=0;pairNo<pairsNo;pairNo++){
                 for (int col=0;col<3;col++){
-                    pointsA(pairNo,col) = setA[pairNo](col);
-                    pointsB(pairNo,col) = setB[pairNo](col);
+                    pointsA(col,pairNo) = setA[pairNo](col);
+                    pointsB(col,pairNo) = setB[pairNo](col);
                 }
             }
-            //std::cout << pointsA << "A\n";
-            //std::cout << pointsB << "B\n";
-            Eigen::Matrix4d trans1 = Eigen::umeyama(pointsA.transpose(),pointsB.transpose(),false);
+            Eigen::Matrix4d trans1 = Eigen::umeyama(pointsA,pointsB,false);
             trans.matrix()=trans1;
             trans(2,3)=0;
             //trans = putslam::KabschEst::computeTrans(pointsA, pointsB);
@@ -571,88 +569,9 @@ double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, cons
         estimatedTransform=Mat34::Identity();
         return 0;
     }
-    /*ViewDependentPart partC;
-    ViewDependentPart partD;
-    for (int i=0;i<3;i++){
-        for (int j=0;j<3;j++){
-            partC.partIds[i][j]=i;
-            partD.partIds[i][j]=j+i+1;
-        }
-    }
-    partC.partsPosNorm[0][0].mean << -0.021,-0.02,0,0,0,1;    partC.partsPosNorm[0][1].mean << 0,-0.02,0,0,0,1;    partC.partsPosNorm[0][2].mean << 0.02,-0.02,0,0,0,1;
-    //partD.partsPosNorm[0][0].mean << -0.07,-0.1,0.17,0,-0.78,0.78;    partD.partsPosNorm[0][1].mean << 0.0,-0.1,0.1,0,0,1;    partD.partsPosNorm[0][2].mean << 0.07,-0.1,0.03,0,-0.78,0.78;
-
-    partC.partsPosNorm[1][0].mean << -0.02,0.0,0,0,0,1;    partC.partsPosNorm[1][1].mean << 0,0.0,0,0,0,1;    partC.partsPosNorm[1][2].mean << 0.02,0.0,0.0,0,0,1;
-    //partD.partsPosNorm[1][0].mean << -0.07,0.0,0.17,0,-0.78,0.78;    partD.partsPosNorm[1][1].mean << 0.0,0.0,0.1,0,0,1;    partD.partsPosNorm[1][2].mean << 0.07,0.0,0.03,0,-0.78,0.78;
-
-    partC.partsPosNorm[2][0].mean << -0.0205,0.02,0,0,0,1;    partC.partsPosNorm[2][1].mean << 0,0.02,0,0,0,1;    partC.partsPosNorm[2][2].mean << 0.02,0.02,0,0,0,1;
-    //partD.partsPosNorm[2][0].mean << -0.07,0.1,0.17,0,-0.78,0.78;    partD.partsPosNorm[2][1].mean << 0.0,0.1,0.1,0,0,1;    partD.partsPosNorm[2][2].mean << 0.07,0.1,0.03,0,-0.78,0.78;
-
-    Mat34 t(Mat34::Identity());
-    t = Eigen::AngleAxisd(0.1, Eigen::Vector3d::UnitZ())* Eigen::AngleAxisd(0.5, Eigen::Vector3d::UnitY())* Eigen::AngleAxisd(-0.3, Eigen::Vector3d::UnitZ());
-
-    for (int i=0;i<3;i++){
-        for (int j=0;j<3;j++){
-            Vec3 pos(partC.partsPosNorm[i][j].mean(0),partC.partsPosNorm[i][j].mean(1),partC.partsPosNorm[i][j].mean(2));
-            Mat34 pose(Mat34::Identity());
-            pose(0,3)=pos(0); pose(1,3)=pos(1); pose(2,3)=pos(2);
-            pose = t*pose;
-            partD.partsPosNorm[i][j].mean(0)=pose(0,3); partD.partsPosNorm[i][j].mean(1)=pose(1,3); partD.partsPosNorm[i][j].mean(2)=pose(2,3);
-            partD.partsPosNorm[i][j].mean(3)=pose(0,2); partD.partsPosNorm[i][j].mean(4)=pose(1,2); partD.partsPosNorm[i][j].mean(5)=pose(2,2);
-        }
-    }
-
-    for (int i=0;i<3;i++){
-        for (int j=0;j<3;j++){
-            //std::cout << partC.partsPosNorm[i][j].mean.transpose() << "\n";
-            std::cout << "plot3(" << partC.partsPosNorm[i][j].mean(0) << ", "<< partC.partsPosNorm[i][j].mean(1) << ", "<< partC.partsPosNorm[i][j].mean(2) <<",'xb'); hold on;\n";
-        }
-    }
-    for (int i=0;i<3;i++){
-        for (int j=0;j<3;j++){
-            //std::cout << partD.partsPosNorm[i][j].mean.transpose() << "\n";
-            std::cout << "plot3(" << partD.partsPosNorm[i][j].mean(0) << ", "<< partD.partsPosNorm[i][j].mean(1) << ", "<< partD.partsPosNorm[i][j].mean(2) <<",'or'); hold on; \n";
-        }
-    }*/
     estimatedTransform=Mat34::Identity();
     double sum = 9;
     sum = findOptimalTransformation(partA, partB, distanceMetric, estimatedTransform);
-    /*if (sum>10000){
-        partA.print();
-        partB.print();
-        std::cout << "dist " << sum << ", ";
-        getchar();
-    }*/
-    /*for (int i=0;i<3;i++){
-        for (int j=0;j<3;j++){
-            Vec3 pos(partD.partsPosNorm[i][j].mean(0),partD.partsPosNorm[i][j].mean(1),partD.partsPosNorm[i][j].mean(2));
-            Mat34 pose(Mat34::Identity());
-            pose(0,3)=pos(0); pose(1,3)=pos(1); pose(2,3)=pos(2);
-            pose = t*pose;
-            std::cout << "plot3(" << pose(0,3) << ", "<< pose(1,3) << ", "<< pose(2,3) <<",'.r'); hold on; \n";
-        }
-    }
-std::cout << "ref transform\n" << t.matrix()<<"\n";
-std::cout << "est transform\n" << estimatedTransform.matrix()<<"\n";
-for (int i=0;i<3;i++){
-    for (int j=0;j<3;j++){
-        std::cout << "C " << partC.partsPosNorm[i][j].mean(0) << ", " << partC.partsPosNorm[i][j].mean(1)<< ", " << partC.partsPosNorm[i][j].mean(2) << "\n";
-        std::cout << "D " << partD.partsPosNorm[i][j].mean(0) << ", " << partD.partsPosNorm[i][j].mean(1)<< ", " << partD.partsPosNorm[i][j].mean(2) << "\n";
-    }
-}
-    for (int i=0;i<3;i++){
-        for (int j=0;j<3;j++){
-            Mat34 pointpos(Mat34::Identity());
-            pointpos(0,3)=partC.partsPosNorm[i][j].mean(0); pointpos(1,3)=partC.partsPosNorm[i][j].mean(1); pointpos(2,3)=partC.partsPosNorm[i][j].mean(2);
-            //std::cout << "point \n" << pointpos.matrix() << "\n";
-            //std::cout << "trans \n" << estimatedTransform.matrix() << "\n";
-            pointpos = estimatedTransform*pointpos;
-            std::cout << "FFFF  " << pointpos(0,3) << ", " << pointpos(1,3) << ", " << pointpos(2,3) << "\n";
-        }
-    }
-    std::cout << "optimal transformation: \n" << estimatedTransform.matrix() << "\n";
-    std::cout << "error " << sum << "\n";
-    getchar();*/
     return sum;
 }
 

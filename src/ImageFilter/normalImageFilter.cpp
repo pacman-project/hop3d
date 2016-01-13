@@ -136,7 +136,7 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     /// compute point cloud, keep order
     std::vector< std::vector<hop3d::PointNormal> > cloudOrd(depthImage.rows, std::vector<hop3d::PointNormal> (depthImage.cols));
-    PointCloudUV cloudGrasp;
+    //PointCloudUV cloudGrasp;
     /// response: id, response value
     std::vector< std::vector<Response> > responseImage(depthImage.rows, std::vector<Response>(depthImage.cols,std::make_pair<int, double>(-1,-1.0)));
     double scale = 1/sensorModel.config.depthImageScale;
@@ -147,14 +147,14 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
     for (int i=0;i<filteredImg.rows;i++){
         for (int j=0;j<filteredImg.cols;j++){
             sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
-            if (!std::isnan(double(cloudOrd[i][j].position(2)))){
+            /*if (!std::isnan(double(cloudOrd[i][j].position(2)))){
                 PointNormalUV puv;
                 Vec3 p3d;
                 sensorModel.getPoint(j, i, filteredImg.at<uint16_t>(i,j)*scale, p3d);
                 puv.position = p3d;
                 puv.u=i; puv.v=j;
                 cloudGrasp.push_back(puv);
-            }
+            }*/
         }
     }
     int pointIdx = 0;
@@ -163,7 +163,7 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
         for (int j=config.filterSize/2;j<filteredImg.cols-(config.filterSize/2);j++){
             if (!std::isnan(double(cloudOrd[i][j].position(2)))){
                 computeNormal(i, j, cloudOrd);
-                cloudGrasp[pointIdx].normal = cloudOrd[i][j].normal;
+                //cloudGrasp[pointIdx].normal = cloudOrd[i][j].normal;
                 //compute id 
 				if (!std::isnan(double(cloudOrd[i][j].normal(2)))){
                     responseImage[i][j].first = toId(cloudOrd[i][j].normal);
@@ -191,7 +191,7 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
     }*/
     OctetsImage octetsImage = extractOctets(responseImage, cloudOrd, octets);
     updateOctetsImages1stLayer(categoryNo, objectNo, imageNo, octetsImage);
-    saveCloud(categoryNo, objectNo, imageNo, cloudGrasp);
+    //saveCloud(categoryNo, objectNo, imageNo, cloudGrasp);
 
     if (config.verbose>0){
         std::chrono::steady_clock::time_point end=std::chrono::steady_clock::now();

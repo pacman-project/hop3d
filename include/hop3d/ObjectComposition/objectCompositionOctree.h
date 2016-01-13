@@ -146,6 +146,9 @@ private:
     /// assign neighbouring parts to new part
     int createFirstLayerPart(ViewIndependentPart& newPart, int x, int y, int z);
 
+    /// assign neighbouring parts to new part
+    int createNextLayerPart(const Hierarchy& hierarchy, int destLayerNo, ViewIndependentPart& newPart, int x, int y, int z);
+
     /// find part in the vocabulary and return new id
     int findIdInVocabulary(const ViewIndependentPart& part, const std::vector<ViewIndependentPart>& vocabulary);
 

@@ -273,7 +273,6 @@ void HOP3DBham::learn(){
     }
     //std::vector< std::set<int>> clusters;
     objects.resize(datasetInfo.categories.size());
-    std::vector<ViewIndependentPart> vocabulary;
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
         for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
             std::cout << "Create object composition\n";
@@ -284,13 +283,8 @@ void HOP3DBham::learn(){
                 std::vector<ViewDependentPart> parts;
                 //get parts of the 3rd layers
                 imageFilterer->getLayerParts((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDepPartsFromLayerNo-1, parts);
-                //std::cout << "parts size: " << parts.size() << "\n";
-                //hierarchy.get()->printIds(parts[0]);
-                //hierarchy.get()->printIds(parts[1]);
                 //move octets into 3D space and update octree representation of the object
                 Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
-                //std::cout << cameraPose.matrix() << " \n";
-                //objects[categoryNo][objectNo].update(0, parts, cameraPose, *depthCameraModel, *hierarchy);
                 objects[categoryNo][objectNo].updatePCLGrid(parts, cameraPose);
             }
             /*std::vector< std::set<int>> clustersTmp;
@@ -302,23 +296,31 @@ void HOP3DBham::learn(){
             std::cout << "finish get clusters\n";
             clusters.reserve( clusters.size() + clustersTmp.size() ); // preallocate memory
             clusters.insert( clusters.end(), clustersTmp.begin(), clustersTmp.end() );*/
-            std::vector<ViewIndependentPart> voc;
-            objects[categoryNo][objectNo].createNextLayerVocabulary(0, *hierarchy, voc);
-            vocabulary.insert( vocabulary.end(), voc.begin(), voc.end() );
         }
     }
     //std::cout << "clusters size: " << clusters.size() << "\n";
     //std::vector<ViewIndependentPart> vocabulary;
     //std::cout << "create unique clusters:\n";
     //partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
-    std::cout << "3rd layer init vocabulary size: " << vocabulary.size() << "\n";
-    partSelector->selectParts(vocabulary, *hierarchy, 4);
-    std::cout << "Dictionary size (" << 4 << "-th layer): " << vocabulary.size() << "\n";
-    /// First view-independent layer (three and a half layer)
-    hierarchy.get()->viewIndependentLayers[0]=vocabulary;
-    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
-            objects[categoryNo][objectNo].updateVoxelsPose(0, vocabulary);
+    std::vector<ViewIndependentPart> vocabulary;
+    for (size_t layerNo=0;layerNo<2/*config.viewIndependentLayersNo*/;layerNo++){
+        vocabulary.clear();
+        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+            for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+                std::vector<ViewIndependentPart> voc;
+                objects[categoryNo][objectNo].createNextLayerVocabulary((int)layerNo, *hierarchy, voc);
+                vocabulary.insert( vocabulary.end(), voc.begin(), voc.end() );
+            }
+        }
+        std::cout << layerNo+4 << " layer init vocabulary size: " << vocabulary.size() << "\n";
+        partSelector->selectParts(vocabulary, *hierarchy, int(layerNo+4));
+        std::cout << "Dictionary size (" << layerNo+4 << "-th layer): " << vocabulary.size() << "\n";
+        /// First view-independent layer (three and a half layer)
+        hierarchy.get()->viewIndependentLayers[layerNo]=vocabulary;
+        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+            for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+                objects[categoryNo][objectNo].updateVoxelsPose((int)layerNo, vocabulary);
+            }
         }
     }
 //    for (auto & word : vocabulary){
@@ -395,15 +397,17 @@ void HOP3DBham::learn(){
             }
         }
     }
+    std::cout << "g6\n";
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
         for (auto & object : objects[categoryNo]){
             std::vector<ViewIndependentPart> objectParts;
-            for (size_t i=0;i<1;i++){//hierarchy.get()->viewIndependentLayers.size()-2;i++){
+            for (size_t i=0;i<2;i++){//hierarchy.get()->viewIndependentLayers.size()-2;i++){
                 object.getParts((int)i, objectParts);
                 notify(objectParts, (int)(i+hierarchy.get()->viewDependentLayers.size()+1));
             }
         }
     }
+    std::cout << "g7\n";
     std::this_thread::sleep_for (std::chrono::seconds(1));
     notify3Dmodels();
 
