@@ -189,13 +189,46 @@ void HOP3DBham::getPartsRealisationCloud(int categoryNo, int objectNo, int image
     Hierarchy::IndexSeqMap points2parts;
     getCloud2PartsMap(categoryNo, objectNo, imageNo, points2parts);
     convertPartsMap2PartsCloud(points2parts, parts);
-    for (auto &element : parts){
+    /*for (auto &element : parts){
         std::cout << "part id: " << element.first << " points: ";
         for (auto & pointId : element.second){
             std::cout << pointId << ", ";
         }
         std::cout << "\n";
+    }*/
+}
+
+/// get realisations graph
+void HOP3DBham::getRealisationsGraph(const std::string& path, Hierarchy::IndexSetMap& realisationsGraph) const{
+    int categoryNo(0), objectNo(0), imageNo(0);
+    dataset->translateString(path, categoryNo, objectNo, imageNo);
+    getRealisationsGraph(categoryNo, objectNo, imageNo, realisationsGraph);
+}
+
+/// get realisations graph
+void HOP3DBham::getRealisationsGraph(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSetMap& realisationsGraph) const{
+    PointCloudUV cloud;
+    cv::Mat depthImage;
+    dataset->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+    imageFilterer->getCloud(depthImage, cloud);
+    for (auto &point : cloud){
+        std::vector<int> ids;
+        getRealisationsIds(categoryNo,objectNo,imageNo,point.u,point.v,ids);
+        int idPrev=-1;
+        for (auto & partId : ids){
+            if (idPrev>-1&&partId>-1){// id_{layer}->ids_{layer-1}
+                realisationsGraph[partId].insert(idPrev);
+            }
+            idPrev=partId;
+        }
     }
+    /*for (auto &element : realisationsGraph){
+        std::cout << "part id: " << element.first << " is build from parts: ";
+        for (auto & partId : element.second){
+            std::cout << partId << ",";
+        }
+        std::cout << "\n";
+    }*/
 }
 
 /// get parts realisation
@@ -218,7 +251,7 @@ void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hie
         std::vector<int> ids;
         getRealisationsIds(categoryNo,objectNo,imageNo,point.u,point.v,ids);
         std::vector<std::uint32_t> idsParts;
-        for (size_t layerNo=0;layerNo<2;layerNo++){
+        for (size_t layerNo=0;layerNo<3;layerNo++){
             if (ids[layerNo]>=0){
                 idsParts.push_back((std::uint32_t)ids[layerNo]);
                 //idsParts.push_back((((std::uint32_t)layerNo)*10000)+(std::uint32_t)ids[layerNo]);//for model ids
@@ -451,6 +484,8 @@ void HOP3DBham::learn(){
     getCloud2PartsMap(0,0,0, points2parts);
     PartsClouds partsCloud;
     getPartsRealisationCloud(0,0,0,partsCloud);
+    Hierarchy::IndexSetMap realisationsGraph;
+    getRealisationsGraph(0,0,1, realisationsGraph);
     /*std::cout << "octets size: " << octets2nd.size() << "\n";
     std::cout << "vocabulary size: " << hierarchy.get()->viewDependentLayers[0].size() << "\n";
     for (auto& octet : octets2nd){
@@ -517,6 +552,8 @@ void HOP3DBham::load(std::string filename){
     getCloud2PartsMap(0,0,0, points2parts);
     PartsClouds partsCloud;
     getPartsRealisationCloud(0,0,0,partsCloud);
+    Hierarchy::IndexSetMap realisationsGraph;
+    getRealisationsGraph(0,0,1, realisationsGraph);
     //createPartClouds();
     std::cout << "Finished\n";
 }

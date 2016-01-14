@@ -268,7 +268,7 @@ void QGLVisualizer::updateHierarchy(){
                 std::cout << "layer "<< i+hierarchy->viewDependentLayers.size()+2 << " size: " << hierarchy->viewIndependentLayers[i].size() << "\n";
             }
             for (auto it = hierarchy->viewIndependentLayers[i].begin(); it!=hierarchy->viewIndependentLayers[i].end(); it++){
-                cloudsListLayers[i+hierarchy->viewDependentLayers.size()+1].push_back(createVIPartList(*it, int(i+4)));
+                cloudsListLayers[i+hierarchy->viewDependentLayers.size()+1].push_back(createVIPartList(*it));
                 clustersList[i+hierarchy->viewDependentLayers.size()+1].push_back(createVIClustersList(*it, int(i+4)));
             }
             //linksLists[i+3].push_back(createVILinksList(int(i+4)));
@@ -392,7 +392,7 @@ void QGLVisualizer::transposeGaussians(std::array<std::array<Gaussian3D,3>,3>& g
 }
 
 /// Create view independent part list
-GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int layerNo){
+GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part){
     // create one display list
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
@@ -408,64 +408,6 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part, int lay
         drawPatch(patch.normal);
         glPopMatrix();
     }
-    /*if (layerNo==4){
-        int id = part.group.begin()->id;
-        Mat34 pose = Mat34::Identity();//part.pose.inverse();
-        double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, 0, 0, 0, 1};
-        glPushMatrix();
-            glMultMatrixd(GLmat);
-            if (id==-1){
-                //glColor3ub(100,50,50);
-                glCallList(backgroundList[hierarchy->viewDependentLayers.size()]);
-            }
-            else{
-                //glColor3ub(200,200,200);
-                glCallList(cloudsListLayers[hierarchy->viewDependentLayers.size()][id]);
-            }
-        glPopMatrix();
-    }
-    else {
-        for (size_t n = 0; n < part.partIds.size(); n++){
-            for (size_t m = 0; m < part.partIds[n].size(); m++){
-                for (size_t l = 0; l < part.partIds[l].size(); l++){
-                    int id = part.partIds[n][m][l];
-                    Mat34 partPose = part.neighbourPoses[n][m][l];
-                    Vec3 pos(partPose(0,3), partPose(1,3), partPose(2,3));
-                    if (id==-1){
-                        pos(0)=config.voxelSize*double(double(m)-1.0);
-                        pos(1)=config.voxelSize*double(double(n)-1.0);
-                        pos(2)=config.voxelSize*double(double(l)-1.0);
-                    }
-                    double GLmatrot[16]={partPose(0,0), partPose(1,0), partPose(2,0), 0,
-                                      partPose(0,1), partPose(1,1), partPose(2,1), 0,
-                                      partPose(0,2), partPose(1,2), partPose(2,2), 0,
-                                      partPose(0,3), partPose(1,3), partPose(2,3), 1};
-                    if (id==-1){
-                        GLmatrot[0]=1; GLmatrot[1]=0; GLmatrot[2]=0;
-                        GLmatrot[4]=0; GLmatrot[5]=1; GLmatrot[6]=0;
-                        GLmatrot[8]=0; GLmatrot[9]=0; GLmatrot[10]=1;
-                        GLmatrot[12]=0; GLmatrot[13]=0; GLmatrot[14]=0;
-                    }
-                    glPushMatrix();
-                        glMultMatrixd(GLmatrot);
-                        if (id==-1){
-                            glColor3ub(200,200,200);
-                            //glBegin(GL_POINTS);
-                            //    glVertex3d(pos(0), pos(1), pos(2));
-                            //glEnd();
-                        }
-                        else{
-                            //this->drawAxis(0.5);
-                            //glColor3ub(200,200,200);
-                            glCallList(cloudsListLayers[layerNo-2][id]);
-                        }
-                        //if (n==1&&m==1&&l==1)
-                            //this->drawAxis(0.5);
-                    glPopMatrix();
-                }
-            }
-        }
-    }*/
     glPopMatrix();
     glEndList();
     return index;

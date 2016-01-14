@@ -17,6 +17,10 @@ public:
     /** Index sequence map */
     typedef std::map<std::uint32_t, IndexSeq> IndexSeqMap;
 
+    typedef std::set<std::uint32_t> IndexSet;
+    /** Index sequence map */
+    typedef std::map<std::uint32_t, IndexSet> IndexSetMap;
+
     /// first layer -- filters
     Filter::Seq firstLayer;
     /// create view dependent layers from words of i-th layer
@@ -45,7 +49,7 @@ public:
     void getNormal(const ViewDependentPart& part, Vec3& normal) const;
 
     /// get points related to the part assuming that we have flat patches
-    void getPoints(const ViewDependentPart& part, std::vector<Vec3>& points) const;
+    //void getPoints(const ViewDependentPart& part, std::vector<Vec3>& points) const;
 
     /// print ids
     void printIds(const ViewDependentPart& part);

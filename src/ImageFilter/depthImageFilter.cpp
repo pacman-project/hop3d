@@ -267,9 +267,7 @@ void DepthImageFilter::getPartsRealisation(int categoryNo, int objectNo, int ima
     point=Vec3(NAN,NAN,NAN);
 }*/
 
-int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, Filter &filter, cv::Mat &filteredImage)
-{
-
+int DepthImageFilter::filterSingleImageSingleFilter(const cv::Mat &depthImage, Filter &filter, cv::Mat &filteredImage){
     //std::cout << "Applying filter number: " << filter.id << std::endl;
     int filterSize = filter.patch.cols; //size of the applied filter
     int offset = int(filterSize/2);     //casting discards fractional part

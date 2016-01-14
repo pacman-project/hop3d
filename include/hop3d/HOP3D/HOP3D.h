@@ -89,6 +89,12 @@ public:
     /// get maps from point to part realisation
     virtual void getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSeqMap& points2parts) const = 0;
 
+    /// get realisations graph
+    virtual void getRealisationsGraph(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSetMap& hierarchyGraph) const = 0;
+
+    /// get realisations graph
+    virtual void getRealisationsGraph(const std::string& path, Hierarchy::IndexSetMap& realisationsGraph) const = 0;
+
     /// Virtual descrutor
     virtual ~HOP3D() {
     }

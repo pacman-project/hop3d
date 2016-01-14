@@ -95,6 +95,12 @@ public:
     /// get camera pose
     void getSensorFrame(const std::string& path, Mat34& cameraPose) const;
 
+    /// get realisations graph
+    void getRealisationsGraph(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSetMap& realisationsGraph) const;
+
+    /// get realisations graph
+    void getRealisationsGraph(const std::string& path, Hierarchy::IndexSetMap& realisationsGraph) const;
+
     #ifdef QVisualizerBuild
         ///Attach visualizer
         void attachVisualizer(QGLVisualizer* visualizer);

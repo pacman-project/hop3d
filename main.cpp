@@ -1,12 +1,9 @@
 #include <iostream>
-#include "hop3d/Data/Defs.h"
-#include "hop3d/Utilities/Reader.h"
-#include "hop3d/ImageFilter/depthImageFilter.h"
-#include "hop3d/Data/Graph.h"
+#include "hop3d/HOP3D/HOP3DBham.h"
 
 int main(void){
     try {
-        tinyxml2::XMLDocument config;
+        /*tinyxml2::XMLDocument config;
         config.LoadFile("../../resources/configGlobal.xml");
         if (config.ErrorID()){
             std::cout << "unable to load global config file.\n";
@@ -28,7 +25,9 @@ int main(void){
         std::cout<< vecImages.size() << std::endl;
         hop3d::Octet::Seq  sequenceOfOctets;
 
-        imageFilter->computeOctets(vecImages[0],0,0,0,sequenceOfOctets);
+        imageFilter->computeOctets(vecImages[0],0,0,0,sequenceOfOctets);*/
+        hop3d::HOP3D* hop3d = hop3d::createHOP3DBham("../../resources/configGlobal.xml");
+        hop3d->learn();
     }
     catch (const std::exception& ex) {
         std::cerr << ex.what() << std::endl;

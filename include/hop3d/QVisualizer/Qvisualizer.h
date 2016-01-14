@@ -325,7 +325,7 @@ private:
     GLuint createPartList(const hop3d::ViewDependentPart& part, int layerNo);
 
     /// Create point cloud List
-    GLuint createVIPartList(hop3d::ViewIndependentPart& part, int layerNo);
+    GLuint createVIPartList(hop3d::ViewIndependentPart& part);
 
     /// Create objects lists
     GLuint createObjList(const std::vector<hop3d::ViewIndependentPart>& parts, int layerNo);
