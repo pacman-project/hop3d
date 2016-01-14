@@ -131,13 +131,13 @@ namespace hop3d {
         for (size_t i=0;i<depth.size()-1;i++){
             if (depth[i+1]-depth[i]>distThreshold){
                 if (i+1>depth.size()-i)
-                    groupSize = i+1;
+                    groupSize = int(i+1);
                 else
-                    groupSize = depth.size()-i;
+                    groupSize = int(depth.size()-i);
                 return true;
             }
         }
-        groupSize = depth.size();
+        groupSize = (int)depth.size();
         return false;
     }
 
@@ -167,6 +167,12 @@ namespace hop3d {
             }
         }
         os << "\n";
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                os << octet.realisationsIds[i][j] << " ";
+            }
+        }
+        os << "\n";
         return os;
     }
 
@@ -175,6 +181,11 @@ namespace hop3d {
         for (int i=0;i<3;i++){
             for (int j=0;j<3;j++){
                 is >> octet.partIds[i][j];
+            }
+        }
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                is >> octet.realisationsIds[i][j];
             }
         }
         return is;

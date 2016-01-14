@@ -224,6 +224,8 @@ public:
     std::array<std::array<GaussianSE3,3>,3> partsPosNorm;
     /// SE3 offset betwen part realization and word from dictionary
     std::array<std::array<Mat34,3>,3> offsets;
+    /// realisation ids
+    std::array<std::array<int,3>,3> realisationsIds;
 
     /// id of the word from dictionary
     int parentId;

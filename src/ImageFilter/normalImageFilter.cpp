@@ -372,6 +372,14 @@ NormalImageFilter::OctetsImage NormalImageFilter::extractOctets(const std::vecto
         for (size_t j=config.filterSize+config.filterSize/2;j<responseImg[0].size()-config.filterSize-(config.filterSize/2);j=j+3*config.filterSize){
             Octet octet;
             if (computeOctet(responseImg, cloudOrd, int(i), int(j), octet)){
+                for (int u=0;u<(int)octet.realisationsIds.size();u++){//update realisations ids
+                    for (int v=0;v<(int)octet.realisationsIds.size();v++){
+                        if (octet.partIds[u][v]>=0){
+                            octet.realisationsIds[u][v]=partRealisationsCounter;
+                            partRealisationsCounter++;
+                        }
+                    }
+                }
                 octetsImage[u][v]=octet;
                 octets.push_back(octet);
                 /*octet.print();
@@ -1120,6 +1128,13 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
 /// get set of ids for the given input point
 void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart, int layersNo){
     unsigned int octetCoords[2]={u/(config.filterSize*3),v/(config.filterSize*3)};
+    if ((octetCoords[0]<octetsImages1stLayer[categoryNo][objectNo][imageNo].size())&&(octetCoords[1]<octetsImages1stLayer[categoryNo][objectNo][imageNo][0].size())){
+        Octet octet = octetsImages1stLayer[categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
+        ids.push_back(octet.partIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]);
+    }
+    else{
+        ids.push_back(-2); //point wasn't used to create part
+    }
     if (octetCoords[0]<partsImages[0][categoryNo][objectNo][imageNo].size()&&octetCoords[1]<partsImages[0][categoryNo][objectNo][imageNo][0].size()){
         lastVDpart = partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
         if (!lastVDpart.isBackground())

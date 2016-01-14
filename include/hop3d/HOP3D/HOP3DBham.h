@@ -48,7 +48,7 @@ public:
     void load(std::string filename);
 
     /// get set of ids from hierarchy for the given input point
-    void getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const;
+    //void getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const;
 
     /// get training dataset info
     void getDatasetInfo(hop3d::DatasetInfo& _dataset) const;
@@ -71,6 +71,12 @@ public:
     /// get parts realization
     void getPartsRealisation(int categoryNo, int objectNo, int imageNo, std::vector<ViewIndependentPart::Part3D>& parts) const;
 
+    /// get parts realization
+    void getPartsRealisationCloud(int categoryNo, int objectNo, int imageNo, PartsClouds& parts) const;
+
+    /// get parts realization
+    void getPartsRealisationCloud(const std::string& path, PartsClouds& parts) const;
+
     /// get maps from point to part realisation
     void getCloud2PartsMap(const std::string& path, Hierarchy::IndexSeqMap& points2parts) const;
 
@@ -81,7 +87,7 @@ public:
     size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo) const;
 
     /// get point from the point cloud
-    void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const;
+    //void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const;
 
     /// get camera pose
     void getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose) const;
@@ -149,6 +155,9 @@ private:
 
     /// get points realisation for the cloud
     void getPointsModels(int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts) const;
+
+    /// convert parts map to parts cloud
+    void convertPartsMap2PartsCloud(const Hierarchy::IndexSeqMap& points2parts, PartsClouds& partsCloud) const;
 
     /// Configuration of the module
     Config config;

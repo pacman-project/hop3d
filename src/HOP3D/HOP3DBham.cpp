@@ -85,11 +85,11 @@ HOP3DBham::Config::Config(std::string configFilename){
 }
 
 /// get set of ids from hierarchy for the given input point
-void HOP3DBham::getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const{
+/*void HOP3DBham::getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const{
     int categoryNo, objectNo, imageNo = 0;
     dataset->translateString(path, categoryNo, objectNo, imageNo);
     getPartsIds(categoryNo, objectNo, imageNo, u, v, ids);
-}
+}*/
 
 /// get training dataset info
 void HOP3DBham::getDatasetInfo(hop3d::DatasetInfo& _dataset) const{
@@ -141,9 +141,9 @@ size_t HOP3DBham::getNumOfPoints(int categoryNo, int objectNo, int imageNo) cons
 }
 
 /// get point from the point cloud
-void HOP3DBham::getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const{
+/*void HOP3DBham::getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const{
     dataset->getPoint(categoryNo, objectNo, imageNo, pointNo, point);
-}
+}*/
 
 /// get camera pose
 void HOP3DBham::getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose) const{
@@ -181,6 +181,29 @@ void HOP3DBham::getPartsRealisation(int categoryNo, int objectNo, int imageNo, s
             parts.push_back(part3D);
         }
     }
+}
+
+/// get parts realization
+void HOP3DBham::getPartsRealisationCloud(int categoryNo, int objectNo, int imageNo, PartsClouds& parts) const{
+    parts.clear();
+    Hierarchy::IndexSeqMap points2parts;
+    getCloud2PartsMap(categoryNo, objectNo, imageNo, points2parts);
+    convertPartsMap2PartsCloud(points2parts, parts);
+    for (auto &element : parts){
+        std::cout << "part id: " << element.first << " points: ";
+        for (auto & pointId : element.second){
+            std::cout << pointId << ", ";
+        }
+        std::cout << "\n";
+    }
+}
+
+/// get parts realisation
+void HOP3DBham::getPartsRealisationCloud(const std::string& path, PartsClouds& parts) const{
+    parts.clear();
+    int categoryNo(0), objectNo(0), imageNo(0);
+    dataset->translateString(path, categoryNo, objectNo, imageNo);
+    getPartsRealisationCloud(categoryNo, objectNo, imageNo, parts);
 }
 
 /// get maps from point to part realisation
@@ -317,7 +340,7 @@ void HOP3DBham::learn(){
             }
         }
         std::cout << layerNo+4 << " layer init vocabulary size: " << vocabulary.size() << "\n";
-        partSelector->selectParts(vocabulary, *hierarchy, int(layerNo+4));
+        partSelector->selectParts(vocabulary, int(layerNo+4));
         std::cout << "Dictionary size (" << layerNo+4 << "-th layer): " << vocabulary.size() << "\n";
         /// First view-independent layer (three and a half layer)
         hierarchy.get()->viewIndependentLayers[layerNo]=vocabulary;
@@ -401,7 +424,6 @@ void HOP3DBham::learn(){
             }
         }
     }
-    std::cout << "g6\n";
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
         for (auto & object : objects[categoryNo]){
             std::vector<ViewIndependentPart> objectParts;
@@ -411,7 +433,6 @@ void HOP3DBham::learn(){
             }
         }
     }
-    std::cout << "g7\n";
     std::this_thread::sleep_for (std::chrono::seconds(1));
     notify3Dmodels();
 
@@ -428,6 +449,8 @@ void HOP3DBham::learn(){
     }*/
     Hierarchy::IndexSeqMap points2parts;
     getCloud2PartsMap(0,0,0, points2parts);
+    PartsClouds partsCloud;
+    getPartsRealisationCloud(0,0,0,partsCloud);
     /*std::cout << "octets size: " << octets2nd.size() << "\n";
     std::cout << "vocabulary size: " << hierarchy.get()->viewDependentLayers[0].size() << "\n";
     for (auto& octet : octets2nd){
@@ -492,6 +515,8 @@ void HOP3DBham::load(std::string filename){
     }*/
     Hierarchy::IndexSeqMap points2parts;
     getCloud2PartsMap(0,0,0, points2parts);
+    PartsClouds partsCloud;
+    getPartsRealisationCloud(0,0,0,partsCloud);
     //createPartClouds();
     std::cout << "Finished\n";
 }
@@ -587,10 +612,10 @@ void HOP3DBham::createPartClouds(){
             std::vector<hop3d::PointCloudRGBA> objsTmp(layersNo);
             for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
                 hop3d::PartsCloud cloudParts;
-                getPointsModels(categoryNo, objectNo, imageNo, cloudParts);
+                getPointsModels((int)categoryNo, (int)objectNo, (int)imageNo, cloudParts);
                 Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                 for (auto &pointPart : cloudParts){
-                    for (int el=0;el<pointPart.partsIds.size();el++){
+                    for (int el=0;el<(int)pointPart.partsIds.size();el++){
                         int layNo=pointPart.partsIds[el].first;
                         PointColor pointRGBA(pointPart.position,std::array<double,4>({0.0,0.0,0.0,1.0}));
                         if (pointPart.partsIds[layNo].second>=0){
@@ -606,38 +631,6 @@ void HOP3DBham::createPartClouds(){
                         }
                     }
                 }
-/*
-                std::vector<int> ids;
-                cv::Mat depthImage;
-                dataset->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo, depthImage);
-                Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
-                for (int u=0;u<depthImage.rows;u++){
-                    for (int v=0;v<depthImage.cols;v++){
-                        if (depthImage.at<uint16_t>(u, v)!=0){
-                            getPartsIds((int)categoryNo, (int)objectNo, (int)imageNo, u, v, ids);
-                            //getPartsIds("../../../Datasets/ObjectDB-2014-Boris-v7/mug2/data-points_raw-mug2-3.pcd", u, v, ids);
-                            Vec3 point3D;
-                            depthCameraModel.get()->getPoint(v,u,depthImage.at<uint16_t>(u, v)/depthCameraModel.get()->config.depthImageScale,point3D);
-                            //std::cout << "point 3D " << point3D.transpose() << "\n";
-                            //getchar();
-                            for (size_t layerNo=0;layerNo<ids.size();layerNo++){
-                                PointColor pointRGBA(point3D,std::array<double,4>({0.0,0.0,0.0,1.0}));
-                                if (ids[layerNo]>=0){
-                                    pointRGBA.color = colors[layerNo][ids[layerNo]];
-                                }
-                                if (!std::isnan(point3D(0))){
-                                    Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(point3D(0),point3D(1),point3D(2)));
-                                    Mat34 pointWorld = cameraPose*pointCam;
-                                    pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(2)=pointWorld(2,3); pointRGBA.position(1)=pointWorld(1,3);
-                                    if (layerNo<3)
-                                        pointRGBA.position(1)+=0.2*double(imageNo);
-                                    objsTmp[layerNo].push_back(pointRGBA);
-                                }
-                            }
-                        }
-                    }
-                }
-                */
             }
             for (size_t layerNo=0;layerNo<objsTmp.size();layerNo++){
                 cloudsObj[layerNo].push_back(objsTmp[layerNo]);
@@ -646,6 +639,17 @@ void HOP3DBham::createPartClouds(){
     }
     notify(cloudsObj);
     createPartObjects();
+}
+
+/// convert parts map to parts cloud
+void HOP3DBham::convertPartsMap2PartsCloud(const Hierarchy::IndexSeqMap& points2parts, PartsClouds& partsCloud) const{
+    for(auto &pointMap : points2parts){
+        std::uint32_t pointIdx = pointMap.first;
+        std::vector<std::uint32_t> partsIds = pointMap.second;
+        for (auto &partId : partsIds){
+            partsCloud[partId].insert(pointIdx);
+        }
+    }
 }
 
 hop3d::HOP3D* hop3d::createHOP3DBham(void) {

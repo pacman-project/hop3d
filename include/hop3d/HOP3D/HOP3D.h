@@ -10,6 +10,7 @@
 #include "../Data/Defs.h"
 #include "../Data/Vocabulary.h"
 #include "hop3d/Utilities/observer.h"
+#include <unordered_map>
 
 namespace hop3d {
 
@@ -22,6 +23,9 @@ public:
         /// HOP3D Bham implementation
         HOP3D_BHAM,
     };
+
+    /// parts realisation cloud (set of points (value) which represent realisation id (key))
+    typedef std::unordered_map<std::uint32_t,std::set<std::uint32_t>> PartsClouds;
 
     /// overloaded constructor
     HOP3D(const std::string _name, Type _type) :
@@ -38,7 +42,7 @@ public:
     virtual void load(std::string filename) = 0;
 
     /// get set of ids from hierarchy for the given input point
-    virtual void getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const = 0;
+    //virtual void getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const = 0;
 
     /// get training dataset info
     virtual void getDatasetInfo(hop3d::DatasetInfo& dataset) const = 0;
@@ -61,11 +65,17 @@ public:
     /// get parts realization
     virtual void getPartsRealisation(int categoryNo, int objectNo, int imageNo, std::vector<ViewIndependentPart::Part3D>& parts) const = 0;
 
+    /// get parts realization
+    virtual void getPartsRealisationCloud(int categoryNo, int objectNo, int imageNo, PartsClouds& parts) const = 0;
+
+    /// get parts realization
+    virtual void getPartsRealisationCloud(const std::string& path, PartsClouds& parts) const = 0;
+
     /// get number of points in the point cloud
     virtual size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo) const = 0;
 
     /// get point from the point cloud
-    virtual void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const = 0;
+    //virtual void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const = 0;
 
     /// get camera pose
     virtual void getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose) const = 0;

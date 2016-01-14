@@ -51,11 +51,11 @@ PartSelectorAgglomerative::Config::Config(std::string configFilename){
 }
 
 /// Select parts from the initial vocabulary
-void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
+void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary, int layerNo){
     std::vector<std::vector<double>> distanceMatrix(dictionary.size(), std::vector<double>(dictionary.size()));
     std::vector<std::vector<Mat34>> transformMatrix(dictionary.size(), std::vector<Mat34>(dictionary.size()));
     std::cout << "compute distance matrix...";
-    computeDistanceMatrix(dictionary, hierarchy, distanceMatrix, transformMatrix);
+    computeDistanceMatrix(dictionary, distanceMatrix, transformMatrix);
     if (config.verbose>0){
         std::cout << "done\n";
         std::cout << "Initial number of words in dictionary: " << dictionary.size() << "\n";
@@ -75,10 +75,11 @@ void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary
         double minDist = findMinDistance(distanceMatrix, pairedIds);
         //std::cout << "find min dist between " << pairedIds.first << "->" << pairedIds.second << "\n";
         distanceMatrix[pairedIds.first][pairedIds.second] = -1;
-        bool finishClusterization(false);
+  //      bool finishClusterization(false);
         std::cout << "dist " << minDist << " max dist " << config.maxDist[layerNo-1] << "\n";
-        if (minDist>config.maxDist[layerNo-1])
-            finishClusterization = true;
+        if (minDist>config.maxDist[layerNo-1]||clusters.size()==1)
+            break;
+            //finishClusterization = true;
         //merge two centroids
         std::pair<int,int> clustersIds;
         findPartsInClusters(clusters, pairedIds, clustersIds);
@@ -86,8 +87,8 @@ void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary
         //std::cout << pairedIds.second << " is in cluster " << clustersIds.second << "\n";
         if (clustersIds.first!=clustersIds.second)
             mergeTwoClusters(clusters, clustersIds);
-        if (finishClusterization)
-            break;
+        //if (finishClusterization)
+//            break;
         if (config.verbose==2){
             std::cout << "Elements no in clusters (clusters size: " << clusters.size() << "): ";
             for (size_t i=0;i<clusters.size();i++)
@@ -154,7 +155,7 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::S
 }
 
 /// compute distance matrix for view-independent parts
-void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) const{
+void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) const{
     for (size_t idA=0;idA<dictionary.size();idA++){
         for (size_t idB=idA+1;idB<dictionary.size();idB++){
             double dist(0); Mat34 transform;

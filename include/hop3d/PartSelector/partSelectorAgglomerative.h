@@ -33,7 +33,7 @@ public:
     void selectParts(ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo);
 
     /// Select parts from the initial vocabulary
-    void selectParts(ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo);
+    void selectParts(ViewIndependentPart::Seq& dictionary, int layerNo);
 
     /// get clusters of parts id stored in octree (one cluster per voxel)
     void createUniqueClusters(const std::vector< std::set<int>>& clusters, std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy);
@@ -78,7 +78,7 @@ private:
     void computeDistanceMatrix(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) const;
 
     /// compute distance matrix for view-independent parts
-    void computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) const;
+    void computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) const;
 
     /// find min distance int the distance matrix
     double findMinDistance(const std::vector<std::vector<double>>& distanceMatrix, std::pair<int,int>& pairedIds) const;
