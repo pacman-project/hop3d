@@ -369,10 +369,10 @@ NormalImageFilter::OctetsImage NormalImageFilter::extractOctets(const std::vecto
         for (size_t j=config.filterSize+config.filterSize/2;j<responseImg[0].size()-config.filterSize-(config.filterSize/2);j=j+3*config.filterSize){
             Octet octet;
             if (computeOctet(responseImg, cloudOrd, int(i), int(j), octet)){
-                for (int u=0;u<(int)octet.realisationsIds.size();u++){//update realisations ids
-                    for (int v=0;v<(int)octet.realisationsIds.size();v++){
-                        if (octet.partIds[u][v]>=0){
-                            octet.realisationsIds[u][v]=partRealisationsCounter;
+                for (int k=0;k<(int)octet.realisationsIds.size();k++){//update realisations ids
+                    for (int l=0;l<(int)octet.realisationsIds.size();l++){
+                        if (octet.partIds[k][l]>=0){
+                            octet.realisationsIds[k][l]=partRealisationsCounter;
                             partRealisationsCounter++;
                         }
                     }
