@@ -213,7 +213,7 @@ void Hierarchy::computeGraph(IndexSeqMap& hierarchyGraph){
         layerNo++;
     }
     layerNo = (int)viewDependentLayers.size();
-    for (const auto &layer : viewIndependentLayers){//graph for view-dependent layers
+    /*for (const auto &layer : viewIndependentLayers){//graph for view-dependent layers
         int wordId = 0;
         for (const auto &word : layer){
             std::set<std::uint32_t> incomingIds;
@@ -225,16 +225,16 @@ void Hierarchy::computeGraph(IndexSeqMap& hierarchyGraph){
             wordId++;
         }
         layerNo++;
-    }
+    }*/
     // print hierarchy
-    /*for (auto &node : graph){
+    for (auto &node : graph){
         std::cout << "part id " << node.first << "\n";
-        std::cout << "is buld from parts: ";
+        std::cout << "is build from parts: ";
         for (auto &incId : node.second){
             std::cout << incId << ", ";
         }
         std::cout << "\n";
-    }*/
+    }
     hierarchyGraph = graph;
 }
 

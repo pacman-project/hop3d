@@ -62,7 +62,7 @@ ObjectCompositionOctree::Config::Config(std::string configFilename){
 }
 
 /// update composition from octets (words from last view-independent layer's vocabulary)
-void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, Hierarchy& hierarchy){
+void ObjectCompositionOctree::update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose){
     for (auto & part : parts){
         if (config.verbose==1){
             std::cout << "update octree, part.id: " << part.id << " layer id" << part.layerId << "\n";

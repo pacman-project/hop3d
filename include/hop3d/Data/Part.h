@@ -88,9 +88,6 @@ public:
 
     Vec3 locationEucl;
 
-    /// Camera pose id
-    int cameraPoseId;
-
     /// Gaussians related to positions of neighbouring parts
     std::array<std::array<Gaussian3D,3>,3> gaussians;
 

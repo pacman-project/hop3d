@@ -34,7 +34,7 @@ public:
     virtual const std::string& getName() const {return name;}
 
     /// update composition from octets (words from last view-independent layer's vocabulary)
-    virtual void update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, Hierarchy& hierarchy) = 0;
+    virtual void update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose) = 0;
 
     /// update voxel grid which contains point and normals
     virtual void updatePCLGrid(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose) = 0;

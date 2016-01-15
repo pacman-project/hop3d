@@ -222,13 +222,13 @@ void HOP3DBham::getRealisationsGraph(int categoryNo, int objectNo, int imageNo, 
             idPrev=partId;
         }
     }
-    /*for (auto &element : realisationsGraph){
+    for (auto &element : realisationsGraph){
         std::cout << "part id: " << element.first << " is build from parts: ";
         for (auto & partId : element.second){
             std::cout << partId << ",";
         }
         std::cout << "\n";
-    }*/
+    }
 }
 
 /// get parts realisation
@@ -468,22 +468,20 @@ void HOP3DBham::learn(){
     }
     std::this_thread::sleep_for (std::chrono::seconds(1));
     notify3Dmodels();
-
     createPartClouds();
-
     Hierarchy::IndexSeqMap hierarchyGraph;
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;
-    getPartsRealisation(0,0,0, parts);
+    getPartsRealisation(0,0,1, parts);
     /*for (auto &part : parts){
         std::cout << "part id " << part.id << "\n";
         std::cout << "part realisation id " << part.realisationId << "\n";
         std::cout << "part pose\n" << part.pose.matrix() << "\n";
     }*/
     Hierarchy::IndexSeqMap points2parts;
-    getCloud2PartsMap(0,0,0, points2parts);
+    getCloud2PartsMap(0,0,1, points2parts);
     PartsClouds partsCloud;
-    getPartsRealisationCloud(0,0,0,partsCloud);
+    getPartsRealisationCloud(0,0,1,partsCloud);
     Hierarchy::IndexSetMap realisationsGraph;
     getRealisationsGraph(0,0,1, realisationsGraph);
     /*std::cout << "octets size: " << octets2nd.size() << "\n";

@@ -663,7 +663,7 @@ void ViewDependentPart::getNormal(Vec3& normal, const ViewDependentPart::Seq& la
 
 // Insertion operator
 std::ostream& operator<<(std::ostream& os, const ViewDependentPart& part){
-    os << part.id << " " << static_cast<unsigned int>(part.type) << " " << part.realisationId << " " << part.layerId << " " << part.cameraPoseId << " " << part.location << " " << part.offset;
+    os << part.id << " " << static_cast<unsigned int>(part.type) << " " << part.realisationId << " " << part.layerId << " " << part.location << " " << part.offset;
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             os << part.partIds[i][j] << " ";
@@ -695,7 +695,7 @@ std::ostream& operator<<(std::ostream& os, const ViewDependentPart& part){
 // Extraction operator
 std::istream& operator>>(std::istream& is, ViewDependentPart& part){
     unsigned int type;
-    is >> part.id >> type >> part.realisationId >> part.layerId >> part.cameraPoseId >> part.location >> part.offset;
+    is >> part.id >> type >> part.realisationId >> part.layerId >> part.location >> part.offset;
     part.type = static_cast<Part::Type>(type);
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){

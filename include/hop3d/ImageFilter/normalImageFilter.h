@@ -26,9 +26,9 @@ class NormalImageFilter: public ImageFilter {
     /// response: id, response value
     typedef std::pair<int,double> Response;
     /// 2D array of octets
-    typedef std::vector< std::vector<Octet> > OctetsImage;
+    typedef std::vector< std::vector<std::shared_ptr<Octet>>> OctetsImage;
     /// 2D array of vocabularies
-    typedef std::vector< std::vector<ViewDependentPart> > PartsImage;
+    typedef std::vector< std::vector<std::shared_ptr<ViewDependentPart>>> PartsImage;
 public:
     /// Pointer
     typedef std::unique_ptr<NormalImageFilter> Ptr;
@@ -147,6 +147,7 @@ private:
     /// sensor model
     DepthSensorModel sensorModel;
     /// octets images
+    std::vector<std::vector<std::vector< std::vector<OctetsImage>>>> octetsImages;
     std::vector<std::vector< std::vector<OctetsImage>>> octetsImages1stLayer;
     /// octets images -- second layer
     std::vector<std::vector< std::vector<OctetsImage>>> octetsImages2ndLayer;
@@ -205,10 +206,7 @@ private:
     int findId(const ViewDependentPart::Seq& dictionary, const Octet& octet, Mat34& offset) const;
 
     /// update structure which holds octets images
-    void updateOctetsImages1stLayer(int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage);
-
-    /// update structure which holds octets images
-    void updateOctetsImages2ndLayer(int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage);
+    void updateOctetsImage(int layerNo, int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage);
 
     /// update structure which holds parts images
     void updatePartsImages(int categoryNo, int objectNo, int imageNo, int layerNo, const PartsImage& partsImage);

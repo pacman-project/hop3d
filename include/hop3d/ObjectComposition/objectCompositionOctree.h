@@ -33,7 +33,7 @@ public:
     ObjectCompositionOctree(std::string config);
 
     /// update composition from octets (words from last view-independent layer's vocabulary)
-    void update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose, const DepthSensorModel& camModel, Hierarchy& hierarchy);
+    void update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose);
 
     /// update voxel grid which contains point and normals
     void updatePCLGrid(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose);

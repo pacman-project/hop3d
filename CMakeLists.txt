@@ -208,7 +208,7 @@ if(BUILD_HOP3D)
             "${CMAKE_SOURCE_DIR}/include/hop3d/Data/*.h"
         )
         ADD_LIBRARY(hop3dData STATIC ${DATA_SOURCES} ${DATA_HEADERS})
-        target_link_libraries(hop3dData Utilities ${PCL_LIBRARIES})# tinyxml2 opencv_core opencv_highgui opencv_contrib boost_filesystem boost_system)
+        target_link_libraries(hop3dData hop3dUtilities ${PCL_LIBRARIES})# tinyxml2 opencv_core opencv_highgui opencv_contrib boost_filesystem boost_system)
         INSTALL(TARGETS hop3dData RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${DATA_HEADERS} DESTINATION include/hop3d/Data/)
 endif(BUILD_HOP3D)
