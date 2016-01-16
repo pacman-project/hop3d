@@ -239,7 +239,7 @@ public:
         for (size_t i=0;i<partIds.size();i++)
             partIds[i].fill(-1);
         for (size_t i=0;i<realisationsIds.size();i++)
-            partIds[i].fill(-1);
+            realisationsIds[i].fill(-1);
     }
 
     /// compute distance between octets -- dot product for normals for each filter

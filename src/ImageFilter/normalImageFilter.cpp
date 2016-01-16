@@ -1131,12 +1131,12 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
     if (layersNo>1){
         unsigned int octetCoords2nd[2]={u/(config.filterSize*3*3),v/(config.filterSize*3*3)};
         if ((octetCoords2nd[0]<octetsImages[1][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<octetsImages[1][categoryNo][objectNo][imageNo][0].size())){
-            if (octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr)
+            if (octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
+                lastVDpart = *(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]);
                 ids.push_back(octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->partIds[(u/(config.filterSize*3))%3][(v/(config.filterSize*3))%3]);
+            }
             else
                 ids.push_back(-2);
-            if (partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr)
-                lastVDpart = *(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]);
             ids.push_back(lastVDpart.id);
         }
         else{
