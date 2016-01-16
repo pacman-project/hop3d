@@ -291,11 +291,35 @@ void NormalImageFilter::getResponseFilters(int categoryNo, int objectNo, int ima
 /// returs parts ids and their position on the image
 void NormalImageFilter::getPartsRealisation(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const{
     parts.clear();
-    for (auto& row : partsImages[layerNo][categoryNo][objectNo][imageNo]){
-        for (auto& part : row){
-            if (part.get()!=nullptr){
-                if (!part->isBackground()){
-                    parts.push_back(*part);
+    if (layerNo==0){
+        for (size_t row=0; row<octetsImages[layerNo][categoryNo][objectNo][imageNo].size();row++){
+            for (size_t col=0; col<octetsImages[layerNo][categoryNo][objectNo][imageNo][row].size();col++){
+                if (octetsImages[layerNo][categoryNo][objectNo][imageNo][row][col].get()!=nullptr){
+                    if (!octetsImages[layerNo][categoryNo][objectNo][imageNo][row][col]->isBackground){
+                        for (int i=0;i<3;i++){
+                            for (int j=0;j<3;j++){
+                                if (octetsImages[layerNo][categoryNo][objectNo][imageNo][row][col]->partIds[i][j]>=0){
+                                    ViewDependentPart vdp;
+                                    vdp.locationEucl = octetsImages[layerNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[1][1]+octetsImages[layerNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[i][j];
+                                    vdp.offset=Mat34::Identity();
+                                    vdp.id = 0;
+                                    vdp.realisationId = octetsImages[layerNo][categoryNo][objectNo][imageNo][row][col]->realisationsIds[i][j];
+                                    parts.push_back(vdp);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else{
+        for (auto& row : partsImages[layerNo-1][categoryNo][objectNo][imageNo]){
+            for (auto& part : row){
+                if (part.get()!=nullptr){
+                    if (!part->isBackground()){
+                        parts.push_back(*part);
+                    }
                 }
             }
         }
@@ -1139,7 +1163,7 @@ void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int ima
     unsigned int octetCoords[2]={u/(config.filterSize*3),v/(config.filterSize*3)};
     if ((octetCoords[0]<octetsImages[0][categoryNo][objectNo][imageNo].size())&&(octetCoords[1]<octetsImages[0][categoryNo][objectNo][imageNo][0].size())){
         if (octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr)
-            ids.push_back(octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->partIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]);
+            ids.push_back(octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->realisationsIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]);
         else
             ids.push_back(-2);
     }
@@ -1147,10 +1171,14 @@ void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int ima
         ids.push_back(-2); //point wasn't used to create part
     }
     if (octetCoords[0]<partsImages[0][categoryNo][objectNo][imageNo].size()&&octetCoords[1]<partsImages[0][categoryNo][objectNo][imageNo][0].size()){
-        if (partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr)
+        if (partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
             lastVDpart = *partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
-        if (!lastVDpart.isBackground())
-            ids.push_back(lastVDpart.realisationId);
+            if (!partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->isBackground()){
+                ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->realisationId);
+            }
+            else
+                ids.push_back(-2);
+        }
         else
             ids.push_back(-2);
     }
@@ -1160,10 +1188,13 @@ void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int ima
     }
     unsigned int octetCoords2nd[2]={u/(config.filterSize*3*3),v/(config.filterSize*3*3)};
     if ((octetCoords2nd[0]<octetsImages[1][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<octetsImages[1][categoryNo][objectNo][imageNo][0].size())){
-        if (partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr)
+        if (partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
             lastVDpart = *partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
-        if (!lastVDpart.isBackground())
-            ids.push_back(lastVDpart.realisationId);
+            if (!partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->isBackground())
+                ids.push_back(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->realisationId);
+            else
+                ids.push_back(-2);
+        }
         else
             ids.push_back(-2);
     }

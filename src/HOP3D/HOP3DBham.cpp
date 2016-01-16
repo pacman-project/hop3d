@@ -166,16 +166,16 @@ void HOP3DBham::getHierarchy(Hierarchy::IndexSeqMap& hierarchyGraph) const{
 void HOP3DBham::getPartsRealisation(int categoryNo, int objectNo, int imageNo, std::vector<ViewIndependentPart::Part3D>& parts) const{
     parts.clear();
     Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
-    for (int layerNo = 0;layerNo<(int)hierarchy.get()->viewDependentLayers.size();layerNo++){
+    for (int layerNo = 0;layerNo<(int)hierarchy.get()->viewDependentLayers.size()+1;layerNo++){
         std::vector<ViewDependentPart> partsView;
         imageFilterer->getPartsRealisation(categoryNo, objectNo, imageNo,layerNo,partsView);
         for (auto& part : partsView){
             ViewIndependentPart::Part3D part3D;
-            part3D.id = ((layerNo+1)*10000)+part.id;
-            Vec3 point3d;
-            depthCameraModel.get()->getPoint(part.location.u, part.location.v, part.location.depth, point3d);
+            part3D.id = ((layerNo)*10000)+part.id;
+            //Vec3 point3d;
+            //depthCameraModel.get()->getPoint(part.location.u, part.location.v, part.location.depth, point3d);
             Mat34 pointPose(Mat34::Identity());
-            pointPose.translation() = point3d;
+            pointPose.translation() = part.locationEucl;
             part3D.pose = cameraPose * pointPose*part.offset;
             part3D.realisationId = part.realisationId;
             parts.push_back(part3D);
@@ -215,20 +215,27 @@ void HOP3DBham::getRealisationsGraph(int categoryNo, int objectNo, int imageNo, 
         std::vector<int> ids;
         getRealisationsIds(categoryNo,objectNo,imageNo,point.u,point.v,ids);
         int idPrev=-1;
+        int idNo=0;
         for (auto & partId : ids){
-            if (idPrev>-1&&partId>-1){// id_{layer}->ids_{layer-1}
+            //std::cout << "partId " << partId << ", ";
+            if (idNo==0&&partId>-1){
+                realisationsGraph.insert(std::make_pair(partId,std::set<unsigned int>()));
+            }
+            else if (idPrev>-1&&partId>-1){// id_{layer}->ids_{layer-1}
                 realisationsGraph[partId].insert(idPrev);
             }
             idPrev=partId;
+            idNo++;
         }
+        //std::cout << "\n"; getchar();
     }
-    for (auto &element : realisationsGraph){
+    /*for (auto &element : realisationsGraph){
         std::cout << "part id: " << element.first << " is build from parts: ";
         for (auto & partId : element.second){
             std::cout << partId << ",";
         }
         std::cout << "\n";
-    }
+    }*/
 }
 
 /// get parts realisation
@@ -472,18 +479,18 @@ void HOP3DBham::learn(){
     Hierarchy::IndexSeqMap hierarchyGraph;
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;
-    getPartsRealisation(0,0,1, parts);
+    getPartsRealisation(0,0,0, parts);
     /*for (auto &part : parts){
         std::cout << "part id " << part.id << "\n";
         std::cout << "part realisation id " << part.realisationId << "\n";
         std::cout << "part pose\n" << part.pose.matrix() << "\n";
     }*/
     Hierarchy::IndexSeqMap points2parts;
-    getCloud2PartsMap(0,0,1, points2parts);
+    getCloud2PartsMap(0,0,0, points2parts);
     PartsClouds partsCloud;
-    getPartsRealisationCloud(0,0,1,partsCloud);
+    getPartsRealisationCloud(0,0,0,partsCloud);
     Hierarchy::IndexSetMap realisationsGraph;
-    getRealisationsGraph(0,0,1, realisationsGraph);
+    getRealisationsGraph(0,0,0, realisationsGraph);
     /*std::cout << "octets size: " << octets2nd.size() << "\n";
     std::cout << "vocabulary size: " << hierarchy.get()->viewDependentLayers[0].size() << "\n";
     for (auto& octet : octets2nd){

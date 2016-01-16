@@ -61,14 +61,14 @@ public:
     std::array<std::array<int,3>,3> partIds;
 
     /// Construction
-    inline Part(){
+    inline Part() : realisationId(-1){
         for (int i=0;i<3;i++)
             for (int j=0;j<3;j++)
                 partIds[i][j] = -1;
     }
 
     /// Construction
-    inline Part(int _id, int _layerId, Type _type) : id(_id), layerId(_layerId), type(_type){
+    inline Part(int _id, int _layerId, Type _type) : id(_id), layerId(_layerId), realisationId(-1), type(_type){
         for (int i=0;i<3;i++)
             for (int j=0;j<3;j++)
                 partIds[i][j] = -1;
