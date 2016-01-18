@@ -587,7 +587,7 @@ void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, const Vec
 void HOP3DBham::getRealisationsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids) const{
     ids.clear();
     ViewDependentPart lastVDpart;
-    imageFilterer->getRealisationsIds(categoryNo, objectNo, imageNo, u, v, ids, lastVDpart, config.viewDependentLayersNo);
+    imageFilterer->getRealisationsIds(categoryNo, objectNo, imageNo, u, v, ids, lastVDpart);
     /// view independent ids
     /*Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
     Vec3 point(Vec3(NAN,NAN,NAN));

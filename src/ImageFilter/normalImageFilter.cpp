@@ -215,6 +215,7 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
         }
     }*/
     OctetsImage octetsImage = extractOctets(responseImage, cloudOrd, octets);
+    std::cout << octets.size() << "\n";
     updateOctetsImage(0,categoryNo, objectNo, imageNo, octetsImage);
     //saveCloud(categoryNo, objectNo, imageNo, cloudGrasp);
 
@@ -1128,38 +1129,35 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
     else{
         ids.push_back(-2); //point wasn't used to create part
     }
-    if (layersNo>1){
-        unsigned int octetCoords2nd[2]={u/(config.filterSize*3*3),v/(config.filterSize*3*3)};
-        if ((octetCoords2nd[0]<octetsImages[1][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<octetsImages[1][categoryNo][objectNo][imageNo][0].size())){
-            if (octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
-                lastVDpart = *(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]);
-                ids.push_back(octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->partIds[(u/(config.filterSize*3))%3][(v/(config.filterSize*3))%3]);
-            }
-            else
-                ids.push_back(-2);
-            ids.push_back(lastVDpart.id);
+    if (octetCoords[0]<partsImages[0][categoryNo][objectNo][imageNo].size()&&octetCoords[1]<partsImages[0][categoryNo][objectNo][imageNo][0].size()){
+        if (partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
+            lastVDpart = *partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
+            ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->id);
         }
-        else{
-            ids.push_back(-2); //point wasn't used to create part (2nd layer)
-            ids.push_back(-2); //point wasn't used to create part (3rd layer)
-            lastVDpart.id = -2;
-        }
+        else
+            ids.push_back(-2);
     }
     else{
-        if (octetCoords[0]<partsImages[categoryNo][objectNo][imageNo].size()&&octetCoords[1]<partsImages[categoryNo][objectNo][imageNo][0].size()){
-            if (partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr)
-                lastVDpart = *partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
+        lastVDpart=ViewDependentPart();
+        ids.push_back(-2);
+    }
+    unsigned int octetCoords2nd[2]={u/(config.filterSize*3*3),v/(config.filterSize*3*3)};
+    if ((octetCoords2nd[0]<partsImages[1][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<partsImages[1][categoryNo][objectNo][imageNo][0].size())){
+        if (partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
+            lastVDpart = *(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]);
             ids.push_back(lastVDpart.id);
         }
-        else{
-            lastVDpart=ViewDependentPart();
+        else
             ids.push_back(-2);
-        }
+    }
+    else{
+        ids.push_back(-2); //point wasn't used to create part (2nd layer)
+        lastVDpart.id = -2;
     }
 }
 
 /// get set of ids for the given input point
-void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart, int layersNo){
+void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart){
     unsigned int octetCoords[2]={u/(config.filterSize*3),v/(config.filterSize*3)};
     if ((octetCoords[0]<octetsImages[0][categoryNo][objectNo][imageNo].size())&&(octetCoords[1]<octetsImages[0][categoryNo][objectNo][imageNo][0].size())){
         if (octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr)

@@ -36,9 +36,7 @@ int main(void)
         }
         filter = hop3d::createNormalImageFilter(configFile, sensorConfigFile);
 
-        std::vector<cv::Mat> vecImages;
-        hop3d::Reader reader;
-        reader.readMultipleImages("../../resources/depthImages",vecImages);
+        std::vector<cv::Mat> vecImages(1);
 
         hop3d::Dataset* dataset = hop3d::createBorisDataset(datasetConfigFile,sensorConfigFile);
         dataset->getDepthImage(0,0,0,vecImages[0]);
