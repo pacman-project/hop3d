@@ -439,25 +439,36 @@ void HOP3DBham::learn(){
             for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
                 for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
                     std::vector<PartCoords> partCoords;
+                    std::vector<PartCoordsEucl> partCoordsEucl;
                     if (layerNo==0)
                         imageFilterer->getResponseFilters((int)categoryNo, (int)objectNo, (int)imageNo, partCoords);
                     else
-                        imageFilterer->getParts3D((int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoords);
+                        imageFilterer->getParts3D((int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoordsEucl);
                     Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                     std::vector<std::pair<int, Mat34>> filtersPoses;
-                    for (auto& filterCoord : partCoords){
-                        Vec3 point3d;
-                        depthCameraModel.get()->getPoint(filterCoord.coords.u, filterCoord.coords.v, filterCoord.coords.depth, point3d);
-                        Mat34 pointPose(Mat34::Identity());
-                        pointPose.translation() = point3d;
-                        if (layerNo>0){
-                            pointPose = cameraPose * pointPose*filterCoord.offset;
-                            //std::cout << "layer no " << layerNo << filterCoord.offset.matrix() << "\n";
-                            //std::cout << filterCoord.offset.matrix() << "\n";
+                    if (layerNo<1){
+                        for (auto& filterCoord : partCoords){
+                            Vec3 point3d;
+                            depthCameraModel.get()->getPoint(filterCoord.coords.u, filterCoord.coords.v, filterCoord.coords.depth, point3d);
+                            Mat34 pointPose(Mat34::Identity());
+                            pointPose.translation() = point3d;
+                            if (layerNo>0){
+                                pointPose = cameraPose * pointPose*filterCoord.offset;
+                                //std::cout << "layer no " << layerNo << filterCoord.offset.matrix() << "\n";
+                                //std::cout << filterCoord.offset.matrix() << "\n";
+                            }
+                            else
+                                pointPose = cameraPose * pointPose;
+                            filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
                         }
-                        else
-                            pointPose = cameraPose * pointPose;
-                        filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
+                    }
+                    else{
+                        for (auto& filterCoord : partCoordsEucl){
+                            Mat34 pointPose(Mat34::Identity());
+                            pointPose.translation() = filterCoord.coords;
+                            pointPose = cameraPose * pointPose*filterCoord.offset;
+                            filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
+                        }
                     }
                     notify(filtersPoses,(int)objectNo,layerNo);
                 }
@@ -479,18 +490,18 @@ void HOP3DBham::learn(){
     Hierarchy::IndexSeqMap hierarchyGraph;
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;
-    getPartsRealisation(0,0,1, parts);
+    getPartsRealisation(0,0,0, parts);
     /*for (auto &part : parts){
         std::cout << "part id " << part.id << "\n";
         std::cout << "part realisation id " << part.realisationId << "\n";
         std::cout << "part pose\n" << part.pose.matrix() << "\n";
     }*/
     Hierarchy::IndexSeqMap points2parts;
-    getCloud2PartsMap(0,0,1, points2parts);
+    getCloud2PartsMap(0,0,0, points2parts);
     PartsClouds partsCloud;
-    getPartsRealisationCloud(0,0,1,partsCloud);
+    getPartsRealisationCloud(0,0,0,partsCloud);
     Hierarchy::IndexSetMap realisationsGraph;
-    getRealisationsGraph(0,0,1, realisationsGraph);
+    getRealisationsGraph(0,0,0, realisationsGraph);
     /*std::cout << "octets size: " << octets2nd.size() << "\n";
     std::cout << "vocabulary size: " << hierarchy.get()->viewDependentLayers[0].size() << "\n";
     for (auto& octet : octets2nd){

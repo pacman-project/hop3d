@@ -28,7 +28,7 @@ void ViewDependentPart::print() const{
     for (auto it = group.begin();it!=group.end();it++)
         std::cout << it->id << ", ";
     std::cout << "\n";
-    std::cout << "Gaussians:\n";
+    /*std::cout << "Gaussians:\n";
     for (size_t i=0; i<gaussians.size();i++){
         for (size_t j=0; j<gaussians.size();j++){
             std::cout << "mean(" << i << ", " << j << "): ";
@@ -36,8 +36,8 @@ void ViewDependentPart::print() const{
             //std::cout << "covariance(" << i << ", " << j << "):\n";
             //std::cout << gaussians[i][j].covariance << "\n";
         }
-    }
-    std::cout << "Gaussians SE3:\n";
+    }*/
+    std::cout << "Pos norm SE3:\n";
     for (size_t i=0; i<partsPosNorm.size();i++){
         for (size_t j=0; j<partsPosNorm.size();j++){
             std::cout << "mean(" << i << ", " << j << "): ";

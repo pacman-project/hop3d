@@ -215,7 +215,6 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
         }
     }*/
     OctetsImage octetsImage = extractOctets(responseImage, cloudOrd, octets);
-    std::cout << octets.size() << "\n";
     updateOctetsImage(0,categoryNo, objectNo, imageNo, octetsImage);
     //saveCloud(categoryNo, objectNo, imageNo, cloudGrasp);
 
@@ -368,6 +367,23 @@ void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, in
     }
 }
 
+/// returs parts ids and their position on the image
+void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords) const{
+    partCoords.clear();
+    if (layerNo>0){
+        for (auto& row : partsImages[layerNo-1][categoryNo][objectNo][imageNo]){
+            for (auto& part : row){
+                if (part.get()!=nullptr){
+                    if (!part->isBackground()){
+                        PartCoordsEucl fcoords(part->id, part->locationEucl, part->offset);
+                        partCoords.push_back(fcoords);
+                    }
+                }
+            }
+        }
+    }
+}
+
 /// update structure which holds parts images
 void NormalImageFilter::updatePartsImages(int categoryNo, int objectNo, int imageNo, int layerNo, const PartsImage& partsImage){
     if((int)partsImages.size()<=layerNo){
@@ -489,12 +505,12 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
         octet.filterPos[1][1].depth = meanDepth;
         octet.partsPosNorm[1][1].mean = meanPosNorm;
         if (config.useEuclideanCoordinates)
-            octet.partsPosEucl[1][1](2) = meanDepth;
+            octet.partsPosEucl[1][1] = meanPosNorm.block<3,1>(0,0);
         //octet.filterPos[1][1].depth = min;
         //octet.filterPos[1][1].u = globU;
         //octet.filterPos[1][1].v = globV;
     }
-    sensorModel.getPoint(octet.filterPos[1][1].u,octet.filterPos[1][1].v,octet.filterPos[1][1].depth,octet.partsPosEucl[1][1]);
+    //sensorModel.getPoint(octet.filterPos[1][1].u,octet.filterPos[1][1].v,octet.filterPos[1][1].depth,octet.partsPosEucl[1][1]);
     for (int i=0;i<3;i++){//for neighbouring blocks
         for (int j=0;j<3;j++){
             if (!((i==1)&&(j==1))){
@@ -503,12 +519,14 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
                     octet.filterPos[i][j].v=(j-1)*config.filterSize*(2.0*layerNo-1.0);//(i-1)*layerNo*(config.filterSize+config.filterSize/2.0);
                     octet.filterPos[i][j].depth=meanDepth;
                     if (config.useEuclideanCoordinates){
-                        sensorModel.getPoint(octet.filterPos[i][j].u,octet.filterPos[i][j].v,octet.filterPos[i][j].depth,octet.partsPosEucl[i][j]);
+                        octet.partsPosEucl[i][j]-=octet.partsPosEucl[1][1];
+                        //sensorModel.getPoint(octet.filterPos[i][j].u,octet.filterPos[i][j].v,octet.filterPos[i][j].depth,octet.partsPosEucl[i][j]);
                     }
+                    octet.partsPosNorm[i][j].mean.block<3,1>(0,0)-=octet.partsPosNorm[1][1].mean.block<3,1>(0,0);//should be boxplus
                 }
                 else {
                     if (config.useEuclideanCoordinates){
-                        sensorModel.getPoint(octet.filterPos[i][j].u,octet.filterPos[i][j].v,octet.filterPos[i][j].depth,octet.partsPosEucl[i][j]);
+                        //sensorModel.getPoint(octet.filterPos[i][j].u,octet.filterPos[i][j].v,octet.filterPos[i][j].depth,octet.partsPosEucl[i][j]);
                         octet.partsPosEucl[i][j]-=octet.partsPosEucl[1][1];
                     }
                     octet.filterPos[i][j].u-=octet.filterPos[1][1].u;
@@ -632,6 +650,7 @@ bool NormalImageFilter::findMaxGroupResponse(const std::vector< std::vector<Resp
             meanPos/=double(pointsNo);
             meanNormal/=double(pointsNo);
             meanNormal.normalize();
+            octet.partsPosEucl[idx][idy]=meanPos;
             octet.partsPosNorm[idx][idy].mean.block<3,1>(0,0)=meanPos;
             octet.partsPosNorm[idx][idy].mean.block<3,1>(3,0)=meanNormal;
             //std::cout << "pos no " << pointsNo << " " << meanPos.transpose() << " " << meanNormal.transpose() << "\n";
@@ -746,6 +765,7 @@ void NormalImageFilter::computePartsImage(int categoryNo, int objectNo, int imag
                     part.layerId=layerNo+1;
                     part.location = octetsImage[i][j]->filterPos[1][1];
                     part.locationEucl = octetsImage[i][j]->partsPosEucl[1][1];
+                    //part.locationEucl = octetsImage[i][j]->partsPosNorm[1][1].mean.block<3,1>(0,0);
                     part.gaussians[1][1].mean=Vec3(octetsImage[i][j]->filterPos[1][1].u, octetsImage[i][j]->filterPos[1][1].v, octetsImage[i][j]->filterPos[1][1].depth);
                     partsNo++;
                     partsImage[i][j].reset(new ViewDependentPart(part));
@@ -788,12 +808,16 @@ int NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDep
                 octet.filterPos[i+1][j+1].v=(u+i)*(config.filterSize*3)+((config.filterSize*3)/2);
                 if (config.useEuclideanCoordinates)
                     sensorModel.getPoint(octet.filterPos[i+1][j+1].u, octet.filterPos[i+1][j+1].u, 1.0, octet.partsPosEucl[i+1][j+1]);
+                octet.filterPos[i+1][j+1].depth = octet.partsPosEucl[i+1][j+1](3);
+                octet.partsPosNorm[i+1][j+1].mean.block<3,1>(0,0)=octet.partsPosEucl[i+1][j+1];
+                octet.partsPosNorm[i+1][j+1].mean.block<3,1>(3,0)=Vec3(0,0,1);
             }
             else {
                 elementsNo++;
                 octet.filterPos[i+1][j+1]=octetsImage[u+i][v+j]->filterPos[1][1];
-                if (config.useEuclideanCoordinates)
-                    sensorModel.getPoint(octet.filterPos[i+1][j+1].u, octet.filterPos[i+1][j+1].v, octet.filterPos[i+1][j+1].depth, octet.partsPosEucl[i+1][j+1]);
+                octet.partsPosEucl[i+1][j+1]=octetsImage[u+i][v+j]->partsPosEucl[1][1];
+                //if (config.useEuclideanCoordinates)
+                    //sensorModel.getPoint(octet.filterPos[i+1][j+1].u, octet.filterPos[i+1][j+1].v, octet.filterPos[i+1][j+1].depth, octet.partsPosEucl[i+1][j+1]);
                 octet.partsPosNorm[i+1][j+1].mean.block<3,1>(0,0)=octet.partsPosEucl[i+1][j+1];
                 /*std::cout << i << ", " << j << " " << octet.partsPosEucl[i+1][j+1].transpose() << " pos\n";
                 std::cout << i << ", " << j << " " << octet.partsPosEucl[i+1][j+1].transpose() << " pos\n";
@@ -1132,7 +1156,10 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
     if (octetCoords[0]<partsImages[0][categoryNo][objectNo][imageNo].size()&&octetCoords[1]<partsImages[0][categoryNo][objectNo][imageNo][0].size()){
         if (partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
             lastVDpart = *partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
-            ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->id);
+            if (!partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->isBackground())
+                ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->id);
+            else
+                ids.push_back(-2);
         }
         else
             ids.push_back(-2);
@@ -1145,7 +1172,10 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
     if ((octetCoords2nd[0]<partsImages[1][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<partsImages[1][categoryNo][objectNo][imageNo][0].size())){
         if (partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
             lastVDpart = *(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]);
-            ids.push_back(lastVDpart.id);
+            if (!lastVDpart.isBackground())
+                ids.push_back(lastVDpart.id);
+            else
+                ids.push_back(-2);
         }
         else
             ids.push_back(-2);

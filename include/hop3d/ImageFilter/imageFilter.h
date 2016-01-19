@@ -64,6 +64,9 @@ public:
     /// returs parts ids and their position on the image
     virtual void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const = 0;
 
+    /// returs parts ids and their position on the image
+    virtual void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords) const = 0;
+
     /// get cloud from dataset
     virtual void getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& cloud) const = 0;
 

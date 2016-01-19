@@ -249,6 +249,12 @@ void DepthImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int
     partCoords.clear();
 }
 
+/// returs parts ids and their position on the image
+void DepthImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords) const{
+    std::cout << categoryNo << objectNo << imageNo << layerNo << "\n";
+    partCoords.clear();
+}
+
 /// get cloud from dataset
 void DepthImageFilter::getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& cloud) const{
     cloud.clear();

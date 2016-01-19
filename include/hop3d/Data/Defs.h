@@ -170,6 +170,26 @@ public:
     PartCoords(int _filterId, ImageCoordsDepth _coords, Mat34 _offset) : filterId(_filterId), coords(_coords), offset(_offset) {}
 };
 
+class PartCoordsEucl {
+public:
+    /// set of PartCoords
+    typedef std::vector<PartCoords> Seq;
+
+    ///Filter id
+    int filterId;
+
+    /// coordinates
+    Vec3 coords;
+
+    /// SE3 offset
+    Mat34 offset;
+
+    /// Construction
+    PartCoordsEucl(){}
+
+    /// Construction
+    PartCoordsEucl(int _filterId, Vec3 _coords, Mat34 _offset) : filterId(_filterId), coords(_coords), offset(_offset) {}
+};
 
 /// 3D Gaussian (SE3)
 class GaussianSE3{

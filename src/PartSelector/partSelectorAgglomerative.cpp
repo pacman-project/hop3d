@@ -77,7 +77,7 @@ void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary
         distanceMatrix[pairedIds.first][pairedIds.second] = -1;
   //      bool finishClusterization(false);
         std::cout << "dist " << minDist << " max dist " << config.maxDist[layerNo-1] << "\n";
-        if (minDist>config.maxDist[layerNo-1]||clusters.size()==1)
+        if (minDist>=config.maxDist[layerNo-1]||clusters.size()==1)
             break;
             //finishClusterization = true;
         //merge two centroids
@@ -264,8 +264,8 @@ void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, 
         distanceMatrix[pairedIds.first][pairedIds.second] = -1;
         bool finishClusterization(false);
         //std::cout << "dist " << minDist << " max dist " << config.maxDist[layerNo-1] << "\n";
-        if (minDist>config.maxDist[layerNo-1])
-            finishClusterization = true;
+        if (minDist>=config.maxDist[layerNo-1])
+            break;
         //merge two centroids
         std::pair<int,int> clustersIds;
         findPartsInClusters(clusters, pairedIds, clustersIds);

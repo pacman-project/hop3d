@@ -13,10 +13,10 @@
     -->
     <parameters verbose="1" distanceMetric="3" layersNo="7" maxIter="10"></parameters>
     <layer1 maxDist="0.0"></layer1> <!--constant size-->
-    <layer2 maxDist="0.2"></layer2>
-    <layer3 maxDist="1.4"></layer3>
-    <layer4 maxDist="0.00008"></layer4>
-    <layer5 maxDist="0.002"></layer5>
+    <layer2 maxDist="0.0"></layer2>
+    <layer3 maxDist="0.0"></layer3>
+    <layer4 maxDist="0.00000"></layer4>
+    <layer5 maxDist="0.000"></layer5>
     <layer6 maxDist="0.6"></layer6>
     <layer7 maxDist="0.7"></layer7>
     <GICP verbose="0" guessesNo="50" correspondenceDist="100" alphaMin="-1.57" alphaMax="1.57" betaMin="-1.57" betaMax="1.57" gammaMin="-1.57" gammaMax="1.57"></GICP>

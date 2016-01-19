@@ -162,6 +162,7 @@ void ObjectCompositionOctree::filterPCLGrid(void){
                         }
                     }
                     (*octreeGrid)(idX,idY,idZ) = means;
+                    //means = (*octreeGrid).at(idX,idY,idZ);
                     for (auto& point : means){//update parts octree
                         int x,y,z;
                         toCoordinate(point.position(0),x,0); toCoordinate(point.position(1),y,0); toCoordinate(point.position(2),z,0);
@@ -455,7 +456,7 @@ int ObjectCompositionOctree::createNextLayerPart(const Hierarchy& hierarchy, int
                         Vec3 patchPos = partPose*offset*Vec4(patch.position(0),patch.position(1),patch.position(2),1.0).block<3,1>(0,0);
                         for (int coord = 0; coord<3; coord++)
                             patchTmp.position(coord)=patchPos(coord)-center[coord];
-                        patchTmp.normal = partPose*offset*Vec4(patchTmp.normal(0),patchTmp.normal(1),patchTmp.normal(2),1).block<3,1>(0,0);
+                        patchTmp.normal = partPose.rotation()*offset.rotation()*patchTmp.normal;
                         newPart.cloud.push_back(patchTmp);
                         partsNo++;
                     }
