@@ -105,8 +105,7 @@ void ObjectCompositionOctree::updatePCLGrid(const std::vector<ViewDependentPart>
                     if (i==1&&j==1)
                         position = Vec4(0,0,0,1.0);
                     pointNorm.position = (partPosition*position).block<3,1>(0,0);
-                    Vec3 normal(part.partsPosNorm[i][j].mean(3),part.partsPosNorm[i][j].mean(4),part.partsPosNorm[i][j].mean(5));
-                    pointNorm.normal = (partPosition.rotation()*normal).block<3,1>(0,0);
+                    pointNorm.normal = partPosition.rotation()*part.partsPosNorm[i][j].mean.block<3,1>(3,0);
                     int x,y,z;
                     toCoordinatePCLGrid(pointNorm.position(0),x);
                     toCoordinatePCLGrid(pointNorm.position(1),y);
@@ -144,10 +143,13 @@ void ObjectCompositionOctree::filterPCLGrid(void){
                         else{
                             int groupNo=-1;
                             int iterNo=0;
+                            double minAngle = std::numeric_limits<double>::max();
                             for (auto point : means){//compute angle between vectors and add select group
                                 double angle = fabs(acos(point.normal.adjoint()*pointNorm.normal));
-                                if (angle<config.maxAngleGrid)
+                                if (angle<config.maxAngleGrid&&angle<minAngle){
+                                    minAngle=angle;
                                     groupNo=iterNo;
+                                }
                                 iterNo++;
                             }
                             if (groupNo==-1){
@@ -221,19 +223,24 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
                             itP++;
                         }
                         std::cout << "ref rot\n" << m << "\n";*/
-                        double fitness = fabs(double(word.cloud.size())-double((*octrees[layerNo]).at(idX,idY,idZ).cloud.size()))*ViewIndependentPart::distanceGICP(word,(*octrees[layerNo])(idX,idY,idZ),config.configGICP,estTransform);
+                        double fitness = (1+fabs(double(word.cloud.size())-double((*octrees[layerNo]).at(idX,idY,idZ).cloud.size())))*ViewIndependentPart::distanceGICP(word,(*octrees[layerNo])(idX,idY,idZ),config.configGICP,estTransform);
                         //std::cout << "estTransform\n" << estTransform.matrix() << "\n";
-                        //std::cout << "fitnes " << fitness << "\n";
+                        //std::cout << "word id " << wordId << ", fitnes: " << fitness << "\n";
                         //getchar();
                         if (fitness<minDist){//find min distance
                             minDist=fitness;
-                            //std::cout << "update " << idX << " " << idY << " " << idZ << " " << (*octrees[layerNo]).at(idX,idY,idZ).id << "\n";
+                            //std::cout << "update " << idX << " " << idY << " " << idZ << " " << wordId << "\n";
+                            //std::cout << "est transform\n" << estTransform.matrix() << "\n";
+                            //std::cout << "fit " << fitness << "\n";
+                            //std::cout << "cloud.size " << (*octrees[layerNo])(idX,idY,idZ).cloud.size() << "\n";
                             //(*octrees[layerNo])(idX,idY,idZ).cloud = word.cloud;
                             (*octrees[layerNo])(idX,idY,idZ).id = wordId;
                             (*octrees[layerNo])(idX,idY,idZ).offset=estTransform;
                         }
                         wordId++;
                     }
+                    //std::cout << "id " << (*octrees[layerNo])(idX,idY,idZ).id <<"\n";
+                    //std::cout << (*octrees[layerNo])(idX,idY,idZ).offset.matrix() << "\n";
                 }
             }
         }

@@ -160,7 +160,7 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart:
         for (size_t idB=idA+1;idB<dictionary.size();idB++){
             double dist(0); Mat34 transform;
             if (dictionary[idA].layerId>2){//compute distance from centroid
-                dist = fabs(double(dictionary[idA].cloud.size())-double(dictionary[idB].cloud.size()))*ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
+                dist = (1+fabs(double(dictionary[idA].cloud.size())-double(dictionary[idB].cloud.size())))*ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
             }
             distanceMatrix[idA][idB]=dist;
             distanceMatrix[idB][idA]=dist;
