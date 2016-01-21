@@ -58,6 +58,8 @@ public:
             int layersNo;
             /// max distance
             std::vector<double> maxDist;
+            /// max distance
+            std::vector<double> maxClusterDist;
             /// config GICP
             ConfigGICP configGICP;
     };
@@ -87,10 +89,22 @@ private:
     void findPartsInClusters(const std::vector<std::vector<int>>& clusters, const std::pair<int,int>& pairedIds, std::pair<int,int>& clustersIds) const;
 
     /// merge two clusters
-    void mergeTwoClusters(std::vector<std::vector<int>>& clusters, const std::pair<int,int>& clustersIds) const;
+    bool mergeTwoClusters(std::vector<std::vector<int>>& clusters, const std::vector<int>& centroids, const std::pair<int,int>& clustersIds, const std::vector<std::vector<double>>& distanceMatrix, int layerNo) const;
 
     /// compute centroids using pre-computed distance in distance matrix
     void computeCentroids(const std::vector<std::vector<int>>& clusters, const std::vector<std::vector<double>>& distanceMatrix, std::vector<int>& centroids) const;
+
+    /// compute centroids using pre-computed distance in distance matrix
+    void computeCentroid(const std::vector<int>& cluster, const std::vector<std::vector<double>>& distanceMatrix, int& centroid) const;
+
+    /// update centroids
+    void updateCentroids(const std::vector<std::vector<int>>& clusters, const std::vector<std::vector<double>>& distanceMatrix, std::vector<int>& centroids, const std::pair<int,int>& clustersIds) const;
+
+    /// compute max distance between centroid of the first cluster and all parts in the second cluster
+    double computeMaxDist(const std::vector<std::vector<int>>& clusters, const std::pair<int,int>& clustersIds, const std::vector<int>& centroids, const std::vector<std::vector<double>>& distanceMatrix) const;
+
+    /// modify clusters according to min distance
+    void reduceEntropy(std::vector<std::vector<int>>& clusters, const std::vector<int>& centroids, const std::pair<int,int>& clustersIds, const std::vector<std::vector<double>>& distanceMatrix);
 };
 }
 #endif // PART_SELECTOR_AGGLOMERATIVE_H_INCLUDED
