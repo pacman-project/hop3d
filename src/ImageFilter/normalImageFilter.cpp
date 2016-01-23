@@ -515,14 +515,17 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
         for (int j=0;j<3;j++){
             if (!((i==1)&&(j==1))){
                 if (octet.partIds[i][j]==-1){
-                    octet.filterPos[i][j].u=(j-1)*config.filterSize*(2.0*layerNo-1.0);//(j-1)*layerNo*(config.filterSize+config.filterSize/2.0);
+                    octet.filterPos[i][j].u=(i-1)*config.filterSize*(2.0*layerNo-1.0);//(j-1)*layerNo*(config.filterSize+config.filterSize/2.0);
                     octet.filterPos[i][j].v=(j-1)*config.filterSize*(2.0*layerNo-1.0);//(i-1)*layerNo*(config.filterSize+config.filterSize/2.0);
                     octet.filterPos[i][j].depth=meanDepth;
                     if (config.useEuclideanCoordinates){
                         octet.partsPosEucl[i][j]-=octet.partsPosEucl[1][1];
                         //sensorModel.getPoint(octet.filterPos[i][j].u,octet.filterPos[i][j].v,octet.filterPos[i][j].depth,octet.partsPosEucl[i][j]);
                     }
-                    octet.partsPosNorm[i][j].mean.block<3,1>(0,0)-=octet.partsPosNorm[1][1].mean.block<3,1>(0,0);//should be boxplus
+                    //octet.partsPosNorm[i][j].mean.block<3,1>(0,0)-=octet.partsPosNorm[1][1].mean.block<3,1>(0,0);//should be boxplus
+                    octet.partsPosNorm[i][j].mean(0)=octet.filterPos[i][j].v*0.001;//should be boxplus
+                    octet.partsPosNorm[i][j].mean(1)=octet.filterPos[i][j].u*0.001;
+                    octet.partsPosNorm[i][j].mean(2)=0;
                 }
                 else {
                     if (config.useEuclideanCoordinates){

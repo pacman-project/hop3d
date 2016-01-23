@@ -441,6 +441,192 @@ void QGLVisualizer::drawPart(const ViewDependentPart& part, int layerNo, double 
     glPopMatrix();
 }
 
+/// draw part
+void QGLVisualizer::drawPartMesh(const ViewDependentPart& part, int layerNo, double r, double g, double b){
+    glPushMatrix();
+    std::array<std::array<Vec6,3>,3> posNormFull;
+    for (size_t n = 0; n < part.partIds.size()-1; n++){
+        for (size_t m = 0; m < part.partIds[n].size()-1; m++){
+            std::vector<Vec6> vertices;
+            std::vector<int> ids;
+            for (int i=0;i<2;i++){
+                for (int j=i;j<2;j++){
+                    if ((n+j)==1&&(m+i)==1){
+                        Vec6 pos = part.partsPosNorm[n+j][m+i].mean;
+                        pos.block<3,1>(0,0)=Vec3(0,0,0);
+                        vertices.push_back(pos);
+                    }
+                    else{
+                        if (part.partIds[n+j][m+i]>0){
+                            vertices.push_back(part.partsPosNorm[n+j][m+i].mean);
+                            posNormFull[n+j][m+i]=part.partsPosNorm[n+j][m+i].mean;
+                        }
+                        else {
+                            double meanDepth = computeMeanDepth(part,(int)n+j,(int)m+i, posNormFull[n+j][m+i]);
+                            Vec6 pos = part.partsPosNorm[n+j][m+i].mean;
+                            pos(2) = meanDepth;
+                            posNormFull[n+j][m+i].block<3,1>(0,0)=pos.block<3,1>(0,0);
+                            vertices.push_back(pos);
+                        }
+                    }
+                    ids.push_back(part.partIds[n+j][m+i]);
+                }
+            }
+            //getchar();
+            double maxDepthDiff=std::numeric_limits<double>::min();
+            double dists[3]={fabs(vertices[0](2)-vertices[1](2)), fabs(vertices[1](2)-vertices[2](2)), fabs(vertices[0](2)-vertices[2](2))};
+            for (int vNo=0; vNo<3;vNo++)
+                if (dists[vNo]>maxDepthDiff)
+                    maxDepthDiff=dists[vNo];
+            double maxDepthDistThreshold=0.015;
+            if (ids[0]>0&&ids[1]>0&&ids[2]>0&&maxDepthDiff<maxDepthDistThreshold)
+                drawTriangle(vertices,ids, r,g,b);
+            vertices.clear();
+            ids.clear();
+            for (int i=0;i<2;i++){
+                for (int j=i;j<2;j++){
+                    if ((n+i)==1&&(m+j)==1){
+                        Vec6 pos = part.partsPosNorm[n+i][m+j].mean;
+                        pos.block<3,1>(0,0)=Vec3(0,0,0);
+                        vertices.push_back(pos);
+                    }
+                    else{
+                        if (part.partIds[n+i][m+j]>0){
+                            vertices.push_back(part.partsPosNorm[n+i][m+j].mean);
+                            posNormFull[n+i][m+j]=part.partsPosNorm[n+i][m+j].mean;
+                        }
+                        else {
+                            double meanDepth = computeMeanDepth(part,(int)n+i,(int)m+j, posNormFull[n+i][m+j]);
+                            Vec6 pos = part.partsPosNorm[n+i][m+j].mean;
+                            pos(2) = meanDepth;
+                            posNormFull[n+i][m+j].block<3,1>(0,0)=pos.block<3,1>(0,0);
+                            vertices.push_back(pos);
+                        }
+                    }
+                    ids.push_back(part.partIds[n+i][m+j]);
+                }
+            }
+            double maxDepthDiff2=std::numeric_limits<double>::min();
+            double dists2[3]={fabs(vertices[0](2)-vertices[1](2)), fabs(vertices[1](2)-vertices[2](2)), fabs(vertices[0](2)-vertices[2](2))};
+            for (int vNo=0; vNo<3;vNo++)
+                if (dists2[vNo]>maxDepthDiff2)
+                    maxDepthDiff2=dists2[vNo];
+            if (ids[0]>0&&ids[1]>0&&ids[2]>0&&maxDepthDiff2<maxDepthDistThreshold)
+                drawTriangle(vertices,ids, r,g,b);
+        }
+    }
+    drawOctagon(posNormFull,part.partIds, r, g,b);
+    if (config.drawNormals){
+        std::vector<Vec6> points;
+        std::vector<int> ids;
+        for (size_t n = 0; n < part.partIds.size(); n++){
+            for (size_t m = 0; m < part.partIds[n].size(); m++){
+                if (n==1&&m==1){
+                    Vec6 pos = part.partsPosNorm[n][m].mean;
+                    pos.block<3,1>(0,0) = Vec3(0,0,0);
+                    points.push_back(pos);
+                }
+                else
+                    points.push_back(part.partsPosNorm[n][m].mean);
+                ids.push_back(part.partIds[n][m]);
+            }
+        }
+        drawNormals(points, ids);
+    }
+    glPopMatrix();
+}
+
+/// draw shaded octagon
+void QGLVisualizer::drawOctagon(const std::array<std::array<Vec6,3>,3>& part, const std::array<std::array<int,3>,3>& ids, double r, double g, double b) const{
+    double radius = 0.01;
+    std::vector<std::pair<int,int>> seq;
+    seq.push_back(std::make_pair(1,2)); seq.push_back(std::make_pair(0,2)); seq.push_back(std::make_pair(0,1));
+    seq.push_back(std::make_pair(0,0)); seq.push_back(std::make_pair(1,0)); seq.push_back(std::make_pair(2,0));
+    seq.push_back(std::make_pair(2,1)); seq.push_back(std::make_pair(2,2)); seq.push_back(std::make_pair(1,2));
+    double angle=0;
+    for (int i=0;i<8;i++){
+        Vec3 point(radius*cos(angle), radius*sin(angle),0);
+        angle-=M_PI/4.0;
+        Mat33 rot = NormalImageFilter::coordinateFromNormal(part[seq[i].first][seq[i].second].block<3,1>(3,0));
+        point=rot*point;
+        //point(2)+=part[seq[i].first][seq[i].second](2);
+
+        Vec3 pointNext(radius*cos(angle), radius*sin(angle),0);
+        Mat33 rotNext = NormalImageFilter::coordinateFromNormal(part[seq[i+1].first][seq[i+1].second].block<3,1>(3,0));
+        pointNext=rotNext*pointNext;
+        //pointNext(2)+=part[seq[i+1].first][seq[i+1].second](2);
+
+        std::vector<Vec6> vertices;
+        std::vector<int> idsVec;
+        Vec6 p; p.block<3,1>(0,0)=point.block<3,1>(0,0); p.block<3,1>(3,0) = part[seq[i].first][seq[i].second].block<3,1>(3,0);
+        vertices.push_back(p);
+        p.block<3,1>(0,0)=pointNext.block<3,1>(0,0); p.block<3,1>(3,0) = part[seq[i+1].first][seq[i+1].second].block<3,1>(3,0);
+        vertices.push_back(p);
+        vertices.push_back(part[seq[i].first][seq[i].second]);
+        idsVec.push_back(1); idsVec.push_back(1); idsVec.push_back(ids[seq[i].first][seq[i].second]);
+        double maxDepthDiff=std::numeric_limits<double>::min();
+        double dists[4]={fabs(vertices[0](2)-vertices[1](2)), fabs(vertices[1](2)-vertices[2](2)), fabs(vertices[0](2)-vertices[2](2)), fabs(part[seq[i+1].first][seq[i+1].second](2)-vertices[0](2))};
+        for (int vNo=0; vNo<4;vNo++)
+            if (dists[vNo]>maxDepthDiff)
+                maxDepthDiff=dists[vNo];
+        double maxDepthDistThreshold=0.015;
+        if (ids[seq[i].first][seq[i].second]>0&&ids[seq[i+1].first][seq[i+1].second]>0&&maxDepthDiff<maxDepthDistThreshold)
+            drawTriangle(vertices,idsVec, r,g,b);
+
+        vertices.clear();
+        idsVec.clear();
+        p.block<3,1>(0,0)=pointNext.block<3,1>(0,0); p.block<3,1>(3,0) = part[seq[i+1].first][seq[i+1].second].block<3,1>(3,0);
+        vertices.push_back(p);
+        vertices.push_back(part[seq[i+1].first][seq[i+1].second]);
+        vertices.push_back(part[seq[i].first][seq[i].second]);
+        idsVec.push_back(1); idsVec.push_back(ids[seq[i+1].first][seq[i+1].second]); idsVec.push_back(ids[seq[i].first][seq[i].second]);
+        double maxDepthDiff2=std::numeric_limits<double>::min();
+        double dists2[3]={fabs(vertices[0](2)-vertices[1](2)), fabs(vertices[1](2)-vertices[2](2)), fabs(vertices[0](2)-vertices[2](2))};
+        for (int vNo=0; vNo<3;vNo++)
+            if (dists2[vNo]>maxDepthDiff2)
+                maxDepthDiff2=dists2[vNo];
+        if (ids[seq[i].first][seq[i].second]>0&&ids[seq[i+1].first][seq[i+1].second]>0&&maxDepthDiff2<maxDepthDistThreshold)
+            drawTriangle(vertices,idsVec, r,g,b);
+    }
+}
+
+/// compute mean depth using neighbouring elements in the word
+double QGLVisualizer::computeMeanDepth(const ViewDependentPart&part, int u, int v, Vec6& meanPosNorm) const{
+    double meanDepth=0;
+    int elementsNo=0;
+    Vec3 meanNormal(0,0,0);
+    for (int i=-1;i<2;i++){
+        for (int j=-1;j<2;j++){
+            int coords[2]={u+i,v+j};
+            if (coords[0]>=0&&coords[0]<3&&coords[1]>=0&&coords[1]<3){
+                if (part.partIds[coords[0]][coords[1]]>0){
+                    if (coords[0]==1&&coords[1]==1){
+                        //meanDepth+=0;
+                        meanNormal+=part.partsPosNorm[coords[0]][coords[1]].mean.block<3,1>(3,0);
+                    }
+                    else{
+                        //meanDepth+=part.partsPosNorm[coords[0]][coords[1]].mean(2);
+                        meanNormal+=part.partsPosNorm[coords[0]][coords[1]].mean.block<3,1>(3,0);
+                    }
+                    elementsNo++;
+                }
+            }
+        }
+    }
+    if (elementsNo>0){
+        //meanDepth/=double(elementsNo);
+        meanNormal/=double(elementsNo);
+    }
+    Mat33 rot = NormalImageFilter::coordinateFromNormal(meanNormal);
+    Vec3 posRot(part.partsPosNorm[u][v].mean.block<3,1>(0,0));
+    posRot(2)=0;
+    posRot=rot*posRot;
+    meanPosNorm.block<3,1>(0,0) = posRot.block<3,1>(0,0);
+    meanPosNorm.block<3,1>(3,0) = meanNormal.block<3,1>(0,0);
+    meanDepth = posRot(2);
+    return meanDepth;
+}
+
 /// Create point cloud List
 GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo){
     // create one display list
@@ -448,7 +634,10 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
     glNewList(index, GL_COMPILE);
     if (layerNo==1){
         glColor3d(0.5,0.5,0.5);
-        drawPart(part, layerNo,0.5,0.5,0.5);
+        if (config.surfaceType==1)
+            drawPartMesh(part,layerNo,0.5,0.5,0.5);
+        else if (config.surfaceType==0)
+            drawPart(part, layerNo,0.5,0.5,0.5);
     }
     else if (layerNo==2){
         for (size_t n = 0; n < part.partIds.size(); n++){
@@ -868,6 +1057,40 @@ void QGLVisualizer::drawPatch(const Vec3& normal) const{
             glColor3d(config.normalsColor.redF(),config.normalsColor.greenF(),config.normalsColor.blueF());
             glVertex3d(0.0, 0.0, 0.0);
             glVertex3d(-normal(0)*config.normalsScale, -normal(1)*config.normalsScale, -normal(2)*config.normalsScale);
+        glEnd();
+    }
+}
+
+/// draw flat patch
+void QGLVisualizer::drawTriangle(const std::vector<Vec6>& vertices, const std::vector<int>& ids, double r, double g, double b) const{
+    glBegin(GL_TRIANGLES);
+    double alpha;
+    for (int i=0;i<3;i++){
+        alpha = (ids[i]<0) ? 0.0 : 1.0;
+        glColor4d(r,g,b,alpha);
+        if (config.useNormalSurf) glNormal3d(-vertices[i](3), -vertices[i](4), -vertices[i](5));
+        glVertex3d( vertices[i](0),vertices[i](1),vertices[i](2));
+    }
+    glEnd();
+    glBegin(GL_TRIANGLES);
+    for (int i=2;i>=0;i--){
+        alpha = (ids[i]<0) ? 0.0 : 1.0;
+        glColor4d(r,g,b,alpha);
+        if (config.useNormalSurf) glNormal3d(vertices[i](3), vertices[i](4), vertices[i](5));
+        glVertex3d( vertices[i](0),vertices[i](1),vertices[i](2)+0.0001);
+    }
+    glEnd();
+}
+
+/// draw flat patch
+void QGLVisualizer::drawNormals(const std::vector<Vec6>& vertices, const std::vector<int>& ids){
+    for (size_t i=0;i<vertices.size();i++){
+        glBegin(GL_LINES);
+            glColor3d(config.normalsColor.redF(),config.normalsColor.greenF(),config.normalsColor.blueF());
+            if (ids[i]>0){
+                glVertex3d(vertices[i](0), vertices[i](1), vertices[i](2));
+                glVertex3d(vertices[i](0)-vertices[i](3)*config.normalsScale, vertices[i](1)-vertices[i](4)*config.normalsScale, vertices[i](2)-vertices[i](5)*config.normalsScale);
+            }
         glEnd();
     }
 }

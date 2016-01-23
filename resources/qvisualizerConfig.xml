@@ -20,7 +20,9 @@
 	<objectsParts drawPartObjects="true" dist="0.3" posY="0.0" posZ="-0.1"></objectsParts>
 	<background red="1.0" green="1.0" blue="1.0" alpha="1.0"></background>
 	<pointCloud drawPointClouds="false" cloudPointSize="3" useNormalCloud="true"></pointCloud>
-	<surface drawSurfaces="true" useNormalSurf="true"></surface>
+	<!--surface type: 0 - rectangular patch
+		      1 - mesh-->
+	<surface surfaceType="0" drawSurfaces="true" useNormalSurf="true"></surface>
 	<layer2layer drawLayer2Layer="false" red="0.0" green="0.0" blue="0.8" alpha="0.1" width="0.5"></layer2layer>
 	<clusters drawClusters="true" red="0.0" green="0.8" blue="0.0" alpha="0.1"></clusters>
 	<normals drawNormals="true" scale="0.015" red="1.0" green="0.0" blue="0.0" alpha="1.0"></normals>

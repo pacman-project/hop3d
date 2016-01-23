@@ -62,6 +62,7 @@ public:
 
             model->FirstChildElement( "surface" )->QueryBoolAttribute("drawSurfaces", &drawSurfaces);
             model->FirstChildElement( "surface" )->QueryBoolAttribute("useNormalSurf", &useNormalSurf);
+            model->FirstChildElement( "surface" )->QueryIntAttribute("surfaceType", &surfaceType);
 
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("pixelSize", &pixelSize);
             model->FirstChildElement( "hierarchy" )->QueryDoubleAttribute("filterDepthScale", &filterDepthScale);
@@ -144,6 +145,8 @@ public:
         bool useNormalCloud;
         /// draw surfaces
         bool drawSurfaces;
+        /// surface type
+        int surfaceType;
         /// use normal to the surface
         bool useNormalSurf;
         /// point size
@@ -371,6 +374,21 @@ private:
 
     /// draw part
     void drawPart(const hop3d::ViewDependentPart& part, int layerNo, double r, double g, double b);
+
+    /// draw part
+    void drawPartMesh(const hop3d::ViewDependentPart& part, int layerNo, double r, double g, double b);
+
+    /// compute mean depth using neighbouring elements in the word
+    double computeMeanDepth(const hop3d::ViewDependentPart&part, int u, int v, hop3d::Vec6& meanPosNorm) const;
+
+    /// draw flat patch
+    void drawTriangle(const std::vector<hop3d::Vec6>& vertices, const std::vector<int>& ids, double r, double g, double b) const;
+
+    /// draw flat patch
+    void drawNormals(const std::vector<hop3d::Vec6>& vertices, const std::vector<int>& ids);
+
+    /// draw shaded octagon
+    void drawOctagon(const std::array<std::array<hop3d::Vec6,3>,3>& part, const std::array<std::array<int,3>,3>& ids, double r, double g, double b) const;
 };
 
 #endif // QVISUALIZER_H_INCLUDED
