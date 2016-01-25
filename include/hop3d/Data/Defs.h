@@ -246,11 +246,12 @@ public:
     std::array<std::array<Mat34,3>,3> offsets;
     /// realisation ids
     std::array<std::array<int,3>,3> realisationsIds;
+    /// second octet (for double surface)
+    std::vector<Octet> secondOctet;
+
 
     /// id of the word from dictionary
     int parentId;
-    /// camera pose Id
-    int poseId;
     ///is background
     bool isBackground;
 
@@ -266,7 +267,10 @@ public:
     static double distance(const Octet& octetA, const Octet& octetB, const Filter::Seq& filters);
 
     /// check if the octet contains double surface
-    bool hasDoubleSurface(double distThreshold, int& groupSize);
+    bool hasDoubleSurface(double distThreshold, int& groupSize, int& othersSize) const;
+
+    /// split double surfaces
+    void splitSurfaces(double distThreshold, int minOctetSize, int smallerGroupSize);
 
     /// Print
     void print() const;

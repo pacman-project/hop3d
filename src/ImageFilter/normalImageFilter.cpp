@@ -36,6 +36,7 @@ NormalImageFilter::Config::Config(std::string configFilename){
     model->FirstChildElement( "parameters" )->QueryBoolAttribute("nonMaximumSupressionGroup", &nonMaximumSupressionGroup);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("minOctetSize", &minOctetSize);
     model->FirstChildElement( "parameters" )->QueryBoolAttribute("useEuclideanCoordinates", &useEuclideanCoordinates);
+    model->FirstChildElement( "parameters" )->QueryBoolAttribute("splitSurfaces", &splitSurfaces);
 
     model->FirstChildElement( "PCA" )->QueryIntAttribute("PCAWindowSize", &PCAWindowSize);
     model->FirstChildElement( "PCA" )->QueryDoubleAttribute("PCADistThreshold", &PCADistThreshold);
@@ -410,14 +411,7 @@ NormalImageFilter::OctetsImage NormalImageFilter::extractOctets(const std::vecto
         for (size_t j=config.filterSize+config.filterSize/2;j<responseImg[0].size()-config.filterSize-(config.filterSize/2);j=j+3*config.filterSize){
             Octet octet;
             if (computeOctet(responseImg, cloudOrd, int(i), int(j), octet)){
-                for (int k=0;k<(int)octet.realisationsIds.size();k++){//update realisations ids
-                    for (int l=0;l<(int)octet.realisationsIds.size();l++){
-                        if (octet.partIds[k][l]>=0){
-                            octet.realisationsIds[k][l]=partRealisationsCounter;
-                            partRealisationsCounter++;
-                        }
-                    }
-                }
+                updateRealisationIds(octet);
                 octetsImage[u][v].reset(new Octet(octet));
                 octets.push_back(octet);
                 /*octet.print();
@@ -428,6 +422,28 @@ NormalImageFilter::OctetsImage NormalImageFilter::extractOctets(const std::vecto
         u++;
     }
     return octetsImage;
+}
+
+/// update realisations ids
+void NormalImageFilter::updateRealisationIds(Octet& octet){
+    for (int k=0;k<(int)octet.realisationsIds.size();k++){//update realisations ids
+        for (int l=0;l<(int)octet.realisationsIds.size();l++){
+            if (octet.partIds[k][l]>=0){
+                octet.realisationsIds[k][l]=partRealisationsCounter;
+                partRealisationsCounter++;
+            }
+        }
+    }
+    if (octet.secondOctet.size()>0){
+        for (int k=0;k<(int)octet.secondOctet[0].realisationsIds.size();k++){//update realisations ids
+            for (int l=0;l<(int)octet.secondOctet[0].realisationsIds.size();l++){
+                if (octet.secondOctet[0].partIds[k][l]>=0){
+                    octet.secondOctet[0].realisationsIds[k][l]=partRealisationsCounter;
+                    partRealisationsCounter++;
+                }
+            }
+        }
+    }
 }
 
 /// compute otet for given location on response image
@@ -447,8 +463,8 @@ bool NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >&
         }
     }
     if (elementsNo>config.minOctetSize){//set relative position for octets
-        int biggerGroupSize;
-        bool hasDoubleSurface = octet.hasDoubleSurface(config.PCADistThreshold,biggerGroupSize);
+        int biggerGroupSize, smallerGroupSize;
+        bool hasDoubleSurface = octet.hasDoubleSurface(config.PCADistThreshold,biggerGroupSize, smallerGroupSize);
         if (hasDoubleSurface && biggerGroupSize<config.minOctetSize)
             return false;
         if (octet.partIds[1][1]==-1){
@@ -460,6 +476,9 @@ bool NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >&
         }
         computeRelativePositions(octet, 1);
         octet.isBackground=false;
+        if (hasDoubleSurface&&config.splitSurfaces){
+            octet.splitSurfaces(config.PCADistThreshold, config.minOctetSize, smallerGroupSize);
+        }
         return true;
     }
     return false;
@@ -675,8 +694,8 @@ void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, con
             Octet octet;
             if (!isBackground(octetsImage, (int)i, (int)j)){
                 if (fillInOctet(octetsImage, dictionary, (int)i, (int)j, octet)>=config.minOctetSize){
-                    int biggerGroupSize;
-                    bool hasDoubleSurface = octet.hasDoubleSurface(config.PCADistThreshold,biggerGroupSize);
+                    int biggerGroupSize, smallerGroupSize;
+                    bool hasDoubleSurface = octet.hasDoubleSurface(config.PCADistThreshold,biggerGroupSize, smallerGroupSize);
                     if (!(hasDoubleSurface && biggerGroupSize<config.minOctetSize)){
                         computeRelativePositions(octet,2);
                         octet.isBackground=false;

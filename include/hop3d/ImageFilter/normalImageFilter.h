@@ -140,6 +140,8 @@ public:
             double PCARelDistClusters;
             /// use Euclidean coordinates to define part position
             bool useEuclideanCoordinates;
+            /// split double surfaces
+            bool splitSurfaces;
     };
 
 private:
@@ -234,6 +236,9 @@ private:
 
     /// filter depth image
     void filterDepthImage(const cv::Mat& input, cv::Mat& output) const;
+
+    /// update realisations ids
+    void updateRealisationIds(Octet& octet);
 };
 
 }

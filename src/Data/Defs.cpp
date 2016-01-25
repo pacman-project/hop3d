@@ -95,7 +95,7 @@ namespace hop3d {
 
     /// Print octet
     void Octet::print() const{
-        std::cout << "Camera pose id:" << poseId << "\n";
+        //std::cout << "Camera pose id:" << poseId << "\n";
         std::cout << "Filter ids:\n";
         for (size_t i=0;i<partIds.size();i++){
             for (size_t j=0;j<partIds[i].size();j++){
@@ -119,7 +119,7 @@ namespace hop3d {
     }
 
     /// check if the octet contains double surface
-    bool Octet::hasDoubleSurface(double distThreshold, int& groupSize){
+    bool Octet::hasDoubleSurface(double distThreshold, int& groupSize, int& othersSize) const{
         std::vector<double> depth;
         for (int i=0;i<3;i++){//detect two surfaces
             for (int j=0;j<3;j++){
@@ -130,16 +130,93 @@ namespace hop3d {
         std::sort(depth.begin(),depth.end());
         for (size_t i=0;i<depth.size()-1;i++){
             if (depth[i+1]-depth[i]>distThreshold){
-                if (i+1>depth.size()-i)
+                if (i+1>depth.size()-(i+1))
                     groupSize = int(i+1);
                 else
-                    groupSize = int(depth.size()-i);
+                    groupSize = int(depth.size()-(i+1));
+                othersSize = (int)depth.size()-groupSize;
                 return true;
             }
         }
         groupSize = (int)depth.size();
+        othersSize = 0;
         return false;
     }
+
+/// split double surfaces
+void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGroupSize){
+        std::vector<double> depth;
+        for (int i=0;i<3;i++){//detect two surfaces
+            for (int j=0;j<3;j++){
+                if (partIds[i][j]!=-1){
+                    if (i==1&&j==1)
+                        depth.push_back(0);
+                    else
+                        depth.push_back(partsPosNorm[i][j].mean(2));
+                }
+            }
+        }
+        std::sort(depth.begin(),depth.end());
+        double distThr=0;
+        int isBackground(true);
+        for (size_t i=0;i<depth.size()-1;i++){
+            if (depth[i+1]-depth[i]>distThreshold){
+                if (i+1>depth.size()-(i+1))
+                    isBackground = true;
+                else
+                    isBackground = false;
+                distThr = depth[i];
+                break;
+            }
+        }
+        // create second octet
+        if (smallerGroupSize>=minOctetSize){
+            Octet background;
+            for (int i=0;i<3;i++){//detect two surfaces
+                for (int j=0;j<3;j++){
+                    double dist;
+                    if (i==1&&j==1)
+                        dist = 0;
+                    else
+                        dist = partsPosNorm[i][j].mean(2);
+                    if (partIds[i][j]!=-1&&dist>distThr&&isBackground){
+                        background.partsPosNorm[i][j] = partsPosNorm[i][j];
+                        background.partsPosEucl[i][j] = partsPosEucl[i][j];
+                        background.partIds[i][j] = partIds[i][j];
+                        partIds[i][j] = -1;
+                        background.offsets[i][j] = offsets[i][j];
+                        background.filterPos[i][j] = filterPos[i][j];
+                    }
+                    if (partIds[i][j]!=-1&&dist<(distThr+std::numeric_limits<double>::epsilon())&&!isBackground){
+                        background.partsPosNorm[i][j] = partsPosNorm[i][j];
+                        background.partsPosEucl[i][j] = partsPosEucl[i][j];
+                        background.partIds[i][j] = partIds[i][j];
+                        partIds[i][j] = -1;
+                        background.offsets[i][j] = offsets[i][j];
+                        background.filterPos[i][j] = filterPos[i][j];
+                    }
+                }
+            }
+            secondOctet.push_back(background);
+        }
+        else{// clean second surface
+            for (int i=0;i<3;i++){
+                for (int j=0;j<3;j++){
+                    double dist;
+                    if (i==1&&j==1)
+                        dist = 0;
+                    else
+                        dist = partsPosNorm[i][j].mean(2);
+                    if (partIds[i][j]!=-1&&dist>distThr&&isBackground){
+                        partIds[i][j] = -1;
+                    }
+                    if (partIds[i][j]!=-1&&dist<=(distThr+std::numeric_limits<double>::epsilon())&&!isBackground){
+                        partIds[i][j] = -1;
+                    }
+                }
+            }
+        }
+}
 
     /// compute distance between octets -- dot product for normals for each filter
     double Octet::distance(const Octet& octetA, const Octet& octetB, const Filter::Seq& filters){

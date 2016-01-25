@@ -103,6 +103,9 @@ public:
     /// SE3 offset betwen part realization and word from dictionary
     Mat34 offset;
 
+    /// second part (for double surface)
+    std::vector<ViewDependentPart> secondVDPart;
+
     /// Construction
     inline ViewDependentPart(){
         type = PART_VIEW_DEP;
