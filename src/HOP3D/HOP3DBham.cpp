@@ -516,7 +516,7 @@ void HOP3DBham::learn(){
         std::vector<int> ids;
         getPartsIds(0,0,0, (int)octet.filterPos[1][1].v, (int)octet.filterPos[1][1].u, ids);
         std::cout << "readed Id: " << ids[1] << "\n";
-        if (ids[1]==-1)
+        if (ids[1]<0)
             hierarchy.get()->viewDependentLayers[0][partNo].print();
     }*/
     //std::vector<int> ids;

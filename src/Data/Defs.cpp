@@ -123,7 +123,7 @@ namespace hop3d {
         std::vector<double> depth;
         for (int i=0;i<3;i++){//detect two surfaces
             for (int j=0;j<3;j++){
-                if (partIds[i][j]!=-1)
+                if (partIds[i][j]>=0)
                     depth.push_back(partsPosNorm[i][j].mean(2));
             }
         }
@@ -148,7 +148,7 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
         std::vector<double> depth;
         for (int i=0;i<3;i++){//detect two surfaces
             for (int j=0;j<3;j++){
-                if (partIds[i][j]!=-1){
+                if (partIds[i][j]>=0){
                     if (i==1&&j==1)
                         depth.push_back(0);
                     else
@@ -179,7 +179,7 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
                         dist = 0;
                     else
                         dist = partsPosNorm[i][j].mean(2);
-                    if (partIds[i][j]!=-1&&dist>distThr&&isBackground){
+                    if (partIds[i][j]>=0&&dist>distThr&&isBackground){
                         background.partsPosNorm[i][j] = partsPosNorm[i][j];
                         background.partsPosEucl[i][j] = partsPosEucl[i][j];
                         background.partIds[i][j] = partIds[i][j];
@@ -187,7 +187,7 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
                         background.offsets[i][j] = offsets[i][j];
                         background.filterPos[i][j] = filterPos[i][j];
                     }
-                    if (partIds[i][j]!=-1&&dist<(distThr+std::numeric_limits<double>::epsilon())&&!isBackground){
+                    if (partIds[i][j]>=0&&dist<(distThr+std::numeric_limits<double>::epsilon())&&!isBackground){
                         background.partsPosNorm[i][j] = partsPosNorm[i][j];
                         background.partsPosEucl[i][j] = partsPosEucl[i][j];
                         background.partIds[i][j] = partIds[i][j];
@@ -208,10 +208,10 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
                         dist = 0;
                     else
                         dist = partsPosNorm[i][j].mean(2);
-                    if (partIds[i][j]!=-1&&dist>distThr&&isBackground){
+                    if (partIds[i][j]>=0&&dist>distThr&&isBackground){
                         partIds[i][j] = -2;
                     }
-                    if (partIds[i][j]!=-1&&dist<=(distThr+std::numeric_limits<double>::epsilon())&&!isBackground){
+                    if (partIds[i][j]>=0&&dist<=(distThr+std::numeric_limits<double>::epsilon())&&!isBackground){
                         partIds[i][j] = -2;
                     }
                 }

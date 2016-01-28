@@ -469,7 +469,7 @@ bool NormalImageFilter::computeOctet(const std::vector< std::vector<Response> >&
         bool hasDoubleSurface = octet.hasDoubleSurface(config.PCADistThreshold,biggerGroupSize, smallerGroupSize);
         if (hasDoubleSurface && biggerGroupSize<config.minOctetSize)
             return false;
-        if (octet.partIds[1][1]==-1){
+        if (octet.partIds[1][1]<0){
             octet.filterPos[1][1].u = v;
             octet.filterPos[1][1].v = u;
             if (config.useEuclideanCoordinates){
@@ -493,7 +493,7 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
     double min=std::numeric_limits<double>::max();
     double max=std::numeric_limits<double>::min();
     //double globU=0, globV=0;
-    if (octet.partIds[1][1]==-1){
+    if (octet.partIds[1][1]<0){
         int depthNo=0;
         ViewDependentPart part;
         part.partIds = octet.partIds;
@@ -535,7 +535,7 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
     for (int i=0;i<3;i++){//for neighbouring blocks
         for (int j=0;j<3;j++){
             if (!((i==1)&&(j==1))){
-                if (octet.partIds[i][j]==-1){
+                if (octet.partIds[i][j]<0){
                     octet.filterPos[i][j].u=(i-1)*config.filterSize*(2.0*layerNo-1.0);//(j-1)*layerNo*(config.filterSize+config.filterSize/2.0);
                     octet.filterPos[i][j].v=(j-1)*config.filterSize*(2.0*layerNo-1.0);//(i-1)*layerNo*(config.filterSize+config.filterSize/2.0);
                     octet.filterPos[i][j].depth=meanDepth;
@@ -841,7 +841,7 @@ int NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDep
                 id = -1;
             octet.offsets[i+1][j+1]=offset;
             octet.partIds[i+1][j+1]=id;
-            if (id ==-1){
+            if (id < 0){
                 octet.filterPos[i+1][j+1].u=(v+j)*(config.filterSize*3)+((config.filterSize*3)/2);//octetsImage[u+i][v+j].filterPos[1][1];
                 octet.filterPos[i+1][j+1].v=(u+i)*(config.filterSize*3)+((config.filterSize*3)/2);
                 if (config.useEuclideanCoordinates)
@@ -1260,7 +1260,7 @@ void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int ima
     if ((octetCoords[0]<octetsImages[0][categoryNo][objectNo][imageNo].size())&&(octetCoords[1]<octetsImages[0][categoryNo][objectNo][imageNo][0].size())){
         if (octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
             Octet octet = *(octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]);
-            if (octet.realisationsIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]==-2){
+            if (octet.partIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]==-2){
                 if (octet.secondOctet.size()>0)
                     ids.push_back(octet.secondOctet[0].realisationsIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]);
                 else

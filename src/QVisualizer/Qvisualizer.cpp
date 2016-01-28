@@ -427,7 +427,7 @@ void QGLVisualizer::drawPart(const ViewDependentPart& part, int layerNo, double 
             double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1), posPart(2), 1};
             glPushMatrix();
                 glMultMatrixd(GLmat1);
-                if (id==-1){
+                if (id<0){
                     //glColor3ub(100,50,50);
                     glCallList(backgroundList[layerNo-1]);
                 }
@@ -649,7 +649,7 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
                 double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1), posPart(2), 1};
                 glPushMatrix();
                     glMultMatrixd(GLmat1);
-                    if (id==-1){
+                    if (id<0){
                         //glColor3ub(100,50,50);
                         glCallList(backgroundList[layerNo-1]);
                     }
@@ -769,7 +769,7 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
             if ((n==1)&&(m==1)){
                 pos(0)=0; pos(1)=0; pos(2)=0;
             }
-            else if (id==-1){
+            else if (id<0){
                 double patchSize = 5.0*(2.0*layerNo-1.0);
                 pos(0)=config.pixelSize*double(double(n)-1.0)*(patchSize+(patchSize/2.0));
                 pos(1)=config.pixelSize*double(double(m)-1.0)*(patchSize+(patchSize/2.0));
@@ -778,7 +778,7 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
-                if (id==-1){
+                if (id<0){
                     //glColor3ub(100,50,50);
                     glCallList(backgroundList[layerNo-1]);
                 }
@@ -838,7 +838,7 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
             double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, 0, (double)(config.partDist[layerNo-1]*double(componentNo+1)), 0, 1};
             glPushMatrix();
                 glMultMatrixd(GLmat);
-                if (partId.id==-1){
+                if (partId.id<0){
                     //glColor3ub(100,50,50);
                     glCallList(backgroundList[hierarchy->viewDependentLayers.size()]);
                 }
@@ -859,7 +859,7 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
                             int id = itComp->partIds[n][m][l];
                             Mat34 partPose = itComp->neighbourPoses[n][m][l];
                             Vec3 pos(partPose(0,3), partPose(1,3), partPose(2,3));
-                            if (id==-1){
+                            if (id<0){
                                 pos(0)=config.voxelSize*double(double(m)-1.0);
                                 pos(1)=config.voxelSize*double(double(n)-1.0);
                                 pos(2)=config.voxelSize*double(double(l)-1.0);
@@ -868,7 +868,7 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
                                               partPose(0,1), partPose(1,1), partPose(2,1), 0,
                                               partPose(0,2), partPose(1,2), partPose(2,2), 0,
                                               partPose(0,3), partPose(1,3)+(double)(config.partDist[layerNo-1]*double(componentNo+1)), partPose(2,3), 1};
-                            if (id==-1){
+                            if (id<0){
                                 GLmatrot[0]=1; GLmatrot[1]=0; GLmatrot[2]=0;
                                 GLmatrot[4]=0; GLmatrot[5]=1; GLmatrot[6]=0;
                                 GLmatrot[8]=0; GLmatrot[9]=0; GLmatrot[10]=1;
@@ -876,7 +876,7 @@ GLuint QGLVisualizer::createVIClustersList(ViewIndependentPart& part, int layerN
                             }
                             glPushMatrix();
                                 glMultMatrixd(GLmatrot);
-                                if (id==-1){
+                                if (id<0){
 
                                 }
                                 else{
@@ -916,7 +916,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                 double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), posPart(2), 1};
                 glPushMatrix();
                     glMultMatrixd(GLmat1);
-                    if (id==-1){
+                    if (id<0){
                         //glColor3ub(100,50,50);
                         glCallList(backgroundList[layerNo-1]);
                     }
@@ -954,7 +954,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                         double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1), posPart(2), 1};
                         glPushMatrix();
                             glMultMatrixd(GLmat1);
-                            if (id==-1){
+                            if (id<0){
                                 //glColor3ub(100,50,50);
                                 glCallList(backgroundList[layerNo-1]);
                             }
@@ -986,7 +986,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                 double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1), posPart(2), 1};
                 glPushMatrix();
                     glMultMatrixd(GLmat1);
-                    if (id==-1){
+                    if (id<0){
                         //glColor3ub(100,50,50);
                         glCallList(backgroundList[layerNo-1]);
                     }
@@ -1148,7 +1148,7 @@ GLuint QGLVisualizer::createVILinksList(int destLayerNo){
                 for (size_t n = 0; n < it->partIds.size(); n++){
                     for (size_t m = 0; m < it->partIds[n].size(); m++){
                         for (size_t l = 0; l < it->partIds[n][m].size(); l++){
-                            if (it->partIds[n][m][l]!=-1)
+                            if (it->partIds[n][m][l]>=0)
                                 prevPartIds.push_back(it->partIds[n][m][l]);
                         }
                     }

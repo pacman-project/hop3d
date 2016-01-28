@@ -52,7 +52,7 @@ void ViewDependentPart::print() const{
 bool ViewDependentPart::isBackground(void) const{
     for (size_t i=0; i<partIds.size();i++){
         for (size_t j=0; j<partIds[0].size();j++){
-            if (partIds[i][j]!=-1)
+            if (partIds[i][j]>=0)
                 return false;
         }
     }
@@ -80,7 +80,7 @@ void ViewIndependentPart::print() const{
     for (size_t i=0; i<gaussians.size();i++){
         for (size_t j=0; j<gaussians.size();j++){
             for (size_t k=0; k<gaussians.size();k++){
-                if (partIds[i][j][k]!=-1){
+                if (partIds[i][j][k]>=0){
                     std::cout << "mean(" << i << ", " << j << ", " << k << "): ";
                     std::cout << gaussians[i][j][k].mean.transpose() << ", ";
                     std::cout << "covariance(" << i << ", " << j << ", " << k << "): ";
@@ -93,7 +93,7 @@ void ViewIndependentPart::print() const{
     for (size_t i=0; i<neighbourPoses.size();i++){
         for (size_t j=0; j<neighbourPoses.size();j++){
             for (size_t k=0; k<neighbourPoses.size();k++){
-                if (partIds[i][j][k]!=-1){
+                if (partIds[i][j][k]>=0){
                     std::cout << "neigbour pose(" << i << ", " << j << ", " << k << "): ";
                     std::cout << neighbourPoses[i][j][k].matrix() << "\n";
                 }
@@ -146,13 +146,13 @@ void ViewIndependentPart::getPoints(const ViewIndependentPart& partA, const View
         for (int j=0;j<3;j++){
             for (int k=0;k<3;k++){
                 //Mat34 rel(Eigen::Translation<double, 3>(double(i),double(j),double(k))*Quaternion(1,0,0,0));
-                if(partA.partIds[i][j][k]!=-1){
+                if(partA.partIds[i][j][k]>=0){
                     normA+=partA.neighbourPoses[i][j][k].matrix().block<3,1>(0,2);
       //              meanA+=partA.neighbourPoses[i][j][k].matrix().block<3,1>(0,3);
                     partASeq.push_back(std::make_pair(partA.neighbourPoses[i][j][k],partA.partIds[i][j][k]));
                     meanPosA+=partA.neighbourPoses[i][j][k].matrix().block<3,1>(0,3);
                 }
-                if(partB.partIds[i][j][k]!=-1){
+                if(partB.partIds[i][j][k]>=0){
                     normB+=partB.neighbourPoses[i][j][k].matrix().block<3,1>(0,2);
         //            meanB+=partB.neighbourPoses[i][j][k].matrix().block<3,1>(0,3);
                     partBSeq.push_back(std::make_pair(partB.neighbourPoses[i][j][k],partB.partIds[i][j][k]));
@@ -188,26 +188,26 @@ double ViewIndependentPart::distance(const ViewIndependentPart& partA, const Vie
         for (int j=0;j<3;j++){
             for (int k=0;k<3;k++){
                 ViewIndependentPart pA, pB;
-                if (partA.partIds[i][j][k]!=-1)
+                if (partA.partIds[i][j][k]>=0)
                     pA= vocabulary2[partA.partIds[i][j][k]];
-                if (partB.partIds[i][j][k]!=-1)
+                if (partB.partIds[i][j][k]>=0)
                     pB= vocabulary2[partB.partIds[i][j][k]];
-                if ((partA.partIds[i][j][k]!=-1)&&(partA.partIds[i][j][k]!=-1)){
+                if ((partA.partIds[i][j][k]>=0)&&(partA.partIds[i][j][k]>=0)){
                     for (int l=0;l<3;l++){
                         for (int m=0;m<3;m++){
                             for (int n=0;n<3;n++){
                                 ViewIndependentPart pAA, pBB;
-                                if (pA.partIds[i][j][k]!=-1)
+                                if (pA.partIds[i][j][k]>=0)
                                     pAA= vocabulary1[pA.partIds[i][j][k]];
-                                if (pB.partIds[i][j][k]!=-1)
+                                if (pB.partIds[i][j][k]>=0)
                                     pBB= vocabulary1[pB.partIds[i][j][k]];
                                 Vec3 nA(0,0,0), nB(0,0,0);
                                 Vec3 meanA(0,0,0); Vec3 meanB(0,0,0);
                                 getPoints(pAA, pBB, partASeq, partBSeq, meanA, nA, meanB, nB);
-                                if (pA.partIds[i][j][k]!=-1){
+                                if (pA.partIds[i][j][k]>=0){
                                     meanPosA+=meanA; normA+=nA;
                                 }
-                                if (pB.partIds[i][j][k]!=-1){
+                                if (pB.partIds[i][j][k]>=0){
                                     meanPosB+=meanB; normB+=nB;
                                 }
                             }
@@ -344,17 +344,17 @@ double ViewIndependentPart::distance(const ViewIndependentPart& partA, const Vie
         for (int j=0;j<3;j++){
             for (int k=0;k<3;k++){
                 ViewIndependentPart pA, pB;
-                if (partA.partIds[i][j][k]!=-1)
+                if (partA.partIds[i][j][k]>=0)
                     pA= vocabulary[partA.partIds[i][j][k]];
-                if (partB.partIds[i][j][k]!=-1)
+                if (partB.partIds[i][j][k]>=0)
                     pB= vocabulary[partB.partIds[i][j][k]];
                 Vec3 nA(0,0,0), nB(0,0,0);
                 Vec3 meanA(0,0,0); Vec3 meanB(0,0,0);
                 getPoints(pA, pB, partASeq, partBSeq, meanA, nA, meanB, nB);
-                if (partA.partIds[i][j][k]!=-1){
+                if (partA.partIds[i][j][k]>=0){
                     meanPosA+=meanA; normA+=nA;
                 }
-                if (partB.partIds[i][j][k]!=-1){
+                if (partB.partIds[i][j][k]>=0){
                     meanPosB+=meanB; normB+=nB;
                 }
             }
@@ -408,7 +408,7 @@ bool ViewDependentPart::removeSecondSurface(ViewDependentPart& part) {
     std::vector<double> depth;
     for (int i=0;i<3;i++){//detect two surfaces
         for (int j=0;j<3;j++){
-            if (part.partIds[i][j]!=-1){
+            if (part.partIds[i][j]>=0){
                 if (i==1&&j==1)
                     depth.push_back(0);
                 else
@@ -493,14 +493,14 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
             int coordB[2]={pointCorrespondence[idx%(pointCorrespondence.size())].first, pointCorrespondence[idx%(pointCorrespondence.size())].second};//partA is not rotated
             //std::cout << coordA[0] << " -> " << coordA[1] << "\n";
             //std::cout << coordB[0] << " -> " << coordB[1] << "\n";
-            if ((partC.partIds[coordA[0]][coordA[1]]!=-1)&&(partD.partIds[coordB[0]][coordB[1]]!=-1)){
+            if ((partC.partIds[coordA[0]][coordA[1]]>=0)&&(partD.partIds[coordB[0]][coordB[1]]>=0)){
                 pairsNo++;
                 setA.push_back(partC.partsPosNorm[coordA[0]][coordA[1]].mean.block<3,1>(0,0));
                 setB.push_back(partD.partsPosNorm[coordB[0]][coordB[1]].mean.block<3,1>(0,0));
             }
             idx++;
         }
-        if ((partA.partIds[1][1]!=-1)&&(partB.partIds[1][1]!=-1)){
+        if ((partA.partIds[1][1]>=0)&&(partB.partIds[1][1]>=0)){
             pairsNo++;
             setA.push_back(Vec3(0,0,0));
             setB.push_back(Vec3(0,0,0));
@@ -550,7 +550,7 @@ double ViewDependentPart::computeError(const ViewDependentPart& partA, const Vie
     //std::cout << "transformation \n" << transformation.matrix() << "\n";
     for (size_t i=0; i<partA.partIds.size();i++){
         for (size_t j=0; j<partA.partIds.size();j++){
-            if ((partA.partIds[i][j]!=-1)&&(partB.partIds[i][j]!=-1)){
+            if ((partA.partIds[i][j]>=0)&&(partB.partIds[i][j]>=0)){
                 if ((type == 1)||((type == 3))){
                     Eigen::Matrix<double, 4, 1> posPrim;
                     posPrim(0) = partA.partsPosNorm[i][j].mean(0); posPrim(1) = partA.partsPosNorm[i][j].mean(1); posPrim(2) = partA.partsPosNorm[i][j].mean(2); posPrim(3) = 1;
@@ -571,13 +571,13 @@ double ViewDependentPart::computeError(const ViewDependentPart& partA, const Vie
                     //std::cout << "error tmp " << errorRot << "\n";
                 }
             }
-            else if ((partA.partIds[i][j]==-1)&&(partB.partIds[i][j]==-1)){
+            else if ((partA.partIds[i][j]<0)&&(partB.partIds[i][j]<0)){
                 errorPos+=0.0;
                 errorRot+=0.0;
                 //std::cout << "error bckgr rot " << errorRot << "\n";
                 //std::cout << "error bckgr pos " << errorPos << "\n";
             }
-            else if ((partA.partIds[i][j]==-1&&partB.partIds[i][j]!=-1)||(partA.partIds[i][j]!=-1&&partB.partIds[i][j]==-1)){
+            else if ((partA.partIds[i][j]<0&&partB.partIds[i][j]>=0)||(partA.partIds[i][j]>=0&&partB.partIds[i][j]<0)){
                 errorPos+=0.1;
                 errorRot+=0.1;
                 //std::cout << "error bckgr diff rot " << errorRot << "\n";
@@ -656,17 +656,17 @@ double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDep
     for (size_t i=0; i<partA.partIds.size();i++){
         for (size_t j=0; j<partA.partIds.size();j++){
             double dotprod=0;
-            if ((partA.partIds[i][j]==-1)&&(partB.partIds[i][j]==-1)){
+            if ((partA.partIds[i][j]<0)&&(partB.partIds[i][j]<0)){
                 dotprod=0;
                 sum+=dotprod;
             }
-            else if ((partA.partIds[i][j]==-1)||(partB.partIds[i][j]==-1)){
+            else if ((partA.partIds[i][j]<0)||(partB.partIds[i][j]<0)){
                 dotprod=1;
                 sum+=dotprod;
             }
             else{
                 dotprod=Filter::distance(filters[partA.partIds[i][j]], filters[partB.partIds[i][j]]);
-                if (partA.partIds[1][1]!=-1&&partB.partIds[1][1]!=-1) {
+                if (partA.partIds[1][1]>=0&&partB.partIds[1][1]>=0) {
                     dotprod=0.01+Filter::distance(filters[partA.partIds[1][1]], filters[partB.partIds[1][1]]);
                 }
                 if (i!=1&&j!=1){
@@ -711,10 +711,10 @@ double ViewDependentPart::distance(const ViewDependentPart& partA, const ViewDep
     for (size_t i=0; i<partA.partIds.size();i++)
         for (size_t j=0; j<partA.partIds.size();j++)
             if (partA.layerId==3){
-                if ((partA.partIds[i][j]==-1)&&(partB.partIds[i][j]==-1)){
+                if ((partA.partIds[i][j]<0)&&(partB.partIds[i][j]<0)){
                     sum+=0;
                 }
-                else if ((partA.partIds[i][j]==-1)||(partB.partIds[i][j]==-1)){
+                else if ((partA.partIds[i][j]<0)||(partB.partIds[i][j]<0)){
                     sum+=9;
                 }
                 else{
@@ -762,6 +762,14 @@ std::ostream& operator<<(std::ostream& os, const ViewDependentPart& part){
         os << part.group[i];
     }
     os << "\n";
+    if (part.secondVDPart.size()>0){
+        os << 1 << " ";
+        os << part.secondVDPart[0];
+    }
+    else{
+        os << 0 << " ";
+    }
+    os << "\n";
     return os;
 }
 
@@ -795,6 +803,13 @@ std::istream& operator>>(std::istream& is, ViewDependentPart& part){
     part.group.resize(groupSize);
     for (int i=0;i<groupSize;i++){
         is >> part.group[i];
+    }
+    int secondVD;
+    is >> secondVD;
+    if (secondVD){
+        ViewDependentPart secondP;
+        is >> secondP;
+        part.secondVDPart.push_back(secondP);
     }
     return is;
 }

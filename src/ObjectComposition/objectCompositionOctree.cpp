@@ -99,7 +99,7 @@ void ObjectCompositionOctree::updatePCLGrid(const std::vector<ViewDependentPart>
         partPosition = cameraPose * partPosition*part.offset;
         for (int i=0;i<3;i++){
             for (int j=0;j<3;j++){
-                if (part.partIds[i][j]!=-1){
+                if (part.partIds[i][j]>0){
                     PointNormal pointNorm;
                     Vec4 position(part.partsPosNorm[i][j].mean(0),part.partsPosNorm[i][j].mean(1),part.partsPosNorm[i][j].mean(2),1.0);
                     if (i==1&&j==1)
