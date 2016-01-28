@@ -222,19 +222,19 @@ void DepthImageFilter::getLayerParts(int categoryNo, int objectNo, int imageNo, 
 }
 
 /// get set of ids for the given input point
-void DepthImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart, int layersNo){
-    std::cout << "not implemented\n";
-    ids.clear();
-    std::cout << lastVDpart.id << "\n";
-    std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << layersNo << "\n";
-}
-
-/// get set of ids for the given input point
-void DepthImageFilter::getRealisationsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart){
+void DepthImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart){
     std::cout << "not implemented\n";
     ids.clear();
     std::cout << lastVDpart.id << "\n";
     std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << "\n";
+}
+
+/// get set of ids for the given input point
+void DepthImageFilter::getRealisationsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart){
+    std::cout << "not implemented\n";
+    ids.clear();
+    std::cout << lastVDpart.id << "\n";
+    std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << depth << "\n";
 }
 
 /// returs filter ids and their position on the image

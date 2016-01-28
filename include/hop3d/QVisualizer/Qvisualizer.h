@@ -376,7 +376,7 @@ private:
     void drawPart(const hop3d::ViewDependentPart& part, int layerNo, double r, double g, double b);
 
     /// draw part
-    void drawPartMesh(const hop3d::ViewDependentPart& part, int layerNo, double r, double g, double b);
+    void drawPartMesh(const hop3d::ViewDependentPart& part, double r, double g, double b);
 
     /// compute mean depth using neighbouring elements in the word
     double computeMeanDepth(const hop3d::ViewDependentPart&part, int u, int v, hop3d::Vec6& meanPosNorm) const;

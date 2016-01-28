@@ -213,7 +213,7 @@ void HOP3DBham::getRealisationsGraph(int categoryNo, int objectNo, int imageNo, 
     imageFilterer->getCloud(depthImage, cloud);
     for (auto &point : cloud){
         std::vector<int> ids;
-        getRealisationsIds(categoryNo,objectNo,imageNo,point.u,point.v,ids);
+        getRealisationsIds(categoryNo,objectNo,imageNo,point.u,point.v,point.position(2),ids);
         int idPrev=-1;
         int idNo=0;
         for (auto & partId : ids){
@@ -256,7 +256,7 @@ void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hie
     std::uint32_t pointIdx=0;
     for (auto &point : cloud){
         std::vector<int> ids;
-        getRealisationsIds(categoryNo,objectNo,imageNo,point.u,point.v,ids);
+        getRealisationsIds(categoryNo,objectNo,imageNo,point.u,point.v, point.position(2),ids);
         std::vector<std::uint32_t> idsParts;
         for (size_t layerNo=0;layerNo<3;layerNo++){
             if (ids[layerNo]>=0){
@@ -328,7 +328,7 @@ void HOP3DBham::learn(){
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
-    //represent all images in parts from 3rd layer
+    //represent/explain all images in parts from i-th layer
     for (size_t layerNo=0; layerNo< hierarchy.get()->viewDependentLayers.size();layerNo++){
         for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
             for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
@@ -575,10 +575,10 @@ void HOP3DBham::load(std::string filename){
 }
 
 /// get set of ids from hierarchy for the given input point
-void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids) const{
+void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const{
     ids.clear();
     ViewDependentPart lastVDpart;
-    imageFilterer->getPartsIds(categoryNo, objectNo, imageNo, u, v, ids, lastVDpart, config.viewDependentLayersNo);
+    imageFilterer->getPartsIds(categoryNo, objectNo, imageNo, u, v, depth, ids, lastVDpart);
 }
 
 /// get set of ids from hierarchy for the given input point (view-independent layers)
@@ -595,10 +595,10 @@ void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, const Vec
 }
 
 /// get realisations ids
-void HOP3DBham::getRealisationsIds(int categoryNo, int objectNo, int imageNo, int u, int v, std::vector<int>& ids) const{
+void HOP3DBham::getRealisationsIds(int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const{
     ids.clear();
     ViewDependentPart lastVDpart;
-    imageFilterer->getRealisationsIds(categoryNo, objectNo, imageNo, u, v, ids, lastVDpart);
+    imageFilterer->getRealisationsIds(categoryNo, objectNo, imageNo, u, v, depth, ids, lastVDpart);
     /// view independent ids
     /*Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
     Vec3 point(Vec3(NAN,NAN,NAN));
@@ -621,7 +621,7 @@ void HOP3DBham::getPointsModels(int categoryNo, int objectNo, int imageNo, hop3d
     imageFilterer->getCloud(depthImage,cloudUV);
     for (const auto &pointuv : cloudUV){
         std::vector<int> ids;
-        getPartsIds(categoryNo, objectNo, imageNo, pointuv.u, pointuv.v, ids);
+        getPartsIds(categoryNo, objectNo, imageNo, pointuv.u, pointuv.v, pointuv.position(2), ids);
         PointPart pointPart;
         pointPart.position=pointuv.position;
         for (int i=0;i<(int)ids.size();i++){

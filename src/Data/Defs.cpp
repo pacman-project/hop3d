@@ -183,7 +183,7 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
                         background.partsPosNorm[i][j] = partsPosNorm[i][j];
                         background.partsPosEucl[i][j] = partsPosEucl[i][j];
                         background.partIds[i][j] = partIds[i][j];
-                        partIds[i][j] = -1;
+                        partIds[i][j] = -2;
                         background.offsets[i][j] = offsets[i][j];
                         background.filterPos[i][j] = filterPos[i][j];
                     }
@@ -191,12 +191,13 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
                         background.partsPosNorm[i][j] = partsPosNorm[i][j];
                         background.partsPosEucl[i][j] = partsPosEucl[i][j];
                         background.partIds[i][j] = partIds[i][j];
-                        partIds[i][j] = -1;
+                        partIds[i][j] = -2;
                         background.offsets[i][j] = offsets[i][j];
                         background.filterPos[i][j] = filterPos[i][j];
                     }
                 }
             }
+            background.isBackground = false;
             secondOctet.push_back(background);
         }
         else{// clean second surface
@@ -208,10 +209,10 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
                     else
                         dist = partsPosNorm[i][j].mean(2);
                     if (partIds[i][j]!=-1&&dist>distThr&&isBackground){
-                        partIds[i][j] = -1;
+                        partIds[i][j] = -2;
                     }
                     if (partIds[i][j]!=-1&&dist<=(distThr+std::numeric_limits<double>::epsilon())&&!isBackground){
-                        partIds[i][j] = -1;
+                        partIds[i][j] = -2;
                     }
                 }
             }
@@ -250,6 +251,26 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
             }
         }
         os << "\n";
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                os << octet.partsPosNorm[i][j] << " ";
+            }
+        }
+        os << "\n";
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                os << octet.partsPosEucl[i][j] << " ";
+            }
+        }
+        os << "\n";
+        os << octet.isBackground << " ";
+        if (octet.secondOctet.size()>0){
+            os << 1 << " ";
+            os << octet.secondOctet[0];
+        }
+        else
+            os << 0;
+        os << "\n";
         return os;
     }
 
@@ -264,6 +285,24 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
             for (int j=0;j<3;j++){
                 is >> octet.realisationsIds[i][j];
             }
+        }
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                is >> octet.partsPosNorm[i][j];
+            }
+        }
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                is >> octet.partsPosEucl[i][j];
+            }
+        }
+        is >> octet.isBackground;
+        int isSecond;
+        is >> isSecond;
+        if (isSecond){
+            Octet secondOct;
+            is >> secondOct;
+            octet.secondOctet.push_back(secondOct);
         }
         return is;
     }
@@ -289,6 +328,18 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
         return os;
     }
 
+    // Insertion operator
+    std::ostream& operator<<(std::ostream& os, const Vec3& vec){
+        for (int i=0;i<3;i++){
+            if (std::isnan(double(vec(i))))
+                os << 0.0 << " ";
+            else
+                os << vec(i) << " ";
+        }
+        os << "\n";
+        return os;
+    }
+
     // Extraction operator
     std::istream& operator>>(std::istream& is, Gaussian3D& gaussian){
         // read gaussian 3d
@@ -298,6 +349,12 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
                 is >> gaussian.covariance(i,j);
             }
         }
+        return is;
+    }
+
+    // Extraction operator
+    std::istream& operator>>(std::istream& is, Vec3& vec){
+        is >> vec(0) >> vec(1) >> vec(2);
         return is;
     }
 

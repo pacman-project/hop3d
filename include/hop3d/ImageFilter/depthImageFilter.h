@@ -64,10 +64,10 @@ public:
     void getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
 
     /// get set of ids for the given input point
-    void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart, int layersNo);
+    void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart);
 
     /// get set of ids for the given input point
-    void getRealisationsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, std::vector<int>& ids, ViewDependentPart& lastVDpart);
+    void getRealisationsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart);
 
     /// returs filter ids and their position on the image
     void getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const;

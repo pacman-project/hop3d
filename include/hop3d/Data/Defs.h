@@ -75,6 +75,12 @@ std::ostream& operator<<(std::ostream& os, const Mat34& mat);
 // Extraction operator
 std::istream& operator>>(std::istream& is, Mat34& mat);
 
+// Insertion operator
+std::ostream& operator<<(std::ostream& os, const Vec3& vec);
+
+// Extraction operator
+std::istream& operator>>(std::istream& is, Vec3& vec);
+
 /// Depth image filter representation
 class Filter {
 public:

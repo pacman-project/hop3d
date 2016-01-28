@@ -442,7 +442,7 @@ void QGLVisualizer::drawPart(const ViewDependentPart& part, int layerNo, double 
 }
 
 /// draw part
-void QGLVisualizer::drawPartMesh(const ViewDependentPart& part, int layerNo, double r, double g, double b){
+void QGLVisualizer::drawPartMesh(const ViewDependentPart& part, double r, double g, double b){
     glPushMatrix();
     std::array<std::array<Vec6,3>,3> posNormFull;
     for (size_t n = 0; n < part.partIds.size()-1; n++){
@@ -635,7 +635,7 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
     if (layerNo==1){
         glColor3d(0.5,0.5,0.5);
         if (config.surfaceType==1)
-            drawPartMesh(part,layerNo,0.5,0.5,0.5);
+            drawPartMesh(part,0.5,0.5,0.5);
         else if (config.surfaceType==0)
             drawPart(part, layerNo,0.5,0.5,0.5);
     }
