@@ -152,7 +152,7 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::S
                 }
                 else if (dictionary[idA].layerId==3){//compute distance from centroid
                     if (config.distanceMetric==3){
-                        dist=ViewDependentPart::distanceInvariant(dictionary[idA], dictionary[idB], 3, transform);
+                        dist=ViewDependentPart::distanceInvariant(dictionary[idA], dictionary[idB], 3, hierarchy.viewDependentLayers[0], transform);
                     }
                     else
                         dist = ViewDependentPart::distance(dictionary[idA], dictionary[idB], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);

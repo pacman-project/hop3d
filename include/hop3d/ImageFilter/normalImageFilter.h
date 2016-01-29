@@ -126,6 +126,10 @@ public:
             bool nonMaximumSupressionGroup;
             ///minimal number of elements in the octet
             int minOctetSize;
+            ///minimal number of elements in the octet (second layer)
+            int minOctetSizeSecondLayer;
+            ///minimal number of points in the octet (second layer)
+            int minPointsNoSecondLayer;
             /// use median filter
             bool useMedianFilter;
             /// kernel size

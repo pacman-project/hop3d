@@ -35,6 +35,8 @@ NormalImageFilter::Config::Config(std::string configFilename){
     model->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     model->FirstChildElement( "parameters" )->QueryBoolAttribute("nonMaximumSupressionGroup", &nonMaximumSupressionGroup);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("minOctetSize", &minOctetSize);
+    model->FirstChildElement( "parameters" )->QueryIntAttribute("minOctetSizeSecondLayer", &minOctetSizeSecondLayer);
+    model->FirstChildElement( "parameters" )->QueryIntAttribute("minPointsNoSecondLayer", &minPointsNoSecondLayer);
     model->FirstChildElement( "parameters" )->QueryBoolAttribute("useEuclideanCoordinates", &useEuclideanCoordinates);
     model->FirstChildElement( "parameters" )->QueryBoolAttribute("splitSurfaces", &splitSurfaces);
 

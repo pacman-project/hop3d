@@ -18,6 +18,9 @@ bool isCloseToZero(T x)
     return std::abs(x) < std::numeric_limits<T>::epsilon();
 }
 
+/// position and normal
+typedef std::array<std::array<GaussianSE3,9>,9> PointsSecondLayer;
+
 class ConfigGICP{
 public:
     ///verbose
@@ -119,17 +122,32 @@ public:
     ///find optimal transformation between normals
     static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& transOpt);
 
+    ///find optimal transformation between normals
+    static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& vocabulary, int distanceMetric, Mat34& transOpt);
+
+    /// create point cloud from second layer part
+    static int createPointsMatrix(const ViewDependentPart& part, const ViewDependentPart::Seq& vocabulary, int rotIndex, PointsSecondLayer& points);
+
+    /// find SE3 transformation
+    static bool findSE3Transformation(const PointsSecondLayer& pointsA, const PointsSecondLayer& pointsB, Mat34& trans);
+
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters, int distanceMetric);
 
     /// compute distance between view dependent parts
     static double distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& estimatedTransform);
 
+    /// compute distance between view dependent parts (invariant version)
+    static double distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, const ViewDependentPart::Seq& vocabulary, Mat34& estimatedTransform);
+
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters, int distanceMetric);
 
     /// view invariant error for two parts with known SE3 transformation
     static double computeError(const ViewDependentPart& partA, const ViewDependentPart& partB, const Mat34& transformation, int type, double coeff);
+
+    /// view invariant error for two second layer parts with known SE3 transformation
+    static double computeError(const PointsSecondLayer& partA, const PointsSecondLayer& partB, const Mat34& transformation, int type, double coeff);
 
     ///get normal vector related to that part
     void getNormal(Vec3& normal, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters) const;
