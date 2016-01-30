@@ -530,7 +530,7 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
                 idx++;
             }
 
-            double error = computeError(partA, partD, trans, distanceMetric, 0.05);
+            double error = computeError(partA, partD, trans, distanceMetric, 0.1);
             trans(2,3)=trans1(2,3);
             if (error<minDist){
                 minDist=error;
@@ -704,7 +704,7 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
             if (findSE3Transformation(pointsA, pointsB,trans)){
                 Mat34 trans1(trans);
                 trans(2,3)=0;
-                double error = computeError(pointsA, pointsB, trans, distanceMetric, 0.05);
+                double error = computeError(pointsA, pointsB, trans, distanceMetric, 0.1);
                 trans(2,3)=trans1(2,3);
                 if (error<minDist){
                     minDist=error;

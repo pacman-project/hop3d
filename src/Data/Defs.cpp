@@ -172,6 +172,7 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
         // create second octet
         if (smallerGroupSize>=minOctetSize){
             Octet background;
+            Vec3 meanPos(0,0,0);
             for (int i=0;i<3;i++){//detect two surfaces
                 for (int j=0;j<3;j++){
                     double dist;
@@ -186,6 +187,7 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
                         partIds[i][j] = -2;
                         background.offsets[i][j] = offsets[i][j];
                         background.filterPos[i][j] = filterPos[i][j];
+                        meanPos+=background.partsPosNorm[i][j].mean.block<3,1>(0,0);
                     }
                     if (partIds[i][j]>=0&&dist<(distThr+std::numeric_limits<double>::epsilon())&&!isBackground){
                         background.partsPosNorm[i][j] = partsPosNorm[i][j];
@@ -194,9 +196,21 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
                         partIds[i][j] = -2;
                         background.offsets[i][j] = offsets[i][j];
                         background.filterPos[i][j] = filterPos[i][j];
+                        meanPos+=background.partsPosNorm[i][j].mean.block<3,1>(0,0);
                     }
                 }
             }
+            Vec3 middleElement(0,0,0);
+            if (background.partIds[1][1]<0){
+                middleElement = meanPos*double(1.0/minOctetSize);
+            }
+            else{
+                middleElement = background.partsPosNorm[1][1].mean.block<3,1>(0,0);
+            }
+            for (int i=0;i<3;i++)
+                for (int j=0;j<3;j++)
+                    if ((background.partIds[i][j]>=0)&&(!(i==1&&j==1)))
+                        background.partsPosNorm[i][j].mean.block<3,1>(0,0)-=middleElement;
             background.isBackground = false;
             secondOctet.push_back(background);
         }
