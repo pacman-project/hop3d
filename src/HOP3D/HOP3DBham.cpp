@@ -314,7 +314,7 @@ void HOP3DBham::learn(){
                 for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
                     for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
                         std::vector<hop3d::Octet> octetsTmp;
-                        imageFilterer->getOctets((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDependentLayers[layerNo-1], octetsTmp);
+                        imageFilterer->getOctets((int)categoryNo, (int)objectNo, (int)imageNo, *hierarchy, octetsTmp);
                         octets.insert(octets.end(), octetsTmp.begin(), octetsTmp.end());
                     }
                 }
@@ -333,7 +333,7 @@ void HOP3DBham::learn(){
         for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
             for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
                 for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
-                    imageFilterer->computePartsImage((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDependentLayers[layerNo], (int)layerNo);
+                    imageFilterer->computePartsImage((int)categoryNo, (int)objectNo, (int)imageNo, *hierarchy, (int)layerNo);
                 }
             }
         }

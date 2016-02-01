@@ -491,7 +491,12 @@ int PartSelectorAgglomerative::centerOfCluster(const std::set<int>& cluster, con
                     dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2],hierarchy.firstLayer, config.distanceMetric);
             }
             else if (vocabulary[id].layerId==3){
-                dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
+                if (config.distanceMetric==3){
+                    Mat34 transform;
+                    dist=ViewDependentPart::distanceInvariant(vocabulary[id],vocabulary[id2], 3, hierarchy.viewDependentLayers[0], transform);
+                }
+                else
+                    dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2],hierarchy.firstLayer, config.distanceMetric);
             }
             distSum+=dist;
         }

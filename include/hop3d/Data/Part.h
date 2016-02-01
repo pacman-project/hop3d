@@ -153,7 +153,7 @@ public:
     void getNormal(Vec3& normal, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters) const;
 
     /// remove elements which belong to "second surface"
-    static bool removeSecondSurface(ViewDependentPart& part);
+    static bool removeSecondSurface(ViewDependentPart& part, double distThreshold);
 
     /// Insertion operator
     friend std::ostream& operator<<(std::ostream& os, const ViewDependentPart& part);

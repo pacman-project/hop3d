@@ -202,11 +202,13 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
             }
             Vec3 middleElement(0,0,0);
             if (background.partIds[1][1]<0){
-                middleElement = meanPos*double(1.0/minOctetSize);
+                middleElement = meanPos*double(1.0/double(smallerGroupSize));
             }
             else{
                 middleElement = background.partsPosNorm[1][1].mean.block<3,1>(0,0);
             }
+            background.partsPosNorm[1][1].mean.block<3,1>(0,0) =partsPosNorm[1][1].mean.block<3,1>(0,0)+middleElement;
+            background.partsPosEucl[1][1] =partsPosEucl[1][1]+middleElement;
             for (int i=0;i<3;i++)
                 for (int j=0;j<3;j++)
                     if ((background.partIds[i][j]>=0)&&(!(i==1&&j==1)))

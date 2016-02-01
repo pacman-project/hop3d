@@ -905,8 +905,52 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
     int componentNo=0;
     for (auto itComp = part.group.begin(); itComp!=part.group.end();itComp++){
         Mat34 estTrans;
-        ViewDependentPart::distanceInvariant(part,*itComp,3,estTrans);
-        for (size_t n = 0; n < itComp->partIds.size(); n++){
+        if (layerNo==1)
+            ViewDependentPart::distanceInvariant(part,*itComp,3,estTrans);
+        else if (layerNo==2)
+            ViewDependentPart::distanceInvariant(part,*itComp,3, hierarchy.get()->viewDependentLayers[0],estTrans);
+        double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, (double)(config.partDist[layerNo]*double(componentNo+1)), 0, 1};
+        glPushMatrix();
+            glMultMatrixd(GLmat1);
+            if (layerNo==1){
+                drawPart(*itComp, layerNo,0.5,0.5,0.5);
+            }
+            else if (layerNo==2){
+                for (size_t n = 0; n < itComp->partIds.size(); n++){
+                    for (size_t m = 0; m < itComp->partIds[n].size(); m++){
+                        int id = itComp->partIds[n][m];
+                        Vec3 posPart(itComp->partsPosNorm[n][m].mean.block<3,1>(0,0));
+                        if (n==1&&m==1)
+                            posPart=Vec3(0,0,0);
+                        double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1), posPart(2), 1};
+                        glPushMatrix();
+                            glMultMatrixd(GLmat1);
+                            if (id<0){
+                                //glColor3ub(100,50,50);
+                                glCallList(backgroundList[layerNo-1]);
+                            }
+                            else{
+                                if (layerNo==1){
+                                    glColor3d(0.5,0.5,0.5);
+                                    drawPatch(Vec3(itComp->partsPosNorm[n][m].mean.block<3,1>(3,0)));
+                                }
+                                else{
+                                    glColor3d(0.5,0.5,0.5);
+                                    Mat34 offset = itComp->offsets[n][m];
+                                    double GLmat2[16]={offset(0,0), offset(1,0), offset(2,0), 0, offset(0,1), offset(1,1), offset(2,1), 0, offset(0,2), offset(1,2), offset(2,2), 0, offset(0,3), offset(1,3), offset(2,3), 1};
+                                    glMultMatrixd(GLmat2);
+                                    glPushMatrix();
+                                        drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, 0.5,0.5,0.5);
+                                    glPopMatrix();
+                                }
+                            }
+                        glPopMatrix();
+                    }
+                }
+            }
+        glPopMatrix();
+
+        /*for (size_t n = 0; n < itComp->partIds.size(); n++){
             for (size_t m = 0; m < itComp->partIds[n].size(); m++){
                 int id = itComp->partIds[n][m];
                 Vec3 posPart(itComp->partsPosNorm[n][m].mean.block<3,1>(0,0));
@@ -936,7 +980,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                     }
                 glPopMatrix();
             }
-        }
+        }*/
         double GLmat2[16]={estTrans(0,0), estTrans(1,0), estTrans(2,0), 0, estTrans(0,1), estTrans(1,1), estTrans(2,1), 0, estTrans(0,2), estTrans(1,2), estTrans(2,2), 0, estTrans(0,3),estTrans(1,3)+(double)(config.partDist[layerNo]*double(componentNo+1)),estTrans(2,3), 1};
         //double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1)+(double)(config.partDist[layerNo]*double(componentNo+1)), posPart(2), 1};
         glPushMatrix();
@@ -977,31 +1021,6 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                     }
                 }
             }
-        /*for (size_t n = 0; n < part.partIds.size(); n++){
-            for (size_t m = 0; m < part.partIds[n].size(); m++){
-                int id = part.partIds[n][m];
-                Vec3 posPart(part.partsPosNorm[n][m].mean.block<3,1>(0,0));
-                if (n==1&&m==1)
-                    posPart=Vec3(0,0,0);
-                double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1), posPart(2), 1};
-                glPushMatrix();
-                    glMultMatrixd(GLmat1);
-                    if (id<0){
-                        //glColor3ub(100,50,50);
-                        glCallList(backgroundList[layerNo-1]);
-                    }
-                    else{
-                        glColor3d(0.5,0.0,0.0);
-                        if (layerNo==1){
-                            drawPatch(Vec3(part.partsPosNorm[n][m].mean.block<3,1>(3,0)));
-                        }
-                        else{
-                            glCallList(cloudsListLayers[layerNo-1][id]);
-                        }
-                    }
-                glPopMatrix();
-            }
-        }*/
         glPopMatrix();
         componentNo++;
     }

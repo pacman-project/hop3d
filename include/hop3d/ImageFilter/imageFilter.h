@@ -9,6 +9,7 @@
 
 #include "../Data/Defs.h"
 #include "hop3d/Data/Vocabulary.h"
+#include "hop3d/Data/Graph.h"
 
 namespace hop3d {
 
@@ -36,7 +37,7 @@ public:
     virtual void computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets) = 0;
 
     /// compute set of octets from set of the ids image
-    virtual void getOctets(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, Octet::Seq& octets) = 0;
+    virtual void getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets) = 0;
 
     /// get filters
     virtual void getFilters(Filter::Seq& _filters) const = 0;
@@ -47,7 +48,7 @@ public:
     /// define 2rd layer octet images using selected words from third layer
     //virtual void computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo) = 0;
     /// define ith layer octet images using selected words from i+1 layer
-    virtual void computePartsImage(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layerNo) = 0;
+    virtual void computePartsImage(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo) = 0;
 
     /// get last view dependent layer parts from the image
     virtual void getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const = 0;

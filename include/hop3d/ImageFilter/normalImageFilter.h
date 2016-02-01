@@ -49,7 +49,7 @@ public:
     void computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets);
 
     /// compute set of octets from set of the ids image
-    void getOctets(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, Octet::Seq& octets);
+    void getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets);
 
     /// get filters
     void getFilters(Filter::Seq& _filters) const;
@@ -61,7 +61,7 @@ public:
     void computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo);
 
     /// define ith layer octet images using selected words from i+1 layer
-    void computePartsImage(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layerNo);
+    void computePartsImage(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo);
 
     /// get last view dependent layer parts from the image
     void getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
@@ -130,6 +130,8 @@ public:
             int minOctetSizeSecondLayer;
             ///minimal number of points in the octet (second layer)
             int minPointsNoSecondLayer;
+            /// distance between points -- slpit surfaces
+            double distThresholdSecondLayer;
             /// use median filter
             bool useMedianFilter;
             /// kernel size
@@ -203,16 +205,16 @@ private:
     bool findMeanResponse(const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Octet& octet, int idx, int idy) const;
 
     /// Fill in octet
-    int fillInOctet(const OctetsImage& octetsImage, const ViewDependentPart::Seq& dictionary, int u, int v, Octet& octet) const;
+    int fillInOctet(const OctetsImage& octetsImage, const Hierarchy& hierarchy, int u, int v, Octet& octet) const;
 
     //set relative position for octets
     void computeRelativePositions(Octet& octet, int layerNo) const;
 
     /// determine id of the part using dictionary
-    int findId(const ViewDependentPart::Seq& dictionary, const Octet& octet) const;
+    //int findId(const ViewDependentPart::Seq& dictionary, const Octet& octet) const;
 
     /// determine id of the part using dictionary
-    int findId(const ViewDependentPart::Seq& dictionary, const Octet& octet, Mat34& offset) const;
+    int findId(const hop3d::Hierarchy& hierarchy, int layerNo, const Octet& octet, Mat34& offset) const;
 
     /// update structure which holds octets images
     void updateOctetsImage(int layerNo, int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage);

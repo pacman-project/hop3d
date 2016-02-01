@@ -48,7 +48,7 @@ public:
     void getOctets(Octet::Seq& octets);
 
     /// compute set of octets from set of the ids image
-    void getOctets(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, Octet::Seq& octets);
+    void getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets);
 
     /// get filters
     void getFilters(Filter::Seq& _filters) const;
@@ -58,7 +58,7 @@ public:
     /// define 2rd layer octet images using selected words from third layer
     //void computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo);
     /// define ith layer octet images using selected words from i+1 layer
-    void computePartsImage(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layerNo);
+    void computePartsImage(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo);
 
     /// get last view dependent layer parts from the image
     void getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;

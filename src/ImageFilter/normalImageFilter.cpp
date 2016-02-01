@@ -37,6 +37,7 @@ NormalImageFilter::Config::Config(std::string configFilename){
     model->FirstChildElement( "parameters" )->QueryIntAttribute("minOctetSize", &minOctetSize);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("minOctetSizeSecondLayer", &minOctetSizeSecondLayer);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("minPointsNoSecondLayer", &minPointsNoSecondLayer);
+    model->FirstChildElement( "parameters" )->QueryDoubleAttribute("distThresholdSecondLayer", &distThresholdSecondLayer);
     model->FirstChildElement( "parameters" )->QueryBoolAttribute("useEuclideanCoordinates", &useEuclideanCoordinates);
     model->FirstChildElement( "parameters" )->QueryBoolAttribute("splitSurfaces", &splitSurfaces);
 
@@ -380,6 +381,10 @@ void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, in
                     if (!part->isBackground()){
                         PartCoordsEucl fcoords(part->id, part->locationEucl, part->offset);
                         partCoords.push_back(fcoords);
+                        if (part->secondVDPart.size()>0){
+                            PartCoordsEucl fcoords1(part->secondVDPart[0].id, part->secondVDPart[0].locationEucl, part->secondVDPart[0].offset);
+                            partCoords.push_back(fcoords1);
+                        }
                     }
                 }
             }
@@ -500,7 +505,14 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
         ViewDependentPart part;
         part.partIds = octet.partIds;
         part.partsPosNorm = octet.partsPosNorm;
-        ViewDependentPart::removeSecondSurface(part);
+        if (layerNo==1)
+            ViewDependentPart::removeSecondSurface(part,config.PCADistThreshold);
+        else if (layerNo==2)
+            ViewDependentPart::removeSecondSurface(part,config.distThresholdSecondLayer);
+        else{
+            std::cout << "dist threshold for layer undefined\n";
+            getchar();
+        }
         Octet octetTmp(octet);
         octetTmp.partIds=part.partIds;
         for (int i=0;i<3;i++){//compute mean depth
@@ -687,7 +699,7 @@ bool NormalImageFilter::findMaxGroupResponse(const std::vector< std::vector<Resp
 }
 
 /// compute set of octets from set of the ids image
-void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, Octet::Seq& octets){
+void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets){
     octets.clear();
     OctetsImage octetsImage = octetsImages[0][categoryNo][objectNo][imageNo];
     OctetsImage nextLayerOctetsImg(octetsImage.size()/3, std::vector<std::shared_ptr<Octet>> (octetsImage.back().size()/3));
@@ -697,13 +709,19 @@ void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, con
         for (size_t j=1; j<octetsImage[0].size()-1;j=j+3){
             Octet octet;
             if (!isBackground(octetsImage, (int)i, (int)j)){
-                if (fillInOctet(octetsImage, dictionary, (int)i, (int)j, octet)>=config.minOctetSize){
+                if (fillInOctet(octetsImage, hierarchy, (int)i, (int)j, octet)>=config.minOctetSizeSecondLayer){
                     int biggerGroupSize, smallerGroupSize;
-                    bool hasDoubleSurface = octet.hasDoubleSurface(config.PCADistThreshold,biggerGroupSize, smallerGroupSize);
-                    if (!(hasDoubleSurface && biggerGroupSize<config.minOctetSize)){
-                        computeRelativePositions(octet,2);
+                    bool hasDoubleSurface = octet.hasDoubleSurface(config.distThresholdSecondLayer,biggerGroupSize, smallerGroupSize);
+                    if (biggerGroupSize>=config.minOctetSizeSecondLayer){
+                        computeRelativePositions(octet, 2);
                         octet.isBackground=false;
+                        if (hasDoubleSurface&&config.splitSurfaces){
+                            octet.splitSurfaces(config.distThresholdSecondLayer, config.minOctetSizeSecondLayer, smallerGroupSize);
+                        }
+                        updateRealisationIds(octet);
                         octets.push_back(octet);
+                        if (octet.secondOctet.size()>0)
+                            octets.push_back(octet.secondOctet[0]);
                         nextLayerOctetsImg[u][v].reset(new Octet(octet));
                     }
                 }
@@ -771,7 +789,7 @@ bool NormalImageFilter::isBackground(OctetsImage& octetsImage, int u, int v) con
 }*/
 
 /// define 2rd layer octet images using selected words from third layer
-void NormalImageFilter::computePartsImage(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layerNo){
+void NormalImageFilter::computePartsImage(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo){
     OctetsImage octetsImage = octetsImages[layerNo][categoryNo][objectNo][imageNo];
     PartsImage partsImage (octetsImage.size(), std::vector<std::shared_ptr<ViewDependentPart>> (octetsImage.back().size()));
     for (size_t i=0; i<octetsImage.size();i++){
@@ -781,8 +799,8 @@ void NormalImageFilter::computePartsImage(int categoryNo, int objectNo, int imag
             if (octetsImage[i][j].get()!=nullptr){
                 if (!octetsImage[i][j]->isBackground){
                     Mat34 offset;
-                    int id = findId(dictionary,*(octetsImage[i][j]), offset);
-                    part = dictionary[id];
+                    int id = findId(hierarchy, layerNo,*(octetsImage[i][j]), offset);
+                    part = hierarchy.viewDependentLayers[layerNo][id];
                     part.offset = offset;
                     part.id = id;
                     part.realisationId = partRealisationsCounter;
@@ -795,16 +813,16 @@ void NormalImageFilter::computePartsImage(int categoryNo, int objectNo, int imag
                     if (octetsImage[i][j].get()->secondOctet.size()>0){
                         ViewDependentPart secondPart;
                         if (!octetsImage[i][j].get()->secondOctet[0].isBackground){
-                            id = findId(dictionary,octetsImage[i][j].get()->secondOctet[0], offset);
-                            secondPart = dictionary[id];
+                            id = findId(hierarchy, layerNo, octetsImage[i][j].get()->secondOctet[0], offset);
+                            secondPart = hierarchy.viewDependentLayers[layerNo][id];
                             secondPart.offset = offset;
                             secondPart.id = id;
                             secondPart.realisationId = partRealisationsCounter;
                             partRealisationsCounter++;
                             secondPart.layerId=layerNo+1;
-                            secondPart.location = octetsImage[i][j]->filterPos[1][1];
-                            secondPart.locationEucl = octetsImage[i][j]->partsPosEucl[1][1];
-                            secondPart.gaussians[1][1].mean=Vec3(octetsImage[i][j]->filterPos[1][1].u, octetsImage[i][j]->filterPos[1][1].v, octetsImage[i][j]->filterPos[1][1].depth);
+                            secondPart.location = octetsImage[i][j].get()->secondOctet[0].filterPos[1][1];
+                            secondPart.locationEucl = octetsImage[i][j].get()->secondOctet[0].partsPosEucl[1][1];
+                            secondPart.gaussians[1][1].mean=Vec3(octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].u, octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].v, octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].depth);
                             part.secondVDPart.push_back(secondPart);
                         }
                     }
@@ -831,14 +849,14 @@ void NormalImageFilter::getLayerParts(int categoryNo, int objectNo, int imageNo,
 }
 
 /// Fill in octet
-int NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDependentPart::Seq& dictionary, int u, int v, Octet& octet) const{
+int NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const Hierarchy& hierarchy, int u, int v, Octet& octet) const{
     int elementsNo=0;
     for (int i=-1;i<2;i++){
         for (int j=-1;j<2;j++){
             Mat34 offset(Mat34::Identity());
             int id;
             if (octetsImage[u+i][v+j].get()!=nullptr)
-                id = findId(dictionary, *octetsImage[u+i][v+j], offset);
+                id = findId(hierarchy, 0, *octetsImage[u+i][v+j], offset);
             else
                 id = -1;
             octet.offsets[i+1][j+1]=offset;
@@ -848,7 +866,7 @@ int NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDep
                 octet.filterPos[i+1][j+1].v=(u+i)*(config.filterSize*3)+((config.filterSize*3)/2);
                 if (config.useEuclideanCoordinates)
                     sensorModel.getPoint(octet.filterPos[i+1][j+1].u, octet.filterPos[i+1][j+1].u, 1.0, octet.partsPosEucl[i+1][j+1]);
-                octet.filterPos[i+1][j+1].depth = octet.partsPosEucl[i+1][j+1](3);
+                octet.filterPos[i+1][j+1].depth = octet.partsPosEucl[i+1][j+1](2);
                 octet.partsPosNorm[i+1][j+1].mean.block<3,1>(0,0)=octet.partsPosEucl[i+1][j+1];
                 octet.partsPosNorm[i+1][j+1].mean.block<3,1>(3,0)=Vec3(0,0,1);
             }
@@ -858,23 +876,21 @@ int NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const ViewDep
                 octet.partsPosEucl[i+1][j+1]=octetsImage[u+i][v+j]->partsPosEucl[1][1];
                 //if (config.useEuclideanCoordinates)
                     //sensorModel.getPoint(octet.filterPos[i+1][j+1].u, octet.filterPos[i+1][j+1].v, octet.filterPos[i+1][j+1].depth, octet.partsPosEucl[i+1][j+1]);
-                octet.partsPosNorm[i+1][j+1].mean.block<3,1>(0,0)=octet.partsPosEucl[i+1][j+1];
+                octet.partsPosNorm[i+1][j+1].mean.block<3,1>(0,0)=octetsImage[u+i][v+j]->partsPosNorm[1][1].mean.block<3,1>(0,0);//octet.partsPosEucl[i+1][j+1];
                 /*std::cout << i << ", " << j << " " << octet.partsPosEucl[i+1][j+1].transpose() << " pos\n";
                 std::cout << i << ", " << j << " " << octet.partsPosEucl[i+1][j+1].transpose() << " pos\n";
                 getchar();*/
-                octet.partsPosNorm[i+1][j+1].mean.block<3,1>(3,0)=dictionary[id].partsPosNorm[1][1].mean.block<3,1>(3,0);
+                octet.partsPosNorm[i+1][j+1].mean.block<3,1>(3,0)=octetsImage[u+i][v+j]->partsPosNorm[1][1].mean.block<3,1>(3,0);//dictionary[id].partsPosNorm[1][1].mean.block<3,1>(3,0);
                 //octet.partsPosNorm[i+1][j+1].mean.block<3,1>(0,0)=(offset*Vec4(octet.partsPosEucl[i+1][j+1](0),octet.partsPosEucl[i+1][j+1](1),octet.partsPosEucl[i+1][j+1](2),1.0)).block<3,1>(0,3);
                 //octet.partsPosNorm[i+1][j+1].mean.block<3,1>(3,0)=offset.rotation()*dictionary[id].partsPosNorm[1][1].mean.block<3,1>(3,0);
             }
-            if (octetsImage[u+i][v+j].get()!=nullptr)
-                octet.responses[i+1][j+1]=octetsImage[u+i][v+j]->responses[1][1];
         }
     }
     return elementsNo;
 }
 
 /// determine id of the part using dictionary
-int NormalImageFilter::findId(const ViewDependentPart::Seq& dictionary, const Octet& octet) const{
+/*int NormalImageFilter::findId(const ViewDependentPart::Seq& dictionary, const Octet& octet) const{
     if (octet.isBackground)//background
         return -1;
     int id=0;
@@ -893,10 +909,10 @@ int NormalImageFilter::findId(const ViewDependentPart::Seq& dictionary, const Oc
     octet.print();
     getchar();
     return -1;
-}
+}*/
 
 /// determine id of the part using dictionary
-int NormalImageFilter::findId(const ViewDependentPart::Seq& dictionary, const Octet& octet, Mat34& offset) const{
+int NormalImageFilter::findId(const hop3d::Hierarchy& hierarchy, int layerNo, const Octet& octet, Mat34& offset) const{
     if (octet.isBackground)//background
         return -1;
     int id=0; int foundId(0);
@@ -905,8 +921,15 @@ int NormalImageFilter::findId(const ViewDependentPart::Seq& dictionary, const Oc
     partVD.partsPosNorm = octet.partsPosNorm;
     partVD.partIds = octet.partIds;
     Mat34 offsetTmp;
-    for (auto & part : dictionary){
-        double dist = ViewDependentPart::distanceInvariant(part, partVD, 3, offsetTmp);
+    int partID=0;
+    for (auto & part : hierarchy.viewDependentLayers[layerNo]){
+        double dist(0);
+        if (layerNo==0)
+            dist = ViewDependentPart::distanceInvariant(part, partVD, 3, offsetTmp);
+        else if (layerNo==1) {
+            dist = ViewDependentPart::distanceInvariant(part, partVD, 3, hierarchy.viewDependentLayers[0], offsetTmp);
+        }
+        partID++;
         if (dist==0){
             offset = offsetTmp;
             return id;
@@ -1240,10 +1263,42 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
     }
     unsigned int octetCoords2nd[2]={u/(config.filterSize*3*3),v/(config.filterSize*3*3)};
     if ((octetCoords2nd[0]<partsImages[1][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<partsImages[1][categoryNo][objectNo][imageNo][0].size())){
-        if (partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
+        /*if (partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
             lastVDpart = *(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]);
             if (!lastVDpart.isBackground())
                 ids.push_back(lastVDpart.id);
+            else
+                ids.push_back(-2);
+        }
+        else
+            ids.push_back(-2);*/
+        if (partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
+            lastVDpart = *partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
+            if (!partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->isBackground()){
+                if (octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
+                    //ViewDependentPart.partsPosNorm[1][1]
+                    Octet * octet = octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get();
+                    if (octet->partIds[(u/(config.filterSize*3))%3][(v/(config.filterSize*3))%3]==-2){
+                        if (octet->secondOctet.size()>0){
+                            //std::cout << "second surf: " << partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->secondVDPart[0].id << "\n";
+                            //ids.push_back(-2);
+                            ids.push_back(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->secondVDPart[0].id);
+                        }
+                        else
+                            ids.push_back(-2);
+                    }
+                    else {
+                        if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer))
+                            ids.push_back(-2);
+                        else
+                            ids.push_back(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->id);
+                    }
+                }
+                else {
+                    std::cout <<"something is wrong with octets image\n";
+                    getchar();
+                }
+            }
             else
                 ids.push_back(-2);
         }

@@ -24,10 +24,7 @@ void ViewDependentPart::print() const{
         }
         std::cout << "\n";
     }
-    std::cout << "\nParts in group: ";
-    for (auto it = group.begin();it!=group.end();it++)
-        std::cout << it->id << ", ";
-    std::cout << "\n";
+
     /*std::cout << "Gaussians:\n";
     for (size_t i=0; i<gaussians.size();i++){
         for (size_t j=0; j<gaussians.size();j++){
@@ -37,6 +34,15 @@ void ViewDependentPart::print() const{
             //std::cout << gaussians[i][j].covariance << "\n";
         }
     }*/
+    std::cout << "offsets:\n";
+        for (size_t i=0; i<offsets.size();i++){
+            for (size_t j=0; j<offsets.size();j++){
+                if (partIds[i][j]>=0){
+                    std::cout << "offset(" << i << ", " << j << "): \n";
+                    std::cout << offsets[i][j].matrix() << "\n";
+                }
+            }
+        }
     std::cout << "Pos norm SE3:\n";
     for (size_t i=0; i<partsPosNorm.size();i++){
         for (size_t j=0; j<partsPosNorm.size();j++){
@@ -46,6 +52,12 @@ void ViewDependentPart::print() const{
             //std::cout << gaussians[i][j].covariance << "\n";
         }
     }
+    std::cout << "\nParts in group: ";
+    for (auto it = group.begin();it!=group.end();it++){
+        it->print();
+        std::cout << it->id << ", ";
+    }
+    std::cout << "\n";
 }
 
 /// check if part is background
@@ -401,10 +413,9 @@ double ViewIndependentPart::nearestNeighbour(const Mat34& pose, std::vector<std:
 }
 
 /// remove elements which belong to "second surface"
-bool ViewDependentPart::removeSecondSurface(ViewDependentPart& part) {
+bool ViewDependentPart::removeSecondSurface(ViewDependentPart& part, double distThreshold) {
     bool has2surfs(false);
     //part.print();
-    double distThreshold = 0.015;
     std::vector<double> depth;
     for (int i=0;i<3;i++){//detect two surfaces
         for (int j=0;j<3;j++){
@@ -418,16 +429,16 @@ bool ViewDependentPart::removeSecondSurface(ViewDependentPart& part) {
     }
     std::sort(depth.begin(),depth.end());
     double distBorder;
-    size_t groupSize;
+    //size_t groupSize=0;
     bool removeBack=false;
     for (size_t i=0;i<depth.size()-1;i++){
         if (depth[i+1]-depth[i]>distThreshold){
             if (i+1>=depth.size()-i){
-                groupSize = i+1;
+                //groupSize = i+1;
                 removeBack=true;
             }
-            else
-                groupSize = depth.size()-i;
+            //else
+            //    groupSize = depth.size()-i;
             distBorder = depth[i]+std::numeric_limits<double>::epsilon();
             has2surfs = true;
         }
@@ -458,11 +469,11 @@ bool ViewDependentPart::removeSecondSurface(ViewDependentPart& part) {
             }
         }
     }
-    if (groupSize<3){
+    /*if (groupSize<3){
         std::cout << "small number of points in group";
         part.print();
         getchar();
-    }
+    }*/
     return true;
 }
 
@@ -869,7 +880,7 @@ double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, cons
 double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, const ViewDependentPart::Seq& vocabulary, Mat34& estimatedTransform){
     estimatedTransform=Mat34::Identity();
     double sum = 9;
-    sum = findOptimalTransformation(partB, partA, vocabulary, distanceMetric, estimatedTransform);
+    sum = findOptimalTransformation(partA, partB, vocabulary, distanceMetric, estimatedTransform);
     //std::cout << "sum : " << sum << "\n";
     //std::cout << "est trans\n" << estimatedTransform.matrix() << "\n";
     //getchar();

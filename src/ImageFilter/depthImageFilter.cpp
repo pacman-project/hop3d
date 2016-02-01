@@ -186,9 +186,9 @@ void DepthImageFilter::getOctets(Octet::Seq& octets){
 }
 
 /// compute set of octets from set of the ids image
-void DepthImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, Octet::Seq& octets){
+void DepthImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets){
     std::cout << categoryNo << " " << objectNo << " " << imageNo << "\n";
-    std::cout << dictionary.size();
+    std::cout << hierarchy.viewDependentLayers.size();
     std::cout << octets.size();
 }
 
@@ -210,9 +210,9 @@ void DepthImageFilter::setFilters(std::string patchesFileName, std::string norma
 }*/
 
 /// define ith layer octet images using selected words from i+1 layer
-void DepthImageFilter::computePartsImage(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layerNo){
+void DepthImageFilter::computePartsImage(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo){
     std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << layerNo << "\n";
-    dictionary.size();
+    hierarchy.viewDependentLayers.size();
 }
 
 /// get last view dependent layer parts from the image
