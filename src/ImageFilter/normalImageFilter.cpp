@@ -1236,14 +1236,16 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
                     Octet * octet = octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get();
                     if (octet->partIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]==-2){
                         if (octet->secondOctet.size()>0){
-                            //ids.push_back(-2);
-                            ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->secondVDPart[0].id);
+                            if (fabs(octet->secondOctet[0].partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold))
+                                ids.push_back(-2);
+                            else
+                                ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->secondVDPart[0].id);
                         }
                         else
                             ids.push_back(-2);
                     }
                     else {
-                        if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>config.PCADistThreshold)
+                        if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold))
                             ids.push_back(-2);
                         else
                             ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->id);
@@ -1283,9 +1285,10 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
                     Octet * octet = octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get();
                     if (octet->partIds[(u/(config.filterSize*3))%3][(v/(config.filterSize*3))%3]==-2){
                         if (octet->secondOctet.size()>0){
-                            //std::cout << "second surf: " << partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->secondVDPart[0].id << "\n";
-                            //ids.push_back(-2);
-                            ids.push_back(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->secondVDPart[0].id);
+                            if (fabs(octet->secondOctet[0].partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer))
+                                ids.push_back(-2);
+                            else
+                                ids.push_back(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->secondVDPart[0].id);
                         }
                         else
                             ids.push_back(-2);
@@ -1345,14 +1348,16 @@ void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int ima
                     Octet * octet = octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get();
                     if (octet->partIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]==-2){
                         if (octet->secondOctet.size()>0){
-                            //ids.push_back(-2);
-                            ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->secondVDPart[0].realisationId);
+                            if (fabs(octet->secondOctet[0].partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold))
+                                ids.push_back(-2);
+                            else
+                                ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->secondVDPart[0].realisationId);
                         }
                         else
                             ids.push_back(-2);
                     }
                     else {
-                        if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>config.PCADistThreshold)
+                        if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold))
                             ids.push_back(-2);
                         else
                             ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->realisationId);
@@ -1374,11 +1379,35 @@ void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int ima
         ids.push_back(-2);
     }
     unsigned int octetCoords2nd[2]={u/(config.filterSize*3*3),v/(config.filterSize*3*3)};
-    if ((octetCoords2nd[0]<octetsImages[1][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<octetsImages[1][categoryNo][objectNo][imageNo][0].size())){
+    if ((octetCoords2nd[0]<partsImages[1][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<partsImages[1][categoryNo][objectNo][imageNo][0].size())){
         if (partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
             lastVDpart = *partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
-            if (!partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->isBackground())
-                ids.push_back(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->realisationId);
+            if (!partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->isBackground()){
+                if (octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
+                    //ViewDependentPart.partsPosNorm[1][1]
+                    Octet * octet = octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get();
+                    if (octet->partIds[(u/(config.filterSize*3))%3][(v/(config.filterSize*3))%3]==-2){
+                        if (octet->secondOctet.size()>0){
+                            if (fabs(octet->secondOctet[0].partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer))
+                                ids.push_back(-2);
+                            else
+                                ids.push_back(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->secondVDPart[0].realisationId);
+                        }
+                        else
+                            ids.push_back(-2);
+                    }
+                    else {
+                        if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer))
+                            ids.push_back(-2);
+                        else
+                            ids.push_back(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->realisationId);
+                    }
+                }
+                else {
+                    std::cout <<"something is wrong with octets image\n";
+                    getchar();
+                }
+            }
             else
                 ids.push_back(-2);
         }
@@ -1386,7 +1415,7 @@ void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int ima
             ids.push_back(-2);
     }
     else{
-        ids.push_back(-2); //point wasn't used to create part (3rd layer)
+        ids.push_back(-2); //point wasn't used to create part (2nd layer)
         lastVDpart.id = -2;
     }
 }

@@ -326,21 +326,13 @@ void HOP3DBham::learn(){
         std::cout << "Dictionary size (" << layerNo+2 << " layer): " << dictionary.size() << "\n";
         partSelector->selectParts(dictionary, *hierarchy, layerNo+2);
         /*if (layerNo==1){
+            for (auto &word : dictionary){
+                word.print();
+            }
             ViewDependentPart pp(dictionary[1]);
             PointsSecondLayer points;
             ViewDependentPart::createPointsMatrix(pp,hierarchy.get()->viewDependentLayers[0],0,points);
             notify(points);
-        }*/
-        /*if (layerNo==1){
-            dictionary[0].print();
-            dictionary[0].group[0].print();
-            dictionary[0].group[1].print();
-            Mat34 offsetTmp;
-            double dist = ViewDependentPart::distanceInvariant(dictionary[0], dictionary[0].group[1], 3, hierarchy.get()->viewDependentLayers[0], offsetTmp);
-            std::cout << "dist: " << dist << "\n";
-            std::cout << "trans:\n ";
-            std::cout << offsetTmp.matrix() << "\n";
-            getchar();
         }*/
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
