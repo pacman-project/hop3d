@@ -37,6 +37,15 @@ void Subject::notify(std::vector<std::pair<int, hop3d::Mat34>>& partsPoses, int 
     }
 }
 
+/// update part second layer
+void Subject::notify(const hop3d::PointsSecondLayer& points){
+    for(vector<Observer*>::const_iterator iter = list.begin(); iter != list.end(); ++iter) {
+        if(*iter != 0) {
+            (*iter)->updateSecondLayerPart(points);
+        }
+    }
+}
+
 void Subject::notify(std::vector<std::vector<hop3d::PointCloudRGBA>>& clouds){
     for(vector<Observer*>::const_iterator iter = list.begin(); iter != list.end(); ++iter){
         if(*iter != 0) {

@@ -808,6 +808,7 @@ void NormalImageFilter::computePartsImage(int categoryNo, int objectNo, int imag
                     part.layerId=layerNo+1;
                     part.location = octetsImage[i][j]->filterPos[1][1];
                     part.locationEucl = octetsImage[i][j]->partsPosEucl[1][1];
+                    //part.offsets = octetsImage[i][j].offsets;
                     //part.locationEucl = octetsImage[i][j]->partsPosNorm[1][1].mean.block<3,1>(0,0);
                     part.gaussians[1][1].mean=Vec3(octetsImage[i][j]->filterPos[1][1].u, octetsImage[i][j]->filterPos[1][1].v, octetsImage[i][j]->filterPos[1][1].depth);
                     if (octetsImage[i][j].get()->secondOctet.size()>0){
@@ -823,6 +824,7 @@ void NormalImageFilter::computePartsImage(int categoryNo, int objectNo, int imag
                             secondPart.location = octetsImage[i][j].get()->secondOctet[0].filterPos[1][1];
                             secondPart.locationEucl = octetsImage[i][j].get()->secondOctet[0].partsPosEucl[1][1];
                             secondPart.gaussians[1][1].mean=Vec3(octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].u, octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].v, octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].depth);
+                            secondPart.offsets = octetsImage[i][j].get()->secondOctet[0].offsets;
                             part.secondVDPart.push_back(secondPart);
                         }
                     }
@@ -920,6 +922,7 @@ int NormalImageFilter::findId(const hop3d::Hierarchy& hierarchy, int layerNo, co
     ViewDependentPart partVD;
     partVD.partsPosNorm = octet.partsPosNorm;
     partVD.partIds = octet.partIds;
+    partVD.offsets = octet.offsets;
     Mat34 offsetTmp;
     int partID=0;
     for (auto & part : hierarchy.viewDependentLayers[layerNo]){

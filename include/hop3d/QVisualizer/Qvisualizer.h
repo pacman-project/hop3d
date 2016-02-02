@@ -228,6 +228,9 @@ public:
     /// update object from filters
     void update(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo, int layerNo);
 
+    /// update second layer part
+    void updateSecondLayerPart(const hop3d::PointsSecondLayer& part);
+
 private:
     Config config;
 
@@ -257,6 +260,12 @@ private:
 
     /// background list
     std::vector< GLuint > backgroundList;
+
+    /// second layer part
+    std::vector<GLuint> secondLayerPartList;
+
+    /// second layer part 2 update
+    std::vector<hop3d::PointsSecondLayer> pointParts2update;
 
     /// objects indexed by layerNo
     std::vector<Object3DSeq> layersOfObjects;
@@ -305,6 +314,9 @@ private:
 
     /// create partObjects
     void createPartObjects();
+
+    /// update second layer part
+    void updateSecondLayerPart(void);
 
     /// Draw clusters
     void drawClusters(void);
@@ -389,6 +401,9 @@ private:
 
     /// draw shaded octagon
     void drawOctagon(const std::array<std::array<hop3d::Vec6,3>,3>& part, const std::array<std::array<int,3>,3>& ids, double r, double g, double b) const;
+
+    /// draw Part Second Layer
+    void drawPartSecondLayer(void) const;
 };
 
 #endif // QVISUALIZER_H_INCLUDED

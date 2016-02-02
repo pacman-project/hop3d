@@ -267,6 +267,11 @@ public:
             partIds[i].fill(-1);
         for (size_t i=0;i<realisationsIds.size();i++)
             realisationsIds[i].fill(-1);
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                offsets[i][j]=Mat34::Identity();
+            }
+        }
     }
 
     /// compute distance between octets -- dot product for normals for each filter

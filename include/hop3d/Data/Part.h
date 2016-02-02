@@ -110,13 +110,23 @@ public:
     std::vector<ViewDependentPart> secondVDPart;
 
     /// Construction
-    inline ViewDependentPart(){
+    inline ViewDependentPart() {
         type = PART_VIEW_DEP;
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                offsets[i][j]=Mat34::Identity();
+            }
+        }
     }
 
     /// Construction
     inline ViewDependentPart(int _id, int _layerId, ImageCoordsDepth _location) :
         Part(_id, _layerId, PART_VIEW_DEP), location(_location){
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                offsets[i][j]=Mat34::Identity();
+            }
+        }
     }
 
     ///find optimal transformation between normals

@@ -183,6 +183,44 @@ void QGLVisualizer::updatePartsObjects(void){
     partClouds.clear();
 }
 
+/// update second layer part
+void QGLVisualizer::updateSecondLayerPart(const hop3d::PointsSecondLayer& part){
+    pointParts2update.push_back(part);
+}
+
+/// update second layer part
+void QGLVisualizer::updateSecondLayerPart(void){
+    if (pointParts2update.size()>0){
+        Vec3 offset(0.1,0.1,0.1);
+        hop3d::PointsSecondLayer part = pointParts2update.back();
+        pointParts2update.clear();
+        // create one display list
+        GLuint index = glGenLists(1);
+        // compile the display list, store a triangle in it
+        glNewList(index, GL_COMPILE);
+        glPushMatrix();
+        for (size_t n = 0; n < part.size(); n++){
+            for (size_t m = 0; m < part[0].size(); m++){
+                Vec3 posPart(part[n][m].mean.block<3,1>(0,0));
+                posPart+=offset;
+                if (n==1&&m==1)
+                    posPart=Vec3(0,0,0);
+                double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1), posPart(2), 1};
+                glPushMatrix();
+                    glMultMatrixd(GLmat1);
+                    if (!std::isnan(posPart(0))){
+                        glColor3d(0.5,0.5,0.5);
+                        drawPatch(Vec3(part[n][m].mean.block<3,1>(3,0)));
+                    }
+                glPopMatrix();
+            }
+        }
+        glPopMatrix();
+        glEndList();
+        secondLayerPartList.push_back(index);
+    }
+}
+
 /// create partObjects
 void QGLVisualizer::createPartObjects(){
     updatePartsObjectsFlag = true;
@@ -1233,6 +1271,12 @@ void QGLVisualizer::drawLayer2Layer(void){
     }
 }
 
+/// draw Part Second Layer
+void QGLVisualizer::drawPartSecondLayer(void) const{
+    for (auto &index : secondLayerPartList)
+        glCallList(index);
+}
+
 /// draw objects
 void QGLVisualizer::draw(){
     // Here we are in the world coordinate system. Draw unit size axis.
@@ -1247,9 +1291,11 @@ void QGLVisualizer::draw(){
     if (config.drawPartObjects)
         drawPartObjects();
     drawPointClouds();
+    //drawPartSecondLayer();
     updateHierarchy();
     update3Dobjects();
     updatePartsObjects();
+    //updateSecondLayerPart();
 }
 
 /// draw objects
