@@ -4,7 +4,7 @@
 int main(void){
     try {
         /*tinyxml2::XMLDocument config;
-        config.LoadFile("../../resources/configGlobal.xml");
+        config.LoadFile("../../resources/hop3dConfigGlobal.xml");
         if (config.ErrorID()){
             std::cout << "unable to load global config file.\n";
             return 1;
@@ -15,7 +15,7 @@ int main(void){
         imageFilter = hop3d::createDepthImageFilter(filterConfig);
         std::cout << imageFilter->getName() << "\n";
 
-        hop3d::Hierarchy hierarchy("configGlobal.xml");
+        hop3d::Hierarchy hierarchy("hop3dConfigGlobal.xml");
         std::cout << "Hierarchy: number of view-dependent layers: " << hierarchy.viewDependentLayers.size() << "\n";
         std::cout << "Finished" << std::endl;
         imageFilter->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
@@ -26,7 +26,7 @@ int main(void){
         hop3d::Octet::Seq  sequenceOfOctets;
 
         imageFilter->computeOctets(vecImages[0],0,0,0,sequenceOfOctets);*/
-        hop3d::HOP3D* hop3d = hop3d::createHOP3DBham("../../resources/configGlobal.xml");
+        hop3d::HOP3D* hop3d = hop3d::createHOP3DBham("../../resources/hop3dConfigGlobal.xml");
         hop3d->learn();
     }
     catch (const std::exception& ex) {

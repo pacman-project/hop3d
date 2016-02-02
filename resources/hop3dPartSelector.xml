@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+  <!-- part selector configuration -->
+  <PartSelector>
+    <name>PartSelector</name>
+<!--    verbose : 0 -> no debug
+		  1 -> show debug output 
+	distanceMeasure:
+		  0 -> dot product of normals
+		  1 -> dot product of normals and Euclidean distance
+		  2 -> dot product of normals and Mahalanobis distance
+		  3 -> view invariant metric
+    -->
+    <parameters verbose="1" distanceMetric="3" layersNo="7" maxIter="10"></parameters>
+    <layer1 clusters="-1" useCompressionRate="false" compressionRate="-1"></layer1> <!--constant size-->
+    <layer2 clusters="430" useCompressionRate="true" compressionRate="0.02"></layer2>
+    <layer3 clusters="100" useCompressionRate="true" compressionRate="0.4"></layer3>
+    <layer4 clusters="7" useCompressionRate="false" compressionRate="0.07"></layer4>
+    <layer5 clusters="43" useCompressionRate="true" compressionRate="1.0"></layer5>
+    <layer6 clusters="5" useCompressionRate="true" compressionRate="1.0"></layer6>
+    <layer7 clusters="5" useCompressionRate="true" compressionRate="1.0"></layer7>
+    <GICP verbose="0" guessesNo="50" correspondenceDist="100" alphaMin="-1.57" alphaMax="1.57" betaMin="-1.57" betaMax="1.57" gammaMin="-1.57" gammaMax="1.57"></GICP>
+  </PartSelector>

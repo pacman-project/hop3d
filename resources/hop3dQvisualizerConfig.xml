@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <!-- Visualizer configuration -->
+  <VisualizerConfig>
+  	<name>QGLVisualizer</name>
+	<parameters verbose="0"></parameters>
+	<hierarchy pixelSize="0.001" useEuclideanCoordinates="true" filterDepthScale="0.0008" draw3Dobjects="true" voxelSize="0.02"></hierarchy>
+	<layer1 dist="0.03" posZ="0.1"></layer1>
+	<layer2 dist="0.25" posZ="0.5"></layer2>
+	<layer3 dist="0.25" posZ="1.0"></layer3>
+	<layer4 dist="0.35" posZ="1.5"></layer4>
+	<layer5 dist="0.45" posZ="2.0"></layer5>
+	<layer6 dist="0.55" posZ="3.0"></layer6>
+	<layer7 dist="0.65" posZ="4.0"></layer7>
+	<objectsLayer1 draw="true" dist="1.12" posY="-0.7" posZ="0.0"></objectsLayer1>
+	<objectsLayer2 draw="true" dist="1.12" posY="-0.7" posZ="0.25"></objectsLayer2>
+	<objectsLayer3 draw="true" dist="1.12" posY="-0.7" posZ="0.5"></objectsLayer3>
+	<objectsLayer4 draw="true" dist="1.12" posY="-0.7" posZ="0.75"></objectsLayer4>
+	<objectsLayer5 draw="true" dist="1.12" posY="-0.7" posZ="1.0"></objectsLayer5>
+	<objectsLayer6 draw="true" dist="1.12" posY="-0.7" posZ="1.25"></objectsLayer6>
+	<objectsParts drawPartObjects="true" dist="0.3" posY="0.0" posZ="-0.1"></objectsParts>
+	<background red="1.0" green="1.0" blue="1.0" alpha="1.0"></background>
+	<pointCloud drawPointClouds="false" cloudPointSize="3" useNormalCloud="true"></pointCloud>
+	<!--surface type: 0 - rectangular patch
+		      1 - mesh-->
+	<surface surfaceType="0" drawSurfaces="true" useNormalSurf="true"></surface>
+	<layer2layer drawLayer2Layer="false" red="0.0" green="0.0" blue="0.8" alpha="0.1" width="0.5"></layer2layer>
+	<clusters drawClusters="true" red="0.0" green="0.8" blue="0.0" alpha="0.1"></clusters>
+	<normals drawNormals="true" scale="0.015" red="1.0" green="0.0" blue="0.0" alpha="1.0"></normals>
+	<GICP verbose="0" guessesNo="50" correspondenceDist="100" alphaMin="-1.57" alphaMax="1.57" betaMin="-1.57" betaMax="1.57" gammaMin="-1.57" gammaMax="1.57"></GICP>
+  </VisualizerConfig>

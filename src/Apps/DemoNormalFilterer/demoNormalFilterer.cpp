@@ -14,7 +14,7 @@ int main(void)
 {
     try {
         tinyxml2::XMLDocument config;
-        config.LoadFile("../../resources/configGlobal.xml");
+        config.LoadFile("../../resources/hop3dConfigGlobal.xml");
         if (config.ErrorID()){
             std::cout << "unable to load global config file.\n";
             return 1;

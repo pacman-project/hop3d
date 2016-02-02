@@ -9,7 +9,7 @@
 int main(void){
     try {
         tinyxml2::XMLDocument config;
-        config.LoadFile("../../resources/configGlobal.xml");
+        config.LoadFile("../../resources/hop3dConfigGlobal.xml");
         if (config.ErrorID()){
             std::cout << "unable to load global config file.\n";
             return 1;
@@ -47,7 +47,7 @@ int main(void){
         //Octet.
         octets[0].print();
 
-        hop3d::Hierarchy hierarchy("configGlobal.xml");
+        hop3d::Hierarchy hierarchy("hop3dConfigGlobal.xml");
         hop3d::ImageFilter* imageFilterer = hop3d::createDepthImageFilter(filtererConfig);
         imageFilterer->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
         std::vector<hop3d::Octet> octets3layer;

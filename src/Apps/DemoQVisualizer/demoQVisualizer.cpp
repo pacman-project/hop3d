@@ -15,21 +15,21 @@ void runHOP3D(){
     //std::cout << "Press Enter to start\n";
     //getchar();
     lhop3d->learn();
-    //lhop3d->load("hierarchyBoris.h3d");
+    //lhop3d->load("hop3dHierarchyBoris.h3d");
 }
 
 int main(int argc, char** argv)
 {
     try {
         tinyxml2::XMLDocument config;
-        config.LoadFile("../../resources/configGlobal.xml");
+        config.LoadFile("../../resources/hop3dConfigGlobal.xml");
         if (config.ErrorID()){
             std::cout << "unable to load global config file.\n";
             return 1;
         }
         std::string configFile(config.FirstChildElement( "QVisualizer" )->Attribute( "configFilename" ));
 
-        lhop3d = hop3d::createHOP3DBham("../../resources/configGlobal.xml");
+        lhop3d = hop3d::createHOP3DBham("../../resources/hop3dConfigGlobal.xml");
         QGLVisualizer::Config configVis(configFile);//something is wrong with QApplication when Qapplication
         //object is created. libTinyxml can read only ints from xml file
         // found: Qt changes locale settings use

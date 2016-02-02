@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+  <!-- dataset configuration -->
+  <!--type:
+	0 - Boris dataset-->
+  <Dataset datasetType="0" configFilename="../../resources/hop3dDatasetBoris.xml">
+  </Dataset>
+  
+  <!-- filter configuration -->
+  <!--type:
+	0 - depth patch
+	1 - normal vector-->
+  <Filterer filterType="1" configFilename="../../resources/hop3dDepthFilter.xml">
+  </Filterer>
+  
+  <!-- Stats builder configuration -->
+  <StatisticsBuilder configFilename="../../resources/hop3dStatsBuilder.xml">
+  </StatisticsBuilder>
+  
+  <!-- Stats builder configuration -->
+  <!--type:
+	0 - k-mean
+	1 - agglomerative hierarchical-->
+<!--   <PartSelector type="0" configFilename="../../resources/partSelector.xml"> -->
+  <PartSelector selectorType="1" configFilename="../../resources/hop3dPartSelectorAgglomerative.xml">
+  </PartSelector>
+  
+<!--   Hierarchy configuration -->
+  <Hierarchy>
+    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="4" viewDepPartsFromLayerNo="1"></parameters>
+    <save2file save2file="true" filename2save="hop3dHierarchyBoris.h3d"/>
+  </Hierarchy>
+  
+<!--  3D object composition configuration -->
+  <ObjectComposition configFilename="../../resources/hop3dObjectComposition.xml">
+  </ObjectComposition>
+
+<!--  depth camera model -->
+  <CameraModel configFilename="../../resources/hop3dKinectModel.xml">
+  </CameraModel>
+  
+<!--   QVisualizer configuration -->
+  <QVisualizer configFilename="../../resources/hop3dQvisualizerConfig.xml">
+  </QVisualizer>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+  <!-- filter configuration -->
+  <Filterer>
+    <name>DepthFilter</name>
+    <parameters filtersNo="100"  filterSize="7" verbose="0" overlapRf="1" maxDepthValue="65535" scalingToMeters="10000" backgroundOverlap="0" boundaryResponseLevel="1.8"></parameters>
+  </Filterer>
+  
+  <!-- normal filter configuration -->
+  <NormalFilterer>
+    <name>NormalDepthFilter</name>
+<!-- parameters:
+    nonMaximumSupressionGroup - true fin max for the group, false - find max for the whole window
+    minOctetsSize - minimal number of elements in the octet-->    
+    <parameters ringsNo="6" filterSize="5" verbose="0" nonMaximumSupressionGroup="true" minOctetSize="4" minOctetSizeSecondLayer="2" minPointsNoSecondLayer="4" distThresholdSecondLayer="0.015" useEuclideanCoordinates="true" splitSurfaces="true"></parameters>
+<!--     PCAWindowSize - aperture linear size
+    PCARelDistClusters - create two clusters and check distance between them. If distance is PCARelDistClusters times larger than width of the front cluster run PCA
+    background threshold - compute response if points no in filter window is bigger than threshold
+    -->
+    <PCA PCAWindowSize="7" PCADistThreshold="0.015" PCAbackgroundThreshold="40" PCAuseClustering="false" PCARelDistClusters="4.0"></PCA>
+    <imageFiltering useMedianFilter="true" kernelSize="7"></imageFiltering>
+  </NormalFilterer>
