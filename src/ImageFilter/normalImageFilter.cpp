@@ -218,8 +218,12 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
             }
         }
     }*/
-    OctetsImage octetsImage = extractOctets(responseImage, cloudOrd, octets);
-    updateOctetsImage(0,categoryNo, objectNo, imageNo, octetsImage);
+    for (int overlapNo=0;overlapNo<3;overlapNo++){
+        Octet::Seq octetsTmp;
+        OctetsImage octetsImage = extractOctets(responseImage, overlapNo, cloudOrd, octetsTmp);
+        octets.insert(octets.end(), octetsTmp.begin(), octetsTmp.end() );
+        updateOctetsImage(0,overlapNo,categoryNo, objectNo, imageNo, octetsImage);
+    }
     //saveCloud(categoryNo, objectNo, imageNo, cloudGrasp);
 
     if (config.verbose>0){
@@ -235,20 +239,23 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
 }
 
 /// update structure which holds octets images
-void NormalImageFilter::updateOctetsImage(int layerNo, int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage){
+void NormalImageFilter::updateOctetsImage(int layerNo, int overlapNo, int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage){
     if((int)octetsImages.size()<=layerNo){
         octetsImages.resize(layerNo+1);
     }
-    if((int)octetsImages[layerNo].size()<=categoryNo){
-        octetsImages[layerNo].resize(categoryNo+1);
+    if((int)octetsImages[layerNo].size()<=overlapNo){
+        octetsImages[layerNo].resize(overlapNo+1);
     }
-    if ((int)octetsImages[layerNo][categoryNo].size()<=objectNo){
-        octetsImages[layerNo][categoryNo].resize(objectNo+1);
+    if((int)octetsImages[layerNo][overlapNo].size()<=categoryNo){
+        octetsImages[layerNo][overlapNo].resize(categoryNo+1);
     }
-    if ((int)octetsImages[layerNo][categoryNo][objectNo].size()<=imageNo){
-        octetsImages[layerNo][categoryNo][objectNo].resize(imageNo+1);
+    if ((int)octetsImages[layerNo][overlapNo][categoryNo].size()<=objectNo){
+        octetsImages[layerNo][overlapNo][categoryNo].resize(objectNo+1);
     }
-    octetsImages[layerNo][categoryNo][objectNo][imageNo] = octetsImage;
+    if ((int)octetsImages[layerNo][overlapNo][categoryNo][objectNo].size()<=imageNo){
+        octetsImages[layerNo][overlapNo][categoryNo][objectNo].resize(imageNo+1);
+    }
+    octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo] = octetsImage;
 }
 
 /// update structure which holds octets images
@@ -266,9 +273,9 @@ void NormalImageFilter::updateOctetsImage(int layerNo, int categoryNo, int objec
 }*/
 
 /// returs filter ids and their position on the image
-void NormalImageFilter::getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const {
+void NormalImageFilter::getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const {
     partCoords.clear();
-    for (auto& row : octetsImages[0][categoryNo][objectNo][imageNo]){
+    for (auto& row : octetsImages[0][overlapNo][categoryNo][objectNo][imageNo]){
         for (auto& octet : row){
             if (octet.get()!=nullptr){
                 if (!octet->isBackground){
@@ -293,21 +300,21 @@ void NormalImageFilter::getResponseFilters(int categoryNo, int objectNo, int ima
 }
 
 /// returs parts ids and their position on the image
-void NormalImageFilter::getPartsRealisation(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const{
+void NormalImageFilter::getPartsRealisation(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const{
     parts.clear();
     if (layerNo==0){
-        for (size_t row=0; row<octetsImages[layerNo][categoryNo][objectNo][imageNo].size();row++){
-            for (size_t col=0; col<octetsImages[layerNo][categoryNo][objectNo][imageNo][row].size();col++){
-                if (octetsImages[layerNo][categoryNo][objectNo][imageNo][row][col].get()!=nullptr){
-                    if (!octetsImages[layerNo][categoryNo][objectNo][imageNo][row][col]->isBackground){
+        for (size_t row=0; row<octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo].size();row++){
+            for (size_t col=0; col<octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row].size();col++){
+                if (octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col].get()!=nullptr){
+                    if (!octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->isBackground){
                         for (int i=0;i<3;i++){
                             for (int j=0;j<3;j++){
-                                if (octetsImages[layerNo][categoryNo][objectNo][imageNo][row][col]->partIds[i][j]>=0){
+                                if (octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->partIds[i][j]>=0){
                                     ViewDependentPart vdp;
-                                    vdp.locationEucl = octetsImages[layerNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[1][1]+octetsImages[layerNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[i][j];
+                                    vdp.locationEucl = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[1][1]+octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[i][j];
                                     vdp.offset=Mat34::Identity();
                                     vdp.id = 0;
-                                    vdp.realisationId = octetsImages[layerNo][categoryNo][objectNo][imageNo][row][col]->realisationsIds[i][j];
+                                    vdp.realisationId = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->realisationsIds[i][j];
                                     parts.push_back(vdp);
                                 }
                             }
@@ -318,7 +325,7 @@ void NormalImageFilter::getPartsRealisation(int categoryNo, int objectNo, int im
         }
     }
     else{
-        for (auto& row : partsImages[layerNo-1][categoryNo][objectNo][imageNo]){
+        for (auto& row : partsImages[layerNo-1][overlapNo][categoryNo][objectNo][imageNo]){
             for (auto& part : row){
                 if (part.get()!=nullptr){
                     if (!part->isBackground()){
@@ -331,10 +338,10 @@ void NormalImageFilter::getPartsRealisation(int categoryNo, int objectNo, int im
 }
 
 /// returs parts ids and their position on the image
-void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const{
+void NormalImageFilter::getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const{
     partCoords.clear();
     if (layerNo==1){
-        for (auto& row : octetsImages[1][categoryNo][objectNo][imageNo]){
+        for (auto& row : octetsImages[1][overlapNo][categoryNo][objectNo][imageNo]){
             for (auto& octet : row){
                 if (octet.get()!=nullptr){
                     if (!octet->isBackground){
@@ -358,7 +365,7 @@ void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, in
         }
     }
     else{
-        for (auto& row : partsImages[layerNo-1][categoryNo][objectNo][imageNo]){
+        for (auto& row : partsImages[layerNo-1][overlapNo][categoryNo][objectNo][imageNo]){
             for (auto& part : row){
                 if (part.get()!=nullptr){
                     if (!part->isBackground()){
@@ -372,10 +379,10 @@ void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, in
 }
 
 /// returs parts ids and their position on the image
-void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords) const{
+void NormalImageFilter::getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords) const{
     partCoords.clear();
     if (layerNo>0){
-        for (auto& row : partsImages[layerNo-1][categoryNo][objectNo][imageNo]){
+        for (auto& row : partsImages[layerNo-1][overlapNo][categoryNo][objectNo][imageNo]){
             for (auto& part : row){
                 if (part.get()!=nullptr){
                     if (!part->isBackground()){
@@ -393,29 +400,32 @@ void NormalImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, in
 }
 
 /// update structure which holds parts images
-void NormalImageFilter::updatePartsImages(int categoryNo, int objectNo, int imageNo, int layerNo, const PartsImage& partsImage){
+void NormalImageFilter::updatePartsImages(int categoryNo, int objectNo, int imageNo, int layerNo, int overlapNo, const PartsImage& partsImage){
     if((int)partsImages.size()<=layerNo){
         partsImages.resize(layerNo+1);
     }
-    if((int)partsImages[layerNo].size()<=categoryNo){
-        partsImages[layerNo].resize(categoryNo+1);
+    if((int)partsImages[layerNo].size()<=overlapNo){
+        partsImages[layerNo].resize(overlapNo+1);
     }
-    if ((int)partsImages[layerNo][categoryNo].size()<=objectNo){
-        partsImages[layerNo][categoryNo].resize(objectNo+1);
+    if((int)partsImages[layerNo][overlapNo].size()<=categoryNo){
+        partsImages[layerNo][overlapNo].resize(categoryNo+1);
     }
-    if ((int)partsImages[layerNo][categoryNo][objectNo].size()<=imageNo){
-        partsImages[layerNo][categoryNo][objectNo].resize(imageNo+1);
+    if ((int)partsImages[layerNo][overlapNo][categoryNo].size()<=objectNo){
+        partsImages[layerNo][overlapNo][categoryNo].resize(objectNo+1);
     }
-    partsImages[layerNo][categoryNo][objectNo][imageNo] = partsImage;
+    if ((int)partsImages[layerNo][overlapNo][categoryNo][objectNo].size()<=imageNo){
+        partsImages[layerNo][overlapNo][categoryNo][objectNo].resize(imageNo+1);
+    }
+    partsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo] = partsImage;
 }
 
 ///extract octets from response image
-NormalImageFilter::OctetsImage NormalImageFilter::extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets){
+NormalImageFilter::OctetsImage NormalImageFilter::extractOctets(const std::vector< std::vector<Response> >& responseImg, int overlapNo, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets){
     int u=0;
     OctetsImage octetsImage(responseImg.size()/(config.filterSize*3), std::vector<std::shared_ptr<Octet>> (responseImg[0].size()/(config.filterSize*3)));
-    for (size_t i=config.filterSize+config.filterSize/2;i<responseImg.size()-config.filterSize-(config.filterSize/2);i=i+3*config.filterSize){
+    for (size_t i=((overlapNo+1)*config.filterSize)+config.filterSize/2;i<responseImg.size()-config.filterSize-(config.filterSize/2);i=i+3*config.filterSize){
         int v=0;
-        for (size_t j=config.filterSize+config.filterSize/2;j<responseImg[0].size()-config.filterSize-(config.filterSize/2);j=j+3*config.filterSize){
+        for (size_t j=((overlapNo+1)*config.filterSize)+config.filterSize/2;j<responseImg[0].size()-config.filterSize-(config.filterSize/2);j=j+3*config.filterSize){
             Octet octet;
             if (computeOctet(responseImg, cloudOrd, int(i), int(j), octet)){
                 updateRealisationIds(octet);
@@ -701,36 +711,38 @@ bool NormalImageFilter::findMaxGroupResponse(const std::vector< std::vector<Resp
 /// compute set of octets from set of the ids image
 void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets){
     octets.clear();
-    OctetsImage octetsImage = octetsImages[0][categoryNo][objectNo][imageNo];
-    OctetsImage nextLayerOctetsImg(octetsImage.size()/3, std::vector<std::shared_ptr<Octet>> (octetsImage.back().size()/3));
-    int u=0;
-    for (size_t i=1; i<octetsImage.size()-1;i=i+3){
-        int v=0;
-        for (size_t j=1; j<octetsImage[0].size()-1;j=j+3){
-            Octet octet;
-            if (!isBackground(octetsImage, (int)i, (int)j)){
-                if (fillInOctet(octetsImage, hierarchy, (int)i, (int)j, octet)>=config.minOctetSizeSecondLayer){
-                    int biggerGroupSize, smallerGroupSize;
-                    bool hasDoubleSurface = octet.hasDoubleSurface(config.distThresholdSecondLayer,biggerGroupSize, smallerGroupSize);
-                    if (biggerGroupSize>=config.minOctetSizeSecondLayer){
-                        computeRelativePositions(octet, 2);
-                        octet.isBackground=false;
-                        if (hasDoubleSurface&&config.splitSurfaces){
-                            octet.splitSurfaces(config.distThresholdSecondLayer, config.minOctetSizeSecondLayer, smallerGroupSize);
+    for (int overlapNo=0;overlapNo<3;overlapNo++){
+        OctetsImage octetsImage = octetsImages[0][overlapNo][categoryNo][objectNo][imageNo];
+        OctetsImage nextLayerOctetsImg(octetsImage.size()/3, std::vector<std::shared_ptr<Octet>> (octetsImage.back().size()/3));
+        int u=0;
+        for (size_t i=1+overlapNo; i<octetsImage.size()-1;i=i+3){
+            int v=0;
+            for (size_t j=1+overlapNo; j<octetsImage[0].size()-1;j=j+3){
+                Octet octet;
+                if (!isBackground(octetsImage, (int)i, (int)j)){
+                    if (fillInOctet(octetsImage, hierarchy, (int)i, (int)j, octet)>=config.minOctetSizeSecondLayer){
+                        int biggerGroupSize, smallerGroupSize;
+                        bool hasDoubleSurface = octet.hasDoubleSurface(config.distThresholdSecondLayer,biggerGroupSize, smallerGroupSize);
+                        if (biggerGroupSize>=config.minOctetSizeSecondLayer){
+                            computeRelativePositions(octet, 2);
+                            octet.isBackground=false;
+                            if (hasDoubleSurface&&config.splitSurfaces){
+                                octet.splitSurfaces(config.distThresholdSecondLayer, config.minOctetSizeSecondLayer, smallerGroupSize);
+                            }
+                            updateRealisationIds(octet);
+                            octets.push_back(octet);
+                            if (octet.secondOctet.size()>0)
+                                octets.push_back(octet.secondOctet[0]);
+                            nextLayerOctetsImg[u][v].reset(new Octet(octet));
                         }
-                        updateRealisationIds(octet);
-                        octets.push_back(octet);
-                        if (octet.secondOctet.size()>0)
-                            octets.push_back(octet.secondOctet[0]);
-                        nextLayerOctetsImg[u][v].reset(new Octet(octet));
                     }
                 }
+                v++;
             }
-            v++;
+            u++;
         }
-        u++;
+        updateOctetsImage(1, overlapNo, categoryNo, objectNo, imageNo, nextLayerOctetsImg);
     }
-    updateOctetsImage(1,categoryNo, objectNo, imageNo, nextLayerOctetsImg);
 }
 
 /// check if octet is background
@@ -789,8 +801,8 @@ bool NormalImageFilter::isBackground(OctetsImage& octetsImage, int u, int v) con
 }*/
 
 /// define 2rd layer octet images using selected words from third layer
-void NormalImageFilter::computePartsImage(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo){
-    OctetsImage octetsImage = octetsImages[layerNo][categoryNo][objectNo][imageNo];
+void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo){
+    OctetsImage octetsImage = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo];
     PartsImage partsImage (octetsImage.size(), std::vector<std::shared_ptr<ViewDependentPart>> (octetsImage.back().size()));
     for (size_t i=0; i<octetsImage.size();i++){
         for (size_t j=0; j<octetsImage.back().size();j++){
@@ -833,17 +845,19 @@ void NormalImageFilter::computePartsImage(int categoryNo, int objectNo, int imag
             }
         }
     }
-    updatePartsImages(categoryNo, objectNo, imageNo, layerNo, partsImage);
+    updatePartsImages(categoryNo, objectNo, imageNo, layerNo, overlapNo, partsImage);
 }
 
 /// get last view dependent layer parts from the image
 void NormalImageFilter::getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const{
     parts.clear();
-    for (size_t i=0; i<partsImages[layerNo][categoryNo][objectNo][imageNo].size();i++){
-        for (size_t j=0; j<partsImages[layerNo][categoryNo][objectNo][imageNo].back().size();j++){
-            if (partsImages[layerNo][categoryNo][objectNo][imageNo][i][j].get()!=nullptr){
-                if (!partsImages[layerNo][categoryNo][objectNo][imageNo][i][j]->isBackground()){
-                    parts.push_back(*partsImages[layerNo][categoryNo][objectNo][imageNo][i][j]);
+    for (int overlapNo=0;overlapNo<3;overlapNo++){
+        for (size_t i=0; i<partsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo].size();i++){
+            for (size_t j=0; j<partsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo].back().size();j++){
+                if (partsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][i][j].get()!=nullptr){
+                    if (!partsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][i][j]->isBackground()){
+                        parts.push_back(*partsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][i][j]);
+                    }
                 }
             }
         }
@@ -1206,19 +1220,19 @@ Mat33 NormalImageFilter::coordinateFromNormal(const Vec3& _normal){
 }*/
 
 /// get set of ids for the given input point
-void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart){
-    unsigned int octetCoords[2]={u/(config.filterSize*3),v/(config.filterSize*3)};
-    if ((octetCoords[0]<octetsImages[0][categoryNo][objectNo][imageNo].size())&&(octetCoords[1]<octetsImages[0][categoryNo][objectNo][imageNo][0].size())){
-        if (octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
-            Octet octet = *(octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]);
-            if (octet.partIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]==-2){
+void NormalImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart){
+    unsigned int octetCoords[2]={(u-overlapNo*config.filterSize)/(config.filterSize*3),(v-overlapNo*config.filterSize)/(config.filterSize*3)};
+    if ((octetCoords[0]>0)&&(octetCoords[1]>0)&&(octetCoords[0]<octetsImages[0][overlapNo][categoryNo][objectNo][imageNo].size())&&(octetCoords[1]<octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][0].size())){
+        if (octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
+            Octet octet = *(octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]);
+            if (octet.partIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]==-2){
                 if (octet.secondOctet.size()>0)
-                    ids.push_back(octet.secondOctet[0].partIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]);
+                    ids.push_back(octet.secondOctet[0].partIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]);
                 else
                     ids.push_back(-2);
             }
             else {
-                ids.push_back(octet.partIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]);
+                ids.push_back(octet.partIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]);
             }
         }
         else
@@ -1227,19 +1241,19 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
     else{
         ids.push_back(-2); //point wasn't used to create part
     }
-    if (octetCoords[0]<partsImages[0][categoryNo][objectNo][imageNo].size()&&octetCoords[1]<partsImages[0][categoryNo][objectNo][imageNo][0].size()){
-        if (partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
-            lastVDpart = *partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
-            if (!partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->isBackground()){
-                if (octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
+    if (octetCoords[0]<partsImages[0][overlapNo][categoryNo][objectNo][imageNo].size()&&octetCoords[1]<partsImages[0][overlapNo][categoryNo][objectNo][imageNo][0].size()){
+        if (partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
+            lastVDpart = *partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
+            if (!partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->isBackground()){
+                if (octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
                     //ViewDependentPart.partsPosNorm[1][1]
-                    Octet * octet = octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get();
-                    if (octet->partIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]==-2){
+                    Octet * octet = octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get();
+                    if (octet->partIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]==-2){
                         if (octet->secondOctet.size()>0){
                             if (fabs(octet->secondOctet[0].partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold))
                                 ids.push_back(-2);
                             else
-                                ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->secondVDPart[0].id);
+                                ids.push_back(partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->secondVDPart[0].id);
                         }
                         else
                             ids.push_back(-2);
@@ -1248,7 +1262,7 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
                         if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold))
                             ids.push_back(-2);
                         else
-                            ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->id);
+                            ids.push_back(partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->id);
                     }
                 }
                 else {
@@ -1266,29 +1280,20 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
         lastVDpart=ViewDependentPart();
         ids.push_back(-2);
     }
-    unsigned int octetCoords2nd[2]={u/(config.filterSize*3*3),v/(config.filterSize*3*3)};
-    if ((octetCoords2nd[0]<partsImages[1][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<partsImages[1][categoryNo][objectNo][imageNo][0].size())){
-        /*if (partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
-            lastVDpart = *(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]);
-            if (!lastVDpart.isBackground())
-                ids.push_back(lastVDpart.id);
-            else
-                ids.push_back(-2);
-        }
-        else
-            ids.push_back(-2);*/
-        if (partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
-            lastVDpart = *partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
-            if (!partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->isBackground()){
-                if (octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
+    unsigned int octetCoords2nd[2]={(u-overlapNo*(3*config.filterSize))/(config.filterSize*3*3),(v-overlapNo*(3*config.filterSize))/(config.filterSize*3*3)};
+    if ((octetCoords2nd[0]>0)&&(octetCoords2nd[1]>0)&&(octetCoords2nd[0]<partsImages[1][overlapNo][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<partsImages[1][overlapNo][categoryNo][objectNo][imageNo][0].size())){
+        if (partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
+            lastVDpart = *partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
+            if (!partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->isBackground()){
+                if (octetsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
                     //ViewDependentPart.partsPosNorm[1][1]
-                    Octet * octet = octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get();
-                    if (octet->partIds[(u/(config.filterSize*3))%3][(v/(config.filterSize*3))%3]==-2){
+                    Octet * octet = octetsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get();
+                    if (octet->partIds[((u-overlapNo*(3*config.filterSize))/(config.filterSize*3))%3][((v-overlapNo*(3*config.filterSize))/(config.filterSize*3))%3]==-2){
                         if (octet->secondOctet.size()>0){
                             if (fabs(octet->secondOctet[0].partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer))
                                 ids.push_back(-2);
                             else
-                                ids.push_back(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->secondVDPart[0].id);
+                                ids.push_back(partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->secondVDPart[0].id);
                         }
                         else
                             ids.push_back(-2);
@@ -1297,7 +1302,7 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
                         if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer))
                             ids.push_back(-2);
                         else
-                            ids.push_back(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->id);
+                            ids.push_back(partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->id);
                     }
                 }
                 else {
@@ -1318,19 +1323,19 @@ void NormalImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, u
 }
 
 /// get set of ids for the given input point
-void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart){
-    unsigned int octetCoords[2]={u/(config.filterSize*3),v/(config.filterSize*3)};
-    if ((octetCoords[0]<octetsImages[0][categoryNo][objectNo][imageNo].size())&&(octetCoords[1]<octetsImages[0][categoryNo][objectNo][imageNo][0].size())){
-        if (octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
-            Octet octet = *(octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]);
-            if (octet.partIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]==-2){
+void NormalImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart){
+    unsigned int octetCoords[2]={(u-overlapNo*config.filterSize)/(config.filterSize*3),(v-overlapNo*config.filterSize)/(config.filterSize*3)};
+    if ((octetCoords[0]>0)&&(octetCoords[1]>0)&&(octetCoords[0]<octetsImages[0][overlapNo][categoryNo][objectNo][imageNo].size())&&(octetCoords[1]<octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][0].size())){
+        if (octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
+            Octet octet = *(octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]);
+            if (octet.partIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]==-2){
                 if (octet.secondOctet.size()>0)
-                    ids.push_back(octet.secondOctet[0].realisationsIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]);
+                    ids.push_back(octet.secondOctet[0].realisationsIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]);
                 else
                     ids.push_back(-2);
             }
             else {
-                ids.push_back(octet.partIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]);
+                ids.push_back(octet.partIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]);
             }
         }
         else
@@ -1339,19 +1344,19 @@ void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int ima
     else{
         ids.push_back(-2); //point wasn't used to create part
     }
-    if (octetCoords[0]<partsImages[0][categoryNo][objectNo][imageNo].size()&&octetCoords[1]<partsImages[0][categoryNo][objectNo][imageNo][0].size()){
-        if (partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
-            lastVDpart = *partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
-            if (!partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->isBackground()){
-                if (octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
+    if (octetCoords[0]<partsImages[0][overlapNo][categoryNo][objectNo][imageNo].size()&&octetCoords[1]<partsImages[0][overlapNo][categoryNo][objectNo][imageNo][0].size()){
+        if (partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
+            lastVDpart = *partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
+            if (!partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->isBackground()){
+                if (octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
                     //ViewDependentPart.partsPosNorm[1][1]
-                    Octet * octet = octetsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get();
+                    Octet * octet = octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get();
                     if (octet->partIds[(u/(config.filterSize))%3][(v/(config.filterSize))%3]==-2){
                         if (octet->secondOctet.size()>0){
                             if (fabs(octet->secondOctet[0].partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold))
                                 ids.push_back(-2);
                             else
-                                ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->secondVDPart[0].realisationId);
+                                ids.push_back(partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->secondVDPart[0].realisationId);
                         }
                         else
                             ids.push_back(-2);
@@ -1360,7 +1365,7 @@ void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int ima
                         if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold))
                             ids.push_back(-2);
                         else
-                            ids.push_back(partsImages[0][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->realisationId);
+                            ids.push_back(partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->realisationId);
                     }
                 }
                 else {
@@ -1379,19 +1384,19 @@ void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int ima
         ids.push_back(-2);
     }
     unsigned int octetCoords2nd[2]={u/(config.filterSize*3*3),v/(config.filterSize*3*3)};
-    if ((octetCoords2nd[0]<partsImages[1][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<partsImages[1][categoryNo][objectNo][imageNo][0].size())){
-        if (partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
-            lastVDpart = *partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
-            if (!partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->isBackground()){
-                if (octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
+    if ((octetCoords2nd[0]<partsImages[1][overlapNo][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<partsImages[1][overlapNo][categoryNo][objectNo][imageNo][0].size())){
+        if (partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
+            lastVDpart = *partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
+            if (!partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->isBackground()){
+                if (octetsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
                     //ViewDependentPart.partsPosNorm[1][1]
-                    Octet * octet = octetsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get();
+                    Octet * octet = octetsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get();
                     if (octet->partIds[(u/(config.filterSize*3))%3][(v/(config.filterSize*3))%3]==-2){
                         if (octet->secondOctet.size()>0){
                             if (fabs(octet->secondOctet[0].partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer))
                                 ids.push_back(-2);
                             else
-                                ids.push_back(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->secondVDPart[0].realisationId);
+                                ids.push_back(partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->secondVDPart[0].realisationId);
                         }
                         else
                             ids.push_back(-2);
@@ -1400,7 +1405,7 @@ void NormalImageFilter::getRealisationsIds(int categoryNo, int objectNo, int ima
                         if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer))
                             ids.push_back(-2);
                         else
-                            ids.push_back(partsImages[1][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->realisationId);
+                            ids.push_back(partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->realisationId);
                     }
                 }
                 else {
@@ -1449,21 +1454,24 @@ void NormalImageFilter::save2file(std::ostream& os) const{
     os << octetsImages.size() << " ";
     for (auto &layer : octetsImages){
         os << layer.size() << " ";
-        for (auto &category : layer){
-            os << category.size() << " ";
-            for (auto &object : category){
-                os << object.size() << " ";
-                for (auto &image : object){
-                    os << image.size() << " ";
-                    for (auto &row : image){
-                        os << row.size() << " ";
-                        for (auto &octet : row){
-                            if (octet.get()!=nullptr){
-                                os << 1 << " ";
-                                os << *octet;
+        for (auto &overlap : layer){
+            os << overlap.size() << " ";
+            for (auto &category : overlap){
+                os << category.size() << " ";
+                for (auto &object : category){
+                    os << object.size() << " ";
+                    for (auto &image : object){
+                        os << image.size() << " ";
+                        for (auto &row : image){
+                            os << row.size() << " ";
+                            for (auto &octet : row){
+                                if (octet.get()!=nullptr){
+                                    os << 1 << " ";
+                                    os << *octet;
+                                }
+                                else
+                                    os << 0 << " ";
                             }
-                            else
-                                os << 0 << " ";
                         }
                     }
                 }
@@ -1473,21 +1481,24 @@ void NormalImageFilter::save2file(std::ostream& os) const{
     os << partsImages.size() << " ";
     for (auto &layer : partsImages){
         os << layer.size() << " ";
-        for (auto &category : layer){
-            os << category.size() << " ";
-            for (auto &object : category){
-                os << object.size() << " ";
-                for (auto &image : object){
-                    os << image.size() << " ";
-                    for (auto &row : image){
-                        os << row.size() << " ";
-                        for (auto &part : row){
-                            if (part.get()!=nullptr){
-                                os << 1 << " ";
-                                os << *part << " ";
-                            }
-                            else{
-                                os << 0 << " ";
+        for (auto &overlap : layer){
+            os << overlap.size() << " ";
+            for (auto &category : overlap){
+                os << category.size() << " ";
+                for (auto &object : category){
+                    os << object.size() << " ";
+                    for (auto &image : object){
+                        os << image.size() << " ";
+                        for (auto &row : image){
+                            os << row.size() << " ";
+                            for (auto &part : row){
+                                if (part.get()!=nullptr){
+                                    os << 1 << " ";
+                                    os << *part << " ";
+                                }
+                                else{
+                                    os << 0 << " ";
+                                }
                             }
                         }
                     }
@@ -1543,31 +1554,36 @@ void NormalImageFilter::loadFromfile(std::istream& is){
     octetsImages.clear();
     octetsImages.resize(layersNo);
     for (int layNo = 0; layNo<layersNo; layNo++){
-        is >> categoriesNo;
-        octetsImages[layNo].resize(categoriesNo);
-        for (int catNo = 0; catNo<categoriesNo; catNo++){
-            int objectsNo;
-            is >> objectsNo;
-            octetsImages[layNo][catNo].resize(objectsNo);
-            for (int objNo=0;objNo<objectsNo; objNo++){
-                int imgsNo;
-                is >> imgsNo;
-                octetsImages[layNo][catNo][objNo].resize(imgsNo);
-                for (int imgNo=0;imgNo<imgsNo;imgNo++){
-                    int rowsNo;
-                    is >> rowsNo;
-                    octetsImages[layNo][catNo][objNo][imgNo].resize(rowsNo);
-                    for (int rowNo=0;rowNo<rowsNo;rowNo++){
-                        int octetsNo;
-                        is >> octetsNo;
-                        octetsImages[layNo][catNo][objNo][imgNo][rowNo].resize(octetsNo);
-                        for (int octetNo=0;octetNo<octetsNo;octetNo++){
-                            int isOctet;
-                            is >> isOctet;
-                            if (isOctet){
-                                Octet octet;
-                                is >> octet;
-                                octetsImages[layNo][catNo][objNo][imgNo][rowNo][octetNo].reset(new Octet(octet));
+        int overlapsNo;
+        is >> overlapsNo;
+        octetsImages[layNo].resize(overlapsNo);
+        for (int overlapNo = 0; overlapNo<overlapsNo; overlapNo++){
+            is >> categoriesNo;
+            octetsImages[layNo][overlapNo].resize(categoriesNo);
+            for (int catNo = 0; catNo<categoriesNo; catNo++){
+                int objectsNo;
+                is >> objectsNo;
+                octetsImages[layNo][overlapNo][catNo].resize(objectsNo);
+                for (int objNo=0;objNo<objectsNo; objNo++){
+                    int imgsNo;
+                    is >> imgsNo;
+                    octetsImages[layNo][overlapNo][catNo][objNo].resize(imgsNo);
+                    for (int imgNo=0;imgNo<imgsNo;imgNo++){
+                        int rowsNo;
+                        is >> rowsNo;
+                        octetsImages[layNo][overlapNo][catNo][objNo][imgNo].resize(rowsNo);
+                        for (int rowNo=0;rowNo<rowsNo;rowNo++){
+                            int octetsNo;
+                            is >> octetsNo;
+                            octetsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo].resize(octetsNo);
+                            for (int octetNo=0;octetNo<octetsNo;octetNo++){
+                                int isOctet;
+                                is >> isOctet;
+                                if (isOctet){
+                                    Octet octet;
+                                    is >> octet;
+                                    octetsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo][octetNo].reset(new Octet(octet));
+                                }
                             }
                         }
                     }
@@ -1580,32 +1596,37 @@ void NormalImageFilter::loadFromfile(std::istream& is){
     partsImages.clear();
     partsImages.resize(layersNo);
     for (int layNo = 0; layNo<layersNo; layNo++){
-        int catsNo;
-        is >> catsNo;
-        partsImages[layNo].resize(catsNo);
-        for (int catNo = 0; catNo<catsNo; catNo++){
-            int objectsNo;
-            is >> objectsNo;
-            partsImages[layNo][catNo].resize(objectsNo);
-            for (int objNo=0;objNo<objectsNo; objNo++){
-                int imgsNo;
-                is >> imgsNo;
-                partsImages[layNo][catNo][objNo].resize(imgsNo);
-                for (int imgNo=0;imgNo<imgsNo;imgNo++){
-                    int rowsNo;
-                    is >> rowsNo;
-                    partsImages[layNo][catNo][objNo][imgNo].resize(rowsNo);
-                    for (int rowNo=0;rowNo<rowsNo;rowNo++){
-                        int partsNo;
-                        is >> partsNo;
-                        partsImages[layNo][catNo][objNo][imgNo][rowNo].resize(partsNo);
-                        for (int partNo=0;partNo<partsNo;partNo++){
-                            int isPart;
-                            is >> isPart;
-                            if (isPart){
-                                ViewDependentPart part;
-                                is >> part;
-                                partsImages[layNo][catNo][objNo][imgNo][rowNo][partNo].reset(new ViewDependentPart(part));
+        int overlapsNo;
+        is >> overlapsNo;
+        octetsImages[layNo].resize(overlapsNo);
+        for (int overlapNo = 0; overlapNo<overlapsNo; overlapNo++){
+            int catsNo;
+            is >> catsNo;
+            partsImages[layNo][overlapNo].resize(catsNo);
+            for (int catNo = 0; catNo<catsNo; catNo++){
+                int objectsNo;
+                is >> objectsNo;
+                partsImages[layNo][overlapNo][catNo].resize(objectsNo);
+                for (int objNo=0;objNo<objectsNo; objNo++){
+                    int imgsNo;
+                    is >> imgsNo;
+                    partsImages[layNo][overlapNo][catNo][objNo].resize(imgsNo);
+                    for (int imgNo=0;imgNo<imgsNo;imgNo++){
+                        int rowsNo;
+                        is >> rowsNo;
+                        partsImages[layNo][overlapNo][catNo][objNo][imgNo].resize(rowsNo);
+                        for (int rowNo=0;rowNo<rowsNo;rowNo++){
+                            int partsNo;
+                            is >> partsNo;
+                            partsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo].resize(partsNo);
+                            for (int partNo=0;partNo<partsNo;partNo++){
+                                int isPart;
+                                is >> isPart;
+                                if (isPart){
+                                    ViewDependentPart part;
+                                    is >> part;
+                                    partsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo][partNo].reset(new ViewDependentPart(part));
+                                }
                             }
                         }
                     }

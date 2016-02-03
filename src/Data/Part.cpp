@@ -532,7 +532,7 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
                 }
             }
             Eigen::Matrix4d trans1 = Eigen::umeyama(pointsA,pointsB,false);
-            trans.matrix()=trans1;
+            trans.matrix() = trans1;
             trans(2,3)=0;
             //trans = putslam::KabschEst::computeTrans(pointsA, pointsB);
             //std::cout << "transss\n" << trans.matrix() << "\n";

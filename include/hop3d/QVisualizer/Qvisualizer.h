@@ -223,7 +223,7 @@ public:
     void update3Dmodels(void);
 
     /// update part clouds
-    void update(std::vector<std::vector<hop3d::PointCloudRGBA>>& objects);
+    void update(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& objects);
 
     /// update object from filters
     void update(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo, int layerNo);
@@ -270,8 +270,8 @@ private:
     /// objects indexed by layerNo
     std::vector<Object3DSeq> layersOfObjects;
 
-    /// object clouds coloured by part id
-    std::vector<std::vector<hop3d::PointCloudRGBA>> partClouds;
+    /// object clouds coloured by part id (overlapNo->layerNo->objectNo)
+    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> partClouds;
 
     /// clusters list
     std::vector< std::vector< GLuint > > objects3Dlist;
@@ -279,11 +279,14 @@ private:
     /// objects drawn from filter poses
     std::vector<std::vector<std::vector<Part3D>>> objectsFromParts;
 
-    /// partObjects list
-    std::vector< GLuint > partObjectsLists;
+    /// partObjects list (overlapNo->layerNo)
+    std::vector<std::vector<GLuint>> partObjectsLists;
 
     /// active layer for partObjects
     int activeLayer;
+
+    /// active overlapNo for partObjects
+    int activeOverlapNo;
 
     /// draw objects
     void draw();

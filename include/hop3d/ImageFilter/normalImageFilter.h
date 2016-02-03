@@ -61,7 +61,7 @@ public:
     void computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo);
 
     /// define ith layer octet images using selected words from i+1 layer
-    void computePartsImage(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo);
+    void computePartsImage(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo);
 
     /// get last view dependent layer parts from the image
     void getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
@@ -70,25 +70,25 @@ public:
     static Mat33 coordinateFromNormal(const Vec3& _normal);
 
     /// get set of ids for the given input point
-    void getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart);
+    void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart);
 
     /// get set of ids for the given input point
-    void getRealisationsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart);
+    void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart);
 
     /// returs filter ids and their position on the image
-    void getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const;
+    void getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const;
 
     /// returs parts ids and their position on the image
-    void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const;
+    void getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const;
 
     /// returs parts ids and their position on the image
-    void getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords) const;
+    void getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords) const;
 
     /// get cloud from dataset
     void getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& cloud) const;
 
     /// returs parts ids and their position on the image
-    void getPartsRealisation(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
+    void getPartsRealisation(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
 
     /// Insertion operator
     friend std::ostream& operator<<(std::ostream& os, const NormalImageFilter& filter);
@@ -157,17 +157,10 @@ private:
     hop3d::Filter::Seq filters;
     /// sensor model
     DepthSensorModel sensorModel;
-    /// octets images
-    std::vector<std::vector<std::vector< std::vector<OctetsImage>>>> octetsImages;
-    std::vector<std::vector< std::vector<OctetsImage>>> octetsImages1stLayer;
-    /// octets images -- second layer
-    std::vector<std::vector< std::vector<OctetsImage>>> octetsImages2ndLayer;
-    /// parts images
-    //std::vector<std::vector< std::vector<PartsImage>>> partsImages;
-    /// parts images
-    std::vector<std::vector<std::vector< std::vector<PartsImage>>>> partsImages;
-    /// input clouds
-    //std::vector<std::vector< std::vector<hop3d::PointCloudUV>>> inputClouds;
+    /// octets images (indices: layerNo->overlapNo->categoryNo->objectNo->imageNo)
+    std::vector<std::vector<std::vector<std::vector< std::vector<OctetsImage>>>>> octetsImages;
+    /// parts images (indices: layerNo->overlapNo->categoryNo->objectNo->imageNo)
+    std::vector<std::vector<std::vector<std::vector< std::vector<PartsImage>>>>> partsImages;
     /// part realisation counter
     int partRealisationsCounter;
 
@@ -190,7 +183,7 @@ private:
     //static void normalizeVector(Vec3& normal);
 
     ///extract octets from response image
-    OctetsImage extractOctets(const std::vector< std::vector<Response> >& responseImg, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets);
+    OctetsImage extractOctets(const std::vector< std::vector<Response> >& responseImg, int overlapNo, const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, hop3d::Octet::Seq& octets);
 
     /// compute otet for given location on response image
     bool computeOctet(const std::vector< std::vector<Response> >& responseImg,  const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u,  int v, Octet& octet) const;
@@ -217,10 +210,10 @@ private:
     int findId(const hop3d::Hierarchy& hierarchy, int layerNo, const Octet& octet, Mat34& offset) const;
 
     /// update structure which holds octets images
-    void updateOctetsImage(int layerNo, int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage);
+    void updateOctetsImage(int layerNo, int overlapNo, int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage);
 
     /// update structure which holds parts images
-    void updatePartsImages(int categoryNo, int objectNo, int imageNo, int layerNo, const PartsImage& partsImage);
+    void updatePartsImages(int categoryNo, int objectNo, int imageNo, int layerNo, int overlapNo, const PartsImage& partsImage);
 
     /// Apply median filter on the image
     void medianFilter(const cv::Mat& inputImg, cv::Mat& outputImg, int kernelSize) const;

@@ -210,8 +210,8 @@ void DepthImageFilter::setFilters(std::string patchesFileName, std::string norma
 }*/
 
 /// define ith layer octet images using selected words from i+1 layer
-void DepthImageFilter::computePartsImage(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo){
-    std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << layerNo << "\n";
+void DepthImageFilter::computePartsImage(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo){
+    std::cout << overlapNo << categoryNo << " " << objectNo << " " << imageNo << " " << layerNo << "\n";
     hierarchy.viewDependentLayers.size();
 }
 
@@ -222,36 +222,36 @@ void DepthImageFilter::getLayerParts(int categoryNo, int objectNo, int imageNo, 
 }
 
 /// get set of ids for the given input point
-void DepthImageFilter::getPartsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart){
+void DepthImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart){
     std::cout << "not implemented\n";
     ids.clear();
     std::cout << lastVDpart.id << "\n";
-    std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << "\n";
+    std::cout << overlapNo << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << "\n";
 }
 
 /// get set of ids for the given input point
-void DepthImageFilter::getRealisationsIds(int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart){
+void DepthImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart){
     std::cout << "not implemented\n";
     ids.clear();
     std::cout << lastVDpart.id << "\n";
-    std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << depth << "\n";
+    std::cout << overlapNo << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << depth << "\n";
 }
 
 /// returs filter ids and their position on the image
-void DepthImageFilter::getResponseFilters(int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const{
-    std::cout << categoryNo << objectNo << imageNo << "\n";
+void DepthImageFilter::getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const{
+    std::cout << overlapNo << categoryNo << objectNo << imageNo << "\n";
     partCoords.clear();
 }
 
 /// returs parts ids and their position on the image
-void DepthImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const{
-    std::cout << categoryNo << objectNo << imageNo << layerNo << "\n";
+void DepthImageFilter::getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const{
+    std::cout << overlapNo << categoryNo << objectNo << imageNo << layerNo << "\n";
     partCoords.clear();
 }
 
 /// returs parts ids and their position on the image
-void DepthImageFilter::getParts3D(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords) const{
-    std::cout << categoryNo << objectNo << imageNo << layerNo << "\n";
+void DepthImageFilter::getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords) const{
+    std::cout << overlapNo << categoryNo << objectNo << imageNo << layerNo << "\n";
     partCoords.clear();
 }
 
@@ -262,9 +262,9 @@ void DepthImageFilter::getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& 
 }
 
 /// returs parts ids and their position on the image
-void DepthImageFilter::getPartsRealisation(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const{
+void DepthImageFilter::getPartsRealisation(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const{
     parts.clear();
-    std::cout << categoryNo << " " << objectNo << imageNo << layerNo << "\n";
+    std::cout << overlapNo << categoryNo << " " << objectNo << imageNo << layerNo << "\n";
 }
 
 /// get input point

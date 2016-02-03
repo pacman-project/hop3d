@@ -168,7 +168,11 @@ void HOP3DBham::getPartsRealisation(int categoryNo, int objectNo, int imageNo, s
     Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
     for (int layerNo = 0;layerNo<(int)hierarchy.get()->viewDependentLayers.size()+1;layerNo++){
         std::vector<ViewDependentPart> partsView;
-        imageFilterer->getPartsRealisation(categoryNo, objectNo, imageNo,layerNo,partsView);
+        for (int overlapNo=0;overlapNo<3;overlapNo++){
+            std::vector<ViewDependentPart> partsViewTmp;
+            imageFilterer->getPartsRealisation(overlapNo, categoryNo, objectNo, imageNo,layerNo,partsViewTmp);
+            partsView.insert(partsView.end(), partsViewTmp.begin(), partsViewTmp.end());
+        }
         for (auto& part : partsView){
             ViewIndependentPart::Part3D part3D;
             part3D.id = ((layerNo)*10000)+part.id;
@@ -339,10 +343,12 @@ void HOP3DBham::learn(){
     }
     //represent/explain all images in parts from i-th layer
     for (size_t layerNo=0; layerNo< hierarchy.get()->viewDependentLayers.size();layerNo++){
-        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
-            for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
-                for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
-                    imageFilterer->computePartsImage((int)categoryNo, (int)objectNo, (int)imageNo, *hierarchy, (int)layerNo);
+        for (int overlapNo=0; overlapNo<3; overlapNo++){
+            for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
+                for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
+                    for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                        imageFilterer->computePartsImage(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, *hierarchy, (int)layerNo);
+                    }
                 }
             }
         }
@@ -449,10 +455,18 @@ void HOP3DBham::learn(){
                 for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
                     std::vector<PartCoords> partCoords;
                     std::vector<PartCoordsEucl> partCoordsEucl;
-                    if (layerNo==0)
-                        imageFilterer->getResponseFilters((int)categoryNo, (int)objectNo, (int)imageNo, partCoords);
-                    else
-                        imageFilterer->getParts3D((int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoordsEucl);
+                    for (int overlapNo=0; overlapNo<3; overlapNo++){
+                        if (layerNo==0){
+                            std::vector<PartCoords> partCoordsTmp;
+                            imageFilterer->getResponseFilters(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, partCoordsTmp);
+                            partCoords.insert(partCoords.end(), partCoordsTmp.begin(), partCoordsTmp.end());
+                        }
+                        else{
+                            std::vector<PartCoordsEucl> partCoordsEuclTmp;
+                            imageFilterer->getParts3D(overlapNo,(int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoordsEuclTmp);
+                            partCoordsEucl.insert(partCoordsEucl.end(), partCoordsEuclTmp.begin(), partCoordsEuclTmp.end());
+                        }
+                    }
                     Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                     std::vector<std::pair<int, Mat34>> filtersPoses;
                     if (layerNo<1){
@@ -584,10 +598,10 @@ void HOP3DBham::load(std::string filename){
 }
 
 /// get set of ids from hierarchy for the given input point
-void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const{
+void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const{
     ids.clear();
     ViewDependentPart lastVDpart;
-    imageFilterer->getPartsIds(categoryNo, objectNo, imageNo, u, v, depth, ids, lastVDpart);
+    imageFilterer->getPartsIds(overlapNo, categoryNo, objectNo, imageNo, u, v, depth, ids, lastVDpart);
 }
 
 /// get set of ids from hierarchy for the given input point (view-independent layers)
@@ -607,7 +621,11 @@ void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, const Vec
 void HOP3DBham::getRealisationsIds(int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const{
     ids.clear();
     ViewDependentPart lastVDpart;
-    imageFilterer->getRealisationsIds(categoryNo, objectNo, imageNo, u, v, depth, ids, lastVDpart);
+    for (int overlapNo=0;overlapNo<3;overlapNo++){
+        std::vector<int> idsTmp;
+        imageFilterer->getRealisationsIds(overlapNo, categoryNo, objectNo, imageNo, u, v, depth, idsTmp, lastVDpart);
+        ids.insert(ids.end(),idsTmp.begin(),idsTmp.end());
+    }
     /// view independent ids
     /*Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
     Vec3 point(Vec3(NAN,NAN,NAN));
@@ -623,14 +641,14 @@ void HOP3DBham::getRealisationsIds(int categoryNo, int objectNo, int imageNo, in
 }
 
 /// get points realisation for the cloud
-void HOP3DBham::getPointsModels(int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts) const{
+void HOP3DBham::getPointsModels(int overlapNo, int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts) const{
     cv::Mat depthImage;
     dataset->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo, depthImage);
     PointCloudUV cloudUV;
     imageFilterer->getCloud(depthImage,cloudUV);
     for (const auto &pointuv : cloudUV){
         std::vector<int> ids;
-        getPartsIds(categoryNo, objectNo, imageNo, pointuv.u, pointuv.v, pointuv.position(2), ids);
+        getPartsIds(overlapNo, categoryNo, objectNo, imageNo, pointuv.u, pointuv.v, pointuv.position(2), ids);
         PointPart pointPart;
         pointPart.position=pointuv.position;
         for (int i=0;i<(int)ids.size();i++){
@@ -666,36 +684,60 @@ void HOP3DBham::createPartClouds(){
             colors[layerNo][partNo] = color;
         }
     }
-    /// point clouds
-    std::vector<std::vector<hop3d::PointCloudRGBA>> cloudsObj(layersNo); // vector of coloured objects
-    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
-        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
-            (datasetInfo.categories[categoryNo].objects.size());
-            std::vector<hop3d::PointCloudRGBA> objsTmp(layersNo);
-            for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
-                hop3d::PartsCloud cloudParts;
-                getPointsModels((int)categoryNo, (int)objectNo, (int)imageNo, cloudParts);
-                Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
-                for (auto &pointPart : cloudParts){
-                    for (int el=0;el<(int)pointPart.partsIds.size();el++){
-                        int layNo=pointPart.partsIds[el].first;
-                        PointColor pointRGBA(pointPart.position,std::array<double,4>({0.0,0.0,0.0,1.0}));
-                        if (pointPart.partsIds[layNo].second>=0){
-                            pointRGBA.color = colors[layNo][pointPart.partsIds[layNo].second];
+    /// point clouds (index: overlapNo->layerNo->objectNo)
+    int overlapsNo=4;
+    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> cloudsObj(overlapsNo, std::vector<std::vector<hop3d::PointCloudRGBA>>(layersNo)); // vector of coloured objects
+    for (int overlapNo=0; overlapNo<overlapsNo; overlapNo++){
+        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
+            for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
+                std::vector<hop3d::PointCloudRGBA> objsTmp(layersNo);
+                for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                    hop3d::PartsCloud cloudParts;
+                    if (overlapNo<3){
+                        getPointsModels(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, cloudParts);
+                        Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+                        for (auto &pointPart : cloudParts){
+                            for (int el=0;el<(int)pointPart.partsIds.size();el++){
+                                int layNo=pointPart.partsIds[el].first;
+                                PointColor pointRGBA(pointPart.position,std::array<double,4>({0.0,0.0,0.0,1.0}));
+                                if (pointPart.partsIds[layNo].second>=0){
+                                    pointRGBA.color = colors[layNo][pointPart.partsIds[layNo].second];
+                                }
+                                if (!std::isnan(pointPart.position(0))){
+                                    Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(pointPart.position(0),pointPart.position(1),pointPart.position(2)));
+                                    Mat34 pointWorld = cameraPose*pointCam;
+                                    pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(2)=pointWorld(2,3); pointRGBA.position(1)=pointWorld(1,3);
+                                    if (layNo<3)
+                                        pointRGBA.position(1)+=0.2*double(imageNo);
+                                    objsTmp[layNo].push_back(pointRGBA);
+                                }
+                            }
                         }
-                        if (!std::isnan(pointPart.position(0))){
-                            Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(pointPart.position(0),pointPart.position(1),pointPart.position(2)));
-                            Mat34 pointWorld = cameraPose*pointCam;
-                            pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(2)=pointWorld(2,3); pointRGBA.position(1)=pointWorld(1,3);
-                            if (layNo<3)
-                                pointRGBA.position(1)+=0.2*double(imageNo);
-                            objsTmp[layNo].push_back(pointRGBA);
+                    }
+                    else{
+                        for (int layNo=0;layNo<3;layNo++){
+                            for (int pointNo=0;pointNo<(int)cloudsObj[0][layNo][objectNo].size();pointNo++){
+                                PointColor pointRGBA(cloudsObj[0][layNo][objectNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
+                                int colorsNo=0;
+                                for (int overNo=0;overNo<3;overNo++){
+                                    if (cloudsObj[overNo][layNo][objectNo][pointNo].color[0]>0||cloudsObj[overNo][layNo][objectNo][pointNo].color[1]>0||cloudsObj[overNo][layNo][objectNo][pointNo].color[2]>0){
+                                        colorsNo++;
+                                        for (int colorId=0;colorId<3;colorId++)
+                                            pointRGBA.color[colorId]+=cloudsObj[overNo][layNo][objectNo][pointNo].color[colorId];
+                                    }
+                                    if (colorsNo>0){
+                                        for (int colorId=0;colorId<3;colorId++)
+                                            pointRGBA.color[colorId]/=double(colorsNo);
+                                    }
+                                }
+                                objsTmp[layNo].push_back(pointRGBA);
+                            }
                         }
                     }
                 }
-            }
-            for (size_t layerNo=0;layerNo<objsTmp.size();layerNo++){
-                cloudsObj[layerNo].push_back(objsTmp[layerNo]);
+                for (size_t layerNo=0;layerNo<objsTmp.size();layerNo++){
+                    cloudsObj[overlapNo][layerNo].push_back(objsTmp[layerNo]);
+                }
             }
         }
     }

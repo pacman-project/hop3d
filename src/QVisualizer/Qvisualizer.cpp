@@ -85,6 +85,7 @@ QGLVisualizer::QGLVisualizer(void) {
     objects3Dlist.resize(7);
     objectsFromParts.resize(7);
     activeLayer=0;
+    activeOverlapNo = 0;
 }
 
 /// Construction
@@ -97,6 +98,7 @@ QGLVisualizer::QGLVisualizer(Config _config): config(_config), updateHierarchyFl
     objects3Dlist.resize(7);
     objectsFromParts.resize(7);
     activeLayer=0;
+    activeOverlapNo = 0;
 }
 
 /// Construction
@@ -167,8 +169,9 @@ void QGLVisualizer::update(hop3d::Hierarchy& _hierarchy) {
 }
 
 /// update part clouds
-void QGLVisualizer::update(std::vector<std::vector<hop3d::PointCloudRGBA>>& objects){
+void QGLVisualizer::update(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& objects){
     activeLayer=0;
+    activeOverlapNo=0;
     partClouds = objects;
 }
 
@@ -176,8 +179,11 @@ void QGLVisualizer::update(std::vector<std::vector<hop3d::PointCloudRGBA>>& obje
 void QGLVisualizer::updatePartsObjects(void){
     if (updatePartsObjectsFlag){
         updatePartsObjectsFlag = false;
-        for (size_t layerNo=0;layerNo<partClouds.size();layerNo++){
-            partObjectsLists.push_back(createPartObjList(partClouds[layerNo]));
+        partObjectsLists.resize(partClouds.size());
+        for (size_t overlapNo=0;overlapNo<partClouds.size();overlapNo++){
+            for (size_t layerNo=0;layerNo<partClouds[overlapNo].size();layerNo++){
+                partObjectsLists[overlapNo].push_back(createPartObjList(partClouds[overlapNo][layerNo]));
+            }
         }
     }
     partClouds.clear();
@@ -354,8 +360,9 @@ void QGLVisualizer::draw3Dobjects(void){
 
 /// Draw part objects
 void QGLVisualizer::drawPartObjects(void){
-    if (activeLayer<(int)partObjectsLists.size())
-        glCallList(partObjectsLists[activeLayer]);
+    if (activeOverlapNo<(int)partObjectsLists.size())
+        if (activeLayer<(int)partObjectsLists[activeOverlapNo].size())
+            glCallList(partObjectsLists[activeOverlapNo][activeLayer]);
 }
 
 /// Draw clusters
@@ -1395,6 +1402,22 @@ void QGLVisualizer::keyPressEvent(QKeyEvent *e) {
   }
   else if ((e->key()==Qt::Key_6) && (modifiers==Qt::NoButton)){
       activeLayer=5;
+      handled = true;
+  }
+  else if ((e->key()==Qt::Key_Q) && (modifiers==Qt::NoButton)){
+      activeOverlapNo=0;
+      handled = true;
+  }
+  else if ((e->key()==Qt::Key_W) && (modifiers==Qt::NoButton)){
+      activeOverlapNo=1;
+      handled = true;
+  }
+  else if ((e->key()==Qt::Key_E) && (modifiers==Qt::NoButton)){
+      activeOverlapNo=2;
+      handled = true;
+  }
+  else if ((e->key()==Qt::Key_R) && (modifiers==Qt::NoButton)){
+      activeOverlapNo=3;
       handled = true;
   }
   // ... and so on with other else/if blocks.
