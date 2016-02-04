@@ -1591,14 +1591,13 @@ void NormalImageFilter::loadFromfile(std::istream& is){
             }
         }
     }
-
     is >> layersNo;
     partsImages.clear();
     partsImages.resize(layersNo);
     for (int layNo = 0; layNo<layersNo; layNo++){
         int overlapsNo;
         is >> overlapsNo;
-        octetsImages[layNo].resize(overlapsNo);
+        partsImages[layNo].resize(overlapsNo);
         for (int overlapNo = 0; overlapNo<overlapsNo; overlapNo++){
             int catsNo;
             is >> catsNo;
