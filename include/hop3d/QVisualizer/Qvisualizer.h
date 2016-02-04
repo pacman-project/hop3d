@@ -126,15 +126,25 @@ public:
             normalsColor.setRedF(rgba[0]); normalsColor.setGreenF(rgba[1]);
             normalsColor.setBlueF(rgba[2]); normalsColor.setAlphaF(rgba[3]);
 
-            model->FirstChildElement( "GICP" )->QueryIntAttribute("verbose", &configGICP.verbose);
-            model->FirstChildElement( "GICP" )->QueryIntAttribute("guessesNo", &configGICP.guessesNo);
-            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("correspondenceDist", &configGICP.correspondenceDist);
-            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMin", &configGICP.alpha.first);
-            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMax", &configGICP.alpha.second);
-            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMin", &configGICP.beta.first);
-            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMax", &configGICP.beta.second);
-            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMin", &configGICP.gamma.first);
-            model->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMax", &configGICP.gamma.second);
+            std::string GICPConfig = (model->FirstChildElement( "GICP" )->Attribute( "configFilename" ));
+            tinyxml2::XMLDocument configGICPxml;
+            configGICPxml.LoadFile(GICPConfig.c_str());
+            if (configGICPxml.ErrorID())
+                throw std::runtime_error("unable to load Object Composition octree config file: " + filename);
+            tinyxml2::XMLElement * groupGICP = configGICPxml.FirstChildElement( "GICP" );
+
+            groupGICP->QueryIntAttribute("verbose", &configGICP.verbose);
+            groupGICP->QueryIntAttribute("guessesNo", &configGICP.guessesNo);
+            groupGICP->QueryIntAttribute("maxIterations", &configGICP.maxIterations);
+            groupGICP->QueryDoubleAttribute("transformationEpsilon", &configGICP.transformationEpsilon);
+            groupGICP->QueryDoubleAttribute("EuclideanFitnessEpsilon", &configGICP.EuclideanFitnessEpsilon);
+            groupGICP->QueryDoubleAttribute("correspondenceDist", &configGICP.correspondenceDist);
+            groupGICP->QueryDoubleAttribute("alphaMin", &configGICP.alpha.first);
+            groupGICP->QueryDoubleAttribute("alphaMax", &configGICP.alpha.second);
+            groupGICP->QueryDoubleAttribute("betaMin", &configGICP.beta.first);
+            groupGICP->QueryDoubleAttribute("betaMax", &configGICP.beta.second);
+            groupGICP->QueryDoubleAttribute("gammaMin", &configGICP.gamma.first);
+            groupGICP->QueryDoubleAttribute("gammaMax", &configGICP.gamma.second);
         }
         public:
         /// Background color

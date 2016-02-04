@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+    <GICP verbose="0" guessesNo="150" maxIterations="10" transformationEpsilon="1e-1" EuclideanFitnessEpsilon="0.1" correspondenceDist="100" alphaMin="-1.57" alphaMax="1.57" betaMin="-1.57" betaMax="1.57" gammaMin="-1.57" gammaMax="1.57"></GICP>

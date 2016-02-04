@@ -45,15 +45,26 @@ PartSelectorMean::Config::Config(std::string configFilename){
         group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("compressionRate", &compressionRate[i]);
         group->FirstChildElement( layerName.c_str() )->QueryIntAttribute("clusters", &clustersNo[i]);
     }
-    group->FirstChildElement( "GICP" )->QueryIntAttribute("verbose", &configGICP.verbose);
-    group->FirstChildElement( "GICP" )->QueryIntAttribute("guessesNo", &configGICP.guessesNo);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("correspondenceDist", &configGICP.correspondenceDist);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMin", &configGICP.alpha.first);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMax", &configGICP.alpha.second);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMin", &configGICP.beta.first);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMax", &configGICP.beta.second);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMin", &configGICP.gamma.first);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMax", &configGICP.gamma.second);
+
+    std::string GICPConfig = (group->FirstChildElement( "GICP" )->Attribute( "configFilename" ));
+    tinyxml2::XMLDocument configGICPxml;
+    configGICPxml.LoadFile(GICPConfig.c_str());
+    if (configGICPxml.ErrorID())
+        throw std::runtime_error("unable to load Object Composition octree config file: " + filename);
+    tinyxml2::XMLElement * groupGICP = configGICPxml.FirstChildElement( "GICP" );
+
+    groupGICP->QueryIntAttribute("verbose", &configGICP.verbose);
+    groupGICP->QueryIntAttribute("guessesNo", &configGICP.guessesNo);
+    groupGICP->QueryIntAttribute("maxIterations", &configGICP.maxIterations);
+    groupGICP->QueryDoubleAttribute("transformationEpsilon", &configGICP.transformationEpsilon);
+    groupGICP->QueryDoubleAttribute("EuclideanFitnessEpsilon", &configGICP.EuclideanFitnessEpsilon);
+    groupGICP->QueryDoubleAttribute("correspondenceDist", &configGICP.correspondenceDist);
+    groupGICP->QueryDoubleAttribute("alphaMin", &configGICP.alpha.first);
+    groupGICP->QueryDoubleAttribute("alphaMax", &configGICP.alpha.second);
+    groupGICP->QueryDoubleAttribute("betaMin", &configGICP.beta.first);
+    groupGICP->QueryDoubleAttribute("betaMax", &configGICP.beta.second);
+    groupGICP->QueryDoubleAttribute("gammaMin", &configGICP.gamma.first);
+    groupGICP->QueryDoubleAttribute("gammaMax", &configGICP.gamma.second);
 }
 
 /// Select parts from the initial vocabulary
@@ -212,6 +223,7 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
             Mat34 offset;
             if (it->layerId>2){//compute distance from centroid
                 dist = (1+fabs(double(it->cloud.size())-double(dictionary[*itCentr].cloud.size())))*ViewIndependentPart::distanceGICP(*it, dictionary[*itCentr],config.configGICP, offset);
+                //dist = ViewIndependentPart::distanceGICP(*it, dictionary[*itCentr],config.configGICP, offset);
             }
             /*if (it->layerId==5){//compute distance from centroid
                 dist = ViewIndependentPart::distance(*it, dictionary[*itCentr], offset);
@@ -317,6 +329,7 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::S
                 Mat34 offset;
                 if (itPart->layerId>2){//compute distance from centroid
                     distSum += (1+fabs(double(itPart->cloud.size())-double(itPart2->cloud.size())))*ViewIndependentPart::distanceGICP(*itPart, *itPart2, config.configGICP, offset);
+                    //distSum += ViewIndependentPart::distanceGICP(*itPart, *itPart2, config.configGICP, offset);
                     offsetsTmp.push_back(offset);
                 }
                 /*if (itPart->layerId==5){//compute distance from centroid

@@ -201,7 +201,7 @@ void Hierarchy::computeGraph(IndexSeqMap& hierarchyGraph){
                 std::set<std::uint32_t> incomingIds;
                 for (int i=0;i<3;i++){
                     for (int j=0;j<3;j++){
-                        if (word.partIds[i][j]!=-1)
+                        if (word.partIds[i][j]>-1)
                             incomingIds.insert(incomingIds.end(),((layerNo)*layerInc)+word.partIds[i][j]);
                     }
                 }
@@ -227,14 +227,14 @@ void Hierarchy::computeGraph(IndexSeqMap& hierarchyGraph){
         layerNo++;
     }*/
     // print hierarchy
-    /*for (auto &node : graph){
+    for (auto &node : graph){
         std::cout << "part id " << node.first << "\n";
         std::cout << "is built from parts: ";
         for (auto &incId : node.second){
             std::cout << incId << ", ";
         }
         std::cout << "\n";
-    }*/
+    }
     hierarchyGraph = graph;
 }
 

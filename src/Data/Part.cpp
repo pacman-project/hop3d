@@ -300,6 +300,12 @@ double ViewIndependentPart::distanceGICP(const ViewIndependentPart& partA, const
     // setup Generalized-ICP
     pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal> gicp;
     gicp.setMaxCorrespondenceDistance(configGICP.correspondenceDist);
+    // Set the maximum number of iterations (criterion 1)
+    gicp.setMaximumIterations (configGICP.maxIterations);
+    // Set the transformation epsilon (criterion 2)
+    gicp.setTransformationEpsilon (configGICP.transformationEpsilon);
+    // Set the euclidean distance difference epsilon (criterion 3)
+    gicp.setEuclideanFitnessEpsilon (configGICP.EuclideanFitnessEpsilon);
     gicp.setInputSource(sourceCloud);
     gicp.setInputTarget(targetCloud);
     Eigen::Matrix4f transform(Eigen::Matrix4f::Identity());
@@ -327,9 +333,18 @@ double ViewIndependentPart::distanceGICP(const ViewIndependentPart& partA, const
         Eigen::Matrix<float, 4, 4> estM = initEst;
         gicp.align(output, estM);
         if (gicp.hasConverged()){
-            if (gicp.getFitnessScore()<errorMin&&fabs(gicp.getFinalTransformation()(0,3))<0.05&&fabs(gicp.getFinalTransformation()(1,3))<0.05&&fabs(gicp.getFinalTransformation()(2,3))<0.05){
-                transform = gicp.getFinalTransformation();
-                errorMin = gicp.getFitnessScore();
+            Eigen::Matrix4f trans = gicp.getFinalTransformation();
+            if ((trans(0,3)<0.1)&&(trans(1,3)<0.1)&&(trans(2,3)<0.1)){
+                //Mat34 trans34; trans34.matrix() = trans.cast<double>();
+                //double error = computeError(partA.cloud, partB.cloud, trans34);
+                //std::cout << "found transform\n" << trans34.matrix() << "\n";
+                //std::cout << "error " << error << "\n";
+                //getchar();
+                if (gicp.getFitnessScore()<errorMin&&fabs(gicp.getFinalTransformation()(0,3))<0.05&&fabs(gicp.getFinalTransformation()(1,3))<0.05&&fabs(gicp.getFinalTransformation()(2,3))<0.05){
+                    transform = trans;
+                    //errorMin = error;
+                    errorMin = gicp.getFitnessScore();
+                }
             }
         }
     }
@@ -340,6 +355,55 @@ double ViewIndependentPart::distanceGICP(const ViewIndependentPart& partA, const
         std::cout << "It took " << std::chrono::duration_cast<std::chrono::microseconds>(time).count() << " us to run.\n";
     }
     return errorMin;
+}
+
+/// compute error between tow point clous
+double ViewIndependentPart::computeError(const hop3d::PointCloud& cloudA, const hop3d::PointCloud& cloudB, hop3d::Mat34& trans){
+    hop3d::PointCloud cloudD;
+    // transform point
+    trans= trans.inverse();
+    for (auto &point : cloudB){
+        PointNormal pointD;
+        //std::cout << "point.position " << point.position.transpose() << "\n";
+        Vec4 pos4d(point.position(0), point.position(1), point.position(2),1.0);
+        //std::cout << (trans*pos4d).matrix() << "\n";
+        pointD.position = (trans*pos4d).block<3,1>(0,0);
+        //std::cout << "pointD.position " << pointD.position.transpose() << "\n";
+        pointD.normal = trans.rotation()*point.normal;
+        //std::cout << "pointD.normal " << pointD.normal.transpose() << "\n";
+        cloudD.push_back(pointD);
+    }
+    //std::cout << "trans \n" << trans.matrix() << "\n";
+    ///compute distance between neighbours
+    double error = 0;
+    double coeff = 0.05;
+    hop3d::PointCloud biggerCloud;
+    hop3d::PointCloud smallerCloud;
+    if (cloudA.size()>cloudD.size()){
+        biggerCloud = cloudA;
+        smallerCloud = cloudD;
+    }
+    else{
+        biggerCloud = cloudD;
+        smallerCloud = cloudA;
+    }
+    for (auto &pointA : biggerCloud){
+        double minDist = std::numeric_limits<double>::max();
+        double minError = std::numeric_limits<double>::max();
+        for (auto &pointD : smallerCloud){
+            double dist = sqrt((pointA.position-pointD.position).transpose()*(pointA.position-pointD.position));
+            if (dist<minDist){
+                minDist=dist;
+                double dotprod = pointA.normal.adjoint()*pointD.normal;
+                if (dotprod>1.0) dotprod=1.0;
+                if (dotprod<-1.0) dotprod=-1.0;
+                double angle = acos(dotprod);
+                minError = dist + coeff*angle;
+            }
+        }
+        error+=minError;
+    }
+    return error/double(biggerCloud.size());
 }
 
 /// compute distance between view-independent parts

@@ -1,6 +1,7 @@
 #include "hop3d/PartSelector/partSelectorAgglomerative.h"
 #include "hop3d/ImageFilter/normalImageFilter.h"
 #include <ctime>
+#include <chrono>
 
 using namespace hop3d;
 
@@ -41,22 +42,33 @@ PartSelectorAgglomerative::Config::Config(std::string configFilename){
         group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("maxDist", &maxDist[i]);
         group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("maxClusterDist", &maxClusterDist[i]);
     }
-    group->FirstChildElement( "GICP" )->QueryIntAttribute("verbose", &configGICP.verbose);
-    group->FirstChildElement( "GICP" )->QueryIntAttribute("guessesNo", &configGICP.guessesNo);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("correspondenceDist", &configGICP.correspondenceDist);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMin", &configGICP.alpha.first);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMax", &configGICP.alpha.second);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMin", &configGICP.beta.first);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMax", &configGICP.beta.second);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMin", &configGICP.gamma.first);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMax", &configGICP.gamma.second);
+
+    std::string GICPConfig = (group->FirstChildElement( "GICP" )->Attribute( "configFilename" ));
+    tinyxml2::XMLDocument configGICPxml;
+    configGICPxml.LoadFile(GICPConfig.c_str());
+    if (configGICPxml.ErrorID())
+        throw std::runtime_error("unable to load Object Composition octree config file: " + filename);
+    tinyxml2::XMLElement * groupGICP = configGICPxml.FirstChildElement( "GICP" );
+
+    groupGICP->QueryIntAttribute("verbose", &configGICP.verbose);
+    groupGICP->QueryIntAttribute("guessesNo", &configGICP.guessesNo);
+    groupGICP->QueryIntAttribute("maxIterations", &configGICP.maxIterations);
+    groupGICP->QueryDoubleAttribute("transformationEpsilon", &configGICP.transformationEpsilon);
+    groupGICP->QueryDoubleAttribute("EuclideanFitnessEpsilon", &configGICP.EuclideanFitnessEpsilon);
+    groupGICP->QueryDoubleAttribute("correspondenceDist", &configGICP.correspondenceDist);
+    groupGICP->QueryDoubleAttribute("alphaMin", &configGICP.alpha.first);
+    groupGICP->QueryDoubleAttribute("alphaMax", &configGICP.alpha.second);
+    groupGICP->QueryDoubleAttribute("betaMin", &configGICP.beta.first);
+    groupGICP->QueryDoubleAttribute("betaMax", &configGICP.beta.second);
+    groupGICP->QueryDoubleAttribute("gammaMin", &configGICP.gamma.first);
+    groupGICP->QueryDoubleAttribute("gammaMax", &configGICP.gamma.second);
 }
 
 /// Select parts from the initial vocabulary
 void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary, int layerNo){
     std::vector<std::vector<double>> distanceMatrix(dictionary.size(), std::vector<double>(dictionary.size()));
     std::vector<std::vector<Mat34>> transformMatrix(dictionary.size(), std::vector<Mat34>(dictionary.size()));
-    std::cout << "compute distance matrix...";
+    std::cout << "compute distance matrix...\n";
     computeDistanceMatrix(dictionary, distanceMatrix, transformMatrix);
     if (config.verbose>0){
         std::cout << "done\n";
@@ -172,7 +184,11 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart:
         for (size_t idB=idA+1;idB<dictionary.size();idB++){
             double dist(0); Mat34 transform;
             if (dictionary[idA].layerId>2){//compute distance from centroid
+                //std::cout << ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idA], config.configGICP, transform) << "\n";
+                //std::cout << transform.matrix() << "\n";
+                //getchar();
                 dist = (1+fabs(double(dictionary[idA].cloud.size())-double(dictionary[idB].cloud.size())))*ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
+                //dist = ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
             }
             distanceMatrix[idA][idB]=dist;
             distanceMatrix[idB][idA]=dist;
@@ -187,7 +203,7 @@ double PartSelectorAgglomerative::findMinDistance(const std::vector<std::vector<
     double minDist=std::numeric_limits<double>::max();
     for (size_t idA=0;idA<distanceMatrix.size();idA++){
         for (size_t idB=idA+1;idB<distanceMatrix.size();idB++){
-            if ((distanceMatrix[idA][idB]>=0)&&(distanceMatrix[idA][idB]<minDist)){
+            if ((distanceMatrix[idA][idB]<minDist)&&(distanceMatrix[idA][idB]>=0)){
                 minDist=distanceMatrix[idA][idB];
                 pairedIds = std::make_pair(idA,idB);
             }
@@ -392,7 +408,7 @@ void PartSelectorAgglomerative::computeCentroids(const std::vector<std::vector<i
 void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
     std::vector<std::vector<double>> distanceMatrix(dictionary.size(), std::vector<double>(dictionary.size()));
     std::vector<std::vector<Mat34>> transformMatrix(dictionary.size(), std::vector<Mat34>(dictionary.size()));
-    std::cout << "compute distance matrix...";
+    std::cout << "compute distance matrix...\n";
     computeDistanceMatrix(dictionary, hierarchy, distanceMatrix, transformMatrix);
     if (config.verbose>0){
         std::cout << "done\n";

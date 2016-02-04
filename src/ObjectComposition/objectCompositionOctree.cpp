@@ -50,15 +50,25 @@ ObjectCompositionOctree::Config::Config(std::string configFilename){
     group->FirstChildElement( "pointCloudGrid" )->QueryIntAttribute("voxelsNoGrid", &voxelsNoGrid);
     group->FirstChildElement( "pointCloudGrid" )->QueryDoubleAttribute("voxelSizeGrid", &voxelSizeGrid);
 
-    group->FirstChildElement( "GICP" )->QueryIntAttribute("verbose", &configGICP.verbose);
-    group->FirstChildElement( "GICP" )->QueryIntAttribute("guessesNo", &configGICP.guessesNo);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("correspondenceDist", &configGICP.correspondenceDist);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMin", &configGICP.alpha.first);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("alphaMax", &configGICP.alpha.second);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMin", &configGICP.beta.first);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("betaMax", &configGICP.beta.second);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMin", &configGICP.gamma.first);
-    group->FirstChildElement( "GICP" )->QueryDoubleAttribute("gammaMax", &configGICP.gamma.second);
+    std::string GICPConfig = (group->FirstChildElement( "GICP" )->Attribute( "configFilename" ));
+    tinyxml2::XMLDocument configGICPxml;
+    configGICPxml.LoadFile(GICPConfig.c_str());
+    if (configGICPxml.ErrorID())
+        throw std::runtime_error("unable to load Object Composition octree config file: " + filename);
+    tinyxml2::XMLElement * groupGICP = configGICPxml.FirstChildElement( "GICP" );
+
+    groupGICP->QueryIntAttribute("verbose", &configGICP.verbose);
+    groupGICP->QueryIntAttribute("guessesNo", &configGICP.guessesNo);
+    groupGICP->QueryIntAttribute("maxIterations", &configGICP.maxIterations);
+    groupGICP->QueryDoubleAttribute("transformationEpsilon", &configGICP.transformationEpsilon);
+    groupGICP->QueryDoubleAttribute("EuclideanFitnessEpsilon", &configGICP.EuclideanFitnessEpsilon);
+    groupGICP->QueryDoubleAttribute("correspondenceDist", &configGICP.correspondenceDist);
+    groupGICP->QueryDoubleAttribute("alphaMin", &configGICP.alpha.first);
+    groupGICP->QueryDoubleAttribute("alphaMax", &configGICP.alpha.second);
+    groupGICP->QueryDoubleAttribute("betaMin", &configGICP.beta.first);
+    groupGICP->QueryDoubleAttribute("betaMax", &configGICP.beta.second);
+    groupGICP->QueryDoubleAttribute("gammaMin", &configGICP.gamma.first);
+    groupGICP->QueryDoubleAttribute("gammaMax", &configGICP.gamma.second);
 }
 
 /// update composition from octets (words from last view-independent layer's vocabulary)
@@ -224,6 +234,7 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
                         }
                         std::cout << "ref rot\n" << m << "\n";*/
                         double fitness = (1+fabs(double(word.cloud.size())-double((*octrees[layerNo]).at(idX,idY,idZ).cloud.size())))*ViewIndependentPart::distanceGICP(word,(*octrees[layerNo])(idX,idY,idZ),config.configGICP,estTransform);
+                        //double fitness = ViewIndependentPart::distanceGICP(word,(*octrees[layerNo])(idX,idY,idZ),config.configGICP,estTransform);
                         //std::cout << "estTransform\n" << estTransform.matrix() << "\n";
                         //std::cout << "word id " << wordId << ", fitnes: " << fitness << "\n";
                         //getchar();

@@ -395,7 +395,10 @@ void HOP3DBham::learn(){
             }
         }
         std::cout << layerNo+4 << " layer init vocabulary size: " << vocabulary.size() << "\n";
+        std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         partSelector->selectParts(vocabulary, int(layerNo+4));
+        std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
+        std::cout << "Clusterization took = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() <<std::endl;
         std::cout << "Dictionary size (" << layerNo+4 << "-th layer): " << vocabulary.size() << "\n";
         /// First view-independent layer (three and a half layer)
         hierarchy.get()->viewIndependentLayers[layerNo]=vocabulary;
@@ -507,7 +510,7 @@ void HOP3DBham::learn(){
             }
         }
     }
-    std::this_thread::sleep_for (std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     notify3Dmodels();
     createPartClouds();
     Hierarchy::IndexSeqMap hierarchyGraph;
@@ -725,10 +728,10 @@ void HOP3DBham::createPartClouds(){
                                         for (int colorId=0;colorId<3;colorId++)
                                             pointRGBA.color[colorId]+=cloudsObj[overNo][layNo][objectNo][pointNo].color[colorId];
                                     }
-                                    if (colorsNo>0){
-                                        for (int colorId=0;colorId<3;colorId++)
-                                            pointRGBA.color[colorId]/=double(colorsNo);
-                                    }
+                                }
+                                if (colorsNo>0){
+                                    for (int colorId=0;colorId<3;colorId++)
+                                        pointRGBA.color[colorId]/=double(colorsNo);
                                 }
                                 objsTmp[layNo].push_back(pointRGBA);
                             }

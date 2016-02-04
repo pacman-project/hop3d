@@ -4,7 +4,6 @@
 #include "hop3d/Data/Defs.h"
 #include "hop3d/Data/Cloud.h"
 #include "hop3d/Utilities/kabschEst.h"
-
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -29,6 +28,12 @@ public:
     int guessesNo;
     /// correspondence distance
     double correspondenceDist;
+    /// max Iterations (stop criterion)
+    int maxIterations;
+    /// transformation Epsilon (stop criterion)
+    double transformationEpsilon;
+    /// EuclideanFitnessEpsilon (stop criterion)
+    double EuclideanFitnessEpsilon;
     /// alpha range
     std::pair<double,double> alpha;
     /// beta range
@@ -260,6 +265,9 @@ public:
 
     /// compute distance between view-independent parts (7th layer)
     static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary1, const ViewIndependentPart::Seq vocabulary2, Mat34& offset);
+
+    /// compute error between tow point clous
+    static double computeError(const hop3d::PointCloud& cloudA, const hop3d::PointCloud& cloudB, hop3d::Mat34& trans);
 
     /// normalize vector
     /*static inline void normalizeVector(Vec3& normal){
