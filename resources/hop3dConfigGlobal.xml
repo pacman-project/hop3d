@@ -40,5 +40,5 @@
   </CameraModel>
   
 <!--   QVisualizer configuration -->
-  <QVisualizer configFilename="../../resources/hop3dQvisualizerConfig.xml">
+  <QVisualizer useVisualization="true" configFilename="../../resources/hop3dQvisualizerConfig.xml">
   </QVisualizer>

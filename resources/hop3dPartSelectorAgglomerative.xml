@@ -13,10 +13,10 @@
     -->
     <parameters verbose="1" distanceMetric="3" layersNo="7" maxIter="10"></parameters>
     <layer1 maxDist="0.0" maxClusterDist="0.0"></layer1> <!--constant size-->
-    <layer2 maxDist="0.35" maxClusterDist="0.36"></layer2>
+    <layer2 maxDist="0.36" maxClusterDist="0.37"></layer2>
     <layer3 maxDist="0.29" maxClusterDist="0.3"></layer3>
-    <layer4 maxDist="0.0004" maxClusterDist="0.00041"></layer4>
-    <layer5 maxDist="0.002" maxClusterDist="0.002"></layer5>
+    <layer4 maxDist="0.0014" maxClusterDist="0.0015"></layer4>
+    <layer5 maxDist="0.006" maxClusterDist="0.0061"></layer5>
     <layer6 maxDist="0.6" maxClusterDist="0.6"></layer6>
     <layer7 maxDist="0.7" maxClusterDist="0.7"></layer7>
     <GICP configFilename="../../resources/hop3dGICP.xml"></GICP>

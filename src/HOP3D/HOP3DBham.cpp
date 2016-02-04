@@ -82,6 +82,7 @@ HOP3DBham::Config::Config(std::string configFilename){
 
     config.FirstChildElement( "Filterer" )->QueryIntAttribute("filterType", &filterType);
     config.FirstChildElement( "Dataset" )->QueryIntAttribute("datasetType", &datasetType);
+    config.FirstChildElement( "QVisualizer" )->QueryBoolAttribute("useVisualization", &useVisualization);
 }
 
 /// get set of ids from hierarchy for the given input point
@@ -235,13 +236,13 @@ void HOP3DBham::getRealisationsGraph(int categoryNo, int objectNo, int imageNo, 
         }
         //std::cout << "\n"; getchar();
     }
-    for (auto &element : realisationsGraph){
+    /*for (auto &element : realisationsGraph){
         std::cout << "part id: " << element.first << " is build from parts: ";
         for (auto & partId : element.second){
             std::cout << partId << ",";
         }
         std::cout << "\n";
-    }
+    }*/
 }
 
 /// get parts realisation
@@ -442,77 +443,81 @@ void HOP3DBham::learn(){
         ofsHierarchy.close();
     }
     //visualization
-    notify(*hierarchy);
-    for (int layerNo=0;layerNo<config.viewDependentLayersNo+1;layerNo++){//create objects from parts
-        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-            for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
-                for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
-                    std::vector<PartCoords> partCoords;
-                    std::vector<PartCoordsEucl> partCoordsEucl;
-                    for (int overlapNo=0; overlapNo<3; overlapNo++){
-                        if (layerNo==0){
-                            std::vector<PartCoords> partCoordsTmp;
-                            imageFilterer->getResponseFilters(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, partCoordsTmp);
-                            partCoords.insert(partCoords.end(), partCoordsTmp.begin(), partCoordsTmp.end());
+#ifdef QVisualizerBuild
+    if (config.useVisualization){
+        notify(*hierarchy);
+        for (int layerNo=0;layerNo<config.viewDependentLayersNo+1;layerNo++){//create objects from parts
+            for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+                for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+                    for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
+                        std::vector<PartCoords> partCoords;
+                        std::vector<PartCoordsEucl> partCoordsEucl;
+                        for (int overlapNo=0; overlapNo<3; overlapNo++){
+                            if (layerNo==0){
+                                std::vector<PartCoords> partCoordsTmp;
+                                imageFilterer->getResponseFilters(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, partCoordsTmp);
+                                partCoords.insert(partCoords.end(), partCoordsTmp.begin(), partCoordsTmp.end());
+                            }
+                            else{
+                                std::vector<PartCoordsEucl> partCoordsEuclTmp;
+                                imageFilterer->getParts3D(overlapNo,(int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoordsEuclTmp);
+                                partCoordsEucl.insert(partCoordsEucl.end(), partCoordsEuclTmp.begin(), partCoordsEuclTmp.end());
+                            }
+                        }
+                        Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+                        std::vector<std::pair<int, Mat34>> filtersPoses;
+                        if (layerNo<1){
+                            for (auto& filterCoord : partCoords){
+                                Vec3 point3d;
+                                depthCameraModel.get()->getPoint(filterCoord.coords.u, filterCoord.coords.v, filterCoord.coords.depth, point3d);
+                                Mat34 pointPose(Mat34::Identity());
+                                pointPose.translation() = point3d;
+                                if (layerNo>0){
+                                    pointPose = cameraPose * pointPose*filterCoord.offset;
+                                    //std::cout << "layer no " << layerNo << filterCoord.offset.matrix() << "\n";
+                                    //std::cout << filterCoord.offset.matrix() << "\n";
+                                }
+                                else
+                                    pointPose = cameraPose * pointPose;
+                                filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
+                            }
                         }
                         else{
-                            std::vector<PartCoordsEucl> partCoordsEuclTmp;
-                            imageFilterer->getParts3D(overlapNo,(int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoordsEuclTmp);
-                            partCoordsEucl.insert(partCoordsEucl.end(), partCoordsEuclTmp.begin(), partCoordsEuclTmp.end());
-                        }
-                    }
-                    Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
-                    std::vector<std::pair<int, Mat34>> filtersPoses;
-                    if (layerNo<1){
-                        for (auto& filterCoord : partCoords){
-                            Vec3 point3d;
-                            depthCameraModel.get()->getPoint(filterCoord.coords.u, filterCoord.coords.v, filterCoord.coords.depth, point3d);
-                            Mat34 pointPose(Mat34::Identity());
-                            pointPose.translation() = point3d;
-                            if (layerNo>0){
+                            for (auto& filterCoord : partCoordsEucl){
+                                Mat34 pointPose(Mat34::Identity());
+                                pointPose.translation() = filterCoord.coords;
                                 pointPose = cameraPose * pointPose*filterCoord.offset;
-                                //std::cout << "layer no " << layerNo << filterCoord.offset.matrix() << "\n";
-                                //std::cout << filterCoord.offset.matrix() << "\n";
+                                filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
                             }
-                            else
-                                pointPose = cameraPose * pointPose;
-                            filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
                         }
+                        notify(filtersPoses,(int)objectNo,layerNo);
                     }
-                    else{
-                        for (auto& filterCoord : partCoordsEucl){
-                            Mat34 pointPose(Mat34::Identity());
-                            pointPose.translation() = filterCoord.coords;
-                            pointPose = cameraPose * pointPose*filterCoord.offset;
-                            filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
-                        }
-                    }
-                    notify(filtersPoses,(int)objectNo,layerNo);
                 }
             }
         }
-    }
-    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-        for (auto & object : objects[categoryNo]){
-            std::vector<ViewIndependentPart> objectParts;
-            for (size_t i=0;i<2;i++){//hierarchy.get()->viewIndependentLayers.size()-2;i++){
-                object.getParts((int)i, objectParts);
-                notify(objectParts, (int)(i+hierarchy.get()->viewDependentLayers.size()+1));
+        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+            for (auto & object : objects[categoryNo]){
+                std::vector<ViewIndependentPart> objectParts;
+                for (size_t i=0;i<2;i++){//hierarchy.get()->viewIndependentLayers.size()-2;i++){
+                    object.getParts((int)i, objectParts);
+                    notify(objectParts, (int)(i+hierarchy.get()->viewDependentLayers.size()+1));
+                }
             }
         }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        notify3Dmodels();
+        createPartClouds();
     }
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    notify3Dmodels();
-    createPartClouds();
+#endif
     Hierarchy::IndexSeqMap hierarchyGraph;
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;
     getPartsRealisation(0,0,0, parts);
-    for (auto &part : parts){
+    /*for (auto &part : parts){
         std::cout << "part id " << part.id << "\n";
         std::cout << "part realisation id " << part.realisationId << "\n";
         std::cout << "part pose\n" << part.pose.matrix() << "\n";
-    }
+    }*/
     Hierarchy::IndexSeqMap points2parts;
     getCloud2PartsMap(0,0,0, points2parts);
     PartsClouds partsCloud;
@@ -676,8 +681,8 @@ void HOP3DBham::createPartClouds(){
             colors[layerNo][partNo] = color;
         }
     }
-    /// point clouds (index: overlapNo->layerNo->objectNo)
     int overlapsNo=4;
+    /// point clouds (index: overlapNo->layerNo->objectNo)
     std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> cloudsObj(overlapsNo, std::vector<std::vector<hop3d::PointCloudRGBA>>(layersNo)); // vector of coloured objects
     for (int overlapNo=0; overlapNo<overlapsNo; overlapNo++){
         for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
@@ -707,7 +712,7 @@ void HOP3DBham::createPartClouds(){
                         }
                     }
                     else{
-                        for (int layNo=0;layNo<3;layNo++){
+                        for (int layNo=0;layNo<layersNo;layNo++){
                             for (int pointNo=0;pointNo<(int)cloudsObj[0][layNo][objectNo].size();pointNo++){
                                 PointColor pointRGBA(cloudsObj[0][layNo][objectNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
                                 int colorsNo=0;

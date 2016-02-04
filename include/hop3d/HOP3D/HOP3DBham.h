@@ -142,6 +142,8 @@ public:
             int datasetType;
             /// save hierarchy to file
             bool save2file;
+            /// use visualization
+            bool useVisualization;
             /// hierarchy filename
             std::string filename2save;
     };

@@ -270,12 +270,15 @@ void ObjectCompositionOctree::getPartsIds(const Vec3& point, int overlapNo, std:
     for (int layNo=0;layNo<3;layNo++){
         toCoordinate(point(0),x, layNo);    toCoordinate(point(1),y, layNo);    toCoordinate(point(2),z, layNo);
         //std::cout << "coordinate " << x << " " << y << " " << z << "\n";
-        if (x%3==0) x+=1; else if (x%3==2) x-=1;
-        if (y%3==0) y+=1; else if (y%3==2) y-=1;
-        if (z%3==0) z+=1; else if (z%3==2) z-=1;
-        ids.push_back((*octrees[layNo][overlapNo]).at(x,y,z).id);//4th layer
+        if ((x-overlapNo)>-1&&(y-overlapNo)>-1&&(z-overlapNo)>-1){
+            if ((x-overlapNo)%3==0) x+=1; else if ((x-overlapNo)%3==2) x-=1;
+            if ((y-overlapNo)%3==0) y+=1; else if ((y-overlapNo)%3==2) y-=1;
+            if ((z-overlapNo)%3==0) z+=1; else if ((z-overlapNo)%3==2) z-=1;
+            //x+=overlapNo; y+=overlapNo; z+=overlapNo;
+            ids.push_back((*octrees[layNo][overlapNo]).at(x,y,z).id);//4th layer
+        }
         /*if ((*octrees[layNo]).at(x,y,z).id>=0){
-            std::cout << "lay no id" << layNo << " " << (*octrees[layNo]).at(x,y,z).id << "\n";
+            std::cout << "overlapNo " << overlapNo << " id " << (*octrees[layNo][overlapNo]).at(x,y,z).id << "\n";
             getchar();
         }*/
     }
@@ -477,12 +480,12 @@ int ObjectCompositionOctree::createNextLayerPart(const Hierarchy& hierarchy, int
     for (int i=-1; i<2;i++){
         for (int j=-1; j<2;j++){
             for (int k=-1; k<2;k++){
-                if ((*octrees[destLayerNo-1][overlapNo]).at(3*(x+i)+1,3*(y+j)+1,3*(z+k)+1).id>=0&&(*octrees[destLayerNo-1][overlapNo]).at(3*(x+i)+1,3*(y+j)+1,3*(z+k)+1).cloud.size()>0){
-                    ViewIndependentPart part = hierarchy.viewIndependentLayers[destLayerNo-1][(*octrees[destLayerNo-1][overlapNo]).at(3*(x+i)+1,3*(y+j)+1,3*(z+k)+1).id];
+                if ((*octrees[destLayerNo-1][overlapNo]).at(3*(x+i)+1+overlapNo,3*(y+j)+1+overlapNo,3*(z+k)+1+overlapNo).id>=0&&(*octrees[destLayerNo-1][overlapNo]).at(3*(x+i)+1+overlapNo,3*(y+j)+1+overlapNo,3*(z+k)+1+overlapNo).cloud.size()>0){
+                    ViewIndependentPart part = hierarchy.viewIndependentLayers[destLayerNo-1][(*octrees[destLayerNo-1][overlapNo]).at(3*(x+i)+1+overlapNo,3*(y+j)+1+overlapNo,3*(z+k)+1+overlapNo).id];
                     for (const auto& patch : part.cloud){
                         PointNormal patchTmp = patch;
-                        Mat34 partPose = (*octrees[destLayerNo-1][overlapNo]).at(3*(x+i)+1,3*(y+j)+1,3*(z+k)+1).pose;
-                        Mat34 offset = (*octrees[destLayerNo-1][overlapNo]).at(3*(x+i)+1,3*(y+j)+1,3*(z+k)+1).offset;
+                        Mat34 partPose = (*octrees[destLayerNo-1][overlapNo]).at(3*(x+i)+1+overlapNo,3*(y+j)+1+overlapNo,3*(z+k)+1+overlapNo).pose;
+                        Mat34 offset = (*octrees[destLayerNo-1][overlapNo]).at(3*(x+i)+1+overlapNo,3*(y+j)+1+overlapNo,3*(z+k)+1+overlapNo).offset;
                         Vec3 patchPos = partPose*offset*Vec4(patch.position(0),patch.position(1),patch.position(2),1.0).block<3,1>(0,0);
                         for (int coord = 0; coord<3; coord++)
                             patchTmp.position(coord)=patchPos(coord)-center[coord];
@@ -491,7 +494,7 @@ int ObjectCompositionOctree::createNextLayerPart(const Hierarchy& hierarchy, int
                         partsNo++;
                     }
                     //std::cout << "add id " << (*octrees[destLayerNo-1]).at(3*(x+i)+1,3*(y+j)+1,3*(z+k)+1).id << "\n";
-                    newPart.incomingIds.insert((*octrees[destLayerNo-1][overlapNo]).at(3*(x+i)+1,3*(y+j)+1,3*(z+k)+1).id);
+                    newPart.incomingIds.insert((*octrees[destLayerNo-1][overlapNo]).at(3*(x+i)+1+overlapNo,3*(y+j)+1+overlapNo,3*(z+k)+1+overlapNo).id);
                     newPart.partIds[i+1][j+1][k+1] = 1;
                 }
                 else
@@ -512,9 +515,10 @@ void ObjectCompositionOctree::createFirstLayer(std::vector<ViewIndependentPart>&
     int tempId=0;
     // update next layer octree
     for (int overlapNo=0;overlapNo<3;overlapNo++){
+        int wordsNo=0;
         for (int idX=1+overlapNo; idX<(*octrees[0][overlapNo]).size()-1; idX+=3){///to do z-slicing
-            for (int idY=1; idY<(*octrees[0][overlapNo]).size()-1; idY+=3){
-                for (int idZ=1; idZ<(*octrees[0][overlapNo]).size()-1; idZ+=3){
+            for (int idY=1+overlapNo; idY<(*octrees[0][overlapNo]).size()-1; idY+=3){
+                for (int idZ=1+overlapNo; idZ<(*octrees[0][overlapNo]).size()-1; idZ+=3){
                     ViewIndependentPart newPart;
                     newPart.layerId=3;
                     // add neighbouring parts into structure
@@ -524,11 +528,13 @@ void ObjectCompositionOctree::createFirstLayer(std::vector<ViewIndependentPart>&
                             (*octrees[0][overlapNo])(idX, idY, idZ) = newPart;//update octree
                             vocabulary.push_back(newPart);
                             tempId++;
+                            wordsNo++;
                         }
                     }
                 }
             }
         }
+        std::cout << "overNo " << overlapNo << " partsNo " << wordsNo << "\n";
     }
 }
 
@@ -544,10 +550,11 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
     }
     else{
         int tempId=0;
-        for (int overlapNo;overlapNo<3;overlapNo++){
-            for (int idX=1; idX<(*octrees[destLayerNo][overlapNo]).size()-1; idX+=3){///to do z-slicing
-                for (int idY=1; idY<(*octrees[destLayerNo][overlapNo]).size()-1; idY+=3){
-                    for (int idZ=1; idZ<(*octrees[destLayerNo][overlapNo]).size()-1; idZ+=3){
+        for (int overlapNo=0;overlapNo<3;overlapNo++){
+            int wordsNo=0;
+            for (int idX=1+overlapNo; idX<(*octrees[destLayerNo][overlapNo]).size()-1; idX+=3){///to do z-slicing
+                for (int idY=1+overlapNo; idY<(*octrees[destLayerNo][overlapNo]).size()-1; idY+=3){
+                    for (int idZ=1+overlapNo; idZ<(*octrees[destLayerNo][overlapNo]).size()-1; idZ+=3){
                         ViewIndependentPart newPart;
                         newPart.layerId=destLayerNo+3;
                         // add neighbouring parts into structure
@@ -557,11 +564,13 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
                                 (*octrees[destLayerNo][overlapNo])(idX, idY, idZ) = newPart;//update octree
                                 vocabulary.push_back(newPart);
                                 tempId++;
+                                wordsNo++;
                             }
                         }
                     }
                 }
             }
+            //std::cout << "1overNo " << overlapNo << " partsNo " << wordsNo << "\n";
         }
     }
 }
