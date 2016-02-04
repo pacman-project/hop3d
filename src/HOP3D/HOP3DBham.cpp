@@ -216,30 +216,32 @@ void HOP3DBham::getRealisationsGraph(int categoryNo, int objectNo, int imageNo, 
     dataset->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
     imageFilterer->getCloud(depthImage, cloud);
     for (auto &point : cloud){
-        std::vector<int> ids;
-        getRealisationsIds(categoryNo,objectNo,imageNo,point.u,point.v,point.position(2),ids);
-        int idPrev=-1;
-        int idNo=0;
-        for (auto & partId : ids){
-            //std::cout << "partId " << partId << ", ";
-            if (idNo==0&&partId>-1){
-                realisationsGraph.insert(std::make_pair(partId,std::set<unsigned int>()));
+        for (int overlapNo=0;overlapNo<3;overlapNo++){
+            std::vector<int> ids;
+            getRealisationsIds(overlapNo, categoryNo, objectNo, imageNo,point.u,point.v,point.position(2),ids);
+            int idPrev=-1;
+            int idNo=0;
+            for (auto & partId : ids){
+                //std::cout << "partId " << partId << ", ";
+                if (idNo==0&&partId>-1){
+                    realisationsGraph.insert(std::make_pair(partId,std::set<unsigned int>()));
+                }
+                else if (idPrev>-1&&partId>-1){// id_{layer}->ids_{layer-1}
+                    realisationsGraph[partId].insert(idPrev);
+                }
+                idPrev=partId;
+                idNo++;
             }
-            else if (idPrev>-1&&partId>-1){// id_{layer}->ids_{layer-1}
-                realisationsGraph[partId].insert(idPrev);
-            }
-            idPrev=partId;
-            idNo++;
         }
         //std::cout << "\n"; getchar();
     }
-    /*for (auto &element : realisationsGraph){
+    for (auto &element : realisationsGraph){
         std::cout << "part id: " << element.first << " is build from parts: ";
         for (auto & partId : element.second){
             std::cout << partId << ",";
         }
         std::cout << "\n";
-    }*/
+    }
 }
 
 /// get parts realisation
@@ -259,17 +261,19 @@ void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hie
     imageFilterer->getCloud(depthImage, cloud);
     std::uint32_t pointIdx=0;
     for (auto &point : cloud){
-        std::vector<int> ids;
-        getRealisationsIds(categoryNo,objectNo,imageNo,point.u,point.v, point.position(2),ids);
-        std::vector<std::uint32_t> idsParts;
-        for (size_t layerNo=0;layerNo<3;layerNo++){
-            if (ids[layerNo]>=0){
-                idsParts.push_back((std::uint32_t)ids[layerNo]);
-                //idsParts.push_back((((std::uint32_t)layerNo)*10000)+(std::uint32_t)ids[layerNo]);//for model ids
-                //std::cout << "point " << pointIdx << " -> " << (std::uint32_t)ids[layerNo] << " lay no " << layerNo << "\n";
+        for (int overlapNo=0;overlapNo<3;overlapNo++){
+            std::vector<int> ids;
+            getRealisationsIds(overlapNo, categoryNo,objectNo,imageNo,point.u,point.v, point.position(2),ids);
+            std::vector<std::uint32_t> idsParts;
+            for (size_t layerNo=0;layerNo<3;layerNo++){
+                if (ids[layerNo]>=0){
+                    idsParts.push_back((std::uint32_t)ids[layerNo]);
+                    //idsParts.push_back((((std::uint32_t)layerNo)*10000)+(std::uint32_t)ids[layerNo]);//for model ids
+                    //std::cout << "point " << pointIdx << " -> " << (std::uint32_t)ids[layerNo] << " lay no " << layerNo << "\n";
+                }
             }
+            points2parts.insert(std::make_pair(pointIdx,idsParts));
         }
-        points2parts.insert(std::make_pair(pointIdx,idsParts));
         pointIdx++;
     }
 }
@@ -369,21 +373,8 @@ void HOP3DBham::learn(){
                 Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                 objects[categoryNo][objectNo].updatePCLGrid(parts, cameraPose);
             }
-            /*std::vector< std::set<int>> clustersTmp;
-            //std::cout << "get clusters\n";
-            objects[categoryNo][objectNo].getClusters(0,clustersTmp);
-            std::vector<ViewIndependentPart> VIparts;
-            objects[categoryNo][objectNo].getParts(-1,VIparts);
-            //std::cout << " clusters size: " << clustersTmp.size() << "\n";
-            std::cout << "finish get clusters\n";
-            clusters.reserve( clusters.size() + clustersTmp.size() ); // preallocate memory
-            clusters.insert( clusters.end(), clustersTmp.begin(), clustersTmp.end() );*/
         }
     }
-    //std::cout << "clusters size: " << clusters.size() << "\n";
-    //std::vector<ViewIndependentPart> vocabulary;
-    //std::cout << "create unique clusters:\n";
-    //partSelector->createUniqueClusters(clusters, vocabulary, *hierarchy);
     std::vector<ViewIndependentPart> vocabulary;
     for (size_t layerNo=0;layerNo<2/*config.viewIndependentLayersNo*/;layerNo++){
         vocabulary.clear();
@@ -517,11 +508,11 @@ void HOP3DBham::learn(){
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;
     getPartsRealisation(0,0,0, parts);
-    /*for (auto &part : parts){
+    for (auto &part : parts){
         std::cout << "part id " << part.id << "\n";
         std::cout << "part realisation id " << part.realisationId << "\n";
         std::cout << "part pose\n" << part.pose.matrix() << "\n";
-    }*/
+    }
     Hierarchy::IndexSeqMap points2parts;
     getCloud2PartsMap(0,0,0, points2parts);
     PartsClouds partsCloud;
@@ -608,11 +599,11 @@ void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int ima
 }
 
 /// get set of ids from hierarchy for the given input point (view-independent layers)
-void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids) const{
+void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids) const{
     Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
     if ((!std::isnan(point(0)))&&(!std::isnan(point(1)))){
         Vec3 pointGlob = (cameraPose*Vec4(point(0),point(1),point(2),1.0)).block<3,1>(0,0);;
-        objects[categoryNo][objectNo].getPartsIds(pointGlob, ids);
+        objects[categoryNo][objectNo].getPartsIds(pointGlob, overlapNo, ids);
     }
     else{
         std::vector<int> notUsed(3,-1);
@@ -621,14 +612,12 @@ void HOP3DBham::getPartsIds(int categoryNo, int objectNo, int imageNo, const Vec
 }
 
 /// get realisations ids
-void HOP3DBham::getRealisationsIds(int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const{
+void HOP3DBham::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const{
     ids.clear();
     ViewDependentPart lastVDpart;
-    for (int overlapNo=0;overlapNo<3;overlapNo++){
-        std::vector<int> idsTmp;
-        imageFilterer->getRealisationsIds(overlapNo, categoryNo, objectNo, imageNo, u, v, depth, idsTmp, lastVDpart);
-        ids.insert(ids.end(),idsTmp.begin(),idsTmp.end());
-    }
+    std::vector<int> idsTmp;
+    imageFilterer->getRealisationsIds(overlapNo, categoryNo, objectNo, imageNo, u, v, depth, idsTmp, lastVDpart);
+    ids.insert(ids.end(),idsTmp.begin(),idsTmp.end());
     /// view independent ids
     /*Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
     Vec3 point(Vec3(NAN,NAN,NAN));
@@ -659,7 +648,7 @@ void HOP3DBham::getPointsModels(int overlapNo, int categoryNo, int objectNo, int
         }
         int idsSize = (int)ids.size();
         ids.clear();
-        getPartsIds(categoryNo, objectNo, imageNo, pointuv.position, ids);
+        getPartsIds(overlapNo, categoryNo, objectNo, imageNo, pointuv.position, ids);
         for (int i=0;i<(int)ids.size();i++){
             pointPart.partsIds.push_back(std::make_pair(i+idsSize,ids[i]));
         }

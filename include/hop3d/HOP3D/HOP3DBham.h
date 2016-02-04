@@ -151,10 +151,10 @@ private:
     void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const;
 
     /// get set of ids from hierarchy for the given input point (view-independent layers)
-    void getPartsIds(int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids) const;
+    void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids) const;
 
     /// get set of ids from hierarchy for the given input point
-    void getRealisationsIds(int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const;
+    void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const;
 
     /// create part-coloured point clouds
     void createPartClouds();

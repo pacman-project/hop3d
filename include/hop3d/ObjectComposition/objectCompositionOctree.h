@@ -33,7 +33,7 @@ public:
     ObjectCompositionOctree(std::string config);
 
     /// update composition from octets (words from last view-independent layer's vocabulary)
-    void update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose);
+    //void update(int layerNo, const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose);
 
     /// update voxel grid which contains point and normals
     void updatePCLGrid(const std::vector<ViewDependentPart>& parts, const Mat34& cameraPose);
@@ -48,10 +48,10 @@ public:
     void getParts(int layerNo, std::vector<ViewIndependentPart>& parts);
 
     /// update ids in the octree using new vocabulary
-    void updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy);
+    //void updateIds(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, Hierarchy& hierarchy);
 
     /// get set of ids for the given input point
-    void getPartsIds(const Vec3& point, std::vector<int>& ids) const;
+    void getPartsIds(const Vec3& point, int overlapNo, std::vector<int>& ids) const;
 
     /// upodate voxel poses using new vocabulary
     void updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary);
@@ -59,21 +59,24 @@ public:
     /// Insertion operator
     friend std::ostream& operator<<(std::ostream& os, const ObjectCompositionOctree& object){
         os << static_cast<unsigned int>(object.type) << " ";
-        os << object.octrees.size() << " ";
-        for (auto& octree : object.octrees){
-            int voxelsNo=0;
-            for (int idX=0; idX<octree->size(); idX++)///to do z-slicing
-                for (int idY=0; idY<octree->size(); idY++)
-                    for (int idZ=0; idZ<octree->size(); idZ++)
-                        if (octree->at(idX,idY,idZ).parts.size()>0||octree->at(idX,idY,idZ).id!=-1)
-                            voxelsNo++;
-            os << voxelsNo << " ";
-            for (int idX=0; idX<octree->size(); idX++){///to do z-slicing
-                for (int idY=0; idY<octree->size(); idY++){
-                    for (int idZ=0; idZ<octree->size(); idZ++){
-                        if (octree->at(idX,idY,idZ).parts.size()>0||octree->at(idX,idY,idZ).id!=-1){
-                            os << idX << " " << idY << " " << idZ << " ";
-                            os << octree->at(idX,idY,idZ) << "\n";
+        os << object.octrees.size() << " ";//layers no
+        for (auto& layer : object.octrees){
+            os << layer.size() << " ";// overlaps no
+            for (auto& octree : layer){
+                int voxelsNo=0;
+                for (int idX=0; idX<octree->size(); idX++)///to do z-slicing
+                    for (int idY=0; idY<octree->size(); idY++)
+                        for (int idZ=0; idZ<octree->size(); idZ++)
+                            if (octree->at(idX,idY,idZ).parts.size()>0||octree->at(idX,idY,idZ).id!=-1)
+                                voxelsNo++;
+                os << voxelsNo << " ";
+                for (int idX=0; idX<octree->size(); idX++){///to do z-slicing
+                    for (int idY=0; idY<octree->size(); idY++){
+                        for (int idZ=0; idZ<octree->size(); idZ++){
+                            if (octree->at(idX,idY,idZ).parts.size()>0||octree->at(idX,idY,idZ).id!=-1){
+                                os << idX << " " << idY << " " << idZ << " ";
+                                os << octree->at(idX,idY,idZ) << "\n";
+                            }
                         }
                     }
                 }
@@ -87,15 +90,19 @@ public:
         unsigned int type;
         is >> type;
         object.type = static_cast<ObjectComposition::Type>(type);
-        int treesNo;
-        is >> treesNo;
-        for (int i=0;i<treesNo;i++){
-            int voxelsNo;
-            is >> voxelsNo;
-            for (int j=0;j<voxelsNo;j++){
-                int x,y,z;
-                is >> x >> y >> z;
-                is >> (*object.octrees[i])(x,y,z);
+        int layersNo;
+        is >> layersNo;
+        for (int layNo=0;layNo<layersNo;layNo++){
+            int overlapsNo;
+            is >> overlapsNo;
+            for (int ovNo=0;ovNo<overlapsNo;ovNo++){
+                int voxelsNo;
+                is >> voxelsNo;
+                for (int j=0;j<voxelsNo;j++){
+                    int x,y,z;
+                    is >> x >> y >> z;
+                    is >> (*object.octrees[layNo][ovNo])(x,y,z);
+                }
             }
         }
         return is;
@@ -132,8 +139,8 @@ public:
 private:
     ///Configuration of the module
     Config config;
-    /// Octree
-    std::vector<OctreePtr> octrees;
+    /// Octree (layerNo->overlapNo)
+    std::vector<std::vector<OctreePtr>> octrees;
     /// points with normals grid
     OctreeCloudPtr octreeGrid;
 
@@ -141,13 +148,13 @@ private:
     //void normal2rot(const Vec3& normal, Mat33& rot);
 
     /// assign neighbouring parts to new part
-    int assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int x, int y, int z);
+    int assignPartNeighbours(ViewIndependentPart& partVoxel, const Hierarchy& hierarchy, int layerNo, int overlapNo, int x, int y, int z);
 
     /// assign neighbouring parts to new part
-    int createFirstLayerPart(ViewIndependentPart& newPart, int x, int y, int z);
+    int createFirstLayerPart(ViewIndependentPart& newPart, int overlapNo, int x, int y, int z);
 
     /// assign neighbouring parts to new part
-    int createNextLayerPart(const Hierarchy& hierarchy, int destLayerNo, ViewIndependentPart& newPart, int x, int y, int z);
+    int createNextLayerPart(const Hierarchy& hierarchy, int destLayerNo, int overlapNo, ViewIndependentPart& newPart, int x, int y, int z);
 
     /// find part in the vocabulary and return new id
     int findIdInVocabulary(const ViewIndependentPart& part, const std::vector<ViewIndependentPart>& vocabulary);
