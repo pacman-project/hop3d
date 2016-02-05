@@ -115,7 +115,7 @@ uint16_t NormalImageFilter::median(const cv::Mat& inputImg, int u, int v, int ke
     std::vector<short unsigned int> values;
     for (int i=v-size;i<v+size+1;i++){
         for (int j=u-size;j<u+size+1;j++){
-            if ((i>=0)&&(j>=0)&&(i<inputImg.rows)&&(j<inputImg.cols)){
+            if ((i>=0)&&(j>=0)&&(j<inputImg.rows)&&(i<inputImg.cols)){
                 values.push_back(inputImg.at<uint16_t>(j,i));
             }
         }
@@ -173,6 +173,8 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
         imshow( "Input image", depthImage );
     cv::Mat filteredImg = depthImage.clone();
     filterDepthImage(depthImage, filteredImg);
+    if (config.verbose>1)
+        imshow( "Filtered image", filteredImg );
     for (int i=0;i<filteredImg.rows;i++){
         for (int j=0;j<filteredImg.cols;j++){
             sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);

@@ -187,7 +187,7 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart:
                 //std::cout << ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idA], config.configGICP, transform) << "\n";
                 //std::cout << transform.matrix() << "\n";
                 //getchar();
-                dist = (1+fabs(double(dictionary[idA].cloud.size())-double(dictionary[idB].cloud.size())))*ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
+                dist = pow(1+fabs(double(dictionary[idA].cloud.size())-double(dictionary[idB].cloud.size())),2.0)*ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
                 //dist = ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
             }
             distanceMatrix[idA][idB]=dist;

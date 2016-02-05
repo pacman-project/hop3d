@@ -238,7 +238,7 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
                                 itP++;
                             }
                             std::cout << "ref rot\n" << m << "\n";*/
-                            double fitness = (1+fabs(double(word.cloud.size())-double((*octrees[layerNo][overlapNo]).at(idX,idY,idZ).cloud.size())))*ViewIndependentPart::distanceGICP(word,(*octrees[layerNo][overlapNo])(idX,idY,idZ),config.configGICP,estTransform);
+                            double fitness = pow(1+fabs(double(word.cloud.size())-double((*octrees[layerNo][overlapNo]).at(idX,idY,idZ).cloud.size())),2.0)*ViewIndependentPart::distanceGICP(word,(*octrees[layerNo][overlapNo])(idX,idY,idZ),config.configGICP,estTransform);
                             //double fitness = ViewIndependentPart::distanceGICP(word,(*octrees[layerNo])(idX,idY,idZ),config.configGICP,estTransform);
                             //std::cout << "estTransform\n" << estTransform.matrix() << "\n";
                             //std::cout << "word id " << wordId << ", fitnes: " << fitness << "\n";

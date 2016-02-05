@@ -222,7 +222,7 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
             double dist = 0;
             Mat34 offset;
             if (it->layerId>2){//compute distance from centroid
-                dist = (1+fabs(double(it->cloud.size())-double(dictionary[*itCentr].cloud.size())))*ViewIndependentPart::distanceGICP(*it, dictionary[*itCentr],config.configGICP, offset);
+                dist = pow(1+fabs(double(it->cloud.size())-double(dictionary[*itCentr].cloud.size())),2.0)*ViewIndependentPart::distanceGICP(*it, dictionary[*itCentr],config.configGICP, offset);
                 //dist = ViewIndependentPart::distanceGICP(*it, dictionary[*itCentr],config.configGICP, offset);
             }
             /*if (it->layerId==5){//compute distance from centroid
@@ -328,7 +328,7 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::S
             for (auto itPart2 = itClust->begin(); itPart2!=itClust->end();itPart2++){//compute mean dist for each part as a centroid
                 Mat34 offset;
                 if (itPart->layerId>2){//compute distance from centroid
-                    distSum += (1+fabs(double(itPart->cloud.size())-double(itPart2->cloud.size())))*ViewIndependentPart::distanceGICP(*itPart, *itPart2, config.configGICP, offset);
+                    distSum += pow(1+fabs(double(itPart->cloud.size())-double(itPart2->cloud.size())),2.0)*ViewIndependentPart::distanceGICP(*itPart, *itPart2, config.configGICP, offset);
                     //distSum += ViewIndependentPart::distanceGICP(*itPart, *itPart2, config.configGICP, offset);
                     offsetsTmp.push_back(offset);
                 }
