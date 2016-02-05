@@ -509,21 +509,16 @@ void HOP3DBham::learn(){
         createPartClouds();
     }
 #endif
-    Hierarchy::IndexSeqMap hierarchyGraph;
+    /*Hierarchy::IndexSeqMap hierarchyGraph;
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;
     getPartsRealisation(0,0,0, parts);
-    /*for (auto &part : parts){
-        std::cout << "part id " << part.id << "\n";
-        std::cout << "part realisation id " << part.realisationId << "\n";
-        std::cout << "part pose\n" << part.pose.matrix() << "\n";
-    }*/
     Hierarchy::IndexSeqMap points2parts;
     getCloud2PartsMap(0,0,0, points2parts);
     PartsClouds partsCloud;
     getPartsRealisationCloud(0,0,0,partsCloud);
     Hierarchy::IndexSetMap realisationsGraph;
-    getRealisationsGraph(0,0,0, realisationsGraph);
+    getRealisationsGraph(0,0,0, realisationsGraph);*/
     /*std::cout << "octets size: " << octets2nd.size() << "\n";
     std::cout << "vocabulary size: " << hierarchy.get()->viewDependentLayers[0].size() << "\n";
     for (auto& octet : octets2nd){
@@ -577,21 +572,21 @@ void HOP3DBham::load(std::string filename){
         }
     }
     notify3Dmodels();*/
-    Hierarchy::IndexSeqMap hierarchyGraph;
+    /*Hierarchy::IndexSeqMap hierarchyGraph;
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;
     getPartsRealisation(0,0,0, parts);
-    /*for (auto &part : parts){
+    for (auto &part : parts){
         std::cout << "part id " << part.id << "\n";
         std::cout << "part realisation id " << part.realisationId << "\n";
         std::cout << "part pose\n" << part.pose.matrix() << "\n";
-    }*/
+    }
     Hierarchy::IndexSeqMap points2parts;
     getCloud2PartsMap(0,0,0, points2parts);
     PartsClouds partsCloud;
     getPartsRealisationCloud(0,0,0,partsCloud);
     Hierarchy::IndexSetMap realisationsGraph;
-    getRealisationsGraph(0,0,1, realisationsGraph);
+    getRealisationsGraph(0,0,0, realisationsGraph);*/
     //createPartClouds();
     std::cout << "Finished\n";
 }

@@ -313,7 +313,27 @@ void NormalImageFilter::getPartsRealisation(int overlapNo, int categoryNo, int o
                             for (int j=0;j<3;j++){
                                 if (octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->partIds[i][j]>=0){
                                     ViewDependentPart vdp;
-                                    vdp.locationEucl = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[1][1]+octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[i][j];
+                                    if (i!=1&&j!=1)
+                                        vdp.locationEucl = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[1][1]+octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[i][j];
+                                    else
+                                        vdp.locationEucl = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[1][1];
+                                    vdp.offset=Mat34::Identity();
+                                    vdp.id = 0;
+                                    vdp.realisationId = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->realisationsIds[i][j];
+                                    parts.push_back(vdp);
+                                }
+                            }
+                        }
+                    }
+                    if (octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->secondOctet.size()>0){
+                        for (int i=0;i<3;i++){
+                            for (int j=0;j<3;j++){
+                                if (octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->secondOctet[0].partIds[i][j]>=0){
+                                    ViewDependentPart vdp;
+                                    if (i!=1&&j!=1)
+                                        vdp.locationEucl = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->secondOctet[0].partsPosEucl[1][1]+octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->secondOctet[0].partsPosEucl[i][j];
+                                    else
+                                        vdp.locationEucl = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->secondOctet[0].partsPosEucl[1][1];
                                     vdp.offset=Mat34::Identity();
                                     vdp.id = 0;
                                     vdp.realisationId = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->realisationsIds[i][j];
@@ -332,6 +352,8 @@ void NormalImageFilter::getPartsRealisation(int overlapNo, int categoryNo, int o
                 if (part.get()!=nullptr){
                     if (!part->isBackground()){
                         parts.push_back(*part);
+                        if (part->secondVDPart.size()>0)
+                            parts.push_back(part->secondVDPart[0]);
                     }
                 }
             }
