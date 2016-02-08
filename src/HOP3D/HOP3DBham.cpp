@@ -213,6 +213,7 @@ void HOP3DBham::getRealisationsGraph(const std::string& path, Hierarchy::IndexSe
 /// get realisations graph
 void HOP3DBham::getRealisationsGraph(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSetMap& realisationsGraph) const{
     PointCloudUV cloud;
+    realisationsGraph.clear();
     cv::Mat depthImage;
     dataset->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
     imageFilterer->getCloud(depthImage, cloud);
@@ -236,13 +237,13 @@ void HOP3DBham::getRealisationsGraph(int categoryNo, int objectNo, int imageNo, 
         }
         //std::cout << "\n"; getchar();
     }
-    /*for (auto &element : realisationsGraph){
+    for (auto &element : realisationsGraph){
         std::cout << "part id: " << element.first << " is build from parts: ";
         for (auto & partId : element.second){
             std::cout << partId << ",";
         }
         std::cout << "\n";
-    }*/
+    }
 }
 
 /// get parts realisation
@@ -513,12 +514,25 @@ void HOP3DBham::learn(){
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;
     getPartsRealisation(0,0,0, parts);
-    Hierarchy::IndexSeqMap points2parts;
-    getCloud2PartsMap(0,0,0, points2parts);
-    PartsClouds partsCloud;
-    getPartsRealisationCloud(0,0,0,partsCloud);
+    for (auto &part : parts){
+        std::cout << "part id " << part.id << "\n";
+        std::cout << "part realisation id " << part.realisationId << "\n";
+        std::cout << "part pose\n" << part.pose.matrix() << "\n";
+    }
+    getPartsRealisation(0,0,1, parts);
+    for (auto &part : parts){
+        std::cout << "part id " << part.id << "\n";
+        std::cout << "part realisation id " << part.realisationId << "\n";
+        std::cout << "part pose\n" << part.pose.matrix() << "\n";
+    }
+    //Hierarchy::IndexSeqMap points2parts;
+    //getCloud2PartsMap(0,0,0, points2parts);
+    //PartsClouds partsCloud;
+    //getPartsRealisationCloud(0,0,0,partsCloud);
     Hierarchy::IndexSetMap realisationsGraph;
-    getRealisationsGraph(0,0,0, realisationsGraph);*/
+    getRealisationsGraph(0,0,0, realisationsGraph);
+    std::cout << "second graph:\n";
+    getRealisationsGraph(0,0,1, realisationsGraph);*/
     /*std::cout << "octets size: " << octets2nd.size() << "\n";
     std::cout << "vocabulary size: " << hierarchy.get()->viewDependentLayers[0].size() << "\n";
     for (auto& octet : octets2nd){
@@ -618,6 +632,7 @@ void HOP3DBham::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, 
     std::vector<int> idsTmp;
     imageFilterer->getRealisationsIds(overlapNo, categoryNo, objectNo, imageNo, u, v, depth, idsTmp, lastVDpart);
     ids.insert(ids.end(),idsTmp.begin(),idsTmp.end());
+    //std::cout << ids[0] << ", " << ids[1] << ", " << ids[2] << "\n";
     /// view independent ids
     /*Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
     Vec3 point(Vec3(NAN,NAN,NAN));

@@ -1357,9 +1357,17 @@ void NormalImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int ob
                     ids.push_back(octet.secondOctet[0].realisationsIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]);
                 else
                     ids.push_back(-2);
+                if (imageNo==1&&ids.back()>-1&&ids.back()<50){
+                    std::cout << ids.back() << "\n";
+                    getchar();
+                }
             }
             else {
-                ids.push_back(octet.partIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]);
+                ids.push_back(octet.realisationsIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]);
+                if (imageNo==1&&ids.back()>-1&&ids.back()<50){
+                    std::cout << ids.back() << "1\n";
+                    getchar();
+                }
             }
         }
         else
