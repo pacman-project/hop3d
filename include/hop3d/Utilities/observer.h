@@ -19,6 +19,7 @@ public:
     virtual void update(std::vector<std::pair<int, hop3d::Mat34>>& partsPoses, int objectNo, int layerNo) = 0;
     virtual void updateSecondLayerPart(const hop3d::PointsSecondLayer& part) = 0;
     virtual void createPartObjects() = 0;
+    virtual void update(const std::vector<hop3d::Mat34>& coords) = 0;
 };
 
 class Subject
@@ -36,6 +37,7 @@ public:
     /// update object from filters
     void notify(std::vector<std::pair<int, hop3d::Mat34>>& partsPoses, int objectNo, int layerNo);
     void notify(const hop3d::PointsSecondLayer& points);
+    void notify(const std::vector<hop3d::Mat34>& coords);
     void createPartObjects();
 };
 

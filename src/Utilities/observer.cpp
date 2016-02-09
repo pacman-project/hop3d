@@ -62,6 +62,14 @@ void Subject::notify3Dmodels(){
     }
 }
 
+void Subject::notify(const std::vector<hop3d::Mat34>& coords){
+    for(vector<Observer*>::const_iterator iter = list.begin(); iter != list.end(); ++iter){
+        if(*iter != 0) {
+            (*iter)->update(coords);
+        }
+    }
+}
+
 void Subject::createPartObjects(){
     for(vector<Observer*>::const_iterator iter = list.begin(); iter != list.end(); ++iter){
         if(*iter != 0) {

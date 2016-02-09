@@ -6,6 +6,7 @@
 #include "hop3d/ImageFilter/imageFilter.h"
 #include "hop3d/ImageFilter/normalImageFilter.h"
 #include "hop3d/Dataset/datasetBoris.h"
+#include "hop3d/Dataset/datasetPacman.h"
 
 using namespace std;
 
@@ -22,6 +23,8 @@ int main(void)
         std::string configFile(config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
         std::string sensorConfigFile(config.FirstChildElement( "CameraModel" )->Attribute( "configFilename" ));
         std::string datasetConfigFile(config.FirstChildElement( "Dataset" )->Attribute( "configFilename" ));
+        int datasetType;
+        config.FirstChildElement( "Dataset" )->QueryIntAttribute("datasetType", &datasetType);
 
         int filterType;
         config.FirstChildElement( "Filterer" )->QueryIntAttribute("filterType", &filterType);
@@ -38,7 +41,17 @@ int main(void)
 
         std::vector<cv::Mat> vecImages(1);
 
-        hop3d::Dataset* dataset = hop3d::createBorisDataset(datasetConfigFile,sensorConfigFile);
+        hop3d::Dataset* dataset;
+        if (datasetType==hop3d::Dataset::DATASET_BORIS){
+            dataset = hop3d::createBorisDataset(datasetConfigFile,sensorConfigFile);
+        }
+        else if (datasetType==hop3d::Dataset::DATASET_PACMAN){
+            dataset = hop3d::createPacmanDataset(datasetConfigFile,sensorConfigFile);
+        }
+        else {// default dataset
+            dataset = hop3d::createBorisDataset(datasetConfigFile,sensorConfigFile);
+        }
+
         dataset->getDepthImage(0,0,0,vecImages[0]);
 
         std::vector<hop3d::Octet> octets;

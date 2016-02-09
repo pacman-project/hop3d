@@ -16,6 +16,7 @@
 #include "hop3d/ImageFilter/depthImageFilter.h"
 #include "hop3d/ImageFilter/normalImageFilter.h"
 #include "hop3d/Dataset/datasetBoris.h"
+#include "hop3d/Dataset/datasetPacman.h"
 #include "hop3d/Utilities/depthSensorModel.h"
 #include "hop3d/ObjectComposition/objectCompositionOctree.h"
 #ifdef QVisualizerBuild

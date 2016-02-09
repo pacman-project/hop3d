@@ -241,6 +241,9 @@ public:
     /// update second layer part
     void updateSecondLayerPart(const hop3d::PointsSecondLayer& part);
 
+    /// update coords
+    void update(const std::vector<hop3d::Mat34>& coords);
+
 private:
     Config config;
 
@@ -291,6 +294,18 @@ private:
 
     /// partObjects list (overlapNo->layerNo)
     std::vector<std::vector<GLuint>> partObjectsLists;
+
+    /// parts coordinates list
+    std::vector<GLuint> partsCoordinatesList;
+
+    /// update coordinates flag
+    bool updateCoordinates;
+
+    ///offset for coordinates
+    hop3d::Vec3 offsetCoords;
+
+    /// parts coordinates
+    std::vector<hop3d::Mat34> partsCoordinates;
 
     /// active layer for partObjects
     int activeLayer;
@@ -373,6 +388,9 @@ private:
     /// Create layer 2 layer List (View independent part)
     GLuint createVILinksList(int destLayerNo);
 
+    /// create coordinates list
+    void createCoordsList(void);
+
     /// transpose ids matrix
     void transposeIds(std::array<std::array<int,3>,3>& ids);
 
@@ -402,6 +420,9 @@ private:
 
     /// draw part
     void drawPartMesh(const hop3d::ViewDependentPart& part, double r, double g, double b);
+
+    /// draw coordinates list
+    void drawCoords(void);
 
     /// compute mean depth using neighbouring elements in the word
     double computeMeanDepth(const hop3d::ViewDependentPart&part, int u, int v, hop3d::Vec6& meanPosNorm) const;

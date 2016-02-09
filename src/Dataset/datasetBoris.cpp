@@ -95,18 +95,15 @@ void BorisDataset::getDepthImage(int categoryNo, int objectNo, int imageNo, cv::
                 readDepthImage(categoryNo, objectNo, imageNo, depthImage);
             }
             else{
-                std::cout << "Wrong image no: " << categoryNo << "->" << objectNo  << "->" << imageNo << "\n";
-                getchar();
+                throw std::runtime_error("Wrong image no: " + std::to_string(categoryNo) + "->" + std::to_string(objectNo)  + "->" + std::to_string(imageNo) + "\n");
             }
         }
         else{
-            std::cout << "Wrong object no: " << categoryNo << "->" << objectNo << "\n";
-            getchar();
+            throw std::runtime_error("Wrong object no: " + std::to_string(categoryNo) + "->" + std::to_string(objectNo) + "\n");
         }
     }
     else{
-        std::cout << "Wrong category no: " << categoryNo << "\n";
-        getchar();
+        throw std::runtime_error("Wrong category no: " + std::to_string(categoryNo) + "\n");
     }
 }
 

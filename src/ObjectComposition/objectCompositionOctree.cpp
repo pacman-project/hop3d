@@ -534,7 +534,7 @@ void ObjectCompositionOctree::createFirstLayer(std::vector<ViewIndependentPart>&
                 }
             }
         }
-        std::cout << "overNo " << overlapNo << " partsNo " << wordsNo << "\n";
+        //std::cout << "overNo " << overlapNo << " partsNo " << wordsNo << "\n";
     }
 }
 

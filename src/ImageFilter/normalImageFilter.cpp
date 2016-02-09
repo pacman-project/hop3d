@@ -317,7 +317,10 @@ void NormalImageFilter::getPartsRealisation(int overlapNo, int categoryNo, int o
                                         vdp.locationEucl = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[1][1]+octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[i][j];
                                     else
                                         vdp.locationEucl = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->partsPosEucl[1][1];
-                                    vdp.offset=Mat34::Identity();
+                                    //vdp.offset=octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->offsets[i][j];
+                                    Mat34 offset(Mat34::Identity());
+                                    offset.matrix().block<3,3>(0,0) = coordinateFromNormal(octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->partsPosNorm[i][j].mean.block<3,1>(3,0));
+                                    vdp.offset=offset;
                                     vdp.id = 0;
                                     vdp.realisationId = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->realisationsIds[i][j];
                                     parts.push_back(vdp);
@@ -334,7 +337,7 @@ void NormalImageFilter::getPartsRealisation(int overlapNo, int categoryNo, int o
                                         vdp.locationEucl = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->secondOctet[0].partsPosEucl[1][1]+octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->secondOctet[0].partsPosEucl[i][j];
                                     else
                                         vdp.locationEucl = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->secondOctet[0].partsPosEucl[1][1];
-                                    vdp.offset=Mat34::Identity();
+                                    vdp.offset=octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->secondOctet[0].offsets[i][j];
                                     vdp.id = 0;
                                     vdp.realisationId = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][row][col]->realisationsIds[i][j];
                                     parts.push_back(vdp);

@@ -19,6 +19,8 @@ public:
     enum Type {
         /// Boris dataset
         DATASET_BORIS,
+        /// Pacman dataset
+        DATASET_PACMAN,
     };
 
     /// overloaded constructor

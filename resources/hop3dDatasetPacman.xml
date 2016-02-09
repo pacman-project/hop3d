@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+  <!-- Boris dataset configuration -->
+  <Dataset>
+    <name>BorisDataset</name>
+<!--    verbose : 0 -> no debug
+		  1 -> show debug output 
+    -->
+    <parameters verbose="1" categoriesNo="1" type="rgbd" path="../../../Datasets/Pacman"></parameters>
+    <Category0 name="Mug" objectsNo="1">
+      <Object0 name="Mug_1" imagesNo="2">
+	<Image0 name="220_P1_IP5.png" />
+	<Image1 name="220_P2_IP5.png" />
+	<Image2 name="220_P3_IP5.png" />
+	<Image3 name="220_P4_IP5.png" />
+	<Image4 name="220_P5_IP5.png" />
+	<Image5 name="220_P6_IP5.png" />
+	<Image6 name="220_P7_IP5.png" />
+      </Object0>
+      <Object1 name="Mug_2" imagesNo="7">
+	<Image0 name="221_P1_IP5.png" />
+	<Image1 name="221_P2_IP5.png" />
+	<Image2 name="221_P3_IP5.png" />
+	<Image3 name="221_P4_IP5.png" />
+	<Image4 name="221_P5_IP5.png" />
+	<Image5 name="221_P6_IP5.png" />
+	<Image6 name="221_P7_IP5.png" />
+      </Object1>
+      <Object2 name="Mug_3" imagesNo="7">
+	<Image0 name="222_P1_IP5.png" />
+	<Image1 name="222_P2_IP5.png" />
+	<Image2 name="222_P3_IP5.png" />
+	<Image3 name="222_P4_IP5.png" />
+	<Image4 name="222_P5_IP5.png" />
+	<Image5 name="222_P6_IP5.png" />
+	<Image6 name="222_P7_IP5.png" />
+      </Object2>
+      <Object3 name="Mug_4" imagesNo="7">
+	<Image0 name="223_P1_IP5.png" />
+	<Image1 name="223_P2_IP5.png" />
+	<Image2 name="223_P3_IP5.png" />
+	<Image3 name="223_P4_IP5.png" />
+	<Image4 name="223_P5_IP5.png" />
+	<Image5 name="223_P6_IP5.png" />
+	<Image6 name="223_P7_IP5.png" />
+      </Object3>
+      <Object4 name="Mug_5" imagesNo="7">
+	<Image0 name="224_P1_IP5.png" />
+	<Image1 name="224_P2_IP5.png" />
+	<Image2 name="224_P3_IP5.png" />
+	<Image3 name="224_P4_IP5.png" />
+	<Image4 name="224_P5_IP5.png" />
+	<Image5 name="224_P6_IP5.png" />
+	<Image6 name="224_P7_IP5.png" />
+      </Object4>
+    </Category0>
+    <Category1 name="Bottle" objectsNo="3">
+      <Object0 name="Bottle_1" imagesNo="7">
+	<Image0 name="1_P1_IP5.png" />
+	<Image1 name="1_P2_IP5.png" />
+	<Image2 name="1_P3_IP5.png" />
+	<Image3 name="1_P4_IP5.png" />
+	<Image4 name="1_P5_IP5.png" />
+	<Image5 name="1_P6_IP5.png" />
+	<Image6 name="1_P7_IP5.png" />
+      </Object0>
+      <Object1 name="Bottle_2" imagesNo="7">
+	<Image0 name="2_P1_IP5.png" />
+	<Image1 name="2_P2_IP5.png" />
+	<Image2 name="2_P3_IP5.png" />
+	<Image3 name="2_P4_IP5.png" />
+	<Image4 name="2_P5_IP5.png" />
+	<Image5 name="2_P6_IP5.png" />
+	<Image6 name="2_P7_IP5.png" />
+      </Object1>
+      <Object2 name="Bottle_3" imagesNo="7">
+	<Image0 name="3_P1_IP5.png" />
+	<Image1 name="3_P2_IP5.png" />
+	<Image2 name="3_P3_IP5.png" />
+	<Image3 name="3_P4_IP5.png" />
+	<Image4 name="3_P5_IP5.png" />
+	<Image5 name="3_P6_IP5.png" />
+	<Image6 name="3_P7_IP5.png" />
+      </Object2>
+    </Category1>
+    <Category2 name="Bowl" objectsNo="3">
+      <Object0 name="Bowl_1" imagesNo="7">
+	<Image0 name="1_P1_IP5.png" />
+	<Image1 name="1_P2_IP5.png" />
+	<Image2 name="1_P3_IP5.png" />
+	<Image3 name="1_P4_IP5.png" />
+	<Image4 name="1_P5_IP5.png" />
+	<Image5 name="1_P6_IP5.png" />
+	<Image6 name="1_P7_IP5.png" />
+      </Object0>
+      <Object1 name="Bowl_2" imagesNo="7">
+	<Image0 name="2_P1_IP5.png" />
+	<Image1 name="2_P2_IP5.png" />
+	<Image2 name="2_P3_IP5.png" />
+	<Image3 name="2_P4_IP5.png" />
+	<Image4 name="2_P5_IP5.png" />
+	<Image5 name="2_P6_IP5.png" />
+	<Image6 name="2_P7_IP5.png" />
+      </Object1>
+      <Object2 name="Bowl_3" imagesNo="7">
+	<Image0 name="3_P1_IP5.png" />
+	<Image1 name="3_P2_IP5.png" />
+	<Image2 name="3_P3_IP5.png" />
+	<Image3 name="3_P4_IP5.png" />
+	<Image4 name="3_P5_IP5.png" />
+	<Image5 name="3_P6_IP5.png" />
+	<Image6 name="3_P7_IP5.png" />
+      </Object2>
+    </Category2>
+    <Category3 name="Box" objectsNo="3">
+      <Object0 name="Box_1" imagesNo="7">
+	<Image0 name="34_P1_IP5.png" />
+	<Image1 name="34_P2_IP5.png" />
+	<Image2 name="34_P3_IP5.png" />
+	<Image3 name="34_P4_IP5.png" />
+	<Image4 name="34_P5_IP5.png" />
+	<Image5 name="34_P6_IP5.png" />
+	<Image6 name="34_P7_IP5.png" />
+      </Object0>
+      <Object1 name="Box_2" imagesNo="7">
+	<Image0 name="35_P1_IP5.png" />
+	<Image1 name="35_P2_IP5.png" />
+	<Image2 name="35_P3_IP5.png" />
+	<Image3 name="35_P4_IP5.png" />
+	<Image4 name="35_P5_IP5.png" />
+	<Image5 name="35_P6_IP5.png" />
+	<Image6 name="35_P7_IP5.png" />
+      </Object1>
+      <Object2 name="Box_3" imagesNo="7">
+	<Image0 name="36_P1_IP5.png" />
+	<Image1 name="36_P2_IP5.png" />
+	<Image2 name="36_P3_IP5.png" />
+	<Image3 name="36_P4_IP5.png" />
+	<Image4 name="36_P5_IP5.png" />
+	<Image5 name="36_P6_IP5.png" />
+	<Image6 name="36_P7_IP5.png" />
+      </Object2>
+    </Category3>
+    <Category4 name="Cup" objectsNo="3">
+      <Object0 name="Cup_1" imagesNo="7">
+	<Image0 name="110_P1_IP5.png" />
+	<Image1 name="110_P2_IP5.png" />
+	<Image2 name="110_P3_IP5.png" />
+	<Image3 name="110_P4_IP5.png" />
+	<Image4 name="110_P5_IP5.png" />
+	<Image5 name="110_P6_IP5.png" />
+	<Image6 name="110_P7_IP5.png" />
+      </Object0>
+      <Object1 name="Cup_2" imagesNo="7">
+	<Image0 name="111_P1_IP5.png" />
+	<Image1 name="111_P2_IP5.png" />
+	<Image2 name="111_P3_IP5.png" />
+	<Image3 name="111_P4_IP5.png" />
+	<Image4 name="111_P5_IP5.png" />
+	<Image5 name="111_P6_IP5.png" />
+	<Image6 name="111_P7_IP5.png" />
+      </Object1>
+      <Object2 name="Cup_3" imagesNo="7">
+	<Image0 name="112_P1_IP5.png" />
+	<Image1 name="112_P2_IP5.png" />
+	<Image2 name="112_P3_IP5.png" />
+	<Image3 name="112_P4_IP5.png" />
+	<Image4 name="112_P5_IP5.png" />
+	<Image5 name="112_P6_IP5.png" />
+	<Image6 name="112_P7_IP5.png" />
+      </Object2>
+    </Category4>
+  </Dataset>

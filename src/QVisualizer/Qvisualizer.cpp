@@ -175,6 +175,31 @@ void QGLVisualizer::update(std::vector<std::vector<std::vector<hop3d::PointCloud
     partClouds = objects;
 }
 
+/// update coords
+void QGLVisualizer::update(const std::vector<hop3d::Mat34>& coords){
+    updateCoordinates=true;
+    partsCoordinates = coords;
+}
+
+/// create coordinates list
+void QGLVisualizer::createCoordsList(void){
+    updateCoordinates = false;
+    // create one display list
+    GLuint index = glGenLists(1);
+    // compile the display list
+    ///Vec3 offset(partClouds[0][0][0].front().position);
+    glNewList(index, GL_COMPILE);
+        for (auto &coord : partsCoordinates){
+            double GLmat[16]={coord(0,0), coord(1,0), coord(2,0), 0, coord(0,1), coord(1,1), coord(2,1), 0, coord(0,2), coord(1,2), coord(2,2), 0, -offsetCoords(0)+coord(0,3), -offsetCoords(1)+coord(1,3), -0.1-offsetCoords(2)+coord(2,3), 1};
+            glPushMatrix();
+                glMultMatrixd(GLmat);
+                drawAxis(float(0.02));
+            glPopMatrix();
+        }
+    glEndList();
+    partsCoordinatesList.push_back(index);
+}
+
 /// Update parts objects
 void QGLVisualizer::updatePartsObjects(void){
     if (updatePartsObjectsFlag){
@@ -185,6 +210,7 @@ void QGLVisualizer::updatePartsObjects(void){
                 partObjectsLists[overlapNo].push_back(createPartObjList(partClouds[overlapNo][layerNo]));
             }
         }
+        offsetCoords=partClouds[0][0][0].front().position;
     }
     partClouds.clear();
 }
@@ -456,6 +482,14 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part){
     glPopMatrix();
     glEndList();
     return index;
+}
+
+/// draw coordinates list
+void QGLVisualizer::drawCoords(void){
+    if (partsCoordinatesList.size()>0){
+        for (auto &index : partsCoordinatesList)
+            glCallList(index);
+    }
 }
 
 /// draw part
@@ -1298,10 +1332,13 @@ void QGLVisualizer::draw(){
     if (config.drawPartObjects)
         drawPartObjects();
     drawPointClouds();
+    drawCoords();
     //drawPartSecondLayer();
     updateHierarchy();
     update3Dobjects();
     updatePartsObjects();
+    if (updateCoordinates)
+        createCoordsList();
     //updateSecondLayerPart();
 }
 
