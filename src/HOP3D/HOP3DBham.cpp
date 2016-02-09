@@ -187,6 +187,8 @@ void HOP3DBham::getPartsRealisation(int categoryNo, int objectNo, int imageNo, s
             part3D.pose = cameraPose * pointPose*part.offset;
             part3D.realisationId = part.realisationId;
             parts.push_back(part3D);
+            std::cout << "realisation id: " << part3D.realisationId << "\n";
+            std::cout << "pose:\n" << part3D.pose.translation().transpose() << "\n";
         }
     }
 }
@@ -515,21 +517,21 @@ void HOP3DBham::learn(){
         notify(coords);*/
     }
 #endif
-    Hierarchy::IndexSeqMap hierarchyGraph;
+    /*Hierarchy::IndexSeqMap hierarchyGraph;
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;
     getPartsRealisation(0,0,0, parts);
-    /*for (auto &part : parts){
+    for (auto &part : parts){
         std::cout << "part id " << part.id << "\n";
         std::cout << "part realisation id " << part.realisationId << "\n";
         std::cout << "part pose\n" << part.pose.matrix() << "\n";
-    }*/
+    }
     Hierarchy::IndexSeqMap points2parts;
     getCloud2PartsMap(0,0,0, points2parts);
     PartsClouds partsCloud;
     getPartsRealisationCloud(0,0,0,partsCloud);
     Hierarchy::IndexSetMap realisationsGraph;
-    getRealisationsGraph(0,0,0, realisationsGraph);
+    getRealisationsGraph(0,0,0, realisationsGraph);*/
     /*for (auto &part : parts){
         std::cout << "part id " << part.id << "\n";
         std::cout << "part realisation id " << part.realisationId << "\n";
