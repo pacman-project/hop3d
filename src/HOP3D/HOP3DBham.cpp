@@ -503,7 +503,7 @@ void HOP3DBham::learn(){
             }
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        notify3Dmodels();
+        //notify3Dmodels();
         createPartClouds();
         // draw parts coordinates
         /*std::vector<ViewIndependentPart::Part3D> parts;

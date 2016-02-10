@@ -88,6 +88,7 @@ private:
 
     /// read camera pose from file
     static Mat34 readCameraPose(std::string& filename);
+
 };
 
 }

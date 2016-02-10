@@ -39,6 +39,7 @@
 
 <!--  depth camera model -->
   <CameraModel configFilename="../../resources/hop3dKinectModel.xml">
+<!--   <CameraModel configFilename="../../resources/hop3dKinectModelPacman.xml"> -->
   </CameraModel>
   
 <!--   QVisualizer configuration -->

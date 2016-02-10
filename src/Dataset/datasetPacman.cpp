@@ -4,17 +4,30 @@
 //#include "opencv2/contrib/contrib.hpp"
 #include "opencv2/highgui/highgui.hpp"
 
+
+/// map idx to viewig angle
+std::map<int,int> idx2Angle;
+std::vector<int> angles={-164,-164,-135,-135,-135,-135,-106,-106,-74,-74,-45,-45,-45,-45,-16,-16,16,16,45,45,45,45,74,74,106,106,135,135,135,135,164,164,-16,16,-68,-35,35,68,-16,16,-16,16,-68,-35,35,68,-16,16,-16,16,-68,-35,35,68,-16,16,-16,16,-68,-35,35,68,-16,16};
+
 using namespace hop3d;
 
 /// A single instance of PacmanDataset
 PacmanDataset::Ptr datasetPacman;
 
 PacmanDataset::PacmanDataset(void) : Dataset("Pacman dataset", DATASET_PACMAN) {
+    idx2Angle.clear();
+    for (size_t id=0; id<angles.size();id++){
+        idx2Angle.insert(std::make_pair(id+1,angles[id]));
+    }
 }
 
 /// Construction
 PacmanDataset::PacmanDataset(std::string config, std::string configSensor) :
         Dataset("Pacman dataset", DATASET_PACMAN), config(config), sensorModel(configSensor) {
+    idx2Angle.clear();
+    for (size_t id=0; id<angles.size();id++){
+        idx2Angle.insert(std::make_pair(id+1,angles[id]));
+    }
 }
 
 /// Destruction
@@ -23,6 +36,10 @@ PacmanDataset::~PacmanDataset(void) {
 
 ///config class constructor
 PacmanDataset::Config::Config(std::string configFilename){
+    idx2Angle.clear();
+    for (size_t id=0; id<angles.size();id++){
+        idx2Angle.insert(std::make_pair(id+1,angles[id]));
+    }
     tinyxml2::XMLDocument config;
     std::string filename = configFilename;
     config.LoadFile(filename.c_str());
@@ -189,7 +206,9 @@ Mat34 PacmanDataset::readCameraPose(std::string& filename){
     std::stringstream ss(rawname);
     int first, second, third;
     ss >> first >> second >> third;
-    Quaternion orientation(1.0,first,second,third);
+    Eigen::Matrix3d m;
+    m = Eigen::AngleAxisd(idx2Angle[second]*3.14/180.0, Eigen::Vector3d::UnitZ())* Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY()) * Eigen::AngleAxisd(idx2Angle[third]*3.14/180.0, Eigen::Vector3d::UnitZ());
+    Quaternion orientation(m);
     Mat34 cameraPose(Eigen::Translation<double, 3>(0,0,0.5)*Quaternion(orientation.w(),orientation.x(),orientation.y(),orientation.z()));
     return cameraPose;
 }

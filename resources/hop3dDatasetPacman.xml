@@ -8,16 +8,7 @@
     -->
     <parameters verbose="1" categoriesNo="1" type="rgbd" path="../../../Datasets/Pacman"></parameters>
     <Category0 name="Mug" objectsNo="1">
-      <Object0 name="Mug_1" imagesNo="2">
-	<Image0 name="220_P1_IP5.png" />
-	<Image1 name="220_P2_IP5.png" />
-	<Image2 name="220_P3_IP5.png" />
-	<Image3 name="220_P4_IP5.png" />
-	<Image4 name="220_P5_IP5.png" />
-	<Image5 name="220_P6_IP5.png" />
-	<Image6 name="220_P7_IP5.png" />
-      </Object0>
-      <Object1 name="Mug_2" imagesNo="7">
+      <Object0 name="Mug_2" imagesNo="1">
 	<Image0 name="221_P1_IP5.png" />
 	<Image1 name="221_P2_IP5.png" />
 	<Image2 name="221_P3_IP5.png" />
@@ -25,6 +16,15 @@
 	<Image4 name="221_P5_IP5.png" />
 	<Image5 name="221_P6_IP5.png" />
 	<Image6 name="221_P7_IP5.png" />
+      </Object0>
+      <Object1 name="Mug_1" imagesNo="7">
+	<Image0 name="220_P1_IP5.png" />
+	<Image1 name="220_P2_IP5.png" />
+	<Image2 name="220_P3_IP5.png" />
+	<Image3 name="220_P4_IP5.png" />
+	<Image4 name="220_P5_IP5.png" />
+	<Image5 name="220_P6_IP5.png" />
+	<Image6 name="220_P7_IP5.png" />
       </Object1>
       <Object2 name="Mug_3" imagesNo="7">
 	<Image0 name="222_P1_IP5.png" />
