@@ -49,6 +49,8 @@ NormalImageFilter::Config::Config(std::string configFilename){
 
     model->FirstChildElement( "imageFiltering" )->QueryBoolAttribute("useMedianFilter", &useMedianFilter);
     model->FirstChildElement( "imageFiltering" )->QueryIntAttribute("kernelSize", &kernelSize);
+    model->FirstChildElement( "imageFiltering" )->QueryBoolAttribute("useMeanFilter", &useMeanFilter);
+    model->FirstChildElement( "imageFiltering" )->QueryIntAttribute("meanKernelSize", &meanKernelSize);
 
     if (verbose>0){
         std::cout << "Load normal filter parameters...\n";
@@ -145,6 +147,9 @@ void NormalImageFilter::filterDepthImage(const cv::Mat& input, cv::Mat& output) 
         else {
             medianFilter(input, output, config.kernelSize);
         }
+    }
+    if (config.useMeanFilter){
+        cv::GaussianBlur(input, output, cv::Size(config.meanKernelSize,config.meanKernelSize),0,0);
     }
 }
 

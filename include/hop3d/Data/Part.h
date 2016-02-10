@@ -73,6 +73,7 @@ public:
         for (int i=0;i<3;i++)
             for (int j=0;j<3;j++)
                 partIds[i][j] = -1;
+        id=-1;
     }
 
     /// Construction

@@ -136,6 +136,10 @@ public:
             bool useMedianFilter;
             /// kernel size
             int kernelSize;
+            /// use mean filter
+            bool useMeanFilter;
+            /// mean kernel size
+            int meanKernelSize;
             /// PCA window size
             int PCAWindowSize;
             /// PCA max distance between points -- if bigger run clusterization

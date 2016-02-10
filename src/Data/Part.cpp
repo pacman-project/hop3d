@@ -1083,11 +1083,10 @@ std::ostream& operator<<(std::ostream& os, const ViewDependentPart& part){
             os << part.offsets[i][j];
         }
     }
-    os << part.group.size() << "\n";
+    os << part.group.size() << " ";
     for (size_t i=0;i<part.group.size();i++){
         os << part.group[i];
     }
-    os << "\n";
     if (part.secondVDPart.size()>0){
         os << 1 << " ";
         os << part.secondVDPart[0];

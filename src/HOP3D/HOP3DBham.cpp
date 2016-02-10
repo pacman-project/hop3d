@@ -187,8 +187,6 @@ void HOP3DBham::getPartsRealisation(int categoryNo, int objectNo, int imageNo, s
             part3D.pose = cameraPose * pointPose*part.offset;
             part3D.realisationId = part.realisationId;
             parts.push_back(part3D);
-            std::cout << "realisation id: " << part3D.realisationId << "\n";
-            std::cout << "pose:\n" << part3D.pose.translation().transpose() << "\n";
         }
     }
 }
@@ -268,10 +266,10 @@ void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hie
     imageFilterer->getCloud(depthImage, cloud);
     std::uint32_t pointIdx=0;
     for (auto &point : cloud){
+        std::vector<std::uint32_t> idsParts;
         for (int overlapNo=0;overlapNo<3;overlapNo++){
             std::vector<int> ids;
             getRealisationsIds(overlapNo, categoryNo,objectNo,imageNo,point.u,point.v, point.position(2),ids);
-            std::vector<std::uint32_t> idsParts;
             for (size_t layerNo=0;layerNo<3;layerNo++){
                 if (ids[layerNo]>=0){
                     idsParts.push_back((std::uint32_t)ids[layerNo]);
@@ -279,8 +277,8 @@ void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hie
                     //std::cout << "point " << pointIdx << " -> " << (std::uint32_t)ids[layerNo] << " lay no " << layerNo << "\n";
                 }
             }
-            points2parts.insert(std::make_pair(pointIdx,idsParts));
         }
+        points2parts.insert(std::make_pair(pointIdx,idsParts));
         pointIdx++;
     }
 }
