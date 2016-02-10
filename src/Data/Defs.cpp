@@ -431,7 +431,7 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
         }
         // covariance
         for (int i=0;i<gaussian.covariance.rows();i++){
-            for (int j=0;j<gaussian.covariance.rows();j++){
+            for (int j=0;j<gaussian.covariance.cols();j++){
 				if (std::isnan(double(gaussian.covariance(i, j))))
                     os << 0.0 << " ";
                 else
@@ -445,11 +445,12 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
     /// Extraction operator
     std::istream& operator>>(std::istream& is, GaussianSE3& gaussian){
         // read mean
-        for (int i=0;i<gaussian.mean.rows();i++)
-            is >> gaussian.mean(i);
+		for (int i = 0; i < gaussian.mean.rows(); i++){
+			is >> gaussian.mean(i);
+		}
         // covariance
         for (int i=0;i<gaussian.covariance.rows();i++){
-            for (int j=0;j<gaussian.covariance.rows();j++){
+            for (int j=0;j<gaussian.covariance.cols();j++){
                 is >> gaussian.covariance(i,j);
             }
         }
