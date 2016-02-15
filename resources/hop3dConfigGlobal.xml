@@ -5,7 +5,7 @@
 	0 - Boris dataset
 	1 - Pacman dataset-->
   <Dataset datasetType="0" configFilename="../../resources/hop3dDatasetBoris.xml">
-<!--   <Dataset datasetType="1" configFilename="../../resources/hop3dDatasetPacman.xml">   -->
+<!--   <Dataset datasetType="1" configFilename="../../resources/hop3dDatasetPacman.xml">  -->
   </Dataset>
   
   <!-- filter configuration -->

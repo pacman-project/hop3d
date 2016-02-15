@@ -1150,9 +1150,29 @@ void QGLVisualizer::drawPatch(const Vec3& normal) const{
         glVertex3d(rightdownA(0), rightdownA(1),rightdownA(2));
         glEnd();
     }
+    if (config.drawPoints){
+        Mat33 rot = NormalImageFilter::coordinateFromNormal(normal);
+        glBegin(GL_POINTS);
+        int quadSize=10;
+        for (int i=0;i<10;i++){
+            for (int j=0;j<10;j++){
+                Mat34 trans(Mat34::Identity()), point(Mat34::Identity());
+                trans.matrix().block<3,3>(0,0) = rot;
+                point(0,3) = (i-5)*((quadSize*config.pixelSize)/10);
+                point(1,3) = (j-5)*((quadSize*config.pixelSize)/10);
+                point = trans*point;
+                if (sqrt(pow(point(0,3),2.0)+pow(point(1,3),2.0))<((quadSize-1)*config.pixelSize/2.0)){
+                    glNormal3d(-point(0,2), -point(1,2), -point(2,2));
+                    glVertex3d(point(0,3), point(1,3), point(2,3));
+                }
+
+            }
+        }
+        glEnd();
+    }
     if (config.drawNormals){
         glBegin(GL_LINES);
-            glColor3d(config.normalsColor.redF(),config.normalsColor.greenF(),config.normalsColor.blueF());
+            //glColor3d(config.normalsColor.redF(),config.normalsColor.greenF(),config.normalsColor.blueF());
             glVertex3d(0.0, 0.0, 0.0);
             glVertex3d(-normal(0)*config.normalsScale, -normal(1)*config.normalsScale, -normal(2)*config.normalsScale);
         glEnd();
@@ -1379,7 +1399,7 @@ void QGLVisualizer::init(){
     glEnable(GL_AUTO_NORMAL);
     glEnable(GL_NORMALIZE);
     // Restore previous viewer state.
-    //restoreStateFromFile();
+    restoreStateFromFile();
 
     camera()->setZNearCoefficient((float)0.00001);
     camera()->setZClippingCoefficient(100.0);

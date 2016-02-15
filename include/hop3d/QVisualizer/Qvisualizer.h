@@ -61,6 +61,7 @@ public:
             model->FirstChildElement( "pointCloud" )->QueryBoolAttribute("useNormalCloud", &useNormalCloud);
 
             model->FirstChildElement( "surface" )->QueryBoolAttribute("drawSurfaces", &drawSurfaces);
+            model->FirstChildElement( "surface" )->QueryBoolAttribute("drawPoints", &drawPoints);
             model->FirstChildElement( "surface" )->QueryBoolAttribute("useNormalSurf", &useNormalSurf);
             model->FirstChildElement( "surface" )->QueryIntAttribute("surfaceType", &surfaceType);
 
@@ -155,6 +156,8 @@ public:
         bool useNormalCloud;
         /// draw surfaces
         bool drawSurfaces;
+        /// draw points
+        bool drawPoints;
         /// surface type
         int surfaceType;
         /// use normal to the surface

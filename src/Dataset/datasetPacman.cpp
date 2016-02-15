@@ -207,7 +207,7 @@ Mat34 PacmanDataset::readCameraPose(std::string& filename){
     int first, second, third;
     ss >> first >> second >> third;
     Eigen::Matrix3d m;
-    m = Eigen::AngleAxisd(idx2Angle[second]*3.14/180.0, Eigen::Vector3d::UnitZ())* Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY()) * Eigen::AngleAxisd(idx2Angle[third]*3.14/180.0, Eigen::Vector3d::UnitZ());
+    m = Eigen::AngleAxisd(-idx2Angle[second]*3.14/180.0, Eigen::Vector3d::UnitZ())* Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY()) * Eigen::AngleAxisd(idx2Angle[third]*3.14/180.0, Eigen::Vector3d::UnitZ());
     Quaternion orientation(m);
     Mat34 cameraPose(Eigen::Translation<double, 3>(0,0,0.5)*Quaternion(orientation.w(),orientation.x(),orientation.y(),orientation.z()));
     return cameraPose;
