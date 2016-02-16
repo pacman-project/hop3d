@@ -282,6 +282,7 @@ void NormalImageFilter::updateOctetsImage(int layerNo, int overlapNo, int catego
 /// returs filter ids and their position on the image
 void NormalImageFilter::getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const {
     partCoords.clear();
+    int octetNo = 0;
     for (auto& row : octetsImages[0][overlapNo][categoryNo][objectNo][imageNo]){
         for (auto& octet : row){
             if (octet.get()!=nullptr){
@@ -292,14 +293,21 @@ void NormalImageFilter::getResponseFilters(int overlapNo, int categoryNo, int ob
                                 if (i==1&&j==1){
                                     PartCoords fcoords(octet->partIds[i][j], octet->filterPos[i][j], octet->offsets[i][j]);
                                     partCoords.push_back(fcoords);
+                                    //if (overlapNo==0&&categoryNo==0&&objectNo==0&&imageNo==0)
+                                        //octet->print();
+                                        //std::cout << "part coords1 " << fcoords.coords << " \n" << fcoords.offset.matrix() << "\n";
                                 }
                                 else{
                                     PartCoords fcoords(octet->partIds[i][j], octet->filterPos[1][1]+octet->filterPos[i][j], octet->offsets[i][j]);
                                     partCoords.push_back(fcoords);
+                                    //if (overlapNo==0&&categoryNo==0&&objectNo==0&&imageNo==0)
+                                        //octet->print();
+                                        //std::cout << "part coords " << fcoords.coords << " \n" << fcoords.offset.matrix() << "\n";
                                 }
                             }
                         }
                     }
+                    octetNo++;
                 }
             }
         }
@@ -756,14 +764,39 @@ void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, con
                         bool hasDoubleSurface = octet.hasDoubleSurface(config.distThresholdSecondLayer,biggerGroupSize, smallerGroupSize);
                         if (biggerGroupSize>=config.minOctetSizeSecondLayer){
                             computeRelativePositions(octet, 2);
+                            for (int k=0;k<3;k++){
+                                for (int l=0;l<3;l++){
+                                    if (octet.partIds[k][l]>=0){
+                                        if (!(k==1&&l==1)){
+                                            if (fabs(octet.partsPosNorm[k][l].mean(2))>0.1){
+                                                std::cout << octet.partsPosNorm[k][l].mean(2) << "\n";
+                                               // getchar();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             octet.isBackground=false;
                             if (hasDoubleSurface&&config.splitSurfaces){
                                 octet.splitSurfaces(config.distThresholdSecondLayer, config.minOctetSizeSecondLayer, smallerGroupSize);
                             }
                             updateRealisationIds(octet);
                             octets.push_back(octet);
-                            if (octet.secondOctet.size()>0)
+                            if (octet.secondOctet.size()>0){
                                 octets.push_back(octet.secondOctet[0]);
+                                for (int k=0;k<3;k++){
+                                    for (int l=0;l<3;l++){
+                                        if (octet.secondOctet[0].partIds[k][l]>=0){
+                                            if (!(k==1&&l==1)){
+                                                if (fabs(octet.secondOctet[0].partsPosNorm[k][l].mean(2))>0.1){
+                                                    std::cout << octet.secondOctet[0].partsPosNorm[k][l].mean(2) << " second\n";
+                                                    //getchar();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             nextLayerOctetsImg[u][v].reset(new Octet(octet));
                         }
                     }
@@ -1364,17 +1397,9 @@ void NormalImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int ob
                     ids.push_back(octet.secondOctet[0].realisationsIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]);
                 else
                     ids.push_back(-2);
-                if (imageNo==1&&ids.back()>-1&&ids.back()<50){
-                    std::cout << ids.back() << "\n";
-                    getchar();
-                }
             }
             else {
                 ids.push_back(octet.realisationsIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]);
-                if (imageNo==1&&ids.back()>-1&&ids.back()<50){
-                    std::cout << ids.back() << "1\n";
-                    getchar();
-                }
             }
         }
         else

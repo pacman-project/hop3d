@@ -8,8 +8,8 @@
     -->
     <parameters verbose="1" categoriesNo="1" type="pcl" path="../../Datasets/ObjectDB-2014-Boris-v7"></parameters>
     <Category0 name="mug" objectsNo="1">
-      <Object0 name="mug1" imagesNo="1">
-	<Image0 name="data-points_raw-mug1-3.pcd" />
+      <Object0 name="mug1" imagesNo="2">
+	<Image0 name="data-points_raw-mug1-1.pcd" />
 	<Image1 name="data-points_raw-mug1-2.pcd" />
 	<Image2 name="data-points_raw-mug1-3.pcd" />
 	<Image3 name="data-points_raw-mug1-4.pcd" />
@@ -83,40 +83,7 @@
 	<Image6 name="data-points_raw-bowlsmall-7.pcd" />
       </Object2>
     </Category1>
-    <Category2 name="bucket" objectsNo="1">
-      <Object0 name="bucket" imagesNo="7">
-	<Image0 name="data-points_raw-bucket-1.pcd" />
-	<Image1 name="data-points_raw-bucket-2.pcd" />
-	<Image2 name="data-points_raw-bucket-3.pcd" />
-	<Image3 name="data-points_raw-bucket-4.pcd" />
-	<Image4 name="data-points_raw-bucket-5.pcd" />
-	<Image5 name="data-points_raw-bucket-6.pcd" />
-	<Image6 name="data-points_raw-bucket-7.pcd" />
-      </Object0>
-    </Category2>
-    <Category3 name="cardboardring" objectsNo="1">
-      <Object0 name="cardboardring" imagesNo="7">
-	<Image0 name="data-points_raw-cardboardring-1.pcd" />
-	<Image1 name="data-points_raw-cardboardring-2.pcd" />
-	<Image2 name="data-points_raw-cardboardring-3.pcd" />
-	<Image3 name="data-points_raw-cardboardring-4.pcd" />
-	<Image4 name="data-points_raw-cardboardring-5.pcd" />
-	<Image5 name="data-points_raw-cardboardring-6.pcd" />
-	<Image6 name="data-points_raw-cardboardring-7.pcd" />
-      </Object0>
-    </Category3>
-    <Category4 name="chocsticks" objectsNo="1">
-      <Object0 name="chocsticks" imagesNo="7">
-	<Image0 name="data-points_raw-chocsticks-1.pcd" />
-	<Image1 name="data-points_raw-chocsticks-2.pcd" />
-	<Image2 name="data-points_raw-chocsticks-3.pcd" />
-	<Image3 name="data-points_raw-chocsticks-4.pcd" />
-	<Image4 name="data-points_raw-chocsticks-5.pcd" />
-	<Image5 name="data-points_raw-chocsticks-6.pcd" />
-	<Image6 name="data-points_raw-chocsticks-7.pcd" />
-      </Object0>
-    </Category4>
-    <Category5 name="bottle" objectsNo="1">
+    <Category2 name="bottle" objectsNo="1">
       <Object0 name="coke" imagesNo="7">
 	<Image0 name="data-points_raw-coke-1.pcd" />
 	<Image1 name="data-points_raw-coke-2.pcd" />
@@ -126,8 +93,61 @@
 	<Image5 name="data-points_raw-coke-6.pcd" />
 	<Image6 name="data-points_raw-coke-7.pcd" />
       </Object0>
+    </Category2>
+    <Category3 name="chocsticks" objectsNo="1">
+      <Object0 name="chocsticks" imagesNo="7">
+	<Image0 name="data-points_raw-chocsticks-1.pcd" />
+	<Image1 name="data-points_raw-chocsticks-2.pcd" />
+	<Image2 name="data-points_raw-chocsticks-3.pcd" />
+	<Image3 name="data-points_raw-chocsticks-4.pcd" />
+	<Image4 name="data-points_raw-chocsticks-5.pcd" />
+	<Image5 name="data-points_raw-chocsticks-6.pcd" />
+	<Image6 name="data-points_raw-chocsticks-7.pcd" />
+      </Object0>
+    </Category3>
+    <Category4 name="glass" objectsNo="1">
+      <Object0 name="glass1" imagesNo="7">
+	<Image0 name="data-points_raw-glass1-1.pcd" />
+	<Image1 name="data-points_raw-glass1-2.pcd" />
+	<Image2 name="data-points_raw-glass1-3.pcd" />
+	<Image3 name="data-points_raw-glass1-4.pcd" />
+	<Image4 name="data-points_raw-glass1-5.pcd" />
+	<Image5 name="data-points_raw-glass1-6.pcd" />
+	<Image6 name="data-points_raw-glass1-7.pcd" />
+      </Object0>
+      <Object1 name="glass2" imagesNo="7">
+	<Image0 name="data-points_raw-glass2-1.pcd" />
+	<Image1 name="data-points_raw-glass2-2.pcd" />
+	<Image2 name="data-points_raw-glass2-3.pcd" />
+	<Image3 name="data-points_raw-glass2-4.pcd" />
+	<Image4 name="data-points_raw-glass2-5.pcd" />
+	<Image5 name="data-points_raw-glass2-6.pcd" />
+	<Image6 name="data-points_raw-glass2-7.pcd" />
+      </Object1>
+    </Category4>
+    <Category5 name="bucket" objectsNo="1">
+      <Object0 name="bucket" imagesNo="7">
+	<Image0 name="data-points_raw-bucket-1.pcd" />
+	<Image1 name="data-points_raw-bucket-2.pcd" />
+	<Image2 name="data-points_raw-bucket-3.pcd" />
+	<Image3 name="data-points_raw-bucket-4.pcd" />
+	<Image4 name="data-points_raw-bucket-5.pcd" />
+	<Image5 name="data-points_raw-bucket-6.pcd" />
+	<Image6 name="data-points_raw-bucket-7.pcd" />
+      </Object0>
     </Category5>
-    <Category6 name="colander" objectsNo="1">
+    <Category6 name="cardboardring" objectsNo="1">
+      <Object0 name="cardboardring" imagesNo="7">
+	<Image0 name="data-points_raw-cardboardring-1.pcd" />
+	<Image1 name="data-points_raw-cardboardring-2.pcd" />
+	<Image2 name="data-points_raw-cardboardring-3.pcd" />
+	<Image3 name="data-points_raw-cardboardring-4.pcd" />
+	<Image4 name="data-points_raw-cardboardring-5.pcd" />
+	<Image5 name="data-points_raw-cardboardring-6.pcd" />
+	<Image6 name="data-points_raw-cardboardring-7.pcd" />
+      </Object0>
+    </Category6>
+    <Category7 name="colander" objectsNo="1">
       <Object0 name="colander" imagesNo="7">
 	<Image0 name="data-points_raw-colander-1.pcd" />
 	<Image1 name="data-points_raw-colander-2.pcd" />
@@ -137,8 +157,8 @@
 	<Image5 name="data-points_raw-colander-6.pcd" />
 	<Image6 name="data-points_raw-colander-7.pcd" />
       </Object0>
-    </Category6>
-    <Category7 name="container" objectsNo="1">
+    </Category7>
+    <Category8 name="container" objectsNo="1">
       <Object0 name="container1" imagesNo="7">
 	<Image0 name="data-points_raw-container1-1.pcd" />
 	<Image1 name="data-points_raw-container1-2.pcd" />
@@ -148,8 +168,8 @@
 	<Image5 name="data-points_raw-container1-6.pcd" />
 	<Image6 name="data-points_raw-container1-7.pcd" />
       </Object0>
-    </Category7>
-    <Category8 name="cornflakes" objectsNo="1">
+    </Category8>
+    <Category9 name="cornflakes" objectsNo="1">
       <Object0 name="cornflakes" imagesNo="7">
 	<Image0 name="data-points_raw-cornflakes-1.pcd" />
 	<Image1 name="data-points_raw-cornflakes-2.pcd" />
@@ -159,8 +179,8 @@
 	<Image5 name="data-points_raw-cornflakes-6.pcd" />
 	<Image6 name="data-points_raw-cornflakes-7.pcd" />
       </Object0>
-    </Category8>
-    <Category9 name="cube" objectsNo="1">
+    </Category9>
+    <Category10 name="cube" objectsNo="1">
       <Object0 name="cube" imagesNo="7">
 	<Image0 name="data-points_raw-cube-1.pcd" />
 	<Image1 name="data-points_raw-cube-2.pcd" />
@@ -170,8 +190,8 @@
 	<Image5 name="data-points_raw-cube-6.pcd" />
 	<Image6 name="data-points_raw-cube-7.pcd" />
       </Object0>
-    </Category9>
-    <Category10 name="cup" objectsNo="2">
+    </Category10>
+    <Category11 name="cup" objectsNo="2">
       <Object0 name="cup1" imagesNo="7">
 	<Image0 name="data-points_raw-cup1-1.pcd" />
 	<Image1 name="data-points_raw-cup1-2.pcd" />
@@ -190,8 +210,8 @@
 	<Image5 name="data-points_raw-cup2-6.pcd" />
 	<Image6 name="data-points_raw-cup2-7.pcd" />
       </Object1>
-    </Category10>
-    <Category11 name="danishham" objectsNo="1">
+    </Category11>
+    <Category12 name="danishham" objectsNo="1">
       <Object0 name="danishham" imagesNo="7">
 	<Image0 name="data-points_raw-danishham-1.pcd" />
 	<Image1 name="data-points_raw-danishham-2.pcd" />
@@ -201,8 +221,8 @@
 	<Image5 name="data-points_raw-danishham-6.pcd" />
 	<Image6 name="data-points_raw-danishham-7.pcd" />
       </Object0>
-    </Category11>
-    <Category12 name="deodorant" objectsNo="1">
+    </Category12>
+    <Category13 name="deodorant" objectsNo="1">
       <Object0 name="deodorant" imagesNo="7">
 	<Image0 name="data-points_raw-deodorant-1.pcd" />
 	<Image1 name="data-points_raw-deodorant-2.pcd" />
@@ -212,8 +232,8 @@
 	<Image5 name="data-points_raw-deodorant-6.pcd" />
 	<Image6 name="data-points_raw-deodorant-7.pcd" />
       </Object0>
-    </Category12>
-    <Category13 name="dustpan" objectsNo="1">
+    </Category13>
+    <Category14 name="dustpan" objectsNo="1">
       <Object0 name="dustpan" imagesNo="7">
 	<Image0 name="data-points_raw-dustpan-1.pcd" />
 	<Image1 name="data-points_raw-dustpan-2.pcd" />
@@ -223,8 +243,8 @@
 	<Image5 name="data-points_raw-dustpan-6.pcd" />
 	<Image6 name="data-points_raw-dustpan-7.pcd" />
       </Object0>
-    </Category13>
-    <Category14 name="foambox" objectsNo="1">
+    </Category14>
+    <Category15 name="foambox" objectsNo="1">
       <Object0 name="foambox" imagesNo="7">
 	<Image0 name="data-points_raw-foambox-1.pcd" />
 	<Image1 name="data-points_raw-foambox-2.pcd" />
@@ -234,8 +254,8 @@
 	<Image5 name="data-points_raw-foambox-6.pcd" />
 	<Image6 name="data-points_raw-foambox-7.pcd" />
       </Object0>
-    </Category14>
-    <Category15 name="fryingpan" objectsNo="1">
+    </Category15>
+    <Category16 name="fryingpan" objectsNo="1">
       <Object0 name="fryingpan" imagesNo="7">
 	<Image0 name="data-points_raw-fryingpan-1.pcd" />
 	<Image1 name="data-points_raw-fryingpan-2.pcd" />
@@ -245,8 +265,8 @@
 	<Image5 name="data-points_raw-fryingpan-6.pcd" />
 	<Image6 name="data-points_raw-fryingpan-7.pcd" />
       </Object0>
-    </Category15>
-    <Category16 name="funnel" objectsNo="2">
+    </Category16>
+    <Category17 name="funnel" objectsNo="2">
       <Object0 name="funnellarge" imagesNo="7">
 	<Image0 name="data-points_raw-funnellarge-1.pcd" />
 	<Image1 name="data-points_raw-funnellarge-2.pcd" />
@@ -264,26 +284,6 @@
 	<Image4 name="data-points_raw-funnelsmall-5.pcd" />
 	<Image5 name="data-points_raw-funnelsmall-6.pcd" />
 	<Image6 name="data-points_raw-funnelsmall-7.pcd" />
-      </Object1>
-    </Category16>
-    <Category17 name="glass" objectsNo="2">
-      <Object0 name="glass1" imagesNo="7">
-	<Image0 name="data-points_raw-glass1-1.pcd" />
-	<Image1 name="data-points_raw-glass1-2.pcd" />
-	<Image2 name="data-points_raw-glass1-3.pcd" />
-	<Image3 name="data-points_raw-glass1-4.pcd" />
-	<Image4 name="data-points_raw-glass1-5.pcd" />
-	<Image5 name="data-points_raw-glass1-6.pcd" />
-	<Image6 name="data-points_raw-glass1-7.pcd" />
-      </Object0>
-      <Object1 name="glass2" imagesNo="7">
-	<Image0 name="data-points_raw-glass2-1.pcd" />
-	<Image1 name="data-points_raw-glass2-2.pcd" />
-	<Image2 name="data-points_raw-glass2-3.pcd" />
-	<Image3 name="data-points_raw-glass2-4.pcd" />
-	<Image4 name="data-points_raw-glass2-5.pcd" />
-	<Image5 name="data-points_raw-glass2-6.pcd" />
-	<Image6 name="data-points_raw-glass2-7.pcd" />
       </Object1>
     </Category17>
     <Category18 name="guttering" objectsNo="1">

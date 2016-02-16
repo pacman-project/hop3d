@@ -130,11 +130,22 @@ namespace hop3d {
         std::sort(depth.begin(),depth.end());
         for (size_t i=0;i<depth.size()-1;i++){
             if (depth[i+1]-depth[i]>distThreshold){
-                if (i+1>depth.size()-(i+1))
+                int start,end;
+                if (i+1>depth.size()-(i+1)){
                     groupSize = int(i+1);
-                else
+                    start=0; end = groupSize;
+                }
+                else{
                     groupSize = int(depth.size()-(i+1));
+                    start=int(i+1); end = (int)depth.size()-1;
+                }
                 othersSize = (int)depth.size()-groupSize;
+                for (int j=start;j<end-1;j++){
+                    if (depth[j+1]-depth[j]>distThreshold){//third surface
+                        groupSize=0; othersSize=0;
+                        return true;
+                    }
+                }
                 return true;
             }
         }
@@ -203,16 +214,18 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
             Vec3 middleElement(0,0,0);
             if (background.partIds[1][1]<0){
                 middleElement = meanPos*double(1.0/double(smallerGroupSize));
+                background.partsPosNorm[1][1].mean.block<3,1>(0,0) =middleElement;
+                background.partsPosEucl[1][1] =middleElement;
+                for (int i=0;i<3;i++)
+                    for (int j=0;j<3;j++)
+                        if ((background.partIds[i][j]>=0)&&(!(i==1&&j==1))) {
+                            background.partsPosNorm[i][j].mean.block<3,1>(0,0)-=middleElement;
+                            background.partsPosEucl[i][j]-=middleElement;
+                        }
             }
             else{
                 middleElement = background.partsPosNorm[1][1].mean.block<3,1>(0,0);
             }
-            background.partsPosNorm[1][1].mean.block<3,1>(0,0) =partsPosNorm[1][1].mean.block<3,1>(0,0)+middleElement;
-            background.partsPosEucl[1][1] =partsPosEucl[1][1]+middleElement;
-            for (int i=0;i<3;i++)
-                for (int j=0;j<3;j++)
-                    if ((background.partIds[i][j]>=0)&&(!(i==1&&j==1)))
-                        background.partsPosNorm[i][j].mean.block<3,1>(0,0)-=middleElement;
             background.isBackground = false;
             secondOctet.push_back(background);
         }
@@ -263,6 +276,12 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
         os << "\n";
         for (int i=0;i<3;i++){
             for (int j=0;j<3;j++){
+                os << octet.filterPos[i][j] << " ";
+            }
+        }
+        os << "\n";
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
                 os << octet.realisationsIds[i][j] << " ";
             }
         }
@@ -295,6 +314,11 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
         for (int i=0;i<3;i++){
             for (int j=0;j<3;j++){
                 is >> octet.partIds[i][j];
+            }
+        }
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                is >> octet.filterPos[i][j];
             }
         }
         for (int i=0;i<3;i++){

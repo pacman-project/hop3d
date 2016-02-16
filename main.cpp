@@ -27,8 +27,8 @@ int main(void){
 
         imageFilter->computeOctets(vecImages[0],0,0,0,sequenceOfOctets);*/
         hop3d::HOP3D* hop3d = hop3d::createHOP3DBham("../../resources/hop3dConfigGlobal.xml");
-		//hop3d->learn();
-		hop3d->load("hop3dHierarchyBoris.h3d");
+        hop3d->learn();
+        //hop3d->load("hop3dHierarchyBoris.h3d");
     }
     catch (const std::exception& ex) {
         std::cerr << ex.what() << std::endl;

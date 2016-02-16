@@ -341,15 +341,6 @@ void HOP3DBham::learn(){
         statsBuilder->vocabularyFromOctets(octets, layerNo+2, startId, dictionary);
         std::cout << "Dictionary size (" << layerNo+2 << " layer): " << dictionary.size() << "\n";
         partSelector->selectParts(dictionary, *hierarchy, layerNo+2);
-        /*if (layerNo==1){
-            for (auto &word : dictionary){
-                word.print();
-            }
-            ViewDependentPart pp(dictionary[1]);
-            PointsSecondLayer points;
-            ViewDependentPart::createPointsMatrix(pp,hierarchy.get()->viewDependentLayers[0],0,points);
-            notify(points);
-        }*/
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
@@ -480,6 +471,7 @@ void HOP3DBham::learn(){
                                 Mat34 pointPose(Mat34::Identity());
                                 pointPose.translation() = point3d;
                                 pointPose = cameraPose * pointPose*filterCoord.offset;
+                                std::cout << "point pose \n" << pointPose.matrix() << "\n";
                                 filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
                             }
                         }
@@ -570,6 +562,18 @@ void HOP3DBham::load(std::string filename){
     std::ifstream ifsHierarchy(filename);
     std::cout << "Load hierarchy...";
     ifsHierarchy >> *hierarchy;
+    for (auto &word : (*hierarchy).viewDependentLayers[1]){
+        for (int k=0;k<3;k++){
+            for (int l=0;l<3;l++){
+                if (word.partIds[k][l]>=0){
+                    if (!(k==1&&l==1)){
+                        std::cout << word.partsPosNorm[k][l].mean(2) << "\n";
+                    }
+                }
+            }
+        }
+        //word.print();
+    }
     std::cout << "Loaded\n";
     dataset->getDatasetInfo(datasetInfo);
     objects.resize(datasetInfo.categories.size());
@@ -583,17 +587,74 @@ void HOP3DBham::load(std::string filename){
     ((NormalImageFilter*)imageFilterer)->loadFromfile(ifsHierarchy);
     ifsHierarchy.close();
     //visualization
-    notify(*hierarchy);
-    /*for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-        for (auto & object : objects[categoryNo]){
-            std::vector<ViewIndependentPart> objectParts;
-            for (size_t i=0;i<1;i++){//hierarchy.get()->viewIndependentLayers.size()-2;i++){
-                object.getParts((int)i, objectParts);
-                notify(objectParts, int(i+hierarchy.get()->viewDependentLayers.size()+1));
+#ifdef QVisualizerBuild
+    if (config.useVisualization){
+        notify(*hierarchy);
+        for (int layerNo=0;layerNo<config.viewDependentLayersNo+1;layerNo++){//create objects from parts
+            for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+                for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+                    for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
+                        std::vector<PartCoords> partCoords;
+                        std::vector<PartCoordsEucl> partCoordsEucl;
+                        for (int overlapNo=0; overlapNo<3; overlapNo++){
+                            if (layerNo==0){
+                                std::vector<PartCoords> partCoordsTmp;
+                                imageFilterer->getResponseFilters(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, partCoordsTmp);
+                                partCoords.insert(partCoords.end(), partCoordsTmp.begin(), partCoordsTmp.end());
+                            }
+                            else{
+                                std::vector<PartCoordsEucl> partCoordsEuclTmp;
+                                imageFilterer->getParts3D(overlapNo,(int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoordsEuclTmp);
+                                partCoordsEucl.insert(partCoordsEucl.end(), partCoordsEuclTmp.begin(), partCoordsEuclTmp.end());
+                            }
+                        }
+                        Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+                        std::vector<std::pair<int, Mat34>> filtersPoses;
+                        if (layerNo<1){
+                            for (auto& filterCoord : partCoords){
+                                Vec3 point3d;
+                                depthCameraModel.get()->getPoint(filterCoord.coords.u, filterCoord.coords.v, filterCoord.coords.depth, point3d);
+                                Mat34 pointPose(Mat34::Identity());
+                                pointPose.translation() = point3d;
+                                pointPose = cameraPose * pointPose*filterCoord.offset;
+                                filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
+                            }
+                        }
+                        else{
+                            for (auto& filterCoord : partCoordsEucl){
+                                Mat34 pointPose(Mat34::Identity());
+                                pointPose.translation() = filterCoord.coords;
+                                pointPose = cameraPose * pointPose*filterCoord.offset;
+                                filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
+                            }
+                        }
+                        notify(filtersPoses,(int)objectNo,layerNo);
+                    }
+                }
             }
         }
+        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+            for (auto & object : objects[categoryNo]){
+                std::vector<ViewIndependentPart> objectParts;
+                for (size_t i=0;i<2;i++){//hierarchy.get()->viewIndependentLayers.size()-2;i++){
+                    object.getParts((int)i, objectParts);
+                    notify(objectParts, (int)(i+hierarchy.get()->viewDependentLayers.size()+1));
+                }
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        notify3Dmodels();
+        createPartClouds();
+        // draw parts coordinates
+        /*std::vector<ViewIndependentPart::Part3D> parts;
+        getPartsRealisation(0,0,0, parts);
+        std::vector<Mat34> coords;
+        for (auto &part : parts){
+            coords.push_back(part.pose);
+        }
+        notify(coords);*/
     }
-    notify3Dmodels();*/
+#endif
     /*Hierarchy::IndexSeqMap hierarchyGraph;
     getHierarchy(hierarchyGraph);
     std::vector<ViewIndependentPart::Part3D> parts;

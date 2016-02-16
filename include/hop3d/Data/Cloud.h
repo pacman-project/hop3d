@@ -24,6 +24,12 @@ public:
 
     ///Construction
     PointNormal(Vec3 _position, Vec3 _normal) : position(_position), normal(_normal) {}
+
+    // Insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const PointNormal& point);
+
+    // Extraction operator
+    friend std::istream& operator>>(std::istream& is, PointNormal& point);
 };
 
 class PointPart{

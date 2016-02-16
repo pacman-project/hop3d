@@ -1177,6 +1177,10 @@ std::ostream& operator<<(std::ostream& os, const ViewIndependentPart& part){
             }
         }
     }
+    os << part.cloud.size() << " ";
+    for (auto &point : part.cloud){
+        os << point;
+    }
     os << part.group.size() << "\n";
     for (size_t i=0;i<part.group.size();i++){
         os << part.group[i];
@@ -1220,6 +1224,15 @@ std::istream& operator>>(std::istream& is, ViewIndependentPart& part){
                 is >> part.gaussians[i][j][k];
             }
         }
+    }
+    int cloudSize;
+    is >> cloudSize;
+    part.cloud.clear();
+    part.cloud.reserve(cloudSize);
+    for (int i=0;i<cloudSize;i++){
+        PointNormal point;
+        is >> point;
+        part.cloud.push_back(point);
     }
     int groupSize;
     is >> groupSize;
