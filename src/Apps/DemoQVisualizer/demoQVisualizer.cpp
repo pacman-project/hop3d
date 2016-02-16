@@ -22,14 +22,15 @@ int main(int argc, char** argv)
 {
     try {
         tinyxml2::XMLDocument config;
-        config.LoadFile("../../resources/hop3dConfigGlobal.xml");
+        std::string prefix("../../resources/");
+        config.LoadFile(std::string(prefix+"hop3dConfigGlobal.xml").c_str());
         if (config.ErrorID()){
             std::cout << "unable to load global config file.\n";
             return 1;
         }
-        std::string configFile(config.FirstChildElement( "QVisualizer" )->Attribute( "configFilename" ));
+        std::string configFile(prefix+config.FirstChildElement( "QVisualizer" )->Attribute( "configFilename" ));
 
-        lhop3d = hop3d::createHOP3DBham("../../resources/hop3dConfigGlobal.xml");
+        lhop3d = hop3d::createHOP3DBham(prefix + "hop3dConfigGlobal.xml");
         QGLVisualizer::Config configVis(configFile);//something is wrong with QApplication when Qapplication
         //object is created. libTinyxml can read only ints from xml file
         // found: Qt changes locale settings use

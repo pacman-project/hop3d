@@ -128,6 +128,9 @@ public:
             normalsColor.setBlueF(rgba[2]); normalsColor.setAlphaF(rgba[3]);
 
             std::string GICPConfig = (model->FirstChildElement( "GICP" )->Attribute( "configFilename" ));
+            size_t found = configFilename.find_last_of("/\\");
+            std::string prefix = configFilename.substr(0,found+1);
+            GICPConfig = prefix+GICPConfig;
             tinyxml2::XMLDocument configGICPxml;
             configGICPxml.LoadFile(GICPConfig.c_str());
             if (configGICPxml.ErrorID())

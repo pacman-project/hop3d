@@ -47,6 +47,9 @@ PartSelectorMean::Config::Config(std::string configFilename){
     }
 
     std::string GICPConfig = (group->FirstChildElement( "GICP" )->Attribute( "configFilename" ));
+    size_t found = configFilename.find_last_of("/\\");
+    std::string prefix = configFilename.substr(0,found+1);
+    GICPConfig = prefix+GICPConfig;
     tinyxml2::XMLDocument configGICPxml;
     configGICPxml.LoadFile(GICPConfig.c_str());
     if (configGICPxml.ErrorID())

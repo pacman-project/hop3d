@@ -19,5 +19,5 @@
     <layer5 maxDist="0.06" maxClusterDist="0.061"></layer5>
     <layer6 maxDist="0.6" maxClusterDist="0.6"></layer6>
     <layer7 maxDist="0.7" maxClusterDist="0.7"></layer7>
-    <GICP configFilename="../../resources/hop3dGICP.xml"></GICP>
+    <GICP configFilename="hop3dGICP.xml"></GICP>
   </PartSelector>

@@ -15,7 +15,8 @@ int main(void)
 {
     try {
         tinyxml2::XMLDocument config;
-        config.LoadFile("../../resources/hop3dConfigGlobal.xml");
+        std::string prefix("../../resources/");
+        config.LoadFile(std::string(prefix +"hop3dConfigGlobal.xml").c_str());
         if (config.ErrorID()){
             std::cout << "unable to load global config file.\n";
             return 1;
@@ -23,6 +24,10 @@ int main(void)
         std::string configFile(config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
         std::string sensorConfigFile(config.FirstChildElement( "CameraModel" )->Attribute( "configFilename" ));
         std::string datasetConfigFile(config.FirstChildElement( "Dataset" )->Attribute( "configFilename" ));
+        configFile = prefix+configFile;
+        sensorConfigFile = prefix+sensorConfigFile;
+        datasetConfigFile = prefix+datasetConfigFile;
+
         int datasetType;
         config.FirstChildElement( "Dataset" )->QueryIntAttribute("datasetType", &datasetType);
 

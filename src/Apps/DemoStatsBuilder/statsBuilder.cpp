@@ -9,7 +9,8 @@
 int main(void){
     try {
         tinyxml2::XMLDocument config;
-        config.LoadFile("../../resources/hop3dConfigGlobal.xml");
+        std::string prefix("../../resources/");
+        config.LoadFile(std::string(prefix+"hop3dConfigGlobal.xml").c_str());
         if (config.ErrorID()){
             std::cout << "unable to load global config file.\n";
             return 1;
@@ -17,6 +18,9 @@ int main(void){
         std::string statsConfig(config.FirstChildElement( "StatisticsBuilder" )->Attribute( "configFilename" ));
         std::string filtererConfig(config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
         std::string selectorConfig(config.FirstChildElement( "PartSelector" )->Attribute( "configFilename" ));
+        statsConfig = prefix + statsConfig;
+        filtererConfig = prefix + filtererConfig;
+        selectorConfig = prefix + filtererConfig;
 
         hop3d::StatsBuilder *statsBuilder;
         statsBuilder = hop3d::createUnbiasedStatsBuilder(statsConfig);
@@ -47,24 +51,18 @@ int main(void){
         //Octet.
         octets[0].print();
 
-        hop3d::Hierarchy hierarchy("hop3dConfigGlobal.xml");
+        hop3d::Hierarchy hierarchy(prefix+"hop3dConfigGlobal.xml");
         hop3d::ImageFilter* imageFilterer = hop3d::createDepthImageFilter(filtererConfig);
         imageFilterer->setFilters("filters_7x7_0_005.xml","normals_7x7_0_005.xml","masks_7x7_0_005.xml");
         std::vector<hop3d::Octet> octets3layer;
             octetsNo = 200;
             octets3layer.resize(octetsNo);
         imageFilterer->getFilters(hierarchy.firstLayer);
-        std::cout << hierarchy.firstLayer[0].normal << "\n";
-        std::cout << hierarchy.firstLayer[1].normal << "\n";
-        std::cout << hierarchy.firstLayer[2].normal << "\n";
-
 
         std::vector<cv::Mat> vecImages;
         hop3d::Reader reader;
-        reader.readMultipleImages("../../resources/depthImages",vecImages);
+        reader.readMultipleImages(prefix+"depthImages",vecImages);
         imageFilterer->computeOctets(vecImages[0],0,0,0,octets);
-        std::cout << "stats builders oddddd d sd sag sdgg\n";
-        std:: cout << " size: " << octets.size() << "\n";
 
         hop3d::ViewDependentPart::Seq dictionary;
         statsBuilder->computeStatistics(octets, 2, (int)hierarchy.firstLayer.size(), dictionary);

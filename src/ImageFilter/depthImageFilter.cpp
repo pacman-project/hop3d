@@ -226,7 +226,7 @@ void DepthImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo, 
     std::cout << "not implemented\n";
     ids.clear();
     std::cout << lastVDpart.id << "\n";
-    std::cout << overlapNo << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << "\n";
+    std::cout << overlapNo << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << depth << "\n";
 }
 
 /// get set of ids for the given input point

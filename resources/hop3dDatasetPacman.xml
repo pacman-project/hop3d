@@ -6,9 +6,9 @@
 <!--    verbose : 0 -> no debug
 		  1 -> show debug output 
     -->
-    <parameters verbose="1" categoriesNo="1" type="rgbd" path="../../../Datasets/Pacman"></parameters>
+    <parameters verbose="1" categoriesNo="1" type="rgbd" path="../../Datasets/Pacman"></parameters>
     <Category0 name="Mug" objectsNo="1">
-      <Object0 name="Mug_2" imagesNo="2">
+      <Object0 name="Mug_2" imagesNo="1">
 	<Image0 name="221_P1_IP5.png" />
 	<Image1 name="221_P4_IP5.png" />
 	<Image2 name="221_P3_IP5.png" />

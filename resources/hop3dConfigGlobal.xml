@@ -4,27 +4,27 @@
   <!--type:
 	0 - Boris dataset
 	1 - Pacman dataset-->
-  <Dataset datasetType="0" configFilename="../../resources/hop3dDatasetBoris.xml">
-<!--   <Dataset datasetType="1" configFilename="../../resources/hop3dDatasetPacman.xml">  -->
+  <Dataset datasetType="0" configFilename="hop3dDatasetBoris.xml">
+<!--   <Dataset datasetType="1" configFilename="hop3dDatasetPacman.xml">  -->
   </Dataset>
   
   <!-- filter configuration -->
   <!--type:
 	0 - depth patch
 	1 - normal vector-->
-  <Filterer filterType="1" configFilename="../../resources/hop3dDepthFilter.xml">
+  <Filterer filterType="1" configFilename="hop3dDepthFilter.xml">
   </Filterer>
   
   <!-- Stats builder configuration -->
-  <StatisticsBuilder configFilename="../../resources/hop3dStatsBuilder.xml">
+  <StatisticsBuilder configFilename="hop3dStatsBuilder.xml">
   </StatisticsBuilder>
   
   <!-- Stats builder configuration -->
   <!--type:
 	0 - k-mean
 	1 - agglomerative hierarchical-->
-<!--   <PartSelector type="0" configFilename="../../resources/partSelector.xml"> -->
-  <PartSelector selectorType="1" configFilename="../../resources/hop3dPartSelectorAgglomerative.xml">
+<!--   <PartSelector type="0" configFilename="partSelector.xml"> -->
+  <PartSelector selectorType="1" configFilename="hop3dPartSelectorAgglomerative.xml">
   </PartSelector>
   
 <!--   Hierarchy configuration -->
@@ -34,14 +34,14 @@
   </Hierarchy>
   
 <!--  3D object composition configuration -->
-  <ObjectComposition configFilename="../../resources/hop3dObjectComposition.xml">
+  <ObjectComposition configFilename="hop3dObjectComposition.xml">
   </ObjectComposition>
 
 <!--  depth camera model -->
-  <CameraModel configFilename="../../resources/hop3dKinectModel.xml">
-<!--   <CameraModel configFilename="../../resources/hop3dKinectModelPacman.xml"> -->
+  <CameraModel configFilename="hop3dKinectModel.xml">
+<!--   <CameraModel configFilename="hop3dKinectModelPacman.xml"> -->
   </CameraModel>
   
 <!--   QVisualizer configuration -->
-  <QVisualizer useVisualization="true" configFilename="../../resources/hop3dQvisualizerConfig.xml">
+  <QVisualizer useVisualization="true" configFilename="hop3dQvisualizerConfig.xml">
   </QVisualizer>

@@ -63,25 +63,28 @@ HOP3DBham::Config::Config(std::string configFilename){
     std::string filename = configFilename;
     config.LoadFile(filename.c_str());
     if (config.ErrorID())
-		throw std::runtime_error("unable to load unbiased stats builder config file: " + filename);
+        throw std::runtime_error("unable to load hop3d config file: " + filename);
     tinyxml2::XMLElement * group = config.FirstChildElement( "Hierarchy" );
     group->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     if (verbose == 1) {
         std::cout << "Load HOP3DBham parameters...\n";
     }
+    size_t found = configFilename.find_last_of("/\\");
+    std::string prefix = configFilename.substr(0,found+1);
+
     group->FirstChildElement( "parameters" )->QueryIntAttribute("viewDependentLayersNo", &viewDependentLayersNo);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("viewIndependentLayersNo", &viewIndependentLayersNo);
 
     group->FirstChildElement( "save2file" )->QueryBoolAttribute("save2file", &save2file);
     filename2save = group->FirstChildElement( "save2file" )->Attribute( "filename2save" );
 
-    statsConfig = (config.FirstChildElement( "StatisticsBuilder" )->Attribute( "configFilename" ));
+    statsConfig = prefix+(config.FirstChildElement( "StatisticsBuilder" )->Attribute( "configFilename" ));
     config.FirstChildElement( "PartSelector" )->QueryIntAttribute("selectorType", &partSelectorType);
-    selectorConfig = (config.FirstChildElement( "PartSelector" )->Attribute( "configFilename" ));
-    filtererConfig = (config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
-    compositionConfig = (config.FirstChildElement( "ObjectComposition" )->Attribute( "configFilename" ));
-    cameraConfig = (config.FirstChildElement( "CameraModel" )->Attribute( "configFilename" ));
-    datasetConfig = (config.FirstChildElement( "Dataset" )->Attribute( "configFilename" ));
+    selectorConfig = prefix+(config.FirstChildElement( "PartSelector" )->Attribute( "configFilename" ));
+    filtererConfig = prefix+(config.FirstChildElement( "Filterer" )->Attribute( "configFilename" ));
+    compositionConfig = prefix+(config.FirstChildElement( "ObjectComposition" )->Attribute( "configFilename" ));
+    cameraConfig = prefix+(config.FirstChildElement( "CameraModel" )->Attribute( "configFilename" ));
+    datasetConfig = prefix+(config.FirstChildElement( "Dataset" )->Attribute( "configFilename" ));
 
     config.FirstChildElement( "Filterer" )->QueryIntAttribute("filterType", &filterType);
     config.FirstChildElement( "Dataset" )->QueryIntAttribute("datasetType", &datasetType);

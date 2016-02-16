@@ -391,7 +391,7 @@ if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_STATS)
 
         SET(DEMO_STATS_SOURCES ./src/Apps/DemoStatsBuilder/statsBuilder.cpp)
         ADD_EXECUTABLE(hop3dStatsBuilderDemo ${DEMO_STATS_SOURCES})
-        TARGET_LINK_LIBRARIES(hop3dStatsBuilderDemo tinyxml2 hop3dStatisticsBuilder hop3dImageFilter hop3dPartSelector ${QT_LIBRARIES} ${Boost_LIBRARIES})
+        TARGET_LINK_LIBRARIES(hop3dStatsBuilderDemo tinyxml2 hop3dStatisticsBuilder hop3dImageFilter hop3dPartSelector)
         INSTALL(TARGETS hop3dStatsBuilderDemo RUNTIME DESTINATION bin)
         INSTALL(FILES ${DEMO_FILES} DESTINATION bin)
 

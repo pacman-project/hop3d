@@ -28,13 +28,16 @@ BorisDataset::Config::Config(std::string configFilename){
     config.LoadFile(filename.c_str());
     if (config.ErrorID())
 		throw std::runtime_error("unable to load Boris dataset config file: " + filename);
+    size_t found = configFilename.find_last_of("/\\");
+    std::string prefix = configFilename.substr(0,found+1);
+
     tinyxml2::XMLElement * model = config.FirstChildElement( "Dataset" );
     model->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     int categoriesNo;
     model->FirstChildElement( "parameters" )->QueryIntAttribute("categoriesNo", &categoriesNo);
     dataset.categories.resize(categoriesNo);
     type = model->FirstChildElement( "parameters" )->Attribute( "type" );
-    path = model->FirstChildElement( "parameters" )->Attribute( "path" );
+    path = prefix+model->FirstChildElement( "parameters" )->Attribute( "path" );
     for (int categoryNo=0;categoryNo<categoriesNo; categoryNo++){
         std::stringstream categoryName;
         categoryName << "Category" << categoryNo;
