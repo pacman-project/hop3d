@@ -9,6 +9,7 @@
 
 #include "hop3d/PartSelector/partSelector.h"
 #include "tinyXML/tinyxml2.h"
+#include <queue>
 
 namespace hop3d {
     /// create a single part selector
@@ -22,6 +23,22 @@ class PartSelectorAgglomerative: public PartSelector {
 public:
     /// Pointer
     typedef std::unique_ptr<PartSelectorAgglomerative> Ptr;
+
+    class DistanceElement{
+    public:
+        /// matched poses
+        std::pair<int,int> partsIds;
+
+        /// distance between poses, the smaller the higher priority in the queue
+        double distance;
+
+        bool operator() (const DistanceElement& elementA, const DistanceElement& elementB) const {
+            if (elementA.distance>elementB.distance)
+                return true;
+            else
+                return false;
+        }
+    };
 
     /// Construction
     PartSelectorAgglomerative(void);
@@ -69,6 +86,8 @@ private:
 private:
     ///Configuration of the module
     Config config;
+    /// distance priority queue
+    std::priority_queue<DistanceElement, std::vector<DistanceElement>, DistanceElement > priorityQueueDistance;
 
     /// get clusters of parts id stored in octree (one cluster per voxel)
     bool isInOctets(std::vector< std::set<int>>& clusters, int id, std::vector< std::set<int>>::iterator& iter);
@@ -77,13 +96,13 @@ private:
     int centerOfCluster(const std::set<int>& cluster, const ViewDependentPart::Seq& vocabulary, const Hierarchy& hierarchy) const;
 
     /// compute distance matrix
-    void computeDistanceMatrix(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) const;
+    void computeDistanceMatrix(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix);
 
     /// compute distance matrix for view-independent parts
-    void computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) const;
+    void computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix);
 
     /// find min distance int the distance matrix
-    double findMinDistance(const std::vector<std::vector<double>>& distanceMatrix, std::pair<int,int>& pairedIds) const;
+    double findMinDistance(const std::vector<std::vector<double>>& distanceMatrix, std::pair<int,int>& pairedIds);
 
     /// find clusters ids to which contain specyfic parts (pairedIds)
     void findPartsInClusters(const std::vector<std::vector<int>>& clusters, const std::pair<int,int>& pairedIds, std::pair<int,int>& clustersIds) const;

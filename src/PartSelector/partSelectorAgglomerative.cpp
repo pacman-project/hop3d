@@ -149,7 +149,9 @@ void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary
 }
 
 /// compute distance matrix
-void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) const{
+void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) {
+    for (int i=0;i<(int)priorityQueueDistance.size();i++)
+        priorityQueueDistance.pop();
     for (size_t idA=0;idA<dictionary.size();idA++){
         for (size_t idB=idA;idB<dictionary.size();idB++){
             if (idA==idB){
@@ -176,13 +178,19 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::S
                 distanceMatrix[idB][idA]=dist;
                 transformMatrix[idA][idB] = transform;
                 transformMatrix[idB][idA] = transform;
+                DistanceElement element;
+                element.distance = dist;
+                element.partsIds = std::make_pair(idA,idB);
+                priorityQueueDistance.push(element);
             }
         }
     }
 }
 
 /// compute distance matrix for view-independent parts
-void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) const{
+void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix){
+    for (int i=0;i<(int)priorityQueueDistance.size();i++)
+        priorityQueueDistance.pop();
     for (size_t idA=0;idA<dictionary.size();idA++){
         for (size_t idB=idA+1;idB<dictionary.size();idB++){
             double dist(0); Mat34 transform;
@@ -197,21 +205,30 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart:
             distanceMatrix[idB][idA]=dist;
             transformMatrix[idA][idB] = transform;
             transformMatrix[idB][idA] = transform.inverse();
+            DistanceElement element;
+            element.distance = dist;
+            element.partsIds = std::make_pair(idA,idB);
+            priorityQueueDistance.push(element);
         }
     }
 }
 
 /// find min distance int the distance matrix
-double PartSelectorAgglomerative::findMinDistance(const std::vector<std::vector<double>>& distanceMatrix, std::pair<int,int>& pairedIds) const{
+double PartSelectorAgglomerative::findMinDistance(const std::vector<std::vector<double>>& distanceMatrix, std::pair<int,int>& pairedIds){
     double minDist=std::numeric_limits<double>::max();
-    for (size_t idA=0;idA<distanceMatrix.size();idA++){
+    DistanceElement element = priorityQueueDistance.top();
+    minDist = element.distance;
+    pairedIds = element.partsIds;
+    priorityQueueDistance.pop();
+    distanceMatrix[0][0];
+    /*for (size_t idA=0;idA<distanceMatrix.size();idA++){
         for (size_t idB=idA+1;idB<distanceMatrix.size();idB++){
             if ((distanceMatrix[idA][idB]<minDist)&&(distanceMatrix[idA][idB]>=0)){
                 minDist=distanceMatrix[idA][idB];
                 pairedIds = std::make_pair(idA,idB);
             }
         }
-    }
+    }*/
     return minDist;
 }
 
@@ -412,7 +429,10 @@ void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, 
     std::vector<std::vector<double>> distanceMatrix(dictionary.size(), std::vector<double>(dictionary.size()));
     std::vector<std::vector<Mat34>> transformMatrix(dictionary.size(), std::vector<Mat34>(dictionary.size()));
     std::cout << "compute distance matrix...\n";
+    //std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     computeDistanceMatrix(dictionary, hierarchy, distanceMatrix, transformMatrix);
+    //std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
+    //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::endl;
     if (config.verbose>0){
         std::cout << "done\n";
         std::cout << "Initial number of words in dictionary: " << dictionary.size() << "\n";
@@ -425,13 +445,17 @@ void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, 
         centroids[i]=(int)i;
     }
     for (size_t i=0;i<dictionary.size()*dictionary.size();i++){
+        //std::chrono::steady_clock::time_point begin4 = std::chrono::steady_clock::now();
         if (config.verbose==1){
             if ((dictionary.size()>1)&&i%((dictionary.size()*dictionary.size()+1)/10)==0){
                 std::cout << "Iteration: " << i+1 << "/" << dictionary.size()*dictionary.size() << " clusters no: " << clusters.size() << "\n";
             }
         }
         std::pair<int,int> pairedIds;
+        //std::chrono::steady_clock::time_point begin1 = std::chrono::steady_clock::now();
         double minDist = findMinDistance(distanceMatrix, pairedIds);
+        //std::chrono::steady_clock::time_point end1= std::chrono::steady_clock::now();
+        //std::cout << "Time difference1 = " << std::chrono::duration_cast<std::chrono::microseconds>(end1 - begin1).count() << " us" << std::endl;
         //std::cout << "find min dist between " << pairedIds.first << "->" << pairedIds.second << "\n";
         distanceMatrix[pairedIds.first][pairedIds.second] = -1;
         //std::cout << "dist " << minDist << " max dist " << config.maxDist[layerNo-1] << "\n";
@@ -439,9 +463,13 @@ void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, 
             break;
         //merge two centroids
         std::pair<int,int> clustersIds;
+        //std::chrono::steady_clock::time_point begin2 = std::chrono::steady_clock::now();
         findPartsInClusters(clusters, pairedIds, clustersIds);
+        //std::chrono::steady_clock::time_point end2 = std::chrono::steady_clock::now();
+        //std::cout << "Time difference2 = " << std::chrono::duration_cast<std::chrono::microseconds>(end2 - begin2).count() << " us" << std::endl;
         //std::cout << pairedIds.first << " is in cluster " << clustersIds.first << "\n";
         //std::cout << pairedIds.second << " is in cluster " << clustersIds.second << "\n";
+        //std::chrono::steady_clock::time_point begin3 = std::chrono::steady_clock::now();
         if (clustersIds.first!=clustersIds.second){
             if (mergeTwoClusters(clusters, centroids, clustersIds, distanceMatrix, layerNo))
                 updateCentroids(clusters, distanceMatrix, centroids, clustersIds);
@@ -451,6 +479,8 @@ void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, 
                 computeCentroid(clusters[clustersIds.second], distanceMatrix, centroids[clustersIds.second]);
             }
         }
+        //std::chrono::steady_clock::time_point end3 = std::chrono::steady_clock::now();
+        //std::cout << "Time difference3 = " << std::chrono::duration_cast<std::chrono::microseconds>(end3 - begin3).count() << " us" << std::endl;
         if (config.verbose==2){
             std::cout << "Elements no in clusters (clusters size: " << clusters.size() << "): ";
             for (size_t i=0;i<clusters.size();i++)
@@ -469,6 +499,8 @@ void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, 
             }
             std::cout << "\n";
         }
+        //std::chrono::steady_clock::time_point end4= std::chrono::steady_clock::now();
+        //std::cout << "Time difference iter = " << std::chrono::duration_cast<std::chrono::microseconds>(end4 - begin4).count() << " us" << std::endl;
     }
     //compute centroids for each cluster
     //computeCentroids(clusters, distanceMatrix, centroids);

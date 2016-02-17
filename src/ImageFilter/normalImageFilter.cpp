@@ -282,7 +282,6 @@ void NormalImageFilter::updateOctetsImage(int layerNo, int overlapNo, int catego
 /// returs filter ids and their position on the image
 void NormalImageFilter::getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const {
     partCoords.clear();
-    int octetNo = 0;
     for (auto& row : octetsImages[0][overlapNo][categoryNo][objectNo][imageNo]){
         for (auto& octet : row){
             if (octet.get()!=nullptr){
@@ -307,7 +306,6 @@ void NormalImageFilter::getResponseFilters(int overlapNo, int categoryNo, int ob
                             }
                         }
                     }
-                    octetNo++;
                 }
             }
         }

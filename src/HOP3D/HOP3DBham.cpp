@@ -471,7 +471,6 @@ void HOP3DBham::learn(){
                                 Mat34 pointPose(Mat34::Identity());
                                 pointPose.translation() = point3d;
                                 pointPose = cameraPose * pointPose*filterCoord.offset;
-                                std::cout << "point pose \n" << pointPose.matrix() << "\n";
                                 filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
                             }
                         }

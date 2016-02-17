@@ -163,10 +163,16 @@ private:
     void toCoordinate(double pos, int& coord, int layerNo) const;
 
     /// convert global coordinates to octree coordinates
+    void toCoordinate(double pos, int& coord, int layerNo, int overlapNo) const;
+
+    /// convert global coordinates to octree coordinates
     void toCoordinatePCLGrid(double pos, int& coord) const;
 
     /// convert octree coordinates to global coordinates
-    void fromCoordinate(int coord, double& pos, int layero) const;
+    void fromCoordinate(int coord, double& pos, int layerNo) const;
+
+    /// convert octree coordinates to global coordinates
+    void fromCoordinate(int coord, double& pos, int layerNo, int overlapNo) const;
 
     /// convert octree coordinates to global coordinates
     void fromCoordinatePCLGrid(int coord, double& pos) const;
