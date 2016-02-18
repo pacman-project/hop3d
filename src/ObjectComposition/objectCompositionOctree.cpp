@@ -629,8 +629,8 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
     if (destLayerNo==0){
         std::cout << "create first layer vocabulary\n";
         filterPCLGrid();
-        octreeGrid.reset(new Octree<hop3d::PointCloud>(config.voxelsNoGrid));
         createFirstLayer(vocabulary);
+        octreeGrid.reset(new Octree<hop3d::PointCloud>(config.voxelsNoGrid));
         std::cout << "create first layer vocabulary finished\n";
     }
     else{
