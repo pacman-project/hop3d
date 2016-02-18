@@ -346,6 +346,13 @@ void ObjectCompositionOctree::toCoordinate(double pos, int& coord, int layerNo) 
 }
 
 /// convert global coordinates to octree coordinates
+void ObjectCompositionOctree::toCoordinate(int coordPrevLayer, int& coord, int overlapNo) const{
+    if (coordPrevLayer<overlapNo)
+        throw std::runtime_error("wrong octree coordinate\n");
+    coord = (coordPrevLayer-overlapNo)/3;
+}
+
+/// convert global coordinates to octree coordinates
 void ObjectCompositionOctree::toCoordinate(double pos, int& coord, int layerNo, int overlapNo) const{
     coord = int((pos-(overlapNo*pow(3.0,layerNo-1)*config.voxelSize))/(pow(3.0,layerNo)*config.voxelSize))+(int)(config.voxelsNo/(2*pow(3.0,layerNo)));
 }
@@ -646,10 +653,11 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
                             if (newPart.cloud.size()>(unsigned)config.minPatchesNo){
                                 newPart.id = tempId;
                                 newPart.layerId=destLayerNo+3;
-                                double posPrevLay[3];
-                                fromCoordinate(idX,posPrevLay[0],destLayerNo-1); fromCoordinate(idY,posPrevLay[1],destLayerNo-1); fromCoordinate(idZ,posPrevLay[2],destLayerNo-1);
+                                //double posPrevLay[3];
+                                //fromCoordinate(idX,posPrevLay[0],destLayerNo-1); fromCoordinate(idY,posPrevLay[1],destLayerNo-1); fromCoordinate(idZ,posPrevLay[2],destLayerNo-1);
                                 int newCoords[3];
-                                toCoordinate(posPrevLay[0],newCoords[0],destLayerNo); toCoordinate(posPrevLay[1],newCoords[1],destLayerNo); toCoordinate(posPrevLay[2],newCoords[2],destLayerNo);
+                                //toCoordinate(posPrevLay[0],newCoords[0],destLayerNo); toCoordinate(posPrevLay[1],newCoords[1],destLayerNo); toCoordinate(posPrevLay[2],newCoords[2],destLayerNo);
+                                toCoordinate(idX,newCoords[0],overlapNo); toCoordinate(idY,newCoords[1],overlapNo); toCoordinate(idZ,newCoords[2],overlapNo);
                                 (*octrees[destLayerNo][overlapNo])(newCoords[0],newCoords[1],newCoords[2]) = newPart;//update octree
                                 vocabulary.push_back(newPart);
                                 tempId++;

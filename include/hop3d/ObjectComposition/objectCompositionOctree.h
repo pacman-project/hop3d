@@ -163,6 +163,9 @@ private:
     void toCoordinate(double pos, int& coord, int layerNo) const;
 
     /// convert global coordinates to octree coordinates
+    void toCoordinate(int coordPrevLayer, int& coord, int overlapNo) const;
+
+    /// convert global coordinates to octree coordinates
     void toCoordinate(double pos, int& coord, int layerNo, int overlapNo) const;
 
     /// convert global coordinates to octree coordinates

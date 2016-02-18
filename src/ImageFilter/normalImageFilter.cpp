@@ -864,13 +864,13 @@ bool NormalImageFilter::isBackground(OctetsImage& octetsImage, int u, int v) con
 
 /// define 2rd layer octet images using selected words from third layer
 void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo){
-    std::cout << "layer no , overlapNo, int categoryNo, int objectNo, int imageNo " << layerNo << ", " << overlapNo << ", " << categoryNo << ", " << objectNo << ", " << imageNo << "\n";
-    std::cout << "octetsImages.size " << octetsImages.size() << "\n";
-    std::cout << "octetsImages[layerNo].size " << octetsImages[layerNo].size() << "\n";
-    std::cout << "octetsImages[layerNo][overlapNo].size " << octetsImages[layerNo][overlapNo].size() << "\n";
-    std::cout << "octetsImages[layerNo][overlapNo][categoryNo].size " << octetsImages[layerNo][overlapNo][categoryNo].size() << "\n";
-    std::cout << "octetsImages[layerNo][overlapNo][categoryNo][objectNo].size " << octetsImages[layerNo][overlapNo][categoryNo][objectNo].size() << "\n";
-    std::cout << "octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo].size " << octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo].size() << "\n";
+    //std::cout << "layer no , overlapNo, int categoryNo, int objectNo, int imageNo " << layerNo << ", " << overlapNo << ", " << categoryNo << ", " << objectNo << ", " << imageNo << "\n";
+    //std::cout << "octetsImages.size " << octetsImages.size() << "\n";
+    //std::cout << "octetsImages[layerNo].size " << octetsImages[layerNo].size() << "\n";
+    //std::cout << "octetsImages[layerNo][overlapNo].size " << octetsImages[layerNo][overlapNo].size() << "\n";
+    //std::cout << "octetsImages[layerNo][overlapNo][categoryNo].size " << octetsImages[layerNo][overlapNo][categoryNo].size() << "\n";
+    //std::cout << "octetsImages[layerNo][overlapNo][categoryNo][objectNo].size " << octetsImages[layerNo][overlapNo][categoryNo][objectNo].size() << "\n";
+    //std::cout << "octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo].size " << octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo].size() << "\n";
     OctetsImage octetsImage = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo];
     PartsImage partsImage (octetsImage.size(), std::vector<std::shared_ptr<ViewDependentPart>> (octetsImage.back().size()));
     for (size_t i=0; i<octetsImage.size();i++){
@@ -879,7 +879,6 @@ void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int obj
             part.id=-1;
             if (octetsImage[i][j].get()!=nullptr){
                 if (!octetsImage[i][j]->isBackground){
-                    std::cout << " not back is\n";
                     Mat34 offset;
                     int id = findId(hierarchy, layerNo,*(octetsImage[i][j]), offset);
                     part = hierarchy.viewDependentLayers[layerNo][id];
@@ -893,14 +892,10 @@ void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int obj
                     //part.offsets = octetsImage[i][j].offsets;
                     //part.locationEucl = octetsImage[i][j]->partsPosNorm[1][1].mean.block<3,1>(0,0);
                     part.gaussians[1][1].mean=Vec3(octetsImage[i][j]->filterPos[1][1].u, octetsImage[i][j]->filterPos[1][1].v, octetsImage[i][j]->filterPos[1][1].depth);
-                    std::cout << "is1\n";
                     if (octetsImage[i][j].get()->secondOctet.size()>0){
                         ViewDependentPart secondPart;
-                        std::cout << "is3\n";
                         if (!octetsImage[i][j].get()->secondOctet[0].isBackground){
-                            std::cout << "is4\n";
                             id = findId(hierarchy, layerNo, octetsImage[i][j].get()->secondOctet[0], offset);
-                            std::cout << "is5\n";
                             secondPart = hierarchy.viewDependentLayers[layerNo][id];
                             secondPart.offset = offset;
                             secondPart.id = id;
@@ -912,12 +907,9 @@ void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int obj
                             secondPart.gaussians[1][1].mean=Vec3(octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].u, octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].v, octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].depth);
                             secondPart.offsets = octetsImage[i][j].get()->secondOctet[0].offsets;
                             part.secondVDPart.push_back(secondPart);
-                            std::cout << "is6\n";
                         }
                     }
-                    std::cout << "is7\n";
                     partsImage[i][j].reset(new ViewDependentPart(part));
-                    std::cout << "is2\n";
                 }
             }
         }
