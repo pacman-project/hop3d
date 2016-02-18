@@ -345,6 +345,7 @@ void HOP3DBham::learn(){
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
     }
     //represent/explain all images in parts from i-th layer
+    std::cout << "compute parts\n";
     for (size_t layerNo=0; layerNo< hierarchy.get()->viewDependentLayers.size();layerNo++){
         for (int overlapNo=0; overlapNo<3; overlapNo++){
             for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
@@ -356,7 +357,9 @@ void HOP3DBham::learn(){
             }
         }
     }
+    std::cout << "compute parts finished\n";
     //std::vector< std::set<int>> clusters;
+    std::cout << "update PCL grid\n";
     objects.resize(datasetInfo.categories.size());
     for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
         for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
@@ -374,6 +377,7 @@ void HOP3DBham::learn(){
             }
         }
     }
+    std::cout << "update PCL grid finished\n";
     std::vector<ViewIndependentPart> vocabulary;
     for (size_t layerNo=0;layerNo<2/*config.viewIndependentLayersNo*/;layerNo++){
         vocabulary.clear();
