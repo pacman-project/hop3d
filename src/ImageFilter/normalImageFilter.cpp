@@ -876,10 +876,8 @@ void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int obj
     for (size_t i=0; i<octetsImage.size();i++){
         for (size_t j=0; j<octetsImage.back().size();j++){
             ViewDependentPart part;
-            std::cout << "ij " << i << ", " << j << "\n";
             part.id=-1;
             if (octetsImage[i][j].get()!=nullptr){
-                std::cout << "is\n";
                 if (!octetsImage[i][j]->isBackground){
                     std::cout << " not back is\n";
                     Mat34 offset;
@@ -918,7 +916,7 @@ void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int obj
                         }
                     }
                     std::cout << "is7\n";
-                    //partsImage[i][j].reset(new ViewDependentPart(part));
+                    partsImage[i][j].reset(new ViewDependentPart(part));
                     std::cout << "is2\n";
                 }
             }
