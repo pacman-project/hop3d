@@ -321,10 +321,14 @@ void ObjectCompositionOctree::getPartsIds(const Vec3& point, int overlapNo, std:
         }
         else{
             toCoordinate(point(0),x, layNo, overlapNo);    toCoordinate(point(1),y, layNo, overlapNo);    toCoordinate(point(2),z, layNo, overlapNo);
-            //std::cout << "coordinate " << x << " " << y << " " << z << "\n";
             if (x>-1&&y>-1&&z>-1){
-                if (x<(config.voxelsNo/(int)pow(2,layNo))&&y<(config.voxelsNo/(int)pow(2,layNo))&&z<(config.voxelsNo/(int)pow(2,layNo)))
-                    ids.push_back((*octrees[layNo][overlapNo]).at(x,y,z).id);//4th layer
+                if ((x)%3==0) x+=1; else if ((x)%3==2) x-=1;
+                if ((y)%3==0) y+=1; else if ((y)%3==2) y-=1;
+                if ((z)%3==0) z+=1; else if ((z)%3==2) z-=1;
+                if (x<(config.voxelsNo/(int)pow(2,layNo))&&y<(config.voxelsNo/(int)pow(2,layNo))&&z<(config.voxelsNo/(int)pow(2,layNo))){
+                    //std::cout << "lay " << layNo << " " << overlapNo << " ->" << x << ", " << y << ", "<< z << "\n";
+                    ids.push_back((*octrees[layNo][overlapNo]).at(x,y,z).id);//5th layer
+                }
                 else{
                     if (config.verbose>0){
                         std::cout << "Warning5: octree index out of range. " << x << ", " << y << ", " << z << ", " << " layer " <<  layNo << "\n";
@@ -561,7 +565,7 @@ int ObjectCompositionOctree::createNextLayerPart(const Hierarchy& hierarchy, int
     for (int i=-1; i<2;i++){
         for (int j=-1; j<2;j++){
             for (int k=-1; k<2;k++){
-                int coords[3]={x+i,y+j,z+k};
+                int coords[3]={x+3*i,y+3*j,z+3*k};
                 if (coords[0]<(config.voxelsNo/(int)pow(2,destLayerNo-1))&&coords[1]<(config.voxelsNo/(int)pow(2,destLayerNo-1))&&coords[2]<(config.voxelsNo/(int)pow(2,destLayerNo-1))){
                     if ((*octrees[destLayerNo-1][overlapNo]).at(coords[0],coords[1],coords[2]).id>=0&&(*octrees[destLayerNo-1][overlapNo]).at(coords[0],coords[1],coords[2]).cloud.size()>0){
                         ViewIndependentPart part = hierarchy.viewIndependentLayers[destLayerNo-1][(*octrees[destLayerNo-1][overlapNo]).at(coords[0],coords[1],coords[2]).id];
@@ -644,9 +648,9 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
         int tempId=0;
         for (int overlapNo=0;overlapNo<3;overlapNo++){
             int wordsNo=0;
-            for (int idX=1+overlapNo; idX<(*octrees[destLayerNo-1][overlapNo]).size()-1; idX+=3){///to do z-slicing
-                for (int idY=1+overlapNo; idY<(*octrees[destLayerNo-1][overlapNo]).size()-1; idY+=3){
-                    for (int idZ=1+overlapNo; idZ<(*octrees[destLayerNo-1][overlapNo]).size()-1; idZ+=3){
+            for (int idX=4+overlapNo; idX<(*octrees[destLayerNo-1][overlapNo]).size()-1; idX+=9){///to do z-slicing
+                for (int idY=4+overlapNo; idY<(*octrees[destLayerNo-1][overlapNo]).size()-1; idY+=9){
+                    for (int idZ=4+overlapNo; idZ<(*octrees[destLayerNo-1][overlapNo]).size()-1; idZ+=9){
                         ViewIndependentPart newPart;
                         // add neighbouring parts into structure
                         if (createNextLayerPart(hierarchy, destLayerNo, overlapNo, newPart, idX, idY, idZ)>0){
