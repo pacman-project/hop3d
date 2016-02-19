@@ -68,11 +68,13 @@ const std::string& NormalImageFilter::getName() const {
 
 /// get cloud from dataset
 void NormalImageFilter::getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& cloud) const{
-    cloud.clear();
+printf("C>>1\n");
+	cloud.clear();
     double scale = 1/sensorModel.config.depthImageScale;
     cv::Mat filteredImg = depthImage.clone();
     filterDepthImage(depthImage, filteredImg);
-    std::vector< std::vector<hop3d::PointNormal> > cloudOrd(depthImage.rows, std::vector<hop3d::PointNormal> (depthImage.cols));
+printf("C>>2\n");
+	std::vector< std::vector<hop3d::PointNormal> > cloudOrd(depthImage.rows, std::vector<hop3d::PointNormal>(depthImage.cols));
     for (int i=0;i<filteredImg.rows;i++){
         for (int j=0;j<filteredImg.cols;j++){
             PointNormalUV puv;
@@ -94,6 +96,7 @@ void NormalImageFilter::getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV&
             }
         }
     }
+printf("C>>3\n");
 }
 
 /// get point from dataset
@@ -1584,9 +1587,14 @@ std::istream& operator>>(std::istream& is, NormalImageFilter& filter){
     return is;
 }
 
+
+#include <chrono>
+#include <ctime>
+
 /// load from file
 void NormalImageFilter::loadFromfile(std::istream& is){
-    // read categories no
+fprintf(stderr, "NormalImageFilter::loadFromfile()\n");
+	// read categories no
     int categoriesNo;
     /*is >> categoriesNo;
     inputClouds.clear();
@@ -1618,41 +1626,46 @@ void NormalImageFilter::loadFromfile(std::istream& is){
             }
         }
     }*/
-    int layersNo;
+size_t octets = 0;
+std::chrono::time_point<std::chrono::system_clock> start;
+start = std::chrono::system_clock::now();
+
+	int layersNo;
     is >> layersNo;
     octetsImages.clear();
-    octetsImages.resize(layersNo);
+    //octetsImages.resize(layersNo);
     for (int layNo = 0; layNo<layersNo; layNo++){
         int overlapsNo;
         is >> overlapsNo;
-        octetsImages[layNo].resize(overlapsNo);
+        //octetsImages[layNo].resize(overlapsNo);
         for (int overlapNo = 0; overlapNo<overlapsNo; overlapNo++){
             is >> categoriesNo;
-            octetsImages[layNo][overlapNo].resize(categoriesNo);
+            //octetsImages[layNo][overlapNo].resize(categoriesNo);
             for (int catNo = 0; catNo<categoriesNo; catNo++){
                 int objectsNo;
                 is >> objectsNo;
-                octetsImages[layNo][overlapNo][catNo].resize(objectsNo);
+                //octetsImages[layNo][overlapNo][catNo].resize(objectsNo);
                 for (int objNo=0;objNo<objectsNo; objNo++){
                     int imgsNo;
                     is >> imgsNo;
-                    octetsImages[layNo][overlapNo][catNo][objNo].resize(imgsNo);
+                    //octetsImages[layNo][overlapNo][catNo][objNo].resize(imgsNo);
                     for (int imgNo=0;imgNo<imgsNo;imgNo++){
                         int rowsNo;
                         is >> rowsNo;
-                        octetsImages[layNo][overlapNo][catNo][objNo][imgNo].resize(rowsNo);
+                        //octetsImages[layNo][overlapNo][catNo][objNo][imgNo].resize(rowsNo);
                         for (int rowNo=0;rowNo<rowsNo;rowNo++){
                             int octetsNo;
                             is >> octetsNo;
-                            octetsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo].resize(octetsNo);
+                            //octetsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo].resize(octetsNo);
                             for (int octetNo=0;octetNo<octetsNo;octetNo++){
                                 int isOctet;
                                 is >> isOctet;
                                 if (isOctet){
                                     Octet octet;
                                     is >> octet;
-                                    octetsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo][octetNo].reset(new Octet(octet));
-                                }
+                                    //octetsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo][octetNo].reset(new Octet(octet));
+if (octets++ % 1000 == 0) fprintf(stderr, "octets=%lu\n", octets);
+								}
                             }
                         }
                     }
@@ -1660,41 +1673,45 @@ void NormalImageFilter::loadFromfile(std::istream& is){
             }
         }
     }
-    is >> layersNo;
+fprintf(stderr, "OCTETS=%lu, T=%f sec\n", octets, std::chrono::duration<double>(std::chrono::system_clock::now() - start).count());
+start = std::chrono::system_clock::now();
+size_t parts = 0;
+	is >> layersNo;
     partsImages.clear();
-    partsImages.resize(layersNo);
+    //partsImages.resize(layersNo);
     for (int layNo = 0; layNo<layersNo; layNo++){
         int overlapsNo;
         is >> overlapsNo;
-        partsImages[layNo].resize(overlapsNo);
+        //partsImages[layNo].resize(overlapsNo);
         for (int overlapNo = 0; overlapNo<overlapsNo; overlapNo++){
             int catsNo;
             is >> catsNo;
-            partsImages[layNo][overlapNo].resize(catsNo);
+            //partsImages[layNo][overlapNo].resize(catsNo);
             for (int catNo = 0; catNo<catsNo; catNo++){
                 int objectsNo;
                 is >> objectsNo;
-                partsImages[layNo][overlapNo][catNo].resize(objectsNo);
+                //partsImages[layNo][overlapNo][catNo].resize(objectsNo);
                 for (int objNo=0;objNo<objectsNo; objNo++){
                     int imgsNo;
                     is >> imgsNo;
-                    partsImages[layNo][overlapNo][catNo][objNo].resize(imgsNo);
+                    //partsImages[layNo][overlapNo][catNo][objNo].resize(imgsNo);
                     for (int imgNo=0;imgNo<imgsNo;imgNo++){
                         int rowsNo;
                         is >> rowsNo;
-                        partsImages[layNo][overlapNo][catNo][objNo][imgNo].resize(rowsNo);
+                        //partsImages[layNo][overlapNo][catNo][objNo][imgNo].resize(rowsNo);
                         for (int rowNo=0;rowNo<rowsNo;rowNo++){
                             int partsNo;
                             is >> partsNo;
-                            partsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo].resize(partsNo);
+                            //partsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo].resize(partsNo);
                             for (int partNo=0;partNo<partsNo;partNo++){
                                 int isPart;
                                 is >> isPart;
                                 if (isPart){
                                     ViewDependentPart part;
                                     is >> part;
-                                    partsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo][partNo].reset(new ViewDependentPart(part));
-                                }
+                                    //partsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo][partNo].reset(new ViewDependentPart(part));
+if (parts++ % 10 == 0) fprintf(stderr, "parts=%lu\n", parts);
+								}
                             }
                         }
                     }
@@ -1702,6 +1719,8 @@ void NormalImageFilter::loadFromfile(std::istream& is){
             }
         }
     }
+fprintf(stderr, "PARTS=%lu, T=%f sec\n", parts, std::chrono::duration<double>(std::chrono::system_clock::now() - start).count());
+exit(0);
 }
 
 hop3d::ImageFilter* hop3d::createNormalImageFilter(void) {

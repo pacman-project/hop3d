@@ -118,16 +118,20 @@ void HOP3DBham::getCloudPaths(std::vector<std::string>& paths) const{
 void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const{
     hop3d::PointCloudUV cloudUV;
     cv::Mat depthImage;
-    dataset->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
-    imageFilterer->getCloud(depthImage, cloudUV);
-    cloud.clear();
+printf("B>>1\n");
+	dataset->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+printf("B>>2\n");
+	imageFilterer->getCloud(depthImage, cloudUV);
+printf("B>>3\n");
+	cloud.clear();
     cloud.reserve(cloudUV.size());
     for (auto &point : cloudUV){
         hop3d::PointNormal p3d;
         p3d=point;
         cloud.push_back(p3d);
     }
-    //transform cloud to global frame
+printf("B>>4\n");
+	//transform cloud to global frame
     /*Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
     for (auto &point : cloud){
         point.position = (cameraPose * Vec4(point.position(0),point.position(1),point.position(2),1.0)).block<3,1>(0,3);
@@ -137,9 +141,12 @@ void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::Point
 
 /// get cloud from dataset
 void HOP3DBham::getCloud(const std::string& path, hop3d::PointCloud& cloud) const{
+printf("A>>1\n");
     int categoryNo(0), objectNo(0), imageNo(0);
     dataset->translateString(path, categoryNo, objectNo, imageNo);
-    getCloud(categoryNo, objectNo, imageNo, cloud);
+printf("A>>2\n");
+	getCloud(categoryNo, objectNo, imageNo, cloud);
+printf("A>>3\n");
 }
 
 /// get number of points in the point cloud
