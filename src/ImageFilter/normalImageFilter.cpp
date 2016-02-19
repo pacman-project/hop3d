@@ -1591,6 +1591,54 @@ std::istream& operator>>(std::istream& is, NormalImageFilter& filter){
 #include <chrono>
 #include <ctime>
 
+struct OctetPtr {
+	typedef std::map<OctetPtr, Octet> Map;
+	union {
+		struct {
+			std::uint16_t layerNo;
+			std::uint16_t overlapNo;
+			std::uint16_t categoryNo;
+			std::uint16_t objectNo;
+			std::uint16_t imgNo;
+			std::uint16_t rowNo;
+			std::uint16_t octetNo;
+		};
+		struct {
+			std::uint64_t ptr[2];
+		};
+	};
+
+	OctetPtr() {
+		ptr[0] = -1;
+		ptr[1] = -1;
+	}
+	inline bool operator < (const OctetPtr& op) const { return ptr[0] < op.ptr[0] || ptr[0] == op.ptr[0] && ptr[1] < op.ptr[1]; }
+};
+
+struct PartPtr {
+	typedef std::map<PartPtr, ViewDependentPart> Map;
+	union {
+		struct {
+			std::uint16_t layerNo;
+			std::uint16_t overlapNo;
+			std::uint16_t categoryNo;
+			std::uint16_t objectNo;
+			std::uint16_t imgNo;
+			std::uint16_t rowNo;
+			std::uint16_t partNo;
+		};
+		struct {
+			std::uint64_t ptr[2];
+		};
+	};
+
+	PartPtr() {
+		ptr[0] = -1;
+		ptr[1] = -1;
+	}
+	inline bool operator < (const PartPtr& op) const { return ptr[0] < op.ptr[0] || ptr[0] == op.ptr[0] && ptr[1] < op.ptr[1]; }
+};
+
 /// load from file
 void NormalImageFilter::loadFromfile(std::istream& is){
 fprintf(stderr, "NormalImageFilter::loadFromfile()\n");
@@ -1629,6 +1677,7 @@ fprintf(stderr, "NormalImageFilter::loadFromfile()\n");
 size_t octets = 0;
 std::chrono::time_point<std::chrono::system_clock> start;
 start = std::chrono::system_clock::now();
+static OctetPtr::Map octetMap; // static for memory test
 
 	int layersNo;
     is >> layersNo;
@@ -1661,10 +1710,19 @@ start = std::chrono::system_clock::now();
                                 int isOctet;
                                 is >> isOctet;
                                 if (isOctet){
-                                    Octet octet;
-                                    is >> octet;
+                                    //Octet octet;
+                                    //is >> octet;
                                     //octetsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo][octetNo].reset(new Octet(octet));
 if (octets++ % 1000 == 0) fprintf(stderr, "octets=%lu\n", octets);
+OctetPtr ptr;
+ptr.layerNo = layNo;
+ptr.overlapNo = overlapNo;
+ptr.categoryNo = catNo;
+ptr.objectNo = objNo;
+ptr.imgNo = imgNo;
+ptr.rowNo = rowNo;
+ptr.octetNo = octetNo;
+is >> octetMap[ptr];
 								}
                             }
                         }
@@ -1673,9 +1731,10 @@ if (octets++ % 1000 == 0) fprintf(stderr, "octets=%lu\n", octets);
             }
         }
     }
-fprintf(stderr, "OCTETS=%lu, T=%f sec\n", octets, std::chrono::duration<double>(std::chrono::system_clock::now() - start).count());
+fprintf(stderr, "OCTETS=%lu/%lu, T=%f sec\n", octets, octetMap.size(), std::chrono::duration<double>(std::chrono::system_clock::now() - start).count());
 start = std::chrono::system_clock::now();
 size_t parts = 0;
+static PartPtr::Map partMap; // static for memory test
 	is >> layersNo;
     partsImages.clear();
     //partsImages.resize(layersNo);
@@ -1707,10 +1766,19 @@ size_t parts = 0;
                                 int isPart;
                                 is >> isPart;
                                 if (isPart){
-                                    ViewDependentPart part;
-                                    is >> part;
+                                    //ViewDependentPart part;
+                                    //is >> part;
                                     //partsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo][partNo].reset(new ViewDependentPart(part));
 if (parts++ % 10 == 0) fprintf(stderr, "parts=%lu\n", parts);
+PartPtr ptr;
+ptr.layerNo = layNo;
+ptr.overlapNo = overlapNo;
+ptr.categoryNo = catNo;
+ptr.objectNo = objNo;
+ptr.imgNo = imgNo;
+ptr.rowNo = rowNo;
+ptr.partNo = partNo;
+is >> partMap[ptr];
 								}
                             }
                         }
@@ -1719,8 +1787,7 @@ if (parts++ % 10 == 0) fprintf(stderr, "parts=%lu\n", parts);
             }
         }
     }
-fprintf(stderr, "PARTS=%lu, T=%f sec\n", parts, std::chrono::duration<double>(std::chrono::system_clock::now() - start).count());
-exit(0);
+fprintf(stderr, "PARTS=%lu/%lu, T=%f sec\n", parts, partMap.size(), std::chrono::duration<double>(std::chrono::system_clock::now() - start).count());
 }
 
 hop3d::ImageFilter* hop3d::createNormalImageFilter(void) {

@@ -571,34 +571,42 @@ void HOP3DBham::learn(){
 
 /// load hierarchy from the file
 void HOP3DBham::load(std::string filename){
-    std::ifstream ifsHierarchy(filename);
-    std::cout << "Load hierarchy...";
-    ifsHierarchy >> *hierarchy;
-    for (auto &word : (*hierarchy).viewDependentLayers[1]){
-        for (int k=0;k<3;k++){
-            for (int l=0;l<3;l++){
-                if (word.partIds[k][l]>=0){
-                    if (!(k==1&&l==1)){
-                        std::cout << word.partsPosNorm[k][l].mean(2) << "\n";
-                    }
-                }
-            }
-        }
-        //word.print();
-    }
-    std::cout << "Loaded\n";
-    dataset->getDatasetInfo(datasetInfo);
-    objects.resize(datasetInfo.categories.size());
-    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
-            ObjectCompositionOctree object(config.compositionConfig);
-            objects[categoryNo].push_back(object);
-            ifsHierarchy >> objects[categoryNo][objectNo];
-        }
-    }
-    ((NormalImageFilter*)imageFilterer)->loadFromfile(ifsHierarchy);
-    ifsHierarchy.close();
-    //visualization
+	{
+		std::ifstream ifsHierarchy(filename);
+		std::cout << "Load hierarchy...";
+		ifsHierarchy >> *hierarchy;
+		for (auto &word : (*hierarchy).viewDependentLayers[1]){
+			for (int k = 0; k < 3; k++){
+				for (int l = 0; l < 3; l++){
+					if (word.partIds[k][l] >= 0){
+						if (!(k == 1 && l == 1)){
+							std::cout << word.partsPosNorm[k][l].mean(2) << "\n";
+						}
+					}
+				}
+			}
+			//word.print();
+		}
+		std::cout << "Loaded\n";
+		dataset->getDatasetInfo(datasetInfo);
+		objects.resize(datasetInfo.categories.size());
+		for (size_t categoryNo = 0; categoryNo < datasetInfo.categories.size(); categoryNo++){//for each category
+			for (size_t objectNo = 0; objectNo < datasetInfo.categories[categoryNo].objects.size(); objectNo++){//for each object
+				ObjectCompositionOctree object(config.compositionConfig);
+				objects[categoryNo].push_back(object);
+				ifsHierarchy >> objects[categoryNo][objectNo];
+			}
+		}
+		((NormalImageFilter*)imageFilterer)->loadFromfile(ifsHierarchy);
+		ifsHierarchy.close();
+	}
+
+getchar();
+getchar();
+fprintf(stderr, "DONE!\n");
+exit(0);
+
+	//visualization
 #ifdef QVisualizerBuild
     if (config.useVisualization){
         notify(*hierarchy);
