@@ -156,6 +156,9 @@ private:
     /// assign neighbouring parts to new part
     int createNextLayerPart(const Hierarchy& hierarchy, int destLayerNo, int overlapNo, ViewIndependentPart& newPart, int x, int y, int z);
 
+    /// assign neighbouring parts to new part
+    int createNextLayerPart(ViewIndependentPart& newPart, int layerNo, int overlapNo, int x, int y, int z);
+
     /// find part in the vocabulary and return new id
     int findIdInVocabulary(const ViewIndependentPart& part, const std::vector<ViewIndependentPart>& vocabulary);
 
@@ -181,7 +184,7 @@ private:
     void fromCoordinatePCLGrid(int coord, double& pos) const;
 
     /// filter voxel grid
-    void filterPCLGrid(void);
+    void filterPCLGrid(int destLayerNo);
 
     /// compute mean value of normal and position
     PointNormal computeMeanPosNorm(PointCloud cloud);

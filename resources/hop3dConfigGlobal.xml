@@ -29,7 +29,7 @@
   
 <!--   Hierarchy configuration -->
   <Hierarchy>
-    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="4" viewDepPartsFromLayerNo="1"></parameters>
+    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="3" viewDepPartsFromLayerNo="1"></parameters>
     <save2file save2file="true" filename2save="hop3dHierarchyBoris.h3d"/>
   </Hierarchy>
   

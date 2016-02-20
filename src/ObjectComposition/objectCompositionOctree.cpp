@@ -154,7 +154,7 @@ void ObjectCompositionOctree::updatePCLGrid(const std::vector<ViewDependentPart>
 }
 
 /// filter voxel grid
-void ObjectCompositionOctree::filterPCLGrid(void){
+void ObjectCompositionOctree::filterPCLGrid(int destLayerNo){
     for (int idX=0; idX<(*octreeGrid).size(); idX++){///to do z-slicing
         for (int idY=0; idY<(*octreeGrid).size(); idY++){
             for (int idZ=0; idZ<(*octreeGrid).size(); idZ++){
@@ -205,13 +205,13 @@ void ObjectCompositionOctree::filterPCLGrid(void){
                     //means = (*octreeGrid).at(idX,idY,idZ);
                     for (auto& point : means){//update parts octree
                         int x,y,z;
-                        toCoordinate(point.position(0),x,0); toCoordinate(point.position(1),y,0); toCoordinate(point.position(2),z,0);
+                        toCoordinate(point.position(0),x,destLayerNo); toCoordinate(point.position(1),y,destLayerNo); toCoordinate(point.position(2),z,destLayerNo);
                         for (int overlapNo=0;overlapNo<3;overlapNo++){
-                            if (x<(config.voxelsNo/(int)pow(2,0))&&y<(config.voxelsNo/(int)pow(2,0))&&z<(config.voxelsNo/(int)pow(2,0)))
-                                (*octrees[0][overlapNo])(x,y,z).cloud.push_back(point);
+                            if (x<(config.voxelsNo/(int)pow(2,destLayerNo))&&y<(config.voxelsNo/(int)pow(2,destLayerNo))&&z<(config.voxelsNo/(int)pow(2,destLayerNo)))
+                                (*octrees[destLayerNo][overlapNo])(x,y,z).cloud.push_back(point);
                             else{
                                 if (config.verbose>0){
-                                    std::cout << "Warning4: octree index out of range. " << x << ", " << y << ", " << z << ", " << " layer " <<  0 << "\n";
+                                    std::cout << "Warning4: octree index out of range. " << x << ", " << y << ", " << z << ", " << " layer " <<  destLayerNo << "\n";
                                     getchar();
                                 }
                             }
@@ -301,46 +301,22 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
 void ObjectCompositionOctree::getPartsIds(const Vec3& point, int overlapNo, std::vector<int>& ids) const{
     int x,y,z;
     for (int layNo=0;layNo<3;layNo++){
-        if (layNo==0){
-            toCoordinate(point(0),x, layNo);    toCoordinate(point(1),y, layNo);    toCoordinate(point(2),z, layNo);
-            //std::cout << "coordinate " << x << " " << y << " " << z << "\n";
-            if ((x-overlapNo)>-1&&(y-overlapNo)>-1&&(z-overlapNo)>-1){
-                if ((x-overlapNo)%3==0) x+=1; else if ((x-overlapNo)%3==2) x-=1;
-                if ((y-overlapNo)%3==0) y+=1; else if ((y-overlapNo)%3==2) y-=1;
-                if ((z-overlapNo)%3==0) z+=1; else if ((z-overlapNo)%3==2) z-=1;
-                //x+=overlapNo; y+=overlapNo; z+=overlapNo;
-                if (x<(config.voxelsNo/(int)pow(2,layNo))&&y<(config.voxelsNo/(int)pow(2,layNo))&&z<(config.voxelsNo/(int)pow(2,layNo)))
-                    ids.push_back((*octrees[layNo][overlapNo]).at(x,y,z).id);//4th layer
-                else{
-                    if (config.verbose>0){
-                        std::cout << "Warning5: octree index out of range. " << x << ", " << y << ", " << z << ", " << " layer " <<  layNo << "\n";
-                        getchar();
-                    }
+        toCoordinate(point(0),x, layNo);    toCoordinate(point(1),y, layNo);    toCoordinate(point(2),z, layNo);
+        //std::cout << "coordinate " << x << " " << y << " " << z << "\n";
+        if ((x-overlapNo)>-1&&(y-overlapNo)>-1&&(z-overlapNo)>-1){
+            if ((x-overlapNo)%3==0) x+=1; else if ((x-overlapNo)%3==2) x-=1;
+            if ((y-overlapNo)%3==0) y+=1; else if ((y-overlapNo)%3==2) y-=1;
+            if ((z-overlapNo)%3==0) z+=1; else if ((z-overlapNo)%3==2) z-=1;
+            if (x<(config.voxelsNo/(int)pow(2,layNo))&&y<(config.voxelsNo/(int)pow(2,layNo))&&z<(config.voxelsNo/(int)pow(2,layNo))){
+                ids.push_back((*octrees[layNo][overlapNo]).at(x,y,z).id);//4th layer
+            }
+            else{
+                if (config.verbose>0){
+                    std::cout << "Warning5: octree index out of range. " << x << ", " << y << ", " << z << ", " << " layer " <<  layNo << "\n";
+                    getchar();
                 }
             }
         }
-        else{
-            toCoordinate(point(0),x, layNo, overlapNo);    toCoordinate(point(1),y, layNo, overlapNo);    toCoordinate(point(2),z, layNo, overlapNo);
-            if (x>-1&&y>-1&&z>-1){
-                if ((x)%3==0) x+=1; else if ((x)%3==2) x-=1;
-                if ((y)%3==0) y+=1; else if ((y)%3==2) y-=1;
-                if ((z)%3==0) z+=1; else if ((z)%3==2) z-=1;
-                if (x<(config.voxelsNo/(int)pow(2,layNo))&&y<(config.voxelsNo/(int)pow(2,layNo))&&z<(config.voxelsNo/(int)pow(2,layNo))){
-                    //std::cout << "lay " << layNo << " " << overlapNo << " ->" << x << ", " << y << ", "<< z << "\n";
-                    ids.push_back((*octrees[layNo][overlapNo]).at(x,y,z).id);//5th layer
-                }
-                else{
-                    if (config.verbose>0){
-                        std::cout << "Warning5: octree index out of range. " << x << ", " << y << ", " << z << ", " << " layer " <<  layNo << "\n";
-                        getchar();
-                    }
-                }
-            }
-        }
-        /*if ((*octrees[layNo]).at(x,y,z).id>=0){
-            std::cout << "overlapNo " << overlapNo << " id " << (*octrees[layNo][overlapNo]).at(x,y,z).id << "\n";
-            getchar();
-        }*/
     }
 }
 
@@ -558,6 +534,48 @@ int ObjectCompositionOctree::createFirstLayerPart(ViewIndependentPart& newPart, 
 }
 
 /// assign neighbouring parts to new part
+int ObjectCompositionOctree::createNextLayerPart(ViewIndependentPart& newPart, int layerNo, int overlapNo, int x, int y, int z){
+    int partsNo=0;
+    //||||||||||
+    //|  |  |  |
+    //|||||||||||||
+    //|   |   |   |
+    double center[3];
+    fromCoordinate(x,center[0],layerNo); fromCoordinate(y,center[1],layerNo); fromCoordinate(z,center[2],layerNo);
+    for (int i=-1; i<2;i++){
+        for (int j=-1; j<2;j++){
+            for (int k=-1; k<2;k++){
+                if (x+i<(config.voxelsNo/(int)pow(2,layerNo))&&y+j<(config.voxelsNo/(int)pow(2,layerNo))&&z+k<(config.voxelsNo/(int)pow(2,layerNo))){
+                    if ((*octrees[layerNo][overlapNo]).at(x+i,y+j,z+k).cloud.size()>0){
+                        for (auto& patch : (*octrees[layerNo][overlapNo])(x+i,y+j,z+k).cloud){
+                            for (int coord = 0; coord<3; coord++)
+                                patch.position(coord)-=center[coord];
+                            newPart.cloud.push_back(patch);
+                            partsNo++;
+                        }
+                        newPart.incomingIds.insert((*octrees[layerNo][overlapNo]).at(x+i,y+j,z+k).incomingIds.begin(), (*octrees[layerNo][overlapNo]).at(x+i,y+j,z+k).incomingIds.end());
+                        newPart.partIds[i+1][j+1][k+1] = 1;
+                    }
+                    else
+                        newPart.partIds[i+1][j+1][k+1] = -1;
+                }
+                else{
+                    if (config.verbose>0){
+                        std::cout << "Warning6: octree index out of range. " << x+i << ", " << y+j << ", " << z+k << ", " << " layer " <<  0 << "\n";
+                        getchar();
+                    }
+                }
+            }
+        }
+    }
+    if (partsNo>0){
+        Mat34 partPosition(Mat34::Identity());
+        partPosition(0,3) = center[0]; partPosition(1,3) = center[1]; partPosition(2,3) = center[2];
+        newPart.pose = partPosition;
+    }
+    return partsNo;
+}
+/// assign neighbouring parts to new part
 int ObjectCompositionOctree::createNextLayerPart(const Hierarchy& hierarchy, int destLayerNo, int overlapNo, ViewIndependentPart& newPart, int x, int y, int z){
     int partsNo=0;
     double center[3];
@@ -639,13 +657,82 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
     //for no reason take the middle part. In the feature it should be max, or weighted combination
     if (destLayerNo==0){
         std::cout << "create first layer vocabulary\n";
-        filterPCLGrid();
+        filterPCLGrid(0);
         createFirstLayer(vocabulary);
         octreeGrid.reset(new Octree<hop3d::PointCloud>(config.voxelsNoGrid));
         std::cout << "create first layer vocabulary finished\n";
     }
     else{
+        //update PCL grid
+        std::cout << "update PCL grid\n";
+        for (int overlapNo=0;overlapNo<3;overlapNo++){
+            for (int idX=1+overlapNo; idX<(*octrees[destLayerNo-1][overlapNo]).size()-1; idX+=3){///to do z-slicing
+                for (int idY=1+overlapNo; idY<(*octrees[destLayerNo-1][overlapNo]).size()-1; idY+=3){
+                    for (int idZ=1+overlapNo; idZ<(*octrees[destLayerNo-1][overlapNo]).size()-1; idZ+=3){
+                        if ((*octrees[destLayerNo-1][overlapNo]).at(idX, idY, idZ).id>=0){
+                            ViewIndependentPart part = hierarchy.viewIndependentLayers[destLayerNo-1][(*octrees[destLayerNo-1][overlapNo]).at(idX, idY, idZ).id];
+                            double center[3];
+                            fromCoordinate(idX,center[0],destLayerNo-1); fromCoordinate(idY,center[1],destLayerNo-1); fromCoordinate(idZ,center[2],destLayerNo-1);
+                            for (const auto& point : part.cloud){
+                                int x,y,z;
+                                PointNormal patchTmp = point;
+                                Mat34 partPose = (*octrees[destLayerNo-1][overlapNo]).at(idX, idY, idZ).pose;
+                                Mat34 offset = (*octrees[destLayerNo-1][overlapNo]).at(idX, idY, idZ).offset;
+                                Vec3 patchPos = partPose*offset*Vec4(point.position(0),point.position(1),point.position(2),1.0).block<3,1>(0,0);
+                                for (int coord = 0; coord<3; coord++)
+                                    patchTmp.position(coord)=patchPos(coord);//-center[coord];
+                                patchTmp.normal = partPose.rotation()*offset.rotation()*patchTmp.normal;
+                                toCoordinatePCLGrid(patchTmp.position(0),x);
+                                toCoordinatePCLGrid(patchTmp.position(1),y);
+                                toCoordinatePCLGrid(patchTmp.position(2),z);
+                                if (config.verbose==1){
+                                    std::cout << "(" << patchTmp.position(0) << ", " << patchTmp.position(1) << ", " << patchTmp.position(2) << ") Update octree, xyz: " << x << ", " << y << ", " << z << "\n";
+                                }
+                                if (x<config.voxelsNoGrid&&y<config.voxelsNoGrid&&z<config.voxelsNoGrid)
+                                    (*octreeGrid)(x,y,z).push_back(patchTmp);
+                                else{
+                                    if (config.verbose>0){
+                                        std::cout << "Warning1: octree index out of range. " << x << ", " << y << ", " << z << ", " << " layer " <<  0 << "\n";
+                                        getchar();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        std::cout << "update PCL grid finished\n";
+        std::cout << "filtering PCL grid\n";
+        filterPCLGrid(destLayerNo);
         int tempId=0;
+        // update next layer octree
+        for (int overlapNo=0;overlapNo<3;overlapNo++){
+            int wordsNo=0;
+            for (int idX=1+overlapNo; idX<(*octrees[destLayerNo][overlapNo]).size()-1; idX+=3){///to do z-slicing
+                for (int idY=1+overlapNo; idY<(*octrees[destLayerNo][overlapNo]).size()-1; idY+=3){
+                    for (int idZ=1+overlapNo; idZ<(*octrees[destLayerNo][overlapNo]).size()-1; idZ+=3){
+                        ViewIndependentPart newPart;
+                        newPart.layerId=3;
+                        // add neighbouring parts into structure
+                        if (createNextLayerPart(newPart, destLayerNo, overlapNo, idX, idY, idZ)>0){
+                            if (newPart.cloud.size()>(unsigned)config.minPatchesNo){
+                                newPart.id = tempId;//hierarchy.interpreter.at((*octrees[destLayerNo-1]).at(idX, idY, idZ).id);
+                                (*octrees[destLayerNo][overlapNo])(idX, idY, idZ) = newPart;//update octree
+                                vocabulary.push_back(newPart);
+                                tempId++;
+                                wordsNo++;
+                            }
+                        }
+                    }
+                }
+            }
+            //std::cout << "overNo " << overlapNo << " partsNo " << wordsNo << "\n";
+        }
+        octreeGrid.reset(new Octree<hop3d::PointCloud>(config.voxelsNoGrid));
+        std::cout << "filtering PCL grid finished\n";
+        //end update pcl grid
+        /*int tempId=0;
         for (int overlapNo=0;overlapNo<3;overlapNo++){
             int wordsNo=0;
             for (int idX=4+overlapNo; idX<(*octrees[destLayerNo-1][overlapNo]).size()-1; idX+=9){///to do z-slicing
@@ -672,7 +759,7 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
                 }
             }
             //std::cout << "1overNo " << overlapNo << " partsNo " << wordsNo << "\n";
-        }
+        }*/
     }
 }
 

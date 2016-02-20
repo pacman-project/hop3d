@@ -381,7 +381,7 @@ void HOP3DBham::learn(){
     }
     std::cout << "update PCL grid finished\n";
     std::vector<ViewIndependentPart> vocabulary;
-    for (size_t layerNo=0;layerNo<2/*config.viewIndependentLayersNo*/;layerNo++){
+    for (size_t layerNo=0;layerNo<(size_t)config.viewIndependentLayersNo;layerNo++){
         vocabulary.clear();
         for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
             for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
@@ -403,6 +403,7 @@ void HOP3DBham::learn(){
                 objects[categoryNo][objectNo].updateVoxelsPose((int)layerNo, vocabulary);
             }
         }
+        //std::cout << "data explained\n";
     }
 //    for (auto & word : vocabulary){
 //        word.print();
@@ -436,6 +437,7 @@ void HOP3DBham::learn(){
     }*/
     // save hierarchy to file
     if(config.save2file){
+        std::cout << "save 2 file\n";
         std::ofstream ofsHierarchy(config.filename2save);
         ofsHierarchy << *hierarchy;
         for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
@@ -445,6 +447,7 @@ void HOP3DBham::learn(){
         }
         ((NormalImageFilter*)imageFilterer)->save2file(ofsHierarchy);
         ofsHierarchy.close();
+        std::cout << "saved\n";
     }
     //visualization
 #ifdef QVisualizerBuild
@@ -496,13 +499,13 @@ void HOP3DBham::learn(){
         for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
             for (auto & object : objects[categoryNo]){
                 std::vector<ViewIndependentPart> objectParts;
-                for (size_t i=0;i<2;i++){//hierarchy.get()->viewIndependentLayers.size()-2;i++){
+                for (size_t i=0;i<hierarchy.get()->viewIndependentLayers.size();i++){
                     object.getParts((int)i, objectParts);
                     notify(objectParts, (int)(i+hierarchy.get()->viewDependentLayers.size()+1));
                 }
             }
         }
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::seconds(50));
         notify3Dmodels();
         createPartClouds();
         // draw parts coordinates
@@ -690,7 +693,7 @@ void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int ima
 void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids) const{
     Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
     if ((!std::isnan(point(0)))&&(!std::isnan(point(1)))){
-        Vec3 pointGlob = (cameraPose*Vec4(point(0),point(1),point(2),1.0)).block<3,1>(0,0);;
+        Vec3 pointGlob = (cameraPose*Vec4(point(0),point(1),point(2),1.0)).block<3,1>(0,0);
         objects[categoryNo][objectNo].getPartsIds(pointGlob, overlapNo, ids);
     }
     else{
@@ -748,7 +751,7 @@ void HOP3DBham::getPointsModels(int overlapNo, int categoryNo, int objectNo, int
 /// create part-coloured point clouds
 void HOP3DBham::createPartClouds(){
     /// clouds for the first layer
-    int layersNo=(int)hierarchy.get()->viewDependentLayers.size()+(int)hierarchy.get()->viewIndependentLayers.size();
+    int layersNo=(int)hierarchy.get()->viewDependentLayers.size()+(int)hierarchy.get()->viewIndependentLayers.size()+1;
     std::vector<std::vector<std::array<double,4>>> colors(layersNo);
     colors[0].resize(hierarchy.get()->firstLayer.size());
     std::uniform_real_distribution<double> uniformDist(0.0,1.0);
@@ -756,7 +759,7 @@ void HOP3DBham::createPartClouds(){
     for (int layerNo=0;layerNo<(int)hierarchy.get()->viewDependentLayers.size();layerNo++){
         colors[layerNo+1].resize(hierarchy.get()->viewDependentLayers[layerNo].size());
     }
-    for (int layerNo=0;layerNo<(int)hierarchy.get()->viewIndependentLayers.size()-1;layerNo++){
+    for (int layerNo=0;layerNo<(int)hierarchy.get()->viewIndependentLayers.size();layerNo++){
         colors[layerNo+(int)hierarchy.get()->viewDependentLayers.size()+1].resize(hierarchy.get()->viewIndependentLayers[layerNo].size());
     }
     for (size_t layerNo=0;layerNo<colors.size();layerNo++){

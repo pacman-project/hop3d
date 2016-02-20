@@ -11,7 +11,7 @@
 		  2 -> dot product of normals and Mahalanobis distance
 		  3 -> view invariant metric
     -->
-    <parameters verbose="1" distanceMetric="3" layersNo="7" maxIter="10"></parameters>
+    <parameters verbose="0" distanceMetric="3" layersNo="7" maxIter="10"></parameters>
     <layer1 maxDist="0.0" maxClusterDist="0.0"></layer1> <!--constant size-->
     <layer2 maxDist="0.36" maxClusterDist="0.37"></layer2>
     <layer3 maxDist="0.29" maxClusterDist="0.3"></layer3>

@@ -95,7 +95,7 @@ void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary
         //std::cout << "find min dist between " << pairedIds.first << "->" << pairedIds.second << "\n";
         distanceMatrix[pairedIds.first][pairedIds.second] = -1;
   //      bool finishClusterization(false);
-        std::cout << "dist " << minDist << " max dist " << config.maxDist[layerNo-1] << "\n";
+        //std::cout << "dist " << minDist << " max dist " << config.maxDist[layerNo-1] << "\n";
         if (minDist>=config.maxDist[layerNo-1]||clusters.size()==1)
             break;
             //finishClusterization = true;
@@ -189,8 +189,7 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::S
 
 /// compute distance matrix for view-independent parts
 void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix){
-    for (int i=0;i<(int)priorityQueueDistance.size();i++)
-        priorityQueueDistance.pop();
+    while( !priorityQueueDistance.empty() ) priorityQueueDistance.pop();
     for (size_t idA=0;idA<dictionary.size();idA++){
         for (size_t idB=idA+1;idB<dictionary.size();idB++){
             double dist(0); Mat34 transform;
