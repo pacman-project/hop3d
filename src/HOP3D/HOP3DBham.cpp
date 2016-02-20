@@ -570,17 +570,20 @@ void HOP3DBham::load(std::string filename){
     std::ifstream ifsHierarchy(filename);
     std::cout << "Load hierarchy...";
     ifsHierarchy >> *hierarchy;
-    for (auto &word : (*hierarchy).viewDependentLayers[1]){
-        for (int k=0;k<3;k++){
-            for (int l=0;l<3;l++){
-                if (word.partIds[k][l]>=0){
-                    if (!(k==1&&l==1)){
-                        std::cout << word.partsPosNorm[k][l].mean(2) << "\n";
-                    }
-                }
+    int layre=0;
+    for (const auto &layer: hierarchy.get()->viewIndependentLayers){
+        std::cout << "layer " << layre << "\n";
+        int pno=0;
+        for (const auto &part : layer){
+            std::cout << "part no " << pno << "\n";
+            std::cout << "inc ids: ";
+            for (auto &id : part.incomingIds){
+                std::cout << id << ", ";
             }
+            std::cout << "\n";
+            pno++;
         }
-        //word.print();
+        layre++;
     }
     std::cout << "Loaded\n";
     dataset->getDatasetInfo(datasetInfo);

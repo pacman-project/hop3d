@@ -256,40 +256,14 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
                         double minDist=std::numeric_limits<double>::max();
                         for (auto& word: vocabulary){
                             Mat34 estTransform;
-                            /*ViewIndependentPart partA = word;
-                            //transform
-                            Vec3 trans(0.0,0.0,0.0);
-                            double rot[3]={1.2,-0.7,0.6};
-                            Eigen::Matrix3d m;
-                            m = Eigen::AngleAxisd(rot[0], Eigen::Vector3d::UnitZ())* Eigen::AngleAxisd(rot[1], Eigen::Vector3d::UnitY())* Eigen::AngleAxisd(rot[2], Eigen::Vector3d::UnitZ());
-                            int itP = 0;
-                            for (auto& patch : partA.cloud){
-                                patch.position = m*patch.position + trans;
-                                patch.normal = m*patch.normal;
-                                std::cout << "word point poisition " << word.cloud[itP].position.transpose() << "\n";
-                                std::cout << "partA point poisition " << patch.position.transpose() << "\n";
-                                itP++;
-                            }
-                            std::cout << "ref rot\n" << m << "\n";*/
                             double fitness = pow(1+fabs(double(word.cloud.size())-double((*octrees[layerNo][overlapNo]).at(idX,idY,idZ).cloud.size())),2.0)*ViewIndependentPart::distanceGICP(word,(*octrees[layerNo][overlapNo])(idX,idY,idZ),config.configGICP,estTransform);
-                            //double fitness = ViewIndependentPart::distanceGICP(word,(*octrees[layerNo])(idX,idY,idZ),config.configGICP,estTransform);
-                            //std::cout << "estTransform\n" << estTransform.matrix() << "\n";
-                            //std::cout << "word id " << wordId << ", fitnes: " << fitness << "\n";
-                            //getchar();
                             if (fitness<minDist){//find min distance
                                 minDist=fitness;
-                                //std::cout << "update " << idX << " " << idY << " " << idZ << " " << wordId << "\n";
-                                //std::cout << "est transform\n" << estTransform.matrix() << "\n";
-                                //std::cout << "fit " << fitness << "\n";
-                                //std::cout << "cloud.size " << (*octrees[layerNo])(idX,idY,idZ).cloud.size() << "\n";
-                                //(*octrees[layerNo])(idX,idY,idZ).cloud = word.cloud;
                                 (*octrees[layerNo][overlapNo])(idX,idY,idZ).id = wordId;
                                 (*octrees[layerNo][overlapNo])(idX,idY,idZ).offset=estTransform;
                             }
                             wordId++;
                         }
-                        //std::cout << "id " << (*octrees[layerNo])(idX,idY,idZ).id <<"\n";
-                        //std::cout << (*octrees[layerNo])(idX,idY,idZ).offset.matrix() << "\n";
                     }
                 }
             }
@@ -669,7 +643,8 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
             for (int idX=1+overlapNo; idX<(*octrees[destLayerNo-1][overlapNo]).size()-1; idX+=3){///to do z-slicing
                 for (int idY=1+overlapNo; idY<(*octrees[destLayerNo-1][overlapNo]).size()-1; idY+=3){
                     for (int idZ=1+overlapNo; idZ<(*octrees[destLayerNo-1][overlapNo]).size()-1; idZ+=3){
-                        if ((*octrees[destLayerNo-1][overlapNo]).at(idX, idY, idZ).id>=0){
+                        int partId = (*octrees[destLayerNo-1][overlapNo]).at(idX, idY, idZ).id;
+                        if (partId>=0){
                             ViewIndependentPart part = hierarchy.viewIndependentLayers[destLayerNo-1][(*octrees[destLayerNo-1][overlapNo]).at(idX, idY, idZ).id];
                             double center[3];
                             fromCoordinate(idX,center[0],destLayerNo-1); fromCoordinate(idY,center[1],destLayerNo-1); fromCoordinate(idZ,center[2],destLayerNo-1);
@@ -694,6 +669,17 @@ void ObjectCompositionOctree::createNextLayerVocabulary(int destLayerNo, const H
                                     if (config.verbose>0){
                                         std::cout << "Warning1: octree index out of range. " << x << ", " << y << ", " << z << ", " << " layer " <<  0 << "\n";
                                         getchar();
+                                    }
+                                }
+                                toCoordinate(patchTmp.position(0),x, destLayerNo); toCoordinate(patchTmp.position(1),y,destLayerNo); toCoordinate(patchTmp.position(2),z,destLayerNo);
+                                for (int overlapNo=0;overlapNo<3;overlapNo++){
+                                    if (x<(config.voxelsNo/(int)pow(2,0))&&y<(config.voxelsNo/(int)pow(2,0))&&z<(config.voxelsNo/(int)pow(2,0)))
+                                        (*octrees[destLayerNo][overlapNo])(x,y,z).incomingIds.insert(partId);
+                                    else{
+                                        if (config.verbose>0){
+                                            std::cout << "Warning2: octree index out of range. " << x << ", " << y << ", " << z << ", " << " layer " <<  0 << "\n";
+                                            getchar();
+                                        }
                                     }
                                 }
                             }
