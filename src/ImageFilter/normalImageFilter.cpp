@@ -73,11 +73,13 @@ void NormalImageFilter::getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV&
     cv::Mat filteredImg = depthImage.clone();
     filterDepthImage(depthImage, filteredImg);
     std::vector< std::vector<hop3d::PointNormal> > cloudOrd(depthImage.rows, std::vector<hop3d::PointNormal> (depthImage.cols));
+    std::vector< std::vector<hop3d::PointNormal> > cloudOrdNorm(depthImage.rows, std::vector<hop3d::PointNormal> (depthImage.cols));
     for (int i=0;i<filteredImg.rows;i++){
         for (int j=0;j<filteredImg.cols;j++){
             PointNormalUV puv;
-            sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
-            sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, puv.position);
+            sensorModel.getPoint(j, i, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
+            sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, cloudOrdNorm[i][j].position);
+            sensorModel.getPoint(j, i, filteredImg.at<uint16_t>(i,j)*scale, puv.position);
             if (!std::isnan(double(cloudOrd[i][j].position(2)))){
                 puv.u=i; puv.v=j;
                 cloud.push_back(puv);
@@ -88,8 +90,8 @@ void NormalImageFilter::getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV&
     for (int i=config.filterSize/2;i<filteredImg.rows-(config.filterSize/2);i++){
         for (int j=config.filterSize/2;j<filteredImg.cols-(config.filterSize/2);j++){
             if (!std::isnan(double(cloudOrd[i][j].position(2)))){
-                computeNormal(i, j, cloudOrd);
-                cloud[pointIdx].normal = cloudOrd[i][j].normal;
+                computeNormal(i, j, cloudOrdNorm);
+                cloud[pointIdx].normal = cloudOrdNorm[i][j].normal;
                 pointIdx++;
             }
         }

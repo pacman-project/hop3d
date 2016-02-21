@@ -8,16 +8,7 @@
     -->
     <parameters verbose="1" categoriesNo="5" type="pcl" path="../../Datasets/ObjectDB-2014-Boris-v7"></parameters>
     <Category0 name="mug" objectsNo="1">
-      <Object0 name="mug1" imagesNo="7">
-	<Image0 name="data-points_raw-mug1-1.pcd" />
-	<Image1 name="data-points_raw-mug1-2.pcd" />
-	<Image2 name="data-points_raw-mug1-3.pcd" />
-	<Image3 name="data-points_raw-mug1-4.pcd" />
-	<Image4 name="data-points_raw-mug1-5.pcd" />
-	<Image5 name="data-points_raw-mug1-6.pcd" />
-	<Image6 name="data-points_raw-mug1-7.pcd" />
-      </Object0>
-      <Object1 name="mug2" imagesNo="7">
+      <Object0 name="mug2" imagesNo="7">
 	<Image0 name="data-points_raw-mug2-1.pcd" />
 	<Image1 name="data-points_raw-mug2-2.pcd" />
 	<Image2 name="data-points_raw-mug2-3.pcd" />
@@ -25,6 +16,15 @@
 	<Image4 name="data-points_raw-mug2-5.pcd" />
 	<Image5 name="data-points_raw-mug2-6.pcd" />
 	<Image6 name="data-points_raw-mug2-7.pcd" />
+      </Object0>
+      <Object1 name="mug1" imagesNo="7">
+	<Image0 name="data-points_raw-mug1-1.pcd" />
+	<Image1 name="data-points_raw-mug1-2.pcd" />
+	<Image2 name="data-points_raw-mug1-3.pcd" />
+	<Image3 name="data-points_raw-mug1-4.pcd" />
+	<Image4 name="data-points_raw-mug1-5.pcd" />
+	<Image5 name="data-points_raw-mug1-6.pcd" />
+	<Image6 name="data-points_raw-mug1-7.pcd" />
       </Object1>
        <Object2 name="mug3" imagesNo="7">
 	<Image0 name="data-points_raw-mug3-1.pcd" />
@@ -55,16 +55,7 @@
       </Object4>
     </Category0>
     <Category1 name="bowl" objectsNo="1">
-      <Object0 name="bowl" imagesNo="7">
-	<Image0 name="data-points_raw-bowl-1.pcd" />
-	<Image1 name="data-points_raw-bowl-2.pcd" />
-	<Image2 name="data-points_raw-bowl-3.pcd" />
-	<Image3 name="data-points_raw-bowl-4.pcd" />
-	<Image4 name="data-points_raw-bowl-5.pcd" />
-	<Image5 name="data-points_raw-bowl-6.pcd" />
-	<Image6 name="data-points_raw-bowl-7.pcd" />
-      </Object0>
-      <Object1 name="bowllarge" imagesNo="7">
+      <Object0 name="bowllarge" imagesNo="7">
 	<Image0 name="data-points_raw-bowllarge-1.pcd" />
 	<Image1 name="data-points_raw-bowllarge-2.pcd" />
 	<Image2 name="data-points_raw-bowllarge-3.pcd" />
@@ -72,6 +63,15 @@
 	<Image4 name="data-points_raw-bowllarge-5.pcd" />
 	<Image5 name="data-points_raw-bowllarge-6.pcd" />
 	<Image6 name="data-points_raw-bowllarge-7.pcd" />
+      </Object0>
+      <Object1 name="bowl" imagesNo="7">
+	<Image0 name="data-points_raw-bowl-1.pcd" />
+	<Image1 name="data-points_raw-bowl-2.pcd" />
+	<Image2 name="data-points_raw-bowl-3.pcd" />
+	<Image3 name="data-points_raw-bowl-4.pcd" />
+	<Image4 name="data-points_raw-bowl-5.pcd" />
+	<Image5 name="data-points_raw-bowl-6.pcd" />
+	<Image6 name="data-points_raw-bowl-7.pcd" />
       </Object1>
       <Object2 name="bowlsmall" imagesNo="7">
 	<Image0 name="data-points_raw-bowlsmall-1.pcd" />
