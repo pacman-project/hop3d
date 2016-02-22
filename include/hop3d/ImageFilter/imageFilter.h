@@ -77,6 +77,9 @@ public:
     /// get input point
     //virtual void getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const = 0;
 
+    /// get numbers of realisations
+    virtual int getRealisationsNo(void) const = 0;
+
     /// Virtual descrutor
     virtual ~ImageFilter() {
     }

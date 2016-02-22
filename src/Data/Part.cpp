@@ -1140,7 +1140,8 @@ std::istream& operator>>(std::istream& is, ViewDependentPart& part){
 /// Insertion operator
 std::ostream& operator<<(std::ostream& os, const ViewIndependentPart::Part3D& part){
     os << part.id << " ";
-    os << part.pose << "\n";
+    os << part.pose << " ";
+    os << part.realisationId << "\n";
     return os;
 }
 
@@ -1148,12 +1149,13 @@ std::ostream& operator<<(std::ostream& os, const ViewIndependentPart::Part3D& pa
 std::istream& operator>>(std::istream& is, ViewIndependentPart::Part3D& part){
     is >> part.id;
     is >> part.pose;
+    is >> part.realisationId;
     return is;
 }
 
 /// Insertion operator
 std::ostream& operator<<(std::ostream& os, const ViewIndependentPart& part){
-    os << part.id << " " << part.layerId << " ";
+    os << part.id << " " << part.realisationId << " " << part.layerId << " ";
     // part Ids
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
@@ -1204,7 +1206,7 @@ std::ostream& operator<<(std::ostream& os, const ViewIndependentPart& part){
 
 /// Extraction operator
 std::istream& operator>>(std::istream& is, ViewIndependentPart& part){
-    is >> part.id >> part.layerId;
+    is >> part.id >> part.realisationId >> part.layerId;
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             for (int k=0;k<3;k++){

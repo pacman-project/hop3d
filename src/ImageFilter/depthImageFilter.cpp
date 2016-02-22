@@ -359,6 +359,11 @@ int DepthImageFilter::nonMaximaSuppression(const std::vector<cv::Mat> responsesI
     return 0;
 }
 
+/// get numbers of realisations
+int DepthImageFilter::getRealisationsNo(void) const{
+    return 0;
+}
+
 hop3d::ImageFilter* hop3d::createDepthImageFilter(void) {
     filter.reset(new DepthImageFilter());
     return filter.get();

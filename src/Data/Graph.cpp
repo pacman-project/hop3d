@@ -212,20 +212,24 @@ void Hierarchy::computeGraph(IndexSeqMap& hierarchyGraph){
         }
         layerNo++;
     }
-    layerNo = (int)viewDependentLayers.size();
-    /*for (const auto &layer : viewIndependentLayers){//graph for view-dependent layers
+    layerNo = 0;
+    for (const auto &layer : viewIndependentLayers){//graph for view-dependent layers
+        std::cout << "layer no " << layerNo << " size " << layer.size() << "\n";
         int wordId = 0;
         for (const auto &word : layer){
             std::set<std::uint32_t> incomingIds;
             for (auto &id : word.incomingIds){
-                incomingIds.insert(incomingIds.end(),((viewDepPartsFromLayerNo)*layerInc)+id);
+                if (layerNo == 0)
+                    incomingIds.insert(incomingIds.end(),((((int)viewDepPartsFromLayerNo)*layerInc)+id));
+                else
+                    incomingIds.insert(incomingIds.end(),((((int)viewDependentLayers.size()+layerNo)*layerInc)+id));
             }
             std::vector<std::uint32_t> inputIds(incomingIds.begin(), incomingIds.end());
-            graph.insert(std::make_pair(((layerNo+1)*layerInc)+wordId,inputIds));
+            graph.insert(std::make_pair((((int)viewDependentLayers.size()+layerNo+1)*layerInc)+wordId,inputIds));
             wordId++;
         }
         layerNo++;
-    }*/
+    }
     // print hierarchy
     /*for (auto &node : graph){
         std::cout << "part id " << node.first << "\n";

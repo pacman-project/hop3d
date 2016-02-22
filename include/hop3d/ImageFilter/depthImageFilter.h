@@ -87,6 +87,9 @@ public:
     /// get input point
     //void getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const;
 
+    /// get numbers of realisations
+    int getRealisationsNo(void) const;
+
     class Config{
       public:
         Config() {

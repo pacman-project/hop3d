@@ -808,10 +808,6 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
     if (parts.size()>0){
         Vec3 initPose(parts.begin()->pose(0,3), parts.begin()->pose(1,3), parts.begin()->pose(2,3));
         for (auto & part : parts){
-            /// if first view-independent parts are used
-            //Vec3 pos(part.pose(0,3), part.pose(1,3), part.pose(2,3));
-            //std::cout << "part pose\n" << part.pose.matrix() << "\n";
-            //std::cout << "part offset\n" << part.offset.matrix() << "\n";
             Mat34 pose = part.pose*part.offset;
             double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, pose(0,3)-initPose(0), pose(1,3)-initPose(1), pose(2,3)-initPose(2), 1};
             glPushMatrix();
@@ -821,48 +817,6 @@ GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& part
             glPopMatrix();
         }
     }
-    /*if (layerNo==4&&parts.size()>0){
-        Vec3 initPose(parts.begin()->pose(0,3), parts.begin()->pose(1,3), parts.begin()->pose(2,3));
-        int partNo=0;
-        for (auto & part : parts){
-            partNo++;
-            Mat34 pose = part.pose*part.offset;
-            Vec3 pos(pose(0,3), pose(1,3), pose(2,3));
-            double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(1,2), 0, pose(0,2), pose(1,2), pose(2,2), 0, pos(0)-initPose(0), pos(1)-initPose(1), pos(2)-initPose(2), 1};
-            glPushMatrix();
-                glMultMatrixd(GLmat);
-                //glCallList(backgroundList[1]);
-                glCallList(cloudsListLayers[4][part.id]);
-            glPopMatrix();
-        }
-    }*/
-    /*for (size_t n = 0; n < part.partIds.size(); n++){
-        for (size_t m = 0; m < part.partIds[n].size(); m++){
-            Vec3 pos(config.pixelSize*part.gaussians[n][m].mean(0), config.pixelSize*part.gaussians[n][m].mean(1), part.gaussians[n][m].mean(2));
-            int id = part.partIds[n][m];
-            if ((n==1)&&(m==1)){
-                pos(0)=0; pos(1)=0; pos(2)=0;
-            }
-            else if (id<0){
-                double patchSize = 5.0*(2.0*layerNo-1.0);
-                pos(0)=config.pixelSize*double(double(n)-1.0)*(patchSize+(patchSize/2.0));
-                pos(1)=config.pixelSize*double(double(m)-1.0)*(patchSize+(patchSize/2.0));
-                pos(2)=0;
-            }
-            double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pos(0), pos(1), pos(2), 1};
-            glPushMatrix();
-                glMultMatrixd(GLmat);
-                if (id<0){
-                    //glColor3ub(100,50,50);
-                    glCallList(backgroundList[layerNo-1]);
-                }
-                else{
-                    //glColor3ub(200,200,200);
-                    glCallList(cloudsListLayers[layerNo-1][id]);
-                }
-            glPopMatrix();
-        }
-    }*/
     glPopMatrix();
     glEndList();
     return index;

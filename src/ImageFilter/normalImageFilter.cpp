@@ -891,6 +891,7 @@ void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int obj
                     part.layerId=layerNo+1;
                     part.location = octetsImage[i][j]->filterPos[1][1];
                     part.locationEucl = octetsImage[i][j]->partsPosEucl[1][1];
+                    part.group.clear();
                     //part.offsets = octetsImage[i][j].offsets;
                     //part.locationEucl = octetsImage[i][j]->partsPosNorm[1][1].mean.block<3,1>(0,0);
                     part.gaussians[1][1].mean=Vec3(octetsImage[i][j]->filterPos[1][1].u, octetsImage[i][j]->filterPos[1][1].v, octetsImage[i][j]->filterPos[1][1].depth);
@@ -908,6 +909,7 @@ void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int obj
                             secondPart.locationEucl = octetsImage[i][j].get()->secondOctet[0].partsPosEucl[1][1];
                             secondPart.gaussians[1][1].mean=Vec3(octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].u, octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].v, octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].depth);
                             secondPart.offsets = octetsImage[i][j].get()->secondOctet[0].offsets;
+                            secondPart.group.clear();
                             part.secondVDPart.push_back(secondPart);
                         }
                     }
@@ -1704,6 +1706,11 @@ void NormalImageFilter::loadFromfile(std::istream& is){
             }
         }
     }
+}
+
+/// get numbers of realisations
+int NormalImageFilter::getRealisationsNo(void) const{
+    return partRealisationsCounter;
 }
 
 hop3d::ImageFilter* hop3d::createNormalImageFilter(void) {

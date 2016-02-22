@@ -53,8 +53,17 @@ public:
     /// get set of ids for the given input point
     void getPartsIds(const Vec3& point, int overlapNo, std::vector<int>& ids) const;
 
+    /// get realisations ids
+    void getRealisationsIds(const Vec3& point, int overlapNo, std::vector<int>& ids) const;
+
     /// upodate voxel poses using new vocabulary
     void updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary);
+
+    /// get parts realisations
+    void getPartsRealisation(int layerNo, int overlapNo, std::vector<ViewIndependentPart::Part3D>& partsViewTmp) const;
+
+    /// set realisation counter
+    static void setRealisationCounter(int startRealisationId);
 
     /// Insertion operator
     friend std::ostream& operator<<(std::ostream& os, const ObjectCompositionOctree& object){
@@ -143,6 +152,8 @@ private:
     std::vector<std::vector<OctreePtr>> octrees;
     /// points with normals grid
     OctreeCloudPtr octreeGrid;
+    /// part realisation counter
+    static int partRealisationsCounter;
 
     /// compute rotation matrix from normal vector ('y' axis is vetical)
     //void normal2rot(const Vec3& normal, Mat33& rot);

@@ -27,8 +27,8 @@ public:
 
     /// overloaded constructor
     ObjectComposition(const std::string _name, Type _type) :
-            name(_name), type(_type) {
-    };
+            name(_name), type(_type){
+    }
 
     /// Name of the part composition
     virtual const std::string& getName() const {return name;}
@@ -54,8 +54,14 @@ public:
     /// get set of ids for the given input point
     virtual void getPartsIds(const Vec3& point, int overlapNo, std::vector<int>& ids) const = 0;
 
+    /// get realisations ids
+    virtual void getRealisationsIds(const Vec3& point, int overlapNo, std::vector<int>& ids) const = 0;
+
     /// upodate voxel poses using new vocabulary
     virtual void updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary) = 0;
+
+    /// get parts realisations
+    virtual void getPartsRealisation(int layerNo, int overlapNo, std::vector<ViewIndependentPart::Part3D>& partsViewTmp) const = 0;
 
     /// Virtual descrutor
     virtual ~ObjectComposition() {
@@ -68,6 +74,6 @@ protected:
     /// Object Composition type
     Type type;
 };
-};
+}
 
 #endif // _OBJECT_COMPOSITION_H_

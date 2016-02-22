@@ -7,6 +7,8 @@ using namespace hop3d;
 /// A single instance of object composition
 ObjectCompositionOctree::Ptr composition;
 
+int ObjectCompositionOctree::partRealisationsCounter = 0;
+
 ObjectCompositionOctree::ObjectCompositionOctree(void) : ObjectComposition("Octree Object Composition", COMPOSITION_OCTREE) {
 }
 
@@ -261,6 +263,8 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
                                 minDist=fitness;
                                 (*octrees[layerNo][overlapNo])(idX,idY,idZ).id = wordId;
                                 (*octrees[layerNo][overlapNo])(idX,idY,idZ).offset=estTransform;
+                                (*octrees[layerNo][overlapNo])(idX,idY,idZ).realisationId = partRealisationsCounter;
+                                partRealisationsCounter++;
                             }
                             wordId++;
                         }
@@ -283,6 +287,49 @@ void ObjectCompositionOctree::getPartsIds(const Vec3& point, int overlapNo, std:
             if ((z-overlapNo)%3==0) z+=1; else if ((z-overlapNo)%3==2) z-=1;
             if (x<(config.voxelsNo/(int)pow(2,layNo))&&y<(config.voxelsNo/(int)pow(2,layNo))&&z<(config.voxelsNo/(int)pow(2,layNo))){
                 ids.push_back((*octrees[layNo][overlapNo]).at(x,y,z).id);//4th layer
+            }
+            else{
+                if (config.verbose>0){
+                    std::cout << "Warning5: octree index out of range. " << x << ", " << y << ", " << z << ", " << " layer " <<  layNo << "\n";
+                    getchar();
+                }
+            }
+        }
+    }
+}
+
+/// get parts realisations
+void ObjectCompositionOctree::getPartsRealisation(int layerNo, int overlapNo, std::vector<ViewIndependentPart::Part3D>& partsViewTmp) const{
+    for (int idX=0; idX<(*octrees[layerNo][overlapNo]).size(); idX++){///to do z-slicing
+        for (int idY=0; idY<(*octrees[layerNo][overlapNo]).size(); idY++){
+            for (int idZ=0; idZ<(*octrees[layerNo][overlapNo]).size(); idZ++){
+                if ((*octrees[layerNo][overlapNo]).at(idX,idY,idZ).id>=0){
+                    ViewIndependentPart::Part3D part;
+                    part.id = (*octrees[layerNo][overlapNo]).at(idX,idY,idZ).id;
+                    part.realisationId = (*octrees[layerNo][overlapNo]).at(idX,idY,idZ).realisationId;
+                    part.pose = (*octrees[layerNo][overlapNo])(idX,idY,idZ).pose * (*octrees[layerNo][overlapNo])(idX,idY,idZ).offset;
+                    partsViewTmp.push_back(part);
+                }
+            }
+        }
+    }
+}
+
+/// get realisations ids
+void ObjectCompositionOctree::getRealisationsIds(const Vec3& point, int overlapNo, std::vector<int>& ids) const{
+    int x,y,z;
+    for (int layNo=0;layNo<3;layNo++){
+        toCoordinate(point(0),x, layNo);    toCoordinate(point(1),y, layNo);    toCoordinate(point(2),z, layNo);
+        //std::cout << "coordinate " << x << " " << y << " " << z << "\n";
+        if ((x-overlapNo)>-1&&(y-overlapNo)>-1&&(z-overlapNo)>-1){
+            if ((x-overlapNo)%3==0) x+=1; else if ((x-overlapNo)%3==2) x-=1;
+            if ((y-overlapNo)%3==0) y+=1; else if ((y-overlapNo)%3==2) y-=1;
+            if ((z-overlapNo)%3==0) z+=1; else if ((z-overlapNo)%3==2) z-=1;
+            if (x<(config.voxelsNo/(int)pow(2,layNo))&&y<(config.voxelsNo/(int)pow(2,layNo))&&z<(config.voxelsNo/(int)pow(2,layNo))){
+                if ((*octrees[layNo][overlapNo]).at(x,y,z).realisationId>=0)
+                    ids.push_back((*octrees[layNo][overlapNo]).at(x,y,z).realisationId);//4th layer
+                else
+                    ids.push_back(-2);
             }
             else{
                 if (config.verbose>0){
@@ -801,6 +848,11 @@ int ObjectCompositionOctree::assignPartNeighbours(ViewIndependentPart& partVoxel
         }
     }
     return partsNo;
+}
+
+/// set realisation counter
+void ObjectCompositionOctree::setRealisationCounter(int startRealisationId){
+    partRealisationsCounter = startRealisationId;
 }
 
 hop3d::ObjectComposition* hop3d::createObjectCompositionOctree(void) {
