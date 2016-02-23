@@ -168,6 +168,9 @@ private:
     /// convert parts map to parts cloud
     void convertPartsMap2PartsCloud(const Hierarchy::IndexSeqMap& points2parts, PartsClouds& partsCloud) const;
 
+    /// notify visualizer
+    void notifyVisualizer(void);
+
     /// Configuration of the module
     Config config;
 
