@@ -1652,7 +1652,7 @@ void NormalImageFilter::loadFromfile(std::istream& is){
                             for (int octetNo=0;octetNo<octetsNo;octetNo++){
                                 int isOctet;
                                 is >> isOctet;
-                                if (isOctet){
+                                if (isOctet==1){
                                     Octet octet;
                                     is >> octet;
                                     octetsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo][octetNo].reset(new Octet(octet));
@@ -1694,10 +1694,11 @@ void NormalImageFilter::loadFromfile(std::istream& is){
                             for (int partNo=0;partNo<partsNo;partNo++){
                                 int isPart;
                                 is >> isPart;
-                                if (isPart){
+                                if (isPart==1){
                                     ViewDependentPart part;
                                     is >> part;
                                     partsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo][partNo].reset(new ViewDependentPart(part));
+
                                 }
                             }
                         }

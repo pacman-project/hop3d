@@ -15,7 +15,7 @@ void runHOP3D(){
     //std::cout << "Press Enter to start\n";
     //getchar();
     //lhop3d->learn();
-    lhop3d->load("hop3dHierarchyBoris1.h3d");
+    lhop3d->load("hop3dHierarchyBoris6.h3d");
 }
 
 int main(int argc, char** argv)
