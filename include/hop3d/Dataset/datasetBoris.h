@@ -15,9 +15,9 @@
 
 namespace hop3d {
     /// create a single dataset object
-    Dataset* createBorisDataset(void);
+    std::unique_ptr<Dataset> createBorisDataset(void);
     /// create a single dataset object
-    Dataset* createBorisDataset(std::string config, std::string sensorConfig);
+    std::unique_ptr<Dataset> createBorisDataset(std::string config, std::string sensorConfig);
 
 
 /// Dataset implementation

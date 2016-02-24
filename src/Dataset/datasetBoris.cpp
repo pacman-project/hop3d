@@ -3,11 +3,12 @@
 #include <pcl/point_types.h>
 //#include "opencv2/contrib/contrib.hpp"
 #include "opencv2/highgui/highgui.hpp"
+#include <memory>
 
 using namespace hop3d;
 
 /// A single instance of BorisDataset
-BorisDataset::Ptr dataset;
+//BorisDataset::Ptr dataset;
 
 BorisDataset::BorisDataset(void) : Dataset("Boris dataset", DATASET_BORIS) {
 }
@@ -227,12 +228,13 @@ Mat34 BorisDataset::readCameraPose(std::string& filename){
     return cameraPose;
 }
 
-hop3d::Dataset* hop3d::createBorisDataset(void) {
-    dataset.reset(new BorisDataset());
-    return dataset.get();
+std::unique_ptr<hop3d::Dataset> hop3d::createBorisDataset(void) {
+    //dataset.reset(new BorisDataset());
+    return make_unique<BorisDataset>();//dataset.get();
 }
 
-hop3d::Dataset* hop3d::createBorisDataset(std::string config, std::string sensorConfig) {
-    dataset.reset(new BorisDataset(config, sensorConfig));
-    return dataset.get();
+std::unique_ptr<hop3d::Dataset> hop3d::createBorisDataset(std::string config, std::string sensorConfig) {
+    //dataset.reset(new BorisDataset(config, sensorConfig));
+    //return dataset.get();
+    return make_unique<BorisDataset>(config, sensorConfig);
 }

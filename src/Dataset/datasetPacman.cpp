@@ -12,7 +12,7 @@ std::vector<int> angles={-164,-164,-135,-135,-135,-135,-106,-106,-74,-74,-45,-45
 using namespace hop3d;
 
 /// A single instance of PacmanDataset
-PacmanDataset::Ptr datasetPacman;
+//PacmanDataset::Ptr datasetPacman;
 
 PacmanDataset::PacmanDataset(void) : Dataset("Pacman dataset", DATASET_PACMAN) {
     idx2Angle.clear();
@@ -216,12 +216,14 @@ Mat34 PacmanDataset::readCameraPose(std::string& filename){
     return cameraPose;
 }
 
-hop3d::Dataset* hop3d::createPacmanDataset(void) {
-    datasetPacman.reset(new PacmanDataset());
-    return datasetPacman.get();
+std::unique_ptr<hop3d::Dataset> hop3d::createPacmanDataset(void) {
+    //datasetPacman.reset(new PacmanDataset());
+    //return datasetPacman.get();
+    return make_unique<PacmanDataset>();
 }
 
-hop3d::Dataset* hop3d::createPacmanDataset(std::string config, std::string sensorConfig) {
-    datasetPacman.reset(new PacmanDataset(config, sensorConfig));
-    return datasetPacman.get();
+std::unique_ptr<hop3d::Dataset> hop3d::createPacmanDataset(std::string config, std::string sensorConfig) {
+    //datasetPacman.reset(new PacmanDataset(config, sensorConfig));
+    //return datasetPacman.get();
+    return make_unique<PacmanDataset>(config, sensorConfig);
 }

@@ -48,6 +48,9 @@ public:
     /// load hierarchy from the file
     void load(std::string filename);
 
+    /// inference
+    void inference(void);
+
     /// get set of ids from hierarchy for the given input point
     //void getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const;
 
@@ -127,7 +130,7 @@ public:
             std::string statsConfig;
             /// part selector config filename
             std::string selectorConfig;
-            /// dataset type
+            /// part selector type
             int partSelectorType;
             /// image filterer config filename
             std::string filtererConfig;
@@ -137,8 +140,10 @@ public:
             std::string compositionConfig;
             /// camera config filename
             std::string cameraConfig;
-            /// dataset config filename
+            /// dataset config filename (training)
             std::string datasetConfig;
+            /// dataset config filename (testing)
+            std::string configFilenameTest;
             /// dataset type
             int datasetType;
             /// save hierarchy to file
@@ -184,10 +189,16 @@ private:
     ImageFilter *imageFilterer;
 
     /// dataset
-    Dataset *dataset;
+    std::unique_ptr<Dataset> datasetTrain;
+
+    /// dataset
+    std::unique_ptr<Dataset> datasetTest;
 
     /// structure which stores info about dataset
-    DatasetInfo datasetInfo;
+    DatasetInfo datasetInfoTrain;
+
+    /// structure which stores info about dataset
+    DatasetInfo datasetInfoTest;
 
     ///structure to store hierarchy
     std::unique_ptr<Hierarchy> hierarchy;

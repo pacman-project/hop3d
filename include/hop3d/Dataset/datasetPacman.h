@@ -15,9 +15,9 @@
 
 namespace hop3d {
     /// create a single dataset object
-    Dataset* createPacmanDataset(void);
+    std::unique_ptr<Dataset> createPacmanDataset(void);
     /// create a single dataset object
-    Dataset* createPacmanDataset(std::string config, std::string sensorConfig);
+    std::unique_ptr<Dataset> createPacmanDataset(std::string config, std::string sensorConfig);
 
 
 /// Dataset implementation

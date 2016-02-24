@@ -46,7 +46,7 @@ int main(void)
 
         std::vector<cv::Mat> vecImages(1);
 
-        hop3d::Dataset* dataset;
+        std::unique_ptr<hop3d::Dataset> dataset;
         if (datasetType==hop3d::Dataset::DATASET_BORIS){
             dataset = hop3d::createBorisDataset(datasetConfigFile,sensorConfigFile);
         }

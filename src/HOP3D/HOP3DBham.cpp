@@ -36,13 +36,16 @@ HOP3DBham::HOP3DBham(std::string _config) :
         imageFilterer = hop3d::createNormalImageFilter(config.filtererConfig, config.cameraConfig);
     }
     if (config.datasetType==hop3d::Dataset::DATASET_BORIS){
-        dataset = hop3d::createBorisDataset(config.datasetConfig,config.cameraConfig);
+        datasetTrain = hop3d::createBorisDataset(config.datasetConfig,config.cameraConfig);
+        datasetTest = hop3d::createBorisDataset(config.configFilenameTest,config.cameraConfig);
     }
     else if (config.datasetType==hop3d::Dataset::DATASET_PACMAN){
-        dataset = hop3d::createPacmanDataset(config.datasetConfig,config.cameraConfig);
+        datasetTrain = hop3d::createPacmanDataset(config.datasetConfig,config.cameraConfig);
+        datasetTest = hop3d::createPacmanDataset(config.configFilenameTest,config.cameraConfig);
     }
     else {// default dataset
-        dataset = hop3d::createBorisDataset(config.datasetConfig,config.cameraConfig);
+        datasetTrain = hop3d::createBorisDataset(config.datasetConfig,config.cameraConfig);
+        datasetTest = hop3d::createBorisDataset(config.configFilenameTest,config.cameraConfig);
     }
 }
 
@@ -85,6 +88,7 @@ HOP3DBham::Config::Config(std::string configFilename){
     compositionConfig = prefix+(config.FirstChildElement( "ObjectComposition" )->Attribute( "configFilename" ));
     cameraConfig = prefix+(config.FirstChildElement( "CameraModel" )->Attribute( "configFilename" ));
     datasetConfig = prefix+(config.FirstChildElement( "Dataset" )->Attribute( "configFilename" ));
+    configFilenameTest = prefix+(config.FirstChildElement( "Dataset" )->Attribute( "configFilenameTest" ));
 
     config.FirstChildElement( "Filterer" )->QueryIntAttribute("filterType", &filterType);
     config.FirstChildElement( "Dataset" )->QueryIntAttribute("datasetType", &datasetType);
@@ -100,14 +104,14 @@ HOP3DBham::Config::Config(std::string configFilename){
 
 /// get training dataset info
 void HOP3DBham::getDatasetInfo(hop3d::DatasetInfo& _dataset) const{
-    dataset->getDatasetInfo(_dataset);
+    datasetTrain->getDatasetInfo(_dataset);
 }
 
 /// returns paths for each cloud/image
 void HOP3DBham::getCloudPaths(std::vector<std::string>& paths) const{
     paths.clear();
     hop3d::DatasetInfo info;
-    dataset->getDatasetInfo(info);
+    datasetTrain->getDatasetInfo(info);
     for (const auto &category : info.categories)
         for (const auto &object : category.objects)
             for (const auto &path : object.fullPaths)
@@ -118,7 +122,7 @@ void HOP3DBham::getCloudPaths(std::vector<std::string>& paths) const{
 void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const{
     hop3d::PointCloudUV cloudUV;
     cv::Mat depthImage;
-    dataset->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+    datasetTrain->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
     imageFilterer->getCloud(depthImage, cloudUV);
     cloud.clear();
     cloud.reserve(cloudUV.size());
@@ -138,13 +142,13 @@ void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::Point
 /// get cloud from dataset
 void HOP3DBham::getCloud(const std::string& path, hop3d::PointCloud& cloud) const{
     int categoryNo(0), objectNo(0), imageNo(0);
-    dataset->translateString(path, categoryNo, objectNo, imageNo);
+    datasetTrain->translateString(path, categoryNo, objectNo, imageNo);
     getCloud(categoryNo, objectNo, imageNo, cloud);
 }
 
 /// get number of points in the point cloud
 size_t HOP3DBham::getNumOfPoints(int categoryNo, int objectNo, int imageNo) const {
-    return dataset->getNumOfPoints(categoryNo, objectNo, imageNo);
+    return datasetTrain->getNumOfPoints(categoryNo, objectNo, imageNo);
 }
 
 /// get point from the point cloud
@@ -154,14 +158,14 @@ size_t HOP3DBham::getNumOfPoints(int categoryNo, int objectNo, int imageNo) cons
 
 /// get camera pose
 void HOP3DBham::getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose) const{
-    cameraPose = dataset->getCameraPose(categoryNo, objectNo, imageNo);
+    cameraPose = datasetTrain->getCameraPose(categoryNo, objectNo, imageNo);
 }
 
 /// get camera pose
 void HOP3DBham::getSensorFrame(const std::string& path, Mat34& cameraPose) const{
     int categoryNo(0), objectNo(0), imageNo(0);
-    dataset->translateString(path, categoryNo, objectNo, imageNo);
-    cameraPose = dataset->getCameraPose(categoryNo, objectNo, imageNo);
+    datasetTrain->translateString(path, categoryNo, objectNo, imageNo);
+    cameraPose = datasetTrain->getCameraPose(categoryNo, objectNo, imageNo);
 }
 
 /// get hierarchy graph
@@ -172,7 +176,7 @@ void HOP3DBham::getHierarchy(Hierarchy::IndexSeqMap& hierarchyGraph) const{
 /// get parts realization
 void HOP3DBham::getPartsRealisation(int categoryNo, int objectNo, int imageNo, std::vector<ViewIndependentPart::Part3D>& parts) const{
     parts.clear();
-    Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
+    Mat34 cameraPose(datasetTrain->getCameraPose(categoryNo, objectNo, imageNo));
     int idIncrement=10000;
     for (int layerNo = 0;layerNo<(int)hierarchy.get()->viewDependentLayers.size()+1;layerNo++){
         std::vector<ViewDependentPart> partsView;
@@ -224,7 +228,7 @@ void HOP3DBham::getPartsRealisationCloud(int categoryNo, int objectNo, int image
 /// get realisations graph
 void HOP3DBham::getRealisationsGraph(const std::string& path, Hierarchy::IndexSetMap& realisationsGraph) const{
     int categoryNo(0), objectNo(0), imageNo(0);
-    dataset->translateString(path, categoryNo, objectNo, imageNo);
+    datasetTrain->translateString(path, categoryNo, objectNo, imageNo);
     getRealisationsGraph(categoryNo, objectNo, imageNo, realisationsGraph);
 }
 
@@ -233,7 +237,7 @@ void HOP3DBham::getRealisationsGraph(int categoryNo, int objectNo, int imageNo, 
     PointCloudUV cloud;
     realisationsGraph.clear();
     cv::Mat depthImage;
-    dataset->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+    datasetTrain->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
     imageFilterer->getCloud(depthImage, cloud);
     for (auto &point : cloud){
         for (int overlapNo=0;overlapNo<3;overlapNo++){
@@ -271,7 +275,7 @@ void HOP3DBham::getRealisationsGraph(int categoryNo, int objectNo, int imageNo, 
 void HOP3DBham::getPartsRealisationCloud(const std::string& path, PartsClouds& parts) const{
     parts.clear();
     int categoryNo(0), objectNo(0), imageNo(0);
-    dataset->translateString(path, categoryNo, objectNo, imageNo);
+    datasetTrain->translateString(path, categoryNo, objectNo, imageNo);
     getPartsRealisationCloud(categoryNo, objectNo, imageNo, parts);
 }
 
@@ -280,7 +284,7 @@ void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hie
     points2parts.clear();
     PointCloudUV cloud;
     cv::Mat depthImage;
-    dataset->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+    datasetTrain->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
     imageFilterer->getCloud(depthImage, cloud);
     std::uint32_t pointIdx=0;
     for (auto &point : cloud){
@@ -305,7 +309,7 @@ void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hie
 void HOP3DBham::getCloud2PartsMap(const std::string& path, Hierarchy::IndexSeqMap& points2parts) const{
     points2parts.clear();
     int categoryNo(0), objectNo(0), imageNo(0);
-    dataset->translateString(path, categoryNo, objectNo, imageNo);
+    datasetTrain->translateString(path, categoryNo, objectNo, imageNo);
     getCloud2PartsMap(categoryNo, objectNo, imageNo, points2parts);
 }
 
@@ -313,7 +317,7 @@ void HOP3DBham::getCloud2PartsMap(const std::string& path, Hierarchy::IndexSeqMa
 void HOP3DBham::getPartsRealisation(const std::string& path, std::vector<ViewIndependentPart::Part3D>& parts) const{
     parts.clear();
     int categoryNo(0), objectNo(0), imageNo(0);
-    dataset->translateString(path, categoryNo, objectNo, imageNo);
+    datasetTrain->translateString(path, categoryNo, objectNo, imageNo);
     getPartsRealisation(categoryNo, objectNo, imageNo, parts);
 }
 
@@ -321,16 +325,16 @@ void HOP3DBham::getPartsRealisation(const std::string& path, std::vector<ViewInd
 void HOP3DBham::learn(){
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
     hop3d::ViewDependentPart::Seq dictionary;
-    dataset->getDatasetInfo(datasetInfo);
+    datasetTrain->getDatasetInfo(datasetInfoTrain);
     std::vector<hop3d::Octet> octets;
     int startId = (int)hierarchy.get()->firstLayer.size();
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
         if (layerNo==0){
-            for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
-                for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
-                    for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+            for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){
+                for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){
+                    for (size_t imageNo=0;imageNo<datasetInfoTrain.categories[categoryNo].objects[objectNo].images.size();imageNo++){
                         cv::Mat image;
-                        dataset->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo,image);
+                        datasetTrain->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo,image);
                         std::vector<hop3d::Octet> octetsTmp;
                         imageFilterer->computeOctets(image, (int)categoryNo, (int)objectNo, (int)imageNo, octetsTmp);
                         octets.insert(octets.end(), octetsTmp.begin(), octetsTmp.end());
@@ -341,9 +345,9 @@ void HOP3DBham::learn(){
         else if (layerNo==1){
             octets.clear();
             startId = int(hierarchy.get()->firstLayer.size()+10000);
-            for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
-                for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
-                    for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+            for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){
+                for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){
+                    for (size_t imageNo=0;imageNo<datasetInfoTrain.categories[categoryNo].objects[objectNo].images.size();imageNo++){
                         std::vector<hop3d::Octet> octetsTmp;
                         imageFilterer->getOctets((int)categoryNo, (int)objectNo, (int)imageNo, *hierarchy, octetsTmp);
                         octets.insert(octets.end(), octetsTmp.begin(), octetsTmp.end());
@@ -363,9 +367,9 @@ void HOP3DBham::learn(){
     std::cout << "compute parts\n";
     for (size_t layerNo=0; layerNo< hierarchy.get()->viewDependentLayers.size();layerNo++){
         for (int overlapNo=0; overlapNo<3; overlapNo++){
-            for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
-                for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
-                    for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+            for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){
+                for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){
+                    for (size_t imageNo=0;imageNo<datasetInfoTrain.categories[categoryNo].objects[objectNo].images.size();imageNo++){
                         //std::cout << layerNo << " " << overlapNo << " " << categoryNo << " " << objectNo << " " << imageNo <<"\n";
                         imageFilterer->computePartsImage(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, *hierarchy, (int)layerNo);
                         //std::cout << "end\n";
@@ -377,19 +381,19 @@ void HOP3DBham::learn(){
     std::cout << "compute parts finished\n";
     //std::vector< std::set<int>> clusters;
     std::cout << "update PCL grid\n";
-    objects.resize(datasetInfo.categories.size());
-    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+    objects.resize(datasetInfoTrain.categories.size());
+    for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
+        for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
             std::cout << "Create object composition\n";
             ObjectCompositionOctree object(config.compositionConfig);
             objects[categoryNo].push_back(object);
-            for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
+            for (size_t imageNo=0;imageNo<datasetInfoTrain.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
                 //int layerNo=3;
                 std::vector<ViewDependentPart> parts;
                 //get parts of the 3rd layers
                 imageFilterer->getLayerParts((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDepPartsFromLayerNo-1, parts);
                 //move octets into 3D space and update octree representation of the object
-                Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+                Mat34 cameraPose(datasetTrain->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                 objects[categoryNo][objectNo].updatePCLGrid(parts, cameraPose);
             }
         }
@@ -399,8 +403,8 @@ void HOP3DBham::learn(){
     ObjectCompositionOctree::setRealisationCounter(imageFilterer->getRealisationsNo()+10000);
     for (size_t layerNo=0;layerNo<(size_t)config.viewIndependentLayersNo;layerNo++){
         vocabulary.clear();
-        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-            for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+        for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
+            for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
                 std::vector<ViewIndependentPart> voc;
                 objects[categoryNo][objectNo].createNextLayerVocabulary((int)layerNo, *hierarchy, voc);
                 vocabulary.insert( vocabulary.end(), voc.begin(), voc.end() );
@@ -414,8 +418,8 @@ void HOP3DBham::learn(){
         std::cout << "Dictionary size (" << layerNo+4 << "-th layer): " << vocabulary.size() << "\n";
         /// First view-independent layer (three and a half layer)
         hierarchy.get()->viewIndependentLayers[layerNo]=vocabulary;
-        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-            for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+        for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
+            for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
                 objects[categoryNo][objectNo].updateVoxelsPose((int)layerNo, vocabulary);
             }
         }
@@ -426,8 +430,8 @@ void HOP3DBham::learn(){
         std::cout << "save 2 file\n";
         std::ofstream ofsHierarchy(config.filename2save);
         ofsHierarchy << *hierarchy;
-        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-            for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+        for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
+            for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
                 ofsHierarchy << objects[categoryNo][objectNo];
             }
         }
@@ -490,10 +494,10 @@ void HOP3DBham::load(std::string filename){
     std::cout << "Load hierarchy...";
     ifsHierarchy >> *hierarchy;
     std::cout << "Loaded\n";
-    dataset->getDatasetInfo(datasetInfo);
-    objects.resize(datasetInfo.categories.size());
-    for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-        for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
+    datasetTrain->getDatasetInfo(datasetInfoTrain);
+    objects.resize(datasetInfoTrain.categories.size());
+    for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
+        for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
             ObjectCompositionOctree object(config.compositionConfig);
             objects[categoryNo].push_back(object);
             ifsHierarchy >> objects[categoryNo][objectNo];
@@ -529,15 +533,20 @@ void HOP3DBham::load(std::string filename){
     std::cout << "Finished\n";
 }
 
+/// inference
+void HOP3DBham::inference(void){
+
+}
+
 /// notify visualizer
 void HOP3DBham::notifyVisualizer(void){
 #ifdef QVisualizerBuild
     if (config.useVisualization){
         notify(*hierarchy);
         for (int layerNo=0;layerNo<config.viewDependentLayersNo+1;layerNo++){//create objects from parts
-            for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
-                for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){//for each object
-                    for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
+            for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
+                for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
+                    for (size_t imageNo=0;imageNo<datasetInfoTrain.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
                         std::vector<PartCoords> partCoords;
                         std::vector<PartCoordsEucl> partCoordsEucl;
                         for (int overlapNo=0; overlapNo<3; overlapNo++){
@@ -552,7 +561,7 @@ void HOP3DBham::notifyVisualizer(void){
                                 partCoordsEucl.insert(partCoordsEucl.end(), partCoordsEuclTmp.begin(), partCoordsEuclTmp.end());
                             }
                         }
-                        Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+                        Mat34 cameraPose(datasetTrain->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                         std::vector<std::pair<int, Mat34>> filtersPoses;
                         if (layerNo<1){
                             for (auto& filterCoord : partCoords){
@@ -575,14 +584,14 @@ void HOP3DBham::notifyVisualizer(void){
                         //compute object index
                         int objNo=0;
                         for (size_t catNo=0;catNo<categoryNo;catNo++){
-                            objNo+=(int)datasetInfo.categories[catNo].objects.size();
+                            objNo+=(int)datasetInfoTrain.categories[catNo].objects.size();
                         }
                         notify(filtersPoses,(int)objNo,layerNo);
                     }
                 }
             }
         }
-        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){//for each category
+        for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
             for (auto & object : objects[categoryNo]){
                 std::vector<ViewIndependentPart> objectParts;
                 for (size_t i=0;i<hierarchy.get()->viewIndependentLayers.size();i++){
@@ -615,7 +624,7 @@ void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int ima
 
 /// get set of ids from hierarchy for the given input point (view-independent layers)
 void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids) const{
-    Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
+    Mat34 cameraPose(datasetTrain->getCameraPose(categoryNo, objectNo, imageNo));
     if ((!std::isnan(point(0)))&&(!std::isnan(point(1)))){
         Vec3 pointGlob = (cameraPose*Vec4(point(0),point(1),point(2),1.0)).block<3,1>(0,0);
         objects[categoryNo][objectNo].getPartsIds(pointGlob, overlapNo, ids);
@@ -635,7 +644,7 @@ void HOP3DBham::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, 
     ids.insert(ids.end(),idsTmp.begin(),idsTmp.end());
     //std::cout << ids[0] << ", " << ids[1] << ", " << ids[2] << "\n";
     /// view independent ids
-    Mat34 cameraPose(dataset->getCameraPose(categoryNo, objectNo, imageNo));
+    Mat34 cameraPose(datasetTrain->getCameraPose(categoryNo, objectNo, imageNo));
     Vec3 point(Vec3(NAN,NAN,NAN));
     depthCameraModel.get()->getPoint(u, v, depth, point);
     if ((!std::isnan(point(0)))&&(!std::isnan(point(1)))){
@@ -653,7 +662,7 @@ void HOP3DBham::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, 
 /// get points realisation for the cloud
 void HOP3DBham::getPointsModels(int overlapNo, int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts) const{
     cv::Mat depthImage;
-    dataset->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo, depthImage);
+    datasetTrain->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo, depthImage);
     PointCloudUV cloudUV;
     imageFilterer->getCloud(depthImage,cloudUV);
     for (const auto &pointuv : cloudUV){
@@ -698,14 +707,14 @@ void HOP3DBham::createPartClouds(){
     /// point clouds (index: overlapNo->layerNo->objectNo)
     std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> cloudsObj(overlapsNo, std::vector<std::vector<hop3d::PointCloudRGBA>>(layersNo)); // vector of coloured objects
     for (int overlapNo=0; overlapNo<overlapsNo; overlapNo++){
-        for (size_t categoryNo=0;categoryNo<datasetInfo.categories.size();categoryNo++){
-            for (size_t objectNo=0;objectNo<datasetInfo.categories[categoryNo].objects.size();objectNo++){
+        for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){
+            for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){
                 std::vector<hop3d::PointCloudRGBA> objsTmp(layersNo);
-                for (size_t imageNo=0;imageNo<datasetInfo.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                for (size_t imageNo=0;imageNo<datasetInfoTrain.categories[categoryNo].objects[objectNo].images.size();imageNo++){
                     hop3d::PartsCloud cloudParts;
                     if (overlapNo<3){
                         getPointsModels(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, cloudParts);
-                        Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+                        Mat34 cameraPose(datasetTrain->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                         for (auto &pointPart : cloudParts){
                             for (int el=0;el<(int)pointPart.partsIds.size();el++){
                                 int layNo=pointPart.partsIds[el].first;
@@ -729,7 +738,7 @@ void HOP3DBham::createPartClouds(){
                             //compute object index
                             int objNo=0;
                             for (size_t catNo=0;catNo<categoryNo;catNo++){
-                                objNo+=(int)datasetInfo.categories[catNo].objects.size();
+                                objNo+=(int)datasetInfoTrain.categories[catNo].objects.size();
                             }
                             for (int pointNo=0;pointNo<(int)cloudsObj[0][layNo][objNo].size();pointNo++){
                                 PointColor pointRGBA(cloudsObj[0][layNo][objNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
