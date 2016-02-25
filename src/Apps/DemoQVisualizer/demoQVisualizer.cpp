@@ -11,11 +11,15 @@ using namespace std;
 
 hop3d::HOP3D* lhop3d;
 // run HOP3D
-void runHOP3D(){
-    //std::cout << "Press Enter to start\n";
-    //getchar();
-    //lhop3d->learn();
-    lhop3d->load("hop3dHierarchyBoris6.h3d");
+void runHOP3D(bool train, bool load, bool inference, bool loadInference, std::string file2load, std::string inferenceFile){
+    if (train)
+        lhop3d->learn();
+    if (load)
+        lhop3d->load(file2load);
+    if (inference)
+        lhop3d->inference();
+    if (loadInference)
+        lhop3d->loadInference(inferenceFile);
 }
 
 int main(int argc, char** argv)
@@ -29,6 +33,13 @@ int main(int argc, char** argv)
             return 1;
         }
         std::string configFile(prefix+config.FirstChildElement( "QVisualizer" )->Attribute( "configFilename" ));
+        bool train, load, inference, loadInferenceResults;
+        config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("train", &train);
+        config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("load", &load);
+        config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("inference", &inference);
+        config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("loadInferenceResults", &loadInferenceResults);
+        std::string file2load(config.FirstChildElement( "Hierarchy" )->FirstChildElement("parameters")->Attribute( "file2load" ));
+        std::string inferenceFile(config.FirstChildElement( "Hierarchy" )->FirstChildElement("parameters")->Attribute( "inferenceFile" ));
 
         lhop3d = hop3d::createHOP3DBham(prefix + "hop3dConfigGlobal.xml");
         QGLVisualizer::Config configVis(configFile);//something is wrong with QApplication when Qapplication
@@ -45,7 +56,7 @@ int main(int argc, char** argv)
         visu.show();
         ((hop3d::HOP3DBham*)lhop3d)->attachVisualizer(&visu);
         // run HOP3D
-        std::thread tHOP3D(runHOP3D);
+        std::thread tHOP3D(runHOP3D, train, load, inference, loadInferenceResults, file2load, inferenceFile);
         // Run main loop.
         application.exec();
         tHOP3D.join();

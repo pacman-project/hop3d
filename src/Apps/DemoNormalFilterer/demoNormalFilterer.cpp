@@ -60,7 +60,7 @@ int main(void)
         dataset->getDepthImage(0,0,0,vecImages[0]);
 
         std::vector<hop3d::Octet> octets;
-        filter->computeOctets(vecImages[0],0,0,0,octets);
+        filter->computeOctets(vecImages[0],0,0,0,octets, false);
 
         return 1;
     }

@@ -42,13 +42,13 @@ public:
     const std::string& getName() const;
 
     ///compute set of octets from set of the depth images
-    void computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets);
+    void computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets, bool inference);
 
     /// compute set of octets from set of the depth image
     void getOctets(Octet::Seq& octets);
 
     /// compute set of octets from set of the ids image
-    void getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets);
+    void getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets, bool inference);
 
     /// get filters
     void getFilters(Filter::Seq& _filters) const;
@@ -58,10 +58,10 @@ public:
     /// define 2rd layer octet images using selected words from third layer
     //void computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo);
     /// define ith layer octet images using selected words from i+1 layer
-    void computePartsImage(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo);
+    void computePartsImage(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo, bool inference);
 
     /// get last view dependent layer parts from the image
-    void getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
+    void getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts, bool inference) const;
 
     /// get set of ids for the given input point
     void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart);
@@ -70,13 +70,13 @@ public:
     void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart);
 
     /// returs filter ids and their position on the image
-    void getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const;
+    void getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords, bool inference) const;
 
     /// returs parts ids and their position on the image
     void getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const;
 
     /// returs parts ids and their position on the image
-    void getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords) const;
+    void getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords, bool inference) const;
 
     /// get cloud from dataset
     void getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& cloud) const;

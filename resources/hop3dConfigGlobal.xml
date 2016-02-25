@@ -29,8 +29,8 @@
   
 <!--   Hierarchy configuration -->
   <Hierarchy>
-    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="2" viewDepPartsFromLayerNo="1"></parameters>
-    <save2file save2file="true" filename2save="hop3dHierarchyBoris.h3d"/>
+    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="2" viewDepPartsFromLayerNo="1" train="false" load="true" inference="false" file2load="hop3dHierarchyBoris2.h3d" loadInferenceResults="false" inferenceFile="inferenceResults.h3r"></parameters>
+    <save2file save2file="true" filename2save="hop3dHierarchyBoris.h3d" saveInference="true" filename2saveInference="inferenceResults.h3r"/>
   </Hierarchy>
   
 <!--  3D object composition configuration -->

@@ -156,19 +156,8 @@ void NormalImageFilter::filterDepthImage(const cv::Mat& input, cv::Mat& output) 
 }
 
 ///compute set of octets from set of the depth images
-void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets){
+void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets, bool inference){
     octets.clear();
-    /*int filtersNo=2*int(pow(2.0,config.ringsNo)-1)-1;
-    for (int i=0;i<filtersNo;i++){
-        Vec3 normal;
-        this->toNormal(i,normal);
-        std::cout << "set id " << i << "\n";
-        std::cout << "computed normal " << normal.transpose() << "\n";
-        std::cout << "computed id " << this->toId(normal) << "\n";
-        getchar();
-    }
-    std::cout << "number of filters: " << filtersNo << "\n";
-    getchar();*/
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     /// compute point cloud, keep order
     std::vector< std::vector<hop3d::PointNormal> > cloudOrd(depthImage.rows, std::vector<hop3d::PointNormal> (depthImage.cols));
@@ -185,14 +174,6 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
     for (int i=0;i<filteredImg.rows;i++){
         for (int j=0;j<filteredImg.cols;j++){
             sensorModel.getPoint(i, j, filteredImg.at<uint16_t>(i,j)*scale, cloudOrd[i][j].position);
-            /*if (!std::isnan(double(cloudOrd[i][j].position(2)))){
-                PointNormalUV puv;
-                Vec3 p3d;
-                sensorModel.getPoint(j, i, filteredImg.at<uint16_t>(i,j)*scale, p3d);
-                puv.position = p3d;
-                puv.u=i; puv.v=j;
-                cloudGrasp.push_back(puv);
-            }*/
         }
     }
     int pointIdx = 0;
@@ -201,16 +182,10 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
         for (int j=config.filterSize/2;j<filteredImg.cols-(config.filterSize/2);j++){
             if (!std::isnan(double(cloudOrd[i][j].position(2)))){
                 computeNormal(i, j, cloudOrd);
-                //cloudGrasp[pointIdx].normal = cloudOrd[i][j].normal;
-                //compute id 
 				if (!std::isnan(double(cloudOrd[i][j].normal(2)))){
                     responseImage[i][j].first = toId(cloudOrd[i][j].normal);
                     //compute response (dot product)
                     responseImage[i][j].second = cloudOrd[i][j].normal.adjoint()*filters[responseImage[i][j].first].normal;
-                    /*std::cout << "normal " << cloudOrd[i][j].normal.transpose() << "\n";
-                    std::cout << "filter normal " << filters[responseImage[i][j].first].normal.transpose() << "\n";
-                    std::cout << "[" << i << ", " << j << "] " << responseImage[i][j].first << " -> " << responseImage[i][j].second << "\n";
-                    getchar();*/
                     if (config.verbose==2)
                         idsImage.at<uchar>(i,j)=(uchar)(toId(cloudOrd[i][j].normal)*2);
                 }
@@ -218,22 +193,15 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
             }
         }
     }
-    /*for (size_t i=0;i<responseImage.size();i++){
-        for (size_t j=0;j<responseImage[i].size();j++){
-            if (responseImage[i][j].first!=-1){
-                std::cout << "[" << i << ", " << j << "] " << responseImage[i][j].first << " -> " << responseImage[i][j].second << "\n";
-                std::cout << cloudOrd[i][j].position(2) << "\n";
-                getchar();
-            }
-        }
-    }*/
     for (int overlapNo=0;overlapNo<3;overlapNo++){
         Octet::Seq octetsTmp;
         OctetsImage octetsImage = extractOctets(responseImage, overlapNo, cloudOrd, octetsTmp);
         octets.insert(octets.end(), octetsTmp.begin(), octetsTmp.end() );
-        updateOctetsImage(0,overlapNo,categoryNo, objectNo, imageNo, octetsImage);
+        if (inference)
+            updateOctetsImage(0,overlapNo,categoryNo, objectNo, imageNo, octetsImagesInference, octetsImage);
+        else
+            updateOctetsImage(0,overlapNo,categoryNo, objectNo, imageNo, octetsImages, octetsImage);
     }
-    //saveCloud(categoryNo, objectNo, imageNo, cloudGrasp);
 
     if (config.verbose>0){
         std::chrono::steady_clock::time_point end=std::chrono::steady_clock::now();
@@ -248,23 +216,23 @@ void NormalImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo,
 }
 
 /// update structure which holds octets images
-void NormalImageFilter::updateOctetsImage(int layerNo, int overlapNo, int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage){
-    if((int)octetsImages.size()<=layerNo){
-        octetsImages.resize(layerNo+1);
+void NormalImageFilter::updateOctetsImage(int layerNo, int overlapNo, int categoryNo, int objectNo, int imageNo, OctetsImages& _octetsImages, const OctetsImage& octetsImage){
+    if((int)_octetsImages.size()<=layerNo){
+        _octetsImages.resize(layerNo+1);
     }
-    if((int)octetsImages[layerNo].size()<=overlapNo){
-        octetsImages[layerNo].resize(overlapNo+1);
+    if((int)_octetsImages[layerNo].size()<=overlapNo){
+        _octetsImages[layerNo].resize(overlapNo+1);
     }
-    if((int)octetsImages[layerNo][overlapNo].size()<=categoryNo){
-        octetsImages[layerNo][overlapNo].resize(categoryNo+1);
+    if((int)_octetsImages[layerNo][overlapNo].size()<=categoryNo){
+        _octetsImages[layerNo][overlapNo].resize(categoryNo+1);
     }
-    if ((int)octetsImages[layerNo][overlapNo][categoryNo].size()<=objectNo){
-        octetsImages[layerNo][overlapNo][categoryNo].resize(objectNo+1);
+    if ((int)_octetsImages[layerNo][overlapNo][categoryNo].size()<=objectNo){
+        _octetsImages[layerNo][overlapNo][categoryNo].resize(objectNo+1);
     }
-    if ((int)octetsImages[layerNo][overlapNo][categoryNo][objectNo].size()<=imageNo){
-        octetsImages[layerNo][overlapNo][categoryNo][objectNo].resize(imageNo+1);
+    if ((int)_octetsImages[layerNo][overlapNo][categoryNo][objectNo].size()<=imageNo){
+        _octetsImages[layerNo][overlapNo][categoryNo][objectNo].resize(imageNo+1);
     }
-    octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo] = octetsImage;
+    _octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo] = octetsImage;
 }
 
 /// update structure which holds octets images
@@ -282,9 +250,14 @@ void NormalImageFilter::updateOctetsImage(int layerNo, int overlapNo, int catego
 }*/
 
 /// returs filter ids and their position on the image
-void NormalImageFilter::getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const {
+void NormalImageFilter::getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords, bool inference) const {
     partCoords.clear();
-    for (auto& row : octetsImages[0][overlapNo][categoryNo][objectNo][imageNo]){
+    const OctetsImages* oImgs;
+    if (inference)
+        oImgs = &octetsImagesInference;
+    else
+        oImgs = &octetsImages;
+    for (auto& row : (*oImgs)[0][overlapNo][categoryNo][objectNo][imageNo]){
         for (auto& octet : row){
             if (octet.get()!=nullptr){
                 if (!octet->isBackground){
@@ -418,10 +391,15 @@ void NormalImageFilter::getParts3D(int overlapNo, int categoryNo, int objectNo, 
 }
 
 /// returs parts ids and their position on the image
-void NormalImageFilter::getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords) const{
+void NormalImageFilter::getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords, bool inference) const{
     partCoords.clear();
+    const PartsImages* pImgs;
+    if (inference)
+        pImgs = &partsImagesInference;
+    else
+        pImgs = &partsImages;
     if (layerNo>0){
-        for (auto& row : partsImages[layerNo-1][overlapNo][categoryNo][objectNo][imageNo]){
+        for (auto& row : (*pImgs)[layerNo-1][overlapNo][categoryNo][objectNo][imageNo]){
             for (auto& part : row){
                 if (part.get()!=nullptr){
                     if (!part->isBackground()){
@@ -439,23 +417,23 @@ void NormalImageFilter::getParts3D(int overlapNo, int categoryNo, int objectNo, 
 }
 
 /// update structure which holds parts images
-void NormalImageFilter::updatePartsImages(int categoryNo, int objectNo, int imageNo, int layerNo, int overlapNo, const PartsImage& partsImage){
-    if((int)partsImages.size()<=layerNo){
-        partsImages.resize(layerNo+1);
+void NormalImageFilter::updatePartsImages(int categoryNo, int objectNo, int imageNo, int layerNo, int overlapNo, PartsImages& _partsImages, const PartsImage& partsImage){
+    if((int)_partsImages.size()<=layerNo){
+        _partsImages.resize(layerNo+1);
     }
-    if((int)partsImages[layerNo].size()<=overlapNo){
-        partsImages[layerNo].resize(overlapNo+1);
+    if((int)_partsImages[layerNo].size()<=overlapNo){
+        _partsImages[layerNo].resize(overlapNo+1);
     }
-    if((int)partsImages[layerNo][overlapNo].size()<=categoryNo){
-        partsImages[layerNo][overlapNo].resize(categoryNo+1);
+    if((int)_partsImages[layerNo][overlapNo].size()<=categoryNo){
+        _partsImages[layerNo][overlapNo].resize(categoryNo+1);
     }
-    if ((int)partsImages[layerNo][overlapNo][categoryNo].size()<=objectNo){
-        partsImages[layerNo][overlapNo][categoryNo].resize(objectNo+1);
+    if ((int)_partsImages[layerNo][overlapNo][categoryNo].size()<=objectNo){
+        _partsImages[layerNo][overlapNo][categoryNo].resize(objectNo+1);
     }
-    if ((int)partsImages[layerNo][overlapNo][categoryNo][objectNo].size()<=imageNo){
-        partsImages[layerNo][overlapNo][categoryNo][objectNo].resize(imageNo+1);
+    if ((int)_partsImages[layerNo][overlapNo][categoryNo][objectNo].size()<=imageNo){
+        _partsImages[layerNo][overlapNo][categoryNo][objectNo].resize(imageNo+1);
     }
-    partsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo] = partsImage;
+    _partsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo] = partsImage;
 }
 
 ///extract octets from response image
@@ -748,10 +726,14 @@ bool NormalImageFilter::findMaxGroupResponse(const std::vector< std::vector<Resp
 }
 
 /// compute set of octets from set of the ids image
-void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets){
+void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets, bool inference){
     octets.clear();
     for (int overlapNo=0;overlapNo<3;overlapNo++){
-        OctetsImage octetsImage = octetsImages[0][overlapNo][categoryNo][objectNo][imageNo];
+        OctetsImage octetsImage;
+        if (inference)
+            octetsImage = octetsImagesInference[0][overlapNo][categoryNo][objectNo][imageNo];
+        else
+            octetsImage = octetsImages[0][overlapNo][categoryNo][objectNo][imageNo];
         OctetsImage nextLayerOctetsImg(octetsImage.size()/3, std::vector<std::shared_ptr<Octet>> (octetsImage.back().size()/3));
         int u=0;
         for (size_t i=1+overlapNo; i<octetsImage.size()-1;i=i+3){
@@ -805,7 +787,10 @@ void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, con
             }
             u++;
         }
-        updateOctetsImage(1, overlapNo, categoryNo, objectNo, imageNo, nextLayerOctetsImg);
+        if (inference)
+            updateOctetsImage(1, overlapNo, categoryNo, objectNo, imageNo, octetsImagesInference, nextLayerOctetsImg);
+        else
+            updateOctetsImage(1, overlapNo, categoryNo, objectNo, imageNo, octetsImages, nextLayerOctetsImg);
     }
 }
 
@@ -865,7 +850,7 @@ bool NormalImageFilter::isBackground(OctetsImage& octetsImage, int u, int v) con
 }*/
 
 /// define 2rd layer octet images using selected words from third layer
-void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo){
+void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo, bool inference){
     //std::cout << "layer no , overlapNo, int categoryNo, int objectNo, int imageNo " << layerNo << ", " << overlapNo << ", " << categoryNo << ", " << objectNo << ", " << imageNo << "\n";
     //std::cout << "octetsImages.size " << octetsImages.size() << "\n";
     //std::cout << "octetsImages[layerNo].size " << octetsImages[layerNo].size() << "\n";
@@ -873,7 +858,11 @@ void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int obj
     //std::cout << "octetsImages[layerNo][overlapNo][categoryNo].size " << octetsImages[layerNo][overlapNo][categoryNo].size() << "\n";
     //std::cout << "octetsImages[layerNo][overlapNo][categoryNo][objectNo].size " << octetsImages[layerNo][overlapNo][categoryNo][objectNo].size() << "\n";
     //std::cout << "octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo].size " << octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo].size() << "\n";
-    OctetsImage octetsImage = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo];
+    OctetsImage octetsImage;
+    if (inference)
+        octetsImage = octetsImagesInference[layerNo][overlapNo][categoryNo][objectNo][imageNo];
+    else
+        octetsImage = octetsImagesInference[layerNo][overlapNo][categoryNo][objectNo][imageNo];
     PartsImage partsImage (octetsImage.size(), std::vector<std::shared_ptr<ViewDependentPart>> (octetsImage.back().size()));
     for (size_t i=0; i<octetsImage.size();i++){
         for (size_t j=0; j<octetsImage.back().size();j++){
@@ -918,18 +907,26 @@ void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int obj
             }
         }
     }
-    updatePartsImages(categoryNo, objectNo, imageNo, layerNo, overlapNo, partsImage);
+    if (inference)
+        updatePartsImages(categoryNo, objectNo, imageNo, layerNo, overlapNo, partsImagesInference, partsImage);
+    else
+        updatePartsImages(categoryNo, objectNo, imageNo, layerNo, overlapNo, partsImages, partsImage);
 }
 
 /// get last view dependent layer parts from the image
-void NormalImageFilter::getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const{
+void NormalImageFilter::getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts, bool inference) const{
     parts.clear();
+    const PartsImages* partsImgs;
+    if (inference)
+        partsImgs = &partsImagesInference;
+    else
+        partsImgs = &partsImages;
     for (int overlapNo=0;overlapNo<3;overlapNo++){
-        for (size_t i=0; i<partsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo].size();i++){
-            for (size_t j=0; j<partsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo].back().size();j++){
-                if (partsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][i][j].get()!=nullptr){
-                    if (!partsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][i][j]->isBackground()){
-                        parts.push_back(*partsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo][i][j]);
+        for (size_t i=0; i<(*partsImgs)[layerNo][overlapNo][categoryNo][objectNo][imageNo].size();i++){
+            for (size_t j=0; j<(*partsImgs)[layerNo][overlapNo][categoryNo][objectNo][imageNo].back().size();j++){
+                if ((*partsImgs)[layerNo][overlapNo][categoryNo][objectNo][imageNo][i][j].get()!=nullptr){
+                    if (!(*partsImgs)[layerNo][overlapNo][categoryNo][objectNo][imageNo][i][j]->isBackground()){
+                        parts.push_back(*(*partsImgs)[layerNo][overlapNo][categoryNo][objectNo][imageNo][i][j]);
                     }
                 }
             }
@@ -1499,33 +1496,20 @@ void NormalImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int ob
 }
 
 /// Insertion operator
-std::ostream& operator<<(std::ostream& os, const NormalImageFilter& filter){
-    filter.save2file(os);
+/*std::ostream& operator<<(std::ostream& os, const NormalImageFilter& filter){
+    filter.save2file(os, inference);
     return os;
-}
+}*/
 
 /// save to file
-void NormalImageFilter::save2file(std::ostream& os) const{
-   /* os << inputClouds.size() << " ";
-    for (auto &category : inputClouds){
-        os << category.size() << " ";
-        for (auto &object : category){
-            os << object.size() << " ";
-            for (auto &cloud : object){
-                os << cloud.size() << " ";
-                for (auto &point : cloud){
-                    os << point.position(0) << " " << point.position(1) << " " << point.position(2) << " ";
-                    if (std::isnan(point.normal(0))||std::isnan(point.normal(1))||std::isnan(point.normal(2)))
-                        os << -2 << " " << -2 << " " << -2 << " ";
-                    else
-                        os << point.normal(0) << " " << point.normal(1) << " " << point.normal(2) << " ";
-                    os << point.u << " " << point.v << " ";
-                }
-            }
-        }
-    }*/
-    os << octetsImages.size() << " ";
-    for (auto &layer : octetsImages){
+void NormalImageFilter::save2file(std::ostream& os, bool inference) const{
+    OctetsImages oImages;
+    if (inference)
+        oImages = octetsImagesInference;
+    else
+        oImages = octetsImages;
+    os << oImages.size() << " ";
+    for (auto &layer : oImages){
         os << layer.size() << " ";
         for (auto &overlap : layer){
             os << overlap.size() << " ";
@@ -1551,8 +1535,13 @@ void NormalImageFilter::save2file(std::ostream& os) const{
             }
         }
     }
-    os << partsImages.size() << " ";
-    for (auto &layer : partsImages){
+    PartsImages pImages;
+    if (inference)
+        pImages = partsImagesInference;
+    else
+        pImages = partsImages;
+    os << pImages.size() << " ";
+    for (auto &layer : pImages){
         os << layer.size() << " ";
         for (auto &overlap : layer){
             os << overlap.size() << " ";
@@ -1583,79 +1572,54 @@ void NormalImageFilter::save2file(std::ostream& os) const{
 }
 
 // Extraction operator
-std::istream& operator>>(std::istream& is, NormalImageFilter& filter){
+/*std::istream& operator>>(std::istream& is, NormalImageFilter& filter){
     filter.loadFromfile(is);
     return is;
-}
+}*/
 
 /// load from file
-void NormalImageFilter::loadFromfile(std::istream& is){
+void NormalImageFilter::loadFromfile(std::istream& is, bool inference){
     // read categories no
-    int categoriesNo;
-    /*is >> categoriesNo;
-    inputClouds.clear();
-    inputClouds.resize(categoriesNo);
-    for (int catNo = 0; catNo<categoriesNo; catNo++){
-        int objectsNo;
-        is >> objectsNo;
-        inputClouds[catNo].resize(objectsNo);
-        for (int objNo=0;objNo<objectsNo; objNo++){
-            int cloudsNo;
-            is >> cloudsNo;
-            inputClouds[catNo][objNo].resize(cloudsNo);
-            for (int cloudNo=0;cloudNo<cloudsNo;cloudNo++){
-                int pointsNo;
-                is >> pointsNo;
-                PointCloudUV cloud;
-                //cloud.reserve(pointsNo);
-                for (int pointNo=0;pointNo<pointsNo;pointNo++){
-                    hop3d::PointNormalUV point;
-                    is >> point.position(0) >> point.position(1) >> point.position(2);
-                    is >> point.normal(0) >> point.normal(1) >> point.normal(2);
-                    if (point.normal(0)==-2){
-                        point.normal = Vec3(NAN,NAN,NAN);
-                    }
-                    is >> point.u >> point.v;
-                    cloud.push_back(point);
-                }
-                inputClouds[catNo][objNo][cloudNo] = cloud;
-            }
-        }
-    }*/
     int layersNo;
     is >> layersNo;
-    octetsImages.clear();
-    octetsImages.resize(layersNo);
+    OctetsImages* oImages;
+    if (inference)
+        oImages = &octetsImagesInference;
+    else
+        oImages = &octetsImages;
+    oImages->clear();
+    oImages->resize(layersNo);
     for (int layNo = 0; layNo<layersNo; layNo++){
         int overlapsNo;
         is >> overlapsNo;
-        octetsImages[layNo].resize(overlapsNo);
+        (*oImages)[layNo].resize(overlapsNo);
         for (int overlapNo = 0; overlapNo<overlapsNo; overlapNo++){
+            int categoriesNo;
             is >> categoriesNo;
-            octetsImages[layNo][overlapNo].resize(categoriesNo);
+            (*oImages)[layNo][overlapNo].resize(categoriesNo);
             for (int catNo = 0; catNo<categoriesNo; catNo++){
                 int objectsNo;
                 is >> objectsNo;
-                octetsImages[layNo][overlapNo][catNo].resize(objectsNo);
+                (*oImages)[layNo][overlapNo][catNo].resize(objectsNo);
                 for (int objNo=0;objNo<objectsNo; objNo++){
                     int imgsNo;
                     is >> imgsNo;
-                    octetsImages[layNo][overlapNo][catNo][objNo].resize(imgsNo);
+                    (*oImages)[layNo][overlapNo][catNo][objNo].resize(imgsNo);
                     for (int imgNo=0;imgNo<imgsNo;imgNo++){
                         int rowsNo;
                         is >> rowsNo;
-                        octetsImages[layNo][overlapNo][catNo][objNo][imgNo].resize(rowsNo);
+                        (*oImages)[layNo][overlapNo][catNo][objNo][imgNo].resize(rowsNo);
                         for (int rowNo=0;rowNo<rowsNo;rowNo++){
                             int octetsNo;
                             is >> octetsNo;
-                            octetsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo].resize(octetsNo);
+                            (*oImages)[layNo][overlapNo][catNo][objNo][imgNo][rowNo].resize(octetsNo);
                             for (int octetNo=0;octetNo<octetsNo;octetNo++){
                                 int isOctet;
                                 is >> isOctet;
                                 if (isOctet==1){
                                     Octet octet;
                                     is >> octet;
-                                    octetsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo][octetNo].reset(new Octet(octet));
+                                    (*oImages)[layNo][overlapNo][catNo][objNo][imgNo][rowNo][octetNo].reset(new Octet(octet));
                                 }
                             }
                         }
@@ -1665,39 +1629,44 @@ void NormalImageFilter::loadFromfile(std::istream& is){
         }
     }
     is >> layersNo;
-    partsImages.clear();
-    partsImages.resize(layersNo);
+    PartsImages* pImages;
+    if (inference)
+        pImages = &partsImagesInference;
+    else
+        pImages = &partsImages;
+    pImages->clear();
+    pImages->resize(layersNo);
     for (int layNo = 0; layNo<layersNo; layNo++){
         int overlapsNo;
         is >> overlapsNo;
-        partsImages[layNo].resize(overlapsNo);
+        (*pImages)[layNo].resize(overlapsNo);
         for (int overlapNo = 0; overlapNo<overlapsNo; overlapNo++){
             int catsNo;
             is >> catsNo;
-            partsImages[layNo][overlapNo].resize(catsNo);
+            (*pImages)[layNo][overlapNo].resize(catsNo);
             for (int catNo = 0; catNo<catsNo; catNo++){
                 int objectsNo;
                 is >> objectsNo;
-                partsImages[layNo][overlapNo][catNo].resize(objectsNo);
+                (*pImages)[layNo][overlapNo][catNo].resize(objectsNo);
                 for (int objNo=0;objNo<objectsNo; objNo++){
                     int imgsNo;
                     is >> imgsNo;
-                    partsImages[layNo][overlapNo][catNo][objNo].resize(imgsNo);
+                    (*pImages)[layNo][overlapNo][catNo][objNo].resize(imgsNo);
                     for (int imgNo=0;imgNo<imgsNo;imgNo++){
                         int rowsNo;
                         is >> rowsNo;
-                        partsImages[layNo][overlapNo][catNo][objNo][imgNo].resize(rowsNo);
+                        (*pImages)[layNo][overlapNo][catNo][objNo][imgNo].resize(rowsNo);
                         for (int rowNo=0;rowNo<rowsNo;rowNo++){
                             int partsNo;
                             is >> partsNo;
-                            partsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo].resize(partsNo);
+                            (*pImages)[layNo][overlapNo][catNo][objNo][imgNo][rowNo].resize(partsNo);
                             for (int partNo=0;partNo<partsNo;partNo++){
                                 int isPart;
                                 is >> isPart;
                                 if (isPart==1){
                                     ViewDependentPart part;
                                     is >> part;
-                                    partsImages[layNo][overlapNo][catNo][objNo][imgNo][rowNo][partNo].reset(new ViewDependentPart(part));
+                                    (*pImages)[layNo][overlapNo][catNo][objNo][imgNo][rowNo][partNo].reset(new ViewDependentPart(part));
 
                                 }
                             }

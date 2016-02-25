@@ -62,7 +62,7 @@ int main(void){
         std::vector<cv::Mat> vecImages;
         hop3d::Reader reader;
         reader.readMultipleImages(prefix+"depthImages",vecImages);
-        imageFilterer->computeOctets(vecImages[0],0,0,0,octets);
+        imageFilterer->computeOctets(vecImages[0],0,0,0,octets, false);
 
         hop3d::ViewDependentPart::Seq dictionary;
         statsBuilder->computeStatistics(octets, 2, (int)hierarchy.firstLayer.size(), dictionary);

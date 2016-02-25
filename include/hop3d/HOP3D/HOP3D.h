@@ -41,6 +41,9 @@ public:
     /// load hierarchy from the file
     virtual void load(std::string filename) = 0;
 
+    /// load inference results from the file
+    virtual void loadInference(std::string filename) = 0;
+
     /// inference
     virtual void inference(void) = 0;
 

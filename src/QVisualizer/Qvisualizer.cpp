@@ -76,27 +76,31 @@ public:
     }
 };
 
-QGLVisualizer::QGLVisualizer(void) {
+QGLVisualizer::QGLVisualizer(void) : updatePartsObjectsFlag(false){
     hierarchy.reset(new Hierarchy());
     cloudsListLayers.resize(7);
     clustersList.resize(7);
     linksLists.resize(7);
     layersOfObjects.resize(7);
+    layersOfObjectsInference.resize(7);
     objects3Dlist.resize(7);
     objectsFromParts.resize(7);
+    objectsFromPartsInference.resize(7);
     activeLayer=0;
     activeOverlapNo = 0;
 }
 
 /// Construction
-QGLVisualizer::QGLVisualizer(Config _config): config(_config), updateHierarchyFlag(false){
+QGLVisualizer::QGLVisualizer(Config _config): config(_config), updateHierarchyFlag(false), updatePartsObjectsFlag(false){
     hierarchy.reset(new Hierarchy());
     cloudsListLayers.resize(7);
     clustersList.resize(7);
     linksLists.resize(7);
     layersOfObjects.resize(7);
+    layersOfObjectsInference.resize(7);
     objects3Dlist.resize(7);
     objectsFromParts.resize(7);
+    objectsFromPartsInference.resize(7);
     activeLayer=0;
     activeOverlapNo = 0;
 }
@@ -259,22 +263,30 @@ void QGLVisualizer::createPartObjects(){
 }
 
 /// Update 3D object model
-void QGLVisualizer::update(const std::vector<ViewIndependentPart>& objectParts, int objLayerId){
+void QGLVisualizer::update(const std::vector<ViewIndependentPart>& objectParts, int objLayerId, bool inference){
     mtxHierarchy.lock();
-    layersOfObjects[objLayerId].push_back(objectParts);
+    if (inference)
+        layersOfObjectsInference[objLayerId].push_back(objectParts);
+    else
+        layersOfObjects[objLayerId].push_back(objectParts);
     mtxHierarchy.unlock();
 }
 
 /// update object from parts
-void QGLVisualizer::update(std::vector<std::pair<int, Mat34>>& partsPoses, int objectNo, int layerNo){
-    if (objectsFromParts[layerNo].size()<=(size_t)objectNo){
-        objectsFromParts[layerNo].resize(objectNo+1);
+void QGLVisualizer::update(std::vector<std::pair<int, Mat34>>& partsPoses, int objectNo, int layerNo, bool inference){
+    std::vector<std::vector<std::vector<Part3D>>>* objParts;
+    if (inference)
+        objParts = &objectsFromPartsInference;
+    else
+        objParts = &objectsFromParts;
+    if ((*objParts)[layerNo].size()<=(size_t)objectNo){
+        (*objParts)[layerNo].resize(objectNo+1);
     }
     for (auto& part : partsPoses){
         Part3D partPose;
         partPose.id = part.first;
         partPose.pose = part.second;
-        objectsFromParts[layerNo][objectNo].push_back(partPose);
+        (*objParts)[layerNo][objectNo].push_back(partPose);
     }
 }
 
@@ -291,15 +303,33 @@ void QGLVisualizer::update3Dobjects(void){
         for (auto & layer : layersOfObjects){//view independent layers
             int objectNo=0;
             for (auto & object : layer){
-                objects3Dlist[layerNo].push_back(createObjList(object,layerNo+(int)hierarchy.get()->viewDepPartsFromLayerNo));
+                objects3Dlist[layerNo].push_back(createObjList(object,layerNo+(int)hierarchy.get()->viewDepPartsFromLayerNo, false));
                 objectNo++;
             }
+            layersOfObjects[layerNo].clear();
             layerNo++;
         }
         for (layerNo = 0;layerNo<3;layerNo++){//objects from parts of View-dependent layers
             for (auto& object : objectsFromParts[layerNo]){
-                objects3Dlist[layerNo].push_back(createObjList(object, layerNo));
+                objects3Dlist[layerNo].push_back(createObjList(object, layerNo, false));
             }
+            objectsFromParts[layerNo].clear();
+        }
+        layerNo=0;
+        for (auto & layer : layersOfObjectsInference){//view independent layers
+            int objectNo=0;
+            for (auto & object : layer){
+                objects3Dlist[layerNo].push_back(createObjList(object,layerNo+(int)hierarchy.get()->viewDepPartsFromLayerNo, true));
+                objectNo++;
+            }
+            layersOfObjectsInference[layerNo].clear();
+            layerNo++;
+        }
+        for (layerNo = 0;layerNo<3;layerNo++){//objects from parts of View-dependent layers
+            for (auto& object : objectsFromPartsInference[layerNo]){
+                objects3Dlist[layerNo].push_back(createObjList(object, layerNo, true));
+            }
+            objectsFromPartsInference[layerNo].clear();
         }
     }
 }
@@ -779,12 +809,14 @@ GLuint QGLVisualizer::createPartObjList(const std::vector<hop3d::PointCloudRGBA>
 }
 
 /// Create point cloud List from parts (planar patches)
-GLuint QGLVisualizer::createObjList(const std::vector<Part3D>& parts, int layerNo){
+GLuint QGLVisualizer::createObjList(const std::vector<Part3D>& parts, int layerNo, bool inference){
     // create one display list
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
     glPushMatrix();
         Vec3 initPose(parts.begin()->pose(0,3), parts.begin()->pose(1,3), parts.begin()->pose(2,3));
+        if (inference)
+            initPose(1,3)+=config.objectsOffsetY;
         for (auto & part : parts){
             double GLmat[16]={part.pose(0,0), part.pose(1,0), part.pose(2,0), 0, part.pose(0,1), part.pose(1,1), part.pose(2,1), 0, part.pose(0,2), part.pose(1,2), part.pose(2,2), 0, part.pose(0,3)-initPose(0), part.pose(1,3)-initPose(1), part.pose(2,3)-initPose(2), 1};
             glPushMatrix();
@@ -800,13 +832,15 @@ GLuint QGLVisualizer::createObjList(const std::vector<Part3D>& parts, int layerN
 }
 
 /// Create point cloud List
-GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& parts, int layerNo){
+GLuint QGLVisualizer::createObjList(const std::vector<ViewIndependentPart>& parts, int layerNo, bool inference){
     // create one display list
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
     glPushMatrix();
     if (parts.size()>0){
         Vec3 initPose(parts.begin()->pose(0,3), parts.begin()->pose(1,3), parts.begin()->pose(2,3));
+        if (inference)
+            initPose(1,3)+=config.objectsOffsetY;
         for (auto & part : parts){
             Mat34 pose = part.pose*part.offset;
             double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, pose(0,3)-initPose(0), pose(1,3)-initPose(1), pose(2,3)-initPose(2), 1};

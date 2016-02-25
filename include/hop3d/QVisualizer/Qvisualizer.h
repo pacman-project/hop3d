@@ -127,6 +127,9 @@ public:
             normalsColor.setRedF(rgba[0]); normalsColor.setGreenF(rgba[1]);
             normalsColor.setBlueF(rgba[2]); normalsColor.setAlphaF(rgba[3]);
 
+            model->FirstChildElement( "inference" )->QueryDoubleAttribute("objectsOffsetY", &objectsOffsetY);
+            model->FirstChildElement( "inference" )->QueryDoubleAttribute("objectsPartsOffsetZ", &objectsPartsOffsetZ);
+
             std::string GICPConfig = (model->FirstChildElement( "GICP" )->Attribute( "configFilename" ));
             size_t found = configFilename.find_last_of("/\\");
             std::string prefix = configFilename.substr(0,found+1);
@@ -213,6 +216,11 @@ public:
         /// distance parameters
         std::vector<double> partObjectsPos;
 
+        /// inference: objectOffsetY
+        double objectsOffsetY;
+        /// objectsPartsOffsetZ
+        double objectsPartsOffsetZ;
+
         /// config GICP
         hop3d::ConfigGICP configGICP;
     };
@@ -233,7 +241,7 @@ public:
     void update(hop3d::Hierarchy& _hierarchy);
 
     /// Update 3D object model
-    void update(const std::vector<hop3d::ViewIndependentPart>& objectParts, int objLayerId);
+    void update(const std::vector<hop3d::ViewIndependentPart>& objectParts, int objLayerId, bool inference);
 
     /// Update 3D object models
     void update3Dmodels(void);
@@ -242,7 +250,7 @@ public:
     void update(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& objects);
 
     /// update object from filters
-    void update(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo, int layerNo);
+    void update(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo, int layerNo, bool inference);
 
     /// update second layer part
     void updateSecondLayerPart(const hop3d::PointsSecondLayer& part);
@@ -289,6 +297,9 @@ private:
     /// objects indexed by layerNo
     std::vector<Object3DSeq> layersOfObjects;
 
+    /// objects indexed by layerNo
+    std::vector<Object3DSeq> layersOfObjectsInference;
+
     /// object clouds coloured by part id (overlapNo->layerNo->objectNo)
     std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> partClouds;
 
@@ -297,6 +308,9 @@ private:
 
     /// objects drawn from filter poses
     std::vector<std::vector<std::vector<Part3D>>> objectsFromParts;
+
+    /// objects drawn from filter poses inference
+    std::vector<std::vector<std::vector<Part3D>>> objectsFromPartsInference;
 
     /// partObjects list (overlapNo->layerNo)
     std::vector<std::vector<GLuint>> partObjectsLists;
@@ -377,10 +391,10 @@ private:
     GLuint createVIPartList(hop3d::ViewIndependentPart& part);
 
     /// Create objects lists
-    GLuint createObjList(const std::vector<hop3d::ViewIndependentPart>& parts, int layerNo);
+    GLuint createObjList(const std::vector<hop3d::ViewIndependentPart>& parts, int layerNo, bool inference);
 
     /// Create point cloud List from filters (planar patches)
-    GLuint createObjList(const std::vector<Part3D>& parts, int layerNo);
+    GLuint createObjList(const std::vector<Part3D>& parts, int layerNo, bool inference);
 
     /// Create clusters List
     GLuint createClustersList(hop3d::ViewDependentPart& part, int layerNo);

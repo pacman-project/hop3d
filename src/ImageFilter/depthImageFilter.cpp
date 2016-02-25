@@ -54,8 +54,8 @@ const std::string& DepthImageFilter::getName() const {
 }
 
 ///compute set of octets from set of the depth images
-void DepthImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets){
-    std::cout << "Unused parameters: " << categoryNo << " " << objectNo << " " << imageNo << "\n";
+void DepthImageFilter::computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets, bool inference){
+    std::cout << "Unused parameters: " << categoryNo << " " << objectNo << " " << imageNo << " " << inference << "\n";
     octets.clear();
 
     int filterSize = filters[0].patch.cols;
@@ -186,8 +186,8 @@ void DepthImageFilter::getOctets(Octet::Seq& octets){
 }
 
 /// compute set of octets from set of the ids image
-void DepthImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets){
-    std::cout << categoryNo << " " << objectNo << " " << imageNo << "\n";
+void DepthImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets, bool inference){
+    std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << inference << "\n";
     std::cout << hierarchy.viewDependentLayers.size();
     std::cout << octets.size();
 }
@@ -210,14 +210,14 @@ void DepthImageFilter::setFilters(std::string patchesFileName, std::string norma
 }*/
 
 /// define ith layer octet images using selected words from i+1 layer
-void DepthImageFilter::computePartsImage(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo){
-    std::cout << overlapNo << categoryNo << " " << objectNo << " " << imageNo << " " << layerNo << "\n";
+void DepthImageFilter::computePartsImage(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo, bool inference){
+    std::cout << overlapNo << categoryNo << " " << objectNo << " " << imageNo << " " << layerNo << " " << inference << "\n";
     hierarchy.viewDependentLayers.size();
 }
 
 /// get last view dependent layer parts from the image
-void DepthImageFilter::getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const{
-    std::cout << categoryNo << " " << objectNo << " " << imageNo << layerNo << "\n";
+void DepthImageFilter::getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts, bool inference) const{
+    std::cout << categoryNo << " " << objectNo << " " << imageNo << layerNo << " " << inference << "\n";
     parts.clear();
 }
 
@@ -238,8 +238,8 @@ void DepthImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int obj
 }
 
 /// returs filter ids and their position on the image
-void DepthImageFilter::getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const{
-    std::cout << overlapNo << categoryNo << objectNo << imageNo << "\n";
+void DepthImageFilter::getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords, bool inference) const{
+    std::cout << overlapNo << categoryNo << objectNo << imageNo << inference << "\n";
     partCoords.clear();
 }
 
@@ -250,8 +250,8 @@ void DepthImageFilter::getParts3D(int overlapNo, int categoryNo, int objectNo, i
 }
 
 /// returs parts ids and their position on the image
-void DepthImageFilter::getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords) const{
-    std::cout << overlapNo << categoryNo << objectNo << imageNo << layerNo << "\n";
+void DepthImageFilter::getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords, bool inference) const{
+    std::cout << overlapNo << categoryNo << objectNo << imageNo << layerNo << inference << "\n";
     partCoords.clear();
 }
 

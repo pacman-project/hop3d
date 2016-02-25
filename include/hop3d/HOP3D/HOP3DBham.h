@@ -48,6 +48,9 @@ public:
     /// load hierarchy from the file
     void load(std::string filename);
 
+    /// load inference results from the file
+    void loadInference(std::string filename);
+
     /// inference
     void inference(void);
 
@@ -148,6 +151,10 @@ public:
             int datasetType;
             /// save hierarchy to file
             bool save2file;
+            /// save inference results to file
+            bool saveInference;
+            /// inference results filename
+            std::string filename2saveInference;
             /// use visualization
             bool useVisualization;
             /// hierarchy filename
@@ -165,7 +172,10 @@ private:
     void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const;
 
     /// create part-coloured point clouds
-    void createPartClouds();
+    void createPartClouds(void);
+
+    /// create objects from parts
+    void createObjsFromParts(bool inference);
 
     /// get points realisation for the cloud
     void getPointsModels(int overlapNo, int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts) const;
@@ -208,6 +218,9 @@ private:
 
     ///vector of objects compositions
     std::vector<std::vector<ObjectCompositionOctree>> objects;
+
+    ///vector of objects compositions
+    std::vector<std::vector<ObjectCompositionOctree>> objectsInference;
 };
 }
 #endif // HOP3DBHAM_H_INCLUDED

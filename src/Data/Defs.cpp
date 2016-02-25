@@ -469,8 +469,8 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
     /// Extraction operator
     std::istream& operator>>(std::istream& is, GaussianSE3& gaussian){
         // read mean
-		for (int i = 0; i < gaussian.mean.rows(); i++){
-			is >> gaussian.mean(i);
+        for (int i = 0; i < gaussian.mean.rows(); i++){
+            is >> gaussian.mean(i);
 		}
         // covariance
         for (int i=0;i<gaussian.covariance.rows();i++){

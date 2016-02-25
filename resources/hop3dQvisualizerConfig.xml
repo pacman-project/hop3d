@@ -27,4 +27,5 @@
 	<clusters drawClusters="true" red="0.0" green="0.8" blue="0.0" alpha="0.1"></clusters>
 	<normals drawNormals="false" scale="0.015" red="1.0" green="0.0" blue="0.0" alpha="1.0"></normals>
 	<GICP configFilename="hop3dGICP.xml"></GICP>
+	<inference objectsOffsetY="-0.5" objectsPartsOffsetZ="-0.5"></inference>
   </VisualizerConfig>

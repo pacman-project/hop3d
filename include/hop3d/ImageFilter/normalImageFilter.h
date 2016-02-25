@@ -29,6 +29,11 @@ class NormalImageFilter: public ImageFilter {
     typedef std::vector< std::vector<std::shared_ptr<Octet>>> OctetsImage;
     /// 2D array of vocabularies
     typedef std::vector< std::vector<std::shared_ptr<ViewDependentPart>>> PartsImage;
+    /// octets images
+    typedef std::vector<std::vector<std::vector<std::vector< std::vector<OctetsImage>>>>> OctetsImages;
+    /// parts images
+    typedef std::vector<std::vector<std::vector<std::vector< std::vector<PartsImage>>>>> PartsImages;
+
 public:
     /// Pointer
     typedef std::unique_ptr<NormalImageFilter> Ptr;
@@ -46,10 +51,10 @@ public:
     const std::string& getName() const;
 
     ///compute set of octets from set of the depth images
-    void computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets);
+    void computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets, bool inference);
 
     /// compute set of octets from set of the ids image
-    void getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets);
+    void getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets, bool inference);
 
     /// get filters
     void getFilters(Filter::Seq& _filters) const;
@@ -61,10 +66,10 @@ public:
     void computeImagesLastLayer(int categoryNo, int objectNo, int imageNo, const ViewDependentPart::Seq& dictionary, int layersNo);
 
     /// define ith layer octet images using selected words from i+1 layer
-    void computePartsImage(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo);
+    void computePartsImage(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo, bool inference);
 
     /// get last view dependent layer parts from the image
-    void getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
+    void getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts, bool inference) const;
 
     /// compute coordinate system from normal vector
     static Mat33 coordinateFromNormal(const Vec3& _normal);
@@ -76,13 +81,13 @@ public:
     void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart);
 
     /// returs filter ids and their position on the image
-    void getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords) const;
+    void getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords, bool inference) const;
 
     /// returs parts ids and their position on the image
     void getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoords>& partCoords) const;
 
     /// returs parts ids and their position on the image
-    void getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords) const;
+    void getParts3D(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<PartCoordsEucl>& partCoords, bool inference) const;
 
     /// get cloud from dataset
     void getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& cloud) const;
@@ -91,16 +96,16 @@ public:
     void getPartsRealisation(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
 
     /// Insertion operator
-    friend std::ostream& operator<<(std::ostream& os, const NormalImageFilter& filter);
+//    friend std::ostream& operator<<(std::ostream& os, const NormalImageFilter& filter);
 
     // Extraction operator
-    friend std::istream& operator>>(std::istream& is, NormalImageFilter& filter);
+    //friend std::istream& operator>>(std::istream& is, NormalImageFilter& filter);
 
     /// save to file
-    void save2file(std::ostream& os) const;
+    void save2file(std::ostream& os, bool inference) const;
 
     /// load from file
-    void loadFromfile(std::istream& is);
+    void loadFromfile(std::istream& is, bool inference);
 
     /// get input point
     //void getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const;
@@ -165,9 +170,13 @@ private:
     /// sensor model
     DepthSensorModel sensorModel;
     /// octets images (indices: layerNo->overlapNo->categoryNo->objectNo->imageNo)
-    std::vector<std::vector<std::vector<std::vector< std::vector<OctetsImage>>>>> octetsImages;
+    OctetsImages octetsImages;
+    /// octets images for inference (indices: layerNo->overlapNo->categoryNo->objectNo->imageNo)
+    OctetsImages octetsImagesInference;
     /// parts images (indices: layerNo->overlapNo->categoryNo->objectNo->imageNo)
-    std::vector<std::vector<std::vector<std::vector< std::vector<PartsImage>>>>> partsImages;
+    PartsImages partsImages;
+    /// parts images for inference (indices: layerNo->overlapNo->categoryNo->objectNo->imageNo)
+    PartsImages partsImagesInference;
     /// part realisation counter
     int partRealisationsCounter;
 
@@ -217,10 +226,10 @@ private:
     int findId(const hop3d::Hierarchy& hierarchy, int layerNo, const Octet& octet, Mat34& offset) const;
 
     /// update structure which holds octets images
-    void updateOctetsImage(int layerNo, int overlapNo, int categoryNo, int objectNo, int imageNo, const OctetsImage& octetsImage);
+    void updateOctetsImage(int layerNo, int overlapNo, int categoryNo, int objectNo, int imageNo, OctetsImages& _octetsImages, const OctetsImage& octetsImage);
 
     /// update structure which holds parts images
-    void updatePartsImages(int categoryNo, int objectNo, int imageNo, int layerNo, int overlapNo, const PartsImage& partsImage);
+    void updatePartsImages(int categoryNo, int objectNo, int imageNo, int layerNo, int overlapNo, PartsImages& _partsImages, const PartsImage& partsImage);
 
     /// Apply median filter on the image
     void medianFilter(const cv::Mat& inputImg, cv::Mat& outputImg, int kernelSize) const;
