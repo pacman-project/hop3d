@@ -28,7 +28,7 @@ public:
     };
 
     /// Name of the visualizer
-    virtual const std::string& getName() const {return visualizerName;};
+    virtual const std::string& getName() const {return visualizerName;}
 
     /// Virtual descrutor
     virtual ~Visualizer() {

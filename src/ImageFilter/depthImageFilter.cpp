@@ -222,7 +222,7 @@ void DepthImageFilter::getLayerParts(int categoryNo, int objectNo, int imageNo, 
 }
 
 /// get set of ids for the given input point
-void DepthImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart){
+void DepthImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference){
     std::cout << "not implemented\n";
     ids.clear();
     std::cout << lastVDpart.id << "\n";

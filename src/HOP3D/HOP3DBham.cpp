@@ -538,7 +538,7 @@ void HOP3DBham::loadInference(std::string filename){
         createObjsFromParts(true);
         std::this_thread::sleep_for(std::chrono::seconds(5));
         notify3Dmodels();
-        //createPartClouds();
+        createPartClouds(true);
     }
 #endif
 }
@@ -616,6 +616,15 @@ void HOP3DBham::inference(void){
         ofsInference.close();
         std::cout << "saved\n";
     }
+    //visualization
+#ifdef QVisualizerBuild
+    if (config.useVisualization){
+        createObjsFromParts(true);
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        notify3Dmodels();
+        createPartClouds(true);
+    }
+#endif
 }
 
 /// notify visualizer
@@ -626,7 +635,7 @@ void HOP3DBham::notifyVisualizer(void){
         createObjsFromParts(false);
         std::this_thread::sleep_for(std::chrono::seconds(5));
         notify3Dmodels();
-        createPartClouds();
+        createPartClouds(false);
         // draw parts coordinates
         /*std::vector<ViewIndependentPart::Part3D> parts;
         getPartsRealisation(0,0,0, parts);
@@ -714,18 +723,25 @@ void HOP3DBham::createObjsFromParts(bool inference){
 }
 
 /// get set of ids from hierarchy for the given input point
-void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const{
+void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids, bool inference) const{
     ids.clear();
     ViewDependentPart lastVDpart;
-    imageFilterer->getPartsIds(overlapNo, categoryNo, objectNo, imageNo, u, v, depth, ids, lastVDpart);
+    imageFilterer->getPartsIds(overlapNo, categoryNo, objectNo, imageNo, u, v, depth, ids, lastVDpart, inference);
 }
 
 /// get set of ids from hierarchy for the given input point (view-independent layers)
-void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids) const{
-    Mat34 cameraPose(datasetTrain->getCameraPose(categoryNo, objectNo, imageNo));
+void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids, bool inference) const{
+    Mat34 cameraPose;
+    if (inference)
+        cameraPose = datasetTest->getCameraPose(categoryNo, objectNo, imageNo);
+    else
+        cameraPose = datasetTrain->getCameraPose(categoryNo, objectNo, imageNo);
     if ((!std::isnan(point(0)))&&(!std::isnan(point(1)))){
         Vec3 pointGlob = (cameraPose*Vec4(point(0),point(1),point(2),1.0)).block<3,1>(0,0);
-        objects[categoryNo][objectNo].getPartsIds(pointGlob, overlapNo, ids);
+        if (inference)
+            objectsInference[categoryNo][objectNo].getPartsIds(pointGlob, overlapNo, ids);
+        else
+            objects[categoryNo][objectNo].getPartsIds(pointGlob, overlapNo, ids);
     }
     else{
         std::vector<int> notUsed(3,-1);
@@ -758,14 +774,17 @@ void HOP3DBham::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, 
 }
 
 /// get points realisation for the cloud
-void HOP3DBham::getPointsModels(int overlapNo, int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts) const{
+void HOP3DBham::getPointsModels(int overlapNo, int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts, bool inference) const{
     cv::Mat depthImage;
-    datasetTrain->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo, depthImage);
+    if (inference)
+        datasetTest->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo, depthImage);
+    else
+        datasetTrain->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo, depthImage);
     PointCloudUV cloudUV;
     imageFilterer->getCloud(depthImage,cloudUV);
     for (const auto &pointuv : cloudUV){
         std::vector<int> ids;
-        getPartsIds(overlapNo, categoryNo, objectNo, imageNo, pointuv.u, pointuv.v, pointuv.position(2), ids);
+        getPartsIds(overlapNo, categoryNo, objectNo, imageNo, pointuv.u, pointuv.v, pointuv.position(2), ids, inference);
         PointPart pointPart;
         pointPart.position=pointuv.position;
         for (int i=0;i<(int)ids.size();i++){
@@ -773,7 +792,7 @@ void HOP3DBham::getPointsModels(int overlapNo, int categoryNo, int objectNo, int
         }
         int idsSize = (int)ids.size();
         ids.clear();
-        getPartsIds(overlapNo, categoryNo, objectNo, imageNo, pointuv.position, ids);
+        getPartsIds(overlapNo, categoryNo, objectNo, imageNo, pointuv.position, ids, inference);
         for (int i=0;i<(int)ids.size();i++){
             pointPart.partsIds.push_back(std::make_pair(i+idsSize,ids[i]));
         }
@@ -782,37 +801,52 @@ void HOP3DBham::getPointsModels(int overlapNo, int categoryNo, int objectNo, int
 }
 
 /// create part-coloured point clouds
-void HOP3DBham::createPartClouds(){
+void HOP3DBham::createPartClouds(bool inference){
     /// clouds for the first layer
     int layersNo=6;//(int)hierarchy.get()->viewDependentLayers.size()+(int)hierarchy.get()->viewIndependentLayers.size()+1;
-    std::vector<std::vector<std::array<double,4>>> colors(layersNo);
-    colors[0].resize(hierarchy.get()->firstLayer.size());
-    std::uniform_real_distribution<double> uniformDist(0.0,1.0);
-    std::default_random_engine engine;
-    for (int layerNo=0;layerNo<(int)hierarchy.get()->viewDependentLayers.size();layerNo++){
-        colors[layerNo+1].resize(hierarchy.get()->viewDependentLayers[layerNo].size());
-    }
-    for (int layerNo=0;layerNo<(int)hierarchy.get()->viewIndependentLayers.size();layerNo++){
-        colors[layerNo+(int)hierarchy.get()->viewDependentLayers.size()+1].resize(hierarchy.get()->viewIndependentLayers[layerNo].size());
-    }
-    for (size_t layerNo=0;layerNo<colors.size();layerNo++){
-        for (size_t partNo=0;partNo<colors[layerNo].size();partNo++){
-            std::array<double,4> color = {uniformDist(engine), uniformDist(engine), uniformDist(engine), 1.0};
-            colors[layerNo][partNo] = color;
+    if (colors.size()==0){
+        colors.resize(layersNo);
+        colors[0].resize(hierarchy.get()->firstLayer.size());
+        std::uniform_real_distribution<double> uniformDist(0.0,1.0);
+        std::default_random_engine engine;
+        for (int layerNo=0;layerNo<(int)hierarchy.get()->viewDependentLayers.size();layerNo++){
+            colors[layerNo+1].resize(hierarchy.get()->viewDependentLayers[layerNo].size());
         }
+        for (int layerNo=0;layerNo<(int)hierarchy.get()->viewIndependentLayers.size();layerNo++){
+            colors[layerNo+(int)hierarchy.get()->viewDependentLayers.size()+1].resize(hierarchy.get()->viewIndependentLayers[layerNo].size());
+        }
+        for (size_t layerNo=0;layerNo<colors.size();layerNo++){
+            for (size_t partNo=0;partNo<colors[layerNo].size();partNo++){
+                std::array<double,4> color = {uniformDist(engine), uniformDist(engine), uniformDist(engine), 1.0};
+                colors[layerNo][partNo] = color;
+            }
+        }
+    }
+    DatasetInfo* datasetInfo;
+    Dataset* dataset;
+    //std::vector<std::vector<ObjectCompositionOctree>>* objComp;//objects compositions
+    if (inference){
+        datasetInfo = &datasetInfoTest;
+        dataset = datasetTest.get();
+       // objComp = &objectsInference;
+    }
+    else{
+        datasetInfo = &datasetInfoTrain;
+        dataset = datasetTrain.get();
+       // objComp = &objects;
     }
     int overlapsNo=4;
     /// point clouds (index: overlapNo->layerNo->objectNo)
     std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> cloudsObj(overlapsNo, std::vector<std::vector<hop3d::PointCloudRGBA>>(layersNo)); // vector of coloured objects
     for (int overlapNo=0; overlapNo<overlapsNo; overlapNo++){
-        for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){
-            for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){
+        for (size_t categoryNo=0;categoryNo<datasetInfo->categories.size();categoryNo++){
+            for (size_t objectNo=0;objectNo<datasetInfo->categories[categoryNo].objects.size();objectNo++){
                 std::vector<hop3d::PointCloudRGBA> objsTmp(layersNo);
-                for (size_t imageNo=0;imageNo<datasetInfoTrain.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                for (size_t imageNo=0;imageNo<datasetInfo->categories[categoryNo].objects[objectNo].images.size();imageNo++){
                     hop3d::PartsCloud cloudParts;
                     if (overlapNo<3){
-                        getPointsModels(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, cloudParts);
-                        Mat34 cameraPose(datasetTrain->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+                        getPointsModels(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, cloudParts, inference);
+                        Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
                         for (auto &pointPart : cloudParts){
                             for (int el=0;el<(int)pointPart.partsIds.size();el++){
                                 int layNo=pointPart.partsIds[el].first;
@@ -836,7 +870,7 @@ void HOP3DBham::createPartClouds(){
                             //compute object index
                             int objNo=0;
                             for (size_t catNo=0;catNo<categoryNo;catNo++){
-                                objNo+=(int)datasetInfoTrain.categories[catNo].objects.size();
+                                objNo+=(int)datasetInfo->categories[catNo].objects.size();
                             }
                             for (int pointNo=0;pointNo<(int)cloudsObj[0][layNo][objNo].size();pointNo++){
                                 PointColor pointRGBA(cloudsObj[0][layNo][objNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
@@ -863,7 +897,7 @@ void HOP3DBham::createPartClouds(){
             }
         }
     }
-    notify(cloudsObj);
+    notify(cloudsObj, inference);
     createPartObjects();
 }
 

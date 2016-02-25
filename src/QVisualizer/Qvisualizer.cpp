@@ -173,10 +173,13 @@ void QGLVisualizer::update(hop3d::Hierarchy& _hierarchy) {
 }
 
 /// update part clouds
-void QGLVisualizer::update(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& objects){
+void QGLVisualizer::update(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& objects, bool inference){
     activeLayer=0;
     activeOverlapNo=0;
-    partClouds = objects;
+    if (inference)
+        partCloudsInference = objects;
+    else
+        partCloudsTrain = objects;
 }
 
 /// update coords
@@ -208,15 +211,28 @@ void QGLVisualizer::createCoordsList(void){
 void QGLVisualizer::updatePartsObjects(void){
     if (updatePartsObjectsFlag){
         updatePartsObjectsFlag = false;
-        partObjectsLists.resize(partClouds.size());
-        for (size_t overlapNo=0;overlapNo<partClouds.size();overlapNo++){
-            for (size_t layerNo=0;layerNo<partClouds[overlapNo].size();layerNo++){
-                partObjectsLists[overlapNo].push_back(createPartObjList(partClouds[overlapNo][layerNo]));
+        if (partCloudsTrain.size()>0){
+            partObjectsLists.resize(partObjectsLists.size()+partCloudsTrain.size());
+            for (size_t overlapNo=0;overlapNo<partCloudsTrain.size();overlapNo++){
+                partObjectsLists[overlapNo].resize(6);
+                for (size_t layerNo=0;layerNo<partCloudsTrain[overlapNo].size();layerNo++){
+                    partObjectsLists[overlapNo][layerNo].push_back(createPartObjList(partCloudsTrain[overlapNo][layerNo],false));
+                }
             }
+            offsetCoords=partCloudsTrain[0][0][0].front().position;
+            partCloudsTrain.clear();
         }
-        offsetCoords=partClouds[0][0][0].front().position;
+        if (partCloudsInference.size()>0){
+            partObjectsLists.resize(partObjectsLists.size()+partCloudsInference.size());
+            for (size_t overlapNo=0;overlapNo<partCloudsInference.size();overlapNo++){
+                partObjectsLists[overlapNo].resize(6);
+                for (size_t layerNo=0;layerNo<partCloudsInference[overlapNo].size();layerNo++){
+                    partObjectsLists[overlapNo][layerNo].push_back(createPartObjList(partCloudsInference[overlapNo][layerNo],true));
+                }
+            }
+            partCloudsInference.clear();
+        }
     }
-    partClouds.clear();
 }
 
 /// update second layer part
@@ -417,8 +433,10 @@ void QGLVisualizer::draw3Dobjects(void){
 /// Draw part objects
 void QGLVisualizer::drawPartObjects(void){
     if (activeOverlapNo<(int)partObjectsLists.size())
-        if (activeLayer<(int)partObjectsLists[activeOverlapNo].size())
-            glCallList(partObjectsLists[activeOverlapNo][activeLayer]);
+        if (activeLayer<(int)partObjectsLists[activeOverlapNo].size()){
+            for (auto &id : partObjectsLists[activeOverlapNo][activeLayer])
+                glCallList(id);
+        }
 }
 
 /// Draw clusters
@@ -780,7 +798,7 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
 }
 
 /// Create point cloud List
-GLuint QGLVisualizer::createPartObjList(const std::vector<hop3d::PointCloudRGBA>& objects){
+GLuint QGLVisualizer::createPartObjList(const std::vector<hop3d::PointCloudRGBA>& objects, bool inference){
     GLuint index = glGenLists(1);
     glNewList(index, GL_COMPILE);
     glPushMatrix();
@@ -789,6 +807,8 @@ GLuint QGLVisualizer::createPartObjList(const std::vector<hop3d::PointCloudRGBA>
     for (auto& cloud : objects){
         if (cloud.size()>0){
             double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.partObjectsPos[0]*double(objectNo)-(objectsNo/2)*config.partObjectsPos[0])-cloud.front().position(0), config.partObjectsPos[1]-cloud.front().position(1), config.partObjectsPos[2]-cloud.front().position(2), 1};
+            if (inference)
+                GLmat[14]+=config.objectsPartsOffsetZ;
             glPushMatrix();
             glMultMatrixd(GLmat);
             glBegin(GL_POINTS);

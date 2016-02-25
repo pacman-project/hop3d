@@ -1290,11 +1290,21 @@ Mat33 NormalImageFilter::coordinateFromNormal(const Vec3& _normal){
 }*/
 
 /// get set of ids for the given input point
-void NormalImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart){
+void NormalImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference){
+    OctetsImages* oImages;
+    PartsImages* pImages;
+    if (inference){
+        oImages = &octetsImagesInference;
+        pImages = &partsImagesInference;
+    }
+    else {
+        oImages = &octetsImages;
+        pImages = &partsImages;
+    }
     unsigned int octetCoords[2]={(u-overlapNo*config.filterSize)/(config.filterSize*3),(v-overlapNo*config.filterSize)/(config.filterSize*3)};
-    if ((octetCoords[0]>0)&&(octetCoords[1]>0)&&(octetCoords[0]<octetsImages[0][overlapNo][categoryNo][objectNo][imageNo].size())&&(octetCoords[1]<octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][0].size())){
-        if (octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
-            Octet octet = *(octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]);
+    if ((octetCoords[0]>0)&&(octetCoords[1]>0)&&(octetCoords[0]<(*oImages)[0][overlapNo][categoryNo][objectNo][imageNo].size())&&(octetCoords[1]<(*oImages)[0][overlapNo][categoryNo][objectNo][imageNo][0].size())){
+        if ((*oImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
+            Octet octet = *((*oImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]);
             if (octet.partIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]==-2){
                 if (octet.secondOctet.size()>0)
                     ids.push_back(octet.secondOctet[0].partIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]);
@@ -1311,19 +1321,19 @@ void NormalImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo,
     else{
         ids.push_back(-2); //point wasn't used to create part
     }
-    if (octetCoords[0]<partsImages[0][overlapNo][categoryNo][objectNo][imageNo].size()&&octetCoords[1]<partsImages[0][overlapNo][categoryNo][objectNo][imageNo][0].size()){
-        if (partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
-            lastVDpart = *partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
-            if (!partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->isBackground()){
-                if (octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
+    if (octetCoords[0]<(*pImages)[0][overlapNo][categoryNo][objectNo][imageNo].size()&&octetCoords[1]<(*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][0].size()){
+        if ((*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
+            lastVDpart = *(*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
+            if (!(*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->isBackground()){
+                if ((*oImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
                     //ViewDependentPart.partsPosNorm[1][1]
-                    Octet * octet = octetsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get();
+                    Octet * octet = (*oImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get();
                     if (octet->partIds[((u-overlapNo*config.filterSize)/(config.filterSize))%3][((v-overlapNo*config.filterSize)/(config.filterSize))%3]==-2){
                         if (octet->secondOctet.size()>0){
                             if (fabs(octet->secondOctet[0].partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold))
                                 ids.push_back(-2);
                             else
-                                ids.push_back(partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->secondVDPart[0].id);
+                                ids.push_back((*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->secondVDPart[0].id);
                         }
                         else
                             ids.push_back(-2);
@@ -1332,7 +1342,7 @@ void NormalImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo,
                         if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold))
                             ids.push_back(-2);
                         else
-                            ids.push_back(partsImages[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->id);
+                            ids.push_back((*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->id);
                     }
                 }
                 else {
@@ -1351,19 +1361,19 @@ void NormalImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo,
         ids.push_back(-2);
     }
     unsigned int octetCoords2nd[2]={(u-overlapNo*(3*config.filterSize))/(config.filterSize*3*3),(v-overlapNo*(3*config.filterSize))/(config.filterSize*3*3)};
-    if ((octetCoords2nd[0]>0)&&(octetCoords2nd[1]>0)&&(octetCoords2nd[0]<partsImages[1][overlapNo][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<partsImages[1][overlapNo][categoryNo][objectNo][imageNo][0].size())){
-        if (partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
-            lastVDpart = *partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
-            if (!partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->isBackground()){
-                if (octetsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
+    if ((octetCoords2nd[0]>0)&&(octetCoords2nd[1]>0)&&(octetCoords2nd[0]<(*pImages)[1][overlapNo][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<(*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][0].size())){
+        if ((*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
+            lastVDpart = *(*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
+            if (!(*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->isBackground()){
+                if ((*oImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
                     //ViewDependentPart.partsPosNorm[1][1]
-                    Octet * octet = octetsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get();
+                    Octet * octet = (*oImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get();
                     if (octet->partIds[((u-overlapNo*(3*config.filterSize))/(config.filterSize*3))%3][((v-overlapNo*(3*config.filterSize))/(config.filterSize*3))%3]==-2){
                         if (octet->secondOctet.size()>0){
                             if (fabs(octet->secondOctet[0].partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer))
                                 ids.push_back(-2);
                             else
-                                ids.push_back(partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->secondVDPart[0].id);
+                                ids.push_back((*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->secondVDPart[0].id);
                         }
                         else
                             ids.push_back(-2);
@@ -1372,7 +1382,7 @@ void NormalImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo,
                         if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer))
                             ids.push_back(-2);
                         else
-                            ids.push_back(partsImages[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->id);
+                            ids.push_back((*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->id);
                     }
                 }
                 else {

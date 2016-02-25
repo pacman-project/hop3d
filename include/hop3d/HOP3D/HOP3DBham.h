@@ -163,22 +163,22 @@ public:
 
 private:
     /// get set of ids from hierarchy for the given input point (view-dependent layers)
-    void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const;
+    void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids, bool inference) const;
 
     /// get set of ids from hierarchy for the given input point (view-independent layers)
-    void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids) const;
+    void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids, bool inference) const;
 
     /// get set of ids from hierarchy for the given input point
     void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const;
 
     /// create part-coloured point clouds
-    void createPartClouds(void);
+    void createPartClouds(bool inference);
 
     /// create objects from parts
     void createObjsFromParts(bool inference);
 
     /// get points realisation for the cloud
-    void getPointsModels(int overlapNo, int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts) const;
+    void getPointsModels(int overlapNo, int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts, bool inference) const;
 
     /// convert parts map to parts cloud
     void convertPartsMap2PartsCloud(const Hierarchy::IndexSeqMap& points2parts, PartsClouds& partsCloud) const;
@@ -221,6 +221,8 @@ private:
 
     ///vector of objects compositions
     std::vector<std::vector<ObjectCompositionOctree>> objectsInference;
+
+    std::vector<std::vector<std::array<double,4>>> colors;
 };
 }
 #endif // HOP3DBHAM_H_INCLUDED

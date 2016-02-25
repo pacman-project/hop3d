@@ -46,10 +46,10 @@ void Subject::notify(const hop3d::PointsSecondLayer& points){
     }
 }
 
-void Subject::notify(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& clouds){
+void Subject::notify(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& clouds, bool inference){
     for(vector<Observer*>::const_iterator iter = list.begin(); iter != list.end(); ++iter){
         if(*iter != 0) {
-            (*iter)->update(clouds);
+            (*iter)->update(clouds, inference);
         }
     }
 }

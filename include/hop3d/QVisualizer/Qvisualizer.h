@@ -247,7 +247,7 @@ public:
     void update3Dmodels(void);
 
     /// update part clouds
-    void update(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& objects);
+    void update(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& objects, bool inference);
 
     /// update object from filters
     void update(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo, int layerNo, bool inference);
@@ -301,7 +301,10 @@ private:
     std::vector<Object3DSeq> layersOfObjectsInference;
 
     /// object clouds coloured by part id (overlapNo->layerNo->objectNo)
-    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> partClouds;
+    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> partCloudsTrain;
+
+    /// object clouds coloured by part id (overlapNo->layerNo->objectNo)
+    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> partCloudsInference;
 
     /// clusters list
     std::vector< std::vector< GLuint > > objects3Dlist;
@@ -312,8 +315,8 @@ private:
     /// objects drawn from filter poses inference
     std::vector<std::vector<std::vector<Part3D>>> objectsFromPartsInference;
 
-    /// partObjects list (overlapNo->layerNo)
-    std::vector<std::vector<GLuint>> partObjectsLists;
+    /// partObjects list (overlapNo->layerNo->objectNo)
+    std::vector<std::vector<std::vector<GLuint>>> partObjectsLists;
 
     /// parts coordinates list
     std::vector<GLuint> partsCoordinatesList;
@@ -376,7 +379,7 @@ private:
     void drawPartObjects(void);
 
     /// Create point cloud List
-    GLuint createPartObjList(const std::vector<hop3d::PointCloudRGBA>& objects);
+    GLuint createPartObjList(const std::vector<hop3d::PointCloudRGBA>& objects, bool inference);
 
     /// Create point cloud List
     GLuint createCloudList(hop3d::PointCloud& pointCloud, hop3d::Vec3& normal);
