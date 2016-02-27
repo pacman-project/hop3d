@@ -862,7 +862,7 @@ void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int obj
     if (inference)
         octetsImage = octetsImagesInference[layerNo][overlapNo][categoryNo][objectNo][imageNo];
     else
-        octetsImage = octetsImagesInference[layerNo][overlapNo][categoryNo][objectNo][imageNo];
+        octetsImage = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo];
     PartsImage partsImage (octetsImage.size(), std::vector<std::shared_ptr<ViewDependentPart>> (octetsImage.back().size()));
     for (size_t i=0; i<octetsImage.size();i++){
         for (size_t j=0; j<octetsImage.back().size();j++){
