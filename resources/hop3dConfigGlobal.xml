@@ -29,7 +29,7 @@
   
 <!--   Hierarchy configuration -->
   <Hierarchy>
-    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="2" viewDepPartsFromLayerNo="1" train="false" load="true" file2load="hop3dHierarchyBoris2.h3d" inference="false" loadInferenceResults="true" inferenceFile="inferenceResultsMug1.h3r"></parameters>
+    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="2" viewDepPartsFromLayerNo="1" train="false" load="true" file2load="hierarchy5Objects2/hop3dHierarchyBoris12.h3d" inference="true" loadInferenceResults="false" inferenceFile="inferenceResultsMug1.h3r"></parameters>
     <save2file save2file="true" filename2save="hop3dHierarchyBoris.h3d" saveInference="true" filename2saveInference="inferenceResults.h3r"/>
   </Hierarchy>
   
