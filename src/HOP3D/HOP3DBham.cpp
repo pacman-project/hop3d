@@ -523,26 +523,55 @@ void HOP3DBham::loadInference(std::string filename){
     datasetTest->getDatasetInfo(datasetInfoTest);
     objectsInference.resize(datasetInfoTest.categories.size());
     std::map<std::string,int> objectsCoveragesGlob;
+    int inferenceLayerNo=2;
     for (size_t categoryNo=0;categoryNo<datasetInfoTest.categories.size();categoryNo++){//for each category
         for (size_t objectNo=0;objectNo<datasetInfoTest.categories[categoryNo].objects.size();objectNo++){//for each object
             ObjectCompositionOctree object(config.compositionConfig);
             objectsInference[categoryNo].push_back(object);
             ifsInference >> objectsInference[categoryNo][objectNo];
-            std::vector<ViewIndependentPart::Part3D> partView;
-            for (int overlapNo=0;overlapNo<3;overlapNo++){
-                std::vector<ViewIndependentPart::Part3D> partsViewTmp;
-                objectsInference[categoryNo][objectNo].getPartsRealisation(1, overlapNo, partsViewTmp);
-                partView.insert(partView.end(), partsViewTmp.begin(), partsViewTmp.end());
+            if (inferenceLayerNo>2){
+                std::vector<ViewIndependentPart::Part3D> partView;
+                for (int overlapNo=0;overlapNo<3;overlapNo++){
+                    std::vector<ViewIndependentPart::Part3D> partsViewTmp;
+                    objectsInference[categoryNo][objectNo].getPartsRealisation(inferenceLayerNo-3, overlapNo, partsViewTmp);
+                    partView.insert(partView.end(), partsViewTmp.begin(), partsViewTmp.end());
+                }
+                for (auto part : partView){
+                    std::map<std::string,int> objectsCoverage;
+                    getObjectsBuildFromPart(part.id, inferenceLayerNo, objectsCoverage);
+                    for (auto &element : objectsCoverage){
+                        auto it = objectsCoveragesGlob.find(element.first);
+                        if (it != objectsCoverage.end())
+                            objectsCoveragesGlob[element.first]+=element.second;
+                        else
+                            objectsCoveragesGlob[element.first]=element.second;
+                    }
+                }
             }
-            for (auto part : partView){
-                std::map<std::string,int> objectsCoverage;
-                getObjectsBuildFromPart(part.id, 1, objectsCoverage);
-                for (auto &element : objectsCoverage){
-                    auto it = objectsCoveragesGlob.find(element.first);
-                    if (it != objectsCoverage.end())
-                        objectsCoveragesGlob[element.first]+=element.second;
-                    else
-                        objectsCoveragesGlob[element.first]=element.second;
+        }
+    }
+    ((NormalImageFilter*)imageFilterer)->loadFromfile(ifsInference, true);
+    ifsInference.close();
+    std::cout << "Loaded\n";
+    if (inferenceLayerNo<3){
+        for (int overlapNo=0; overlapNo<3; overlapNo++){
+            for (size_t categoryNo=0;categoryNo<datasetInfoTest.categories.size();categoryNo++){
+                for (size_t objectNo=0;objectNo<datasetInfoTest.categories[categoryNo].objects.size();objectNo++){
+                    for (size_t imageNo=0;imageNo<datasetInfoTest.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                        std::vector<PartCoordsEucl> partCoords;
+                        imageFilterer->getParts3D(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, inferenceLayerNo, partCoords, false);
+                        for (auto part : partCoords){
+                            std::map<std::string,int> objectsCoverage;
+                            getObjectsBuildFromPart(part.filterId, inferenceLayerNo, objectsCoverage);
+                            for (auto &element : objectsCoverage){
+                                auto it = objectsCoveragesGlob.find(element.first);
+                                if (it != objectsCoverage.end())
+                                    objectsCoveragesGlob[element.first]+=element.second;
+                                else
+                                    objectsCoveragesGlob[element.first]=element.second;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -554,9 +583,6 @@ void HOP3DBham::loadInference(std::string filename){
     }
     for (auto &element : objectsCoveragesGlob)
         std::cout << element.first << "-> [%] " << double(element.second)/sumCov << "\n";
-    ((NormalImageFilter*)imageFilterer)->loadFromfile(ifsInference, true);
-    ifsInference.close();
-    std::cout << "Loaded\n";
     //visualization
 #ifdef QVisualizerBuild
     if (config.useVisualization){
@@ -575,16 +601,39 @@ void HOP3DBham::getObjectsBuildFromPart(int partId, int layerNo, std::map<std::s
         for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
             for (int overlapNo=0;overlapNo<3;overlapNo++){
                 std::vector<ViewIndependentPart::Part3D> partsViewTmp;
-                objects[categoryNo][objectNo].getPartsRealisation(layerNo, overlapNo, partsViewTmp);
-                for (auto &part : partsViewTmp){
-                    if (partId == part.id){
-                        std::string objectName = datasetInfoTrain.categories[categoryNo].objects[objectNo].name;
-                        int coveragePart = (int)hierarchy.get()->viewIndependentLayers[layerNo][partId].cloud.size();
-                        auto it = objectNames.find(objectName);
-                        if (it != objectNames.end())
-                            objectNames[objectName]+=coveragePart;
-                        else
-                            objectNames[objectName]=coveragePart;
+                if (layerNo>2){
+                    objects[categoryNo][objectNo].getPartsRealisation(layerNo-3, overlapNo, partsViewTmp);
+                    for (auto &part : partsViewTmp){
+                        if (partId == part.id){
+                            std::string objectName = datasetInfoTrain.categories[categoryNo].objects[objectNo].name;
+                            int coveragePart = (int)hierarchy.get()->viewIndependentLayers[layerNo-3][partId].cloud.size();
+                            std::cout << objectName << "-> " << coveragePart << " jjj\n";
+                            auto it = objectNames.find(objectName);
+                            if (it != objectNames.end())
+                                objectNames[objectName]+=coveragePart;
+                            else
+                                objectNames[objectName]=coveragePart;
+                        }
+                    }
+                }
+                else{
+                    std::vector<PartCoordsEucl> partCoords;
+                    for (size_t imageNo=0;imageNo<datasetInfoTrain.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                        std::vector<PartCoordsEucl> partCoordsTmp;
+                        imageFilterer->getParts3D(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoordsTmp, false);
+                        partCoords.insert(partCoords.end(), partCoordsTmp.begin(), partCoordsTmp.end());
+                    }
+                    for (auto &part : partCoords){
+                        if (partId == part.filterId&&hierarchy.get()->viewDependentLayers[layerNo-1][partId].group.size()<10){
+                            std::string objectName = datasetInfoTrain.categories[categoryNo].objects[objectNo].name;
+                            int coveragePart = 1;
+                            std::cout << objectName << "-> " << coveragePart << " jjj\n";
+                            auto it = objectNames.find(objectName);
+                            if (it != objectNames.end())
+                                objectNames[objectName]+=coveragePart;
+                            else
+                                objectNames[objectName]=coveragePart;
+                        }
                     }
                 }
             }
