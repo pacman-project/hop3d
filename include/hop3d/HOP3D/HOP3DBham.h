@@ -186,6 +186,9 @@ private:
     /// notify visualizer
     void notifyVisualizer(void);
 
+    /// return object which are build from part id
+    void getObjectsBuildFromPart(int partId, int layerNo, std::map<std::string,int>& objectNames);
+
     /// Configuration of the module
     Config config;
 

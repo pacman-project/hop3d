@@ -519,16 +519,41 @@ void HOP3DBham::load(std::string filename){
 /// load inference results from the file
 void HOP3DBham::loadInference(std::string filename){
     std::ifstream ifsInference(filename);
-    std::cout << "Load inference results...";
+    std::cout << "Load inference results...\n";
     datasetTest->getDatasetInfo(datasetInfoTest);
     objectsInference.resize(datasetInfoTest.categories.size());
+    std::map<std::string,int> objectsCoveragesGlob;
     for (size_t categoryNo=0;categoryNo<datasetInfoTest.categories.size();categoryNo++){//for each category
         for (size_t objectNo=0;objectNo<datasetInfoTest.categories[categoryNo].objects.size();objectNo++){//for each object
             ObjectCompositionOctree object(config.compositionConfig);
             objectsInference[categoryNo].push_back(object);
             ifsInference >> objectsInference[categoryNo][objectNo];
+            std::vector<ViewIndependentPart::Part3D> partView;
+            for (int overlapNo=0;overlapNo<3;overlapNo++){
+                std::vector<ViewIndependentPart::Part3D> partsViewTmp;
+                objectsInference[categoryNo][objectNo].getPartsRealisation(1, overlapNo, partsViewTmp);
+                partView.insert(partView.end(), partsViewTmp.begin(), partsViewTmp.end());
+            }
+            for (auto part : partView){
+                std::map<std::string,int> objectsCoverage;
+                getObjectsBuildFromPart(part.id, 1, objectsCoverage);
+                for (auto &element : objectsCoverage){
+                    auto it = objectsCoveragesGlob.find(element.first);
+                    if (it != objectsCoverage.end())
+                        objectsCoveragesGlob[element.first]+=element.second;
+                    else
+                        objectsCoveragesGlob[element.first]=element.second;
+                }
+            }
         }
     }
+    double sumCov=0;
+    for (auto &element : objectsCoveragesGlob){
+        sumCov+=element.second;
+        std::cout << element.first << "-> " << element.second << "\n";
+    }
+    for (auto &element : objectsCoveragesGlob)
+        std::cout << element.first << "-> [%] " << double(element.second)/sumCov << "\n";
     ((NormalImageFilter*)imageFilterer)->loadFromfile(ifsInference, true);
     ifsInference.close();
     std::cout << "Loaded\n";
@@ -541,6 +566,30 @@ void HOP3DBham::loadInference(std::string filename){
         createPartClouds(true);
     }
 #endif
+}
+
+/// return object which are build from part id
+void HOP3DBham::getObjectsBuildFromPart(int partId, int layerNo, std::map<std::string,int>& objectNames){
+    objectNames.clear();
+    for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
+        for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
+            for (int overlapNo=0;overlapNo<3;overlapNo++){
+                std::vector<ViewIndependentPart::Part3D> partsViewTmp;
+                objects[categoryNo][objectNo].getPartsRealisation(layerNo, overlapNo, partsViewTmp);
+                for (auto &part : partsViewTmp){
+                    if (partId == part.id){
+                        std::string objectName = datasetInfoTrain.categories[categoryNo].objects[objectNo].name;
+                        int coveragePart = (int)hierarchy.get()->viewIndependentLayers[layerNo][partId].cloud.size();
+                        auto it = objectNames.find(objectName);
+                        if (it != objectNames.end())
+                            objectNames[objectName]+=coveragePart;
+                        else
+                            objectNames[objectName]=coveragePart;
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// inference
@@ -590,6 +639,7 @@ void HOP3DBham::inference(void){
         }
     }
     //ObjectCompositionOctree::setRealisationCounter(imageFilterer->getRealisationsNo()+10000);
+    std::map<std::string,int> objectsCoveragesGlob;
     for (size_t layerNo=0;layerNo<(size_t)config.viewIndependentLayersNo;layerNo++){
         for (size_t categoryNo=0;categoryNo<datasetInfoTest.categories.size();categoryNo++){//for each category
             for (size_t objectNo=0;objectNo<datasetInfoTest.categories[categoryNo].objects.size();objectNo++){//for each object
@@ -600,9 +650,33 @@ void HOP3DBham::inference(void){
         for (size_t categoryNo=0;categoryNo<datasetInfoTest.categories.size();categoryNo++){//for each category
             for (size_t objectNo=0;objectNo<datasetInfoTest.categories[categoryNo].objects.size();objectNo++){//for each object
                 objectsInference[categoryNo][objectNo].updateVoxelsPose((int)layerNo, hierarchy.get()->viewIndependentLayers[layerNo]);
+                std::vector<ViewIndependentPart::Part3D> partView;
+                for (int overlapNo=0;overlapNo<3;overlapNo++){
+                    std::vector<ViewIndependentPart::Part3D> partsViewTmp;
+                    objectsInference[categoryNo][objectNo].getPartsRealisation(1, overlapNo, partsViewTmp);
+                    partView.insert(partView.end(), partsViewTmp.begin(), partsViewTmp.end());
+                }
+                for (auto part : partView){
+                    std::map<std::string,int> objectsCoverage;
+                    getObjectsBuildFromPart(part.id, 1, objectsCoverage);
+                    for (auto &element : objectsCoverage){
+                        auto it = objectsCoveragesGlob.find(element.first);
+                        if (it != objectsCoverage.end())
+                            objectsCoveragesGlob[element.first]+=element.second;
+                        else
+                            objectsCoveragesGlob[element.first]=element.second;
+                    }
+                }
             }
         }
     }
+    double sumCov=0;
+    for (auto &element : objectsCoveragesGlob){
+        sumCov+=element.second;
+        std::cout << element.first << "-> " << element.second << "\n";
+    }
+    for (auto &element : objectsCoveragesGlob)
+        std::cout << element.first << "-> [%] " << double(element.second)/sumCov << "\n";
     std::cout << "Inference finished\n";
     if(config.saveInference){
         std::cout << "Save to file...\n";
