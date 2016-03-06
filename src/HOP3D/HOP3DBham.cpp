@@ -582,7 +582,7 @@ void HOP3DBham::loadInference(std::string filename){
         std::cout << element.first << "-> " << element.second << "\n";
     }
     for (auto &element : objectsCoveragesGlob)
-        std::cout << element.first << "-> [%] " << double(element.second)/sumCov << "\n";
+        std::cout << element.first << "-> [%] " << 100.0*double(element.second)/sumCov << "\n";
     //visualization
 #ifdef QVisualizerBuild
     if (config.useVisualization){
@@ -624,7 +624,7 @@ void HOP3DBham::getObjectsBuildFromPart(int partId, int layerNo, std::map<std::s
                         partCoords.insert(partCoords.end(), partCoordsTmp.begin(), partCoordsTmp.end());
                     }
                     for (auto &part : partCoords){
-                        if (partId == part.filterId&&hierarchy.get()->viewDependentLayers[layerNo-1][partId].group.size()<10){
+                        if (partId == part.filterId&&hierarchy.get()->viewDependentLayers[layerNo-1][partId].group.size()<15){
                             std::string objectName = datasetInfoTrain.categories[categoryNo].objects[objectNo].name;
                             int coveragePart = 1;
                             std::cout << objectName << "-> " << coveragePart << " jjj\n";

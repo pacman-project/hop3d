@@ -29,7 +29,7 @@
   
 <!--   Hierarchy configuration -->
   <Hierarchy>
-    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="2" viewDepPartsFromLayerNo="1" train="false" load="true" file2load="hierarchy5Objects3/hop3dHierarchyBoris13.h3d" inference="true" loadInferenceResults="false" inferenceFile="inferenceResultsMug1_2.h3r"></parameters>
+    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="2" viewDepPartsFromLayerNo="1" train="true" load="false" file2load="hierarchy3Objects1/hop3dHierarchyBoris3Objects.h3d" inference="false" loadInferenceResults="false" inferenceFile="hierarchy3Objects1/inferenceResultsMug1_1.h3r"></parameters>
     <save2file save2file="true" filename2save="hop3dHierarchyBoris.h3d" saveInference="true" filename2saveInference="inferenceResults.h3r"/>
   </Hierarchy>
   
@@ -43,5 +43,5 @@
   </CameraModel>
   
 <!--   QVisualizer configuration -->
-  <QVisualizer useVisualization="true" configFilename="hop3dQvisualizerConfig.xml">
+  <QVisualizer useVisualization="false" configFilename="hop3dQvisualizerConfig.xml">
   </QVisualizer>

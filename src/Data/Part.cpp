@@ -841,8 +841,8 @@ double ViewDependentPart::computeError(const ViewDependentPart& partA, const Vie
                 //std::cout << "error bckgr pos " << errorPos << "\n";
             }
             else if ((partA.partIds[i][j]<0&&partB.partIds[i][j]>=0)||(partA.partIds[i][j]>=0&&partB.partIds[i][j]<0)){
-                errorPos+=0.1;
-                errorRot+=0.1;
+                errorPos+=0.5;
+                errorRot+=0.5;
                 //std::cout << "error bckgr diff rot " << errorRot << "\n";
                 //std::cout << "error bckgr diff pos " << errorPos << "\n";
             }
@@ -894,8 +894,8 @@ double ViewDependentPart::computeError(const PointsSecondLayer& partA, const Poi
                 errorRot+=0.0;
             }
             else if ((isnan(partA[i][j].mean(0))&&!isnan(partB[i][j].mean(0)))||(!isnan(partA[i][j].mean(0))&&isnan(partB[i][j].mean(0)))){
-                errorPos+=0.1;
-                errorRot+=0.1;
+                errorPos+=0.5;
+                errorRot+=0.5;
                 //std::cout << "error pos1 " << errorPos << "\n";
                 //std::cout << "error rot1 " << errorRot << "\n";
             }

@@ -1167,6 +1167,8 @@ void QGLVisualizer::drawPatch(const Vec3& normal) const{
                 if (sqrt(pow(point(0,3),2.0)+pow(point(1,3),2.0))<((quadSize-1)*config.pixelSize/2.0)){
                     glNormal3d(-point(0,2), -point(1,2), -point(2,2));
                     glVertex3d(point(0,3), point(1,3), point(2,3));
+                    glNormal3d(point(0,2), point(1,2), point(2,2));
+                    glVertex3d(point(0,3), point(1,3), point(2,3)+0.001);
                 }
 
             }

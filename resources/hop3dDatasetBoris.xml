@@ -114,7 +114,7 @@
 	<Image6 name="data-points_raw-glass2-7.pcd" />
       </Object1>
     </Category3>
-    <Category4 name="cup" objectsNo="2">
+    <Category4 name="cup" objectsNo="1">
       <Object0 name="cup1" imagesNo="7">
 	<Image0 name="data-points_raw-cup1-1.pcd" />
 	<Image1 name="data-points_raw-cup1-2.pcd" />
