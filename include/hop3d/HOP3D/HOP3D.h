@@ -51,55 +51,55 @@ public:
     //virtual void getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const = 0;
 
     /// get training dataset info
-    virtual void getDatasetInfo(hop3d::DatasetInfo& dataset) const = 0;
+    virtual void getDatasetInfo(hop3d::DatasetInfo& dataset, bool inference) const = 0;
 
     /// returns paths for each cloud/image
-    virtual void getCloudPaths(std::vector<std::string>& paths) const = 0;
+    virtual void getCloudPaths(std::vector<std::string>& paths, bool inference) const = 0;
 
     /// get cloud from dataset
-    virtual void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const = 0;
+    virtual void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud, bool inference) const = 0;
 
     /// get cloud from dataset
-    virtual void getCloud(const std::string& path, hop3d::PointCloud& cloud) const = 0;
+    virtual void getCloud(const std::string& path, hop3d::PointCloud& cloud, bool inference) const = 0;
 
     /// get hierarchy graph
     virtual void getHierarchy(Hierarchy::IndexSeqMap& hierarchyGraph) const = 0;
 
     /// get parts realization
-    virtual void getPartsRealisation(const std::string& path, std::vector<ViewIndependentPart::Part3D>& parts) const = 0;
+    virtual void getPartsRealisation(const std::string& path, std::vector<ViewIndependentPart::Part3D>& parts, bool inference) const = 0;
 
     /// get parts realization
-    virtual void getPartsRealisation(int categoryNo, int objectNo, int imageNo, std::vector<ViewIndependentPart::Part3D>& parts) const = 0;
+    virtual void getPartsRealisation(int categoryNo, int objectNo, int imageNo, std::vector<ViewIndependentPart::Part3D>& parts, bool inference) const = 0;
 
     /// get parts realization
-    virtual void getPartsRealisationCloud(int categoryNo, int objectNo, int imageNo, PartsClouds& parts) const = 0;
+    virtual void getPartsRealisationCloud(int categoryNo, int objectNo, int imageNo, PartsClouds& parts, bool inference) const = 0;
 
     /// get parts realization
-    virtual void getPartsRealisationCloud(const std::string& path, PartsClouds& parts) const = 0;
+    virtual void getPartsRealisationCloud(const std::string& path, PartsClouds& parts, bool inference) const = 0;
 
     /// get number of points in the point cloud
-    virtual size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo) const = 0;
+    virtual size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo, bool inference) const = 0;
 
     /// get point from the point cloud
     //virtual void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const = 0;
 
     /// get camera pose
-    virtual void getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose) const = 0;
+    virtual void getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose, bool inference) const = 0;
 
     /// get camera pose
-    virtual void getSensorFrame(const std::string& path, Mat34& cameraPose) const = 0;
+    virtual void getSensorFrame(const std::string& path, Mat34& cameraPose, bool inference) const = 0;
 
     /// get maps from point to part realisation
-    virtual void getCloud2PartsMap(const std::string& path, Hierarchy::IndexSeqMap& points2parts) const = 0;
+    virtual void getCloud2PartsMap(const std::string& path, Hierarchy::IndexSeqMap& points2parts, bool inference) const = 0;
 
     /// get maps from point to part realisation
-    virtual void getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSeqMap& points2parts) const = 0;
+    virtual void getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSeqMap& points2parts, bool inference) const = 0;
 
     /// get realisations graph
-    virtual void getRealisationsGraph(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSetMap& hierarchyGraph) const = 0;
+    virtual void getRealisationsGraph(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSetMap& hierarchyGraph, bool inference) const = 0;
 
     /// get realisations graph
-    virtual void getRealisationsGraph(const std::string& path, Hierarchy::IndexSetMap& realisationsGraph) const = 0;
+    virtual void getRealisationsGraph(const std::string& path, Hierarchy::IndexSetMap& realisationsGraph, bool inference) const = 0;
 
     /// Virtual descrutor
     virtual ~HOP3D() {

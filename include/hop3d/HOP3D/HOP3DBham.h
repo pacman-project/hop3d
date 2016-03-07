@@ -58,55 +58,55 @@ public:
     //void getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const;
 
     /// get training dataset info
-    void getDatasetInfo(hop3d::DatasetInfo& _dataset) const;
+    void getDatasetInfo(hop3d::DatasetInfo& _dataset, bool inference) const;
 
     /// returns paths for each cloud/image
-    void getCloudPaths(std::vector<std::string>& paths) const;
+    void getCloudPaths(std::vector<std::string>& paths, bool inference) const;
 
     /// get cloud from dataset
-    void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud) const;
+    void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud, bool inference) const;
 
     /// get cloud from dataset
-    void getCloud(const std::string& path, hop3d::PointCloud& cloud) const;
+    void getCloud(const std::string& path, hop3d::PointCloud& cloud, bool inference) const;
 
     /// get hierarchy graph
     void getHierarchy(Hierarchy::IndexSeqMap& hierarchyGraph) const;
 
     /// get parts realization
-    void getPartsRealisation(const std::string& path, std::vector<ViewIndependentPart::Part3D>& parts) const;
+    void getPartsRealisation(const std::string& path, std::vector<ViewIndependentPart::Part3D>& parts, bool inference) const;
 
     /// get parts realization
-    void getPartsRealisation(int categoryNo, int objectNo, int imageNo, std::vector<ViewIndependentPart::Part3D>& parts) const;
+    void getPartsRealisation(int categoryNo, int objectNo, int imageNo, std::vector<ViewIndependentPart::Part3D>& parts, bool inference) const;
 
     /// get parts realization
-    void getPartsRealisationCloud(int categoryNo, int objectNo, int imageNo, PartsClouds& parts) const;
+    void getPartsRealisationCloud(int categoryNo, int objectNo, int imageNo, PartsClouds& parts, bool inference) const;
 
     /// get parts realization
-    void getPartsRealisationCloud(const std::string& path, PartsClouds& parts) const;
+    void getPartsRealisationCloud(const std::string& path, PartsClouds& parts, bool inference) const;
 
     /// get maps from point to part realisation
-    void getCloud2PartsMap(const std::string& path, Hierarchy::IndexSeqMap& points2parts) const;
+    void getCloud2PartsMap(const std::string& path, Hierarchy::IndexSeqMap& points2parts, bool inference) const;
 
     /// get maps from point to part realisation
-    void getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSeqMap& points2parts) const;
+    void getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSeqMap& points2parts, bool inference) const;
 
     /// get number of points in the point cloud
-    size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo) const;
+    size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo, bool inference) const;
 
     /// get point from the point cloud
     //void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const;
 
     /// get camera pose
-    void getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose) const;
+    void getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose, bool inference) const;
 
     /// get camera pose
-    void getSensorFrame(const std::string& path, Mat34& cameraPose) const;
+    void getSensorFrame(const std::string& path, Mat34& cameraPose, bool inference) const;
 
     /// get realisations graph
-    void getRealisationsGraph(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSetMap& realisationsGraph) const;
+    void getRealisationsGraph(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSetMap& realisationsGraph, bool inference) const;
 
     /// get realisations graph
-    void getRealisationsGraph(const std::string& path, Hierarchy::IndexSetMap& realisationsGraph) const;
+    void getRealisationsGraph(const std::string& path, Hierarchy::IndexSetMap& realisationsGraph, bool inference) const;
 
     #ifdef QVisualizerBuild
         ///Attach visualizer
