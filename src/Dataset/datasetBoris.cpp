@@ -230,11 +230,11 @@ Mat34 BorisDataset::readCameraPose(std::string& filename){
 
 std::unique_ptr<hop3d::Dataset> hop3d::createBorisDataset(void) {
     //dataset.reset(new BorisDataset());
-    return make_unique<BorisDataset>();//dataset.get();
+	return hop3d::make_unique<BorisDataset>();//dataset.get();
 }
 
 std::unique_ptr<hop3d::Dataset> hop3d::createBorisDataset(std::string config, std::string sensorConfig) {
     //dataset.reset(new BorisDataset(config, sensorConfig));
     //return dataset.get();
-    return make_unique<BorisDataset>(config, sensorConfig);
+	return hop3d::make_unique<BorisDataset>(config, sensorConfig);
 }
