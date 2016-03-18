@@ -647,7 +647,6 @@ void HOP3DBham::getObjectsBuildFromPart(int partId, int layerNo, std::map<std::s
                         if (partId == part.id){
                             std::string objectName = datasetInfoTrain.categories[categoryNo].objects[objectNo].name;
                             int coveragePart = (int)hierarchy.get()->viewIndependentLayers[layerNo-3][partId].cloud.size();
-                            std::cout << objectName << "-> " << coveragePart << " jjj\n";
                             auto it = objectNames.find(objectName);
                             if (it != objectNames.end())
                                 objectNames[objectName]+=coveragePart;
@@ -762,7 +761,7 @@ void HOP3DBham::inference(void){
     double sumCov=0;
     for (auto &element : objectsCoveragesGlob){
         sumCov+=element.second;
-        std::cout << element.first << "-> " << element.second << "\n";
+        //std::cout << element.first << "-> " << element.second << "\n";
     }
     for (auto &element : objectsCoveragesGlob)
         std::cout << element.first << "-> [%] " << double(element.second)/sumCov << "\n";

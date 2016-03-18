@@ -9,7 +9,7 @@
     <parameters verbose="1" categoriesNo="1" type="rgbd" path="../../Datasets/Pacman"></parameters>
     <Category0 name="Mug" objectsNo="1">
       <Object0 name="Mug_2" imagesNo="1">
-	<Image0 name="219_P28_IP8.png" />
+	<Image0 name="221_P5_IP4.png" />
 	<Image1 name="221_P4_IP5.png" />
 	<Image2 name="221_P3_IP5.png" />
 	<Image3 name="221_P4_IP5.png" />
