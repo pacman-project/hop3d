@@ -342,7 +342,7 @@ void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hie
                 if (ids[layerNo]>=0){
                     idsParts.push_back((std::uint32_t)ids[layerNo]);
                     //idsParts.push_back((((std::uint32_t)layerNo)*10000)+(std::uint32_t)ids[layerNo]);//for model ids
-                    std::cout << "point " << pointIdx << " -> " << (std::uint32_t)ids[layerNo] << " lay no " << layerNo << "\n";
+                    //std::cout << "point " << pointIdx << " -> " << (std::uint32_t)ids[layerNo] << " lay no " << layerNo << "\n";
                 }
             }
         }
