@@ -23,8 +23,18 @@ int main(void){
             lhop3d->learn();
         if (load)
             lhop3d->load(file2load);
-        if (inference)
+        if (inference){
             lhop3d->inference();
+            /*std::vector<std::pair<cv::Mat, hop3d::Mat34>> frames;
+            std::string path = "depth.png";
+            cv::Mat depthImage = cv::imread(path, CV_LOAD_IMAGE_ANYDEPTH );
+            std::cout << depthImage.rows << ", " << depthImage.cols << "vvv\n";
+            if(!depthImage.data ) {
+                throw std::runtime_error("Could not open or find the image " + path + "\n");
+            }
+            frames.push_back(std::make_pair(depthImage, hop3d::Mat34::Identity()));
+            lhop3d->inference(frames,0,0);*/
+        }
         if (loadInferenceResults)
             lhop3d->loadInference(inferenceFile);
     }

@@ -54,6 +54,9 @@ public:
     /// inference
     void inference(void);
 
+    /// inference
+    void inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, int categoryNo, int objectNo);
+
     /// get set of ids from hierarchy for the given input point
     //void getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const;
 
