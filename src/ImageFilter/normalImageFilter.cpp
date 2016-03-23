@@ -263,7 +263,7 @@ void NormalImageFilter::getResponseFilters(int overlapNo, int categoryNo, int ob
                 if (!octet->isBackground){
                     for (int i=0;i<3;i++){
                         for (int j=0;j<3;j++){
-                            if (octet->partIds[i][j]!=-1){
+                            if (octet->partIds[i][j]>=0){
                                 if (i==1&&j==1){
                                     PartCoords fcoords(octet->partIds[i][j], octet->filterPos[i][j], octet->offsets[i][j]);
                                     partCoords.push_back(fcoords);
@@ -359,7 +359,7 @@ void NormalImageFilter::getParts3D(int overlapNo, int categoryNo, int objectNo, 
                     if (!octet->isBackground){
                         for (int i=0;i<3;i++){
                             for (int j=0;j<3;j++){
-                                if (octet->partIds[i][j]!=-1){
+                                if (octet->partIds[i][j]>=0){
                                     if (i==1&&j==1){
                                         PartCoords fcoords(octet->partIds[i][j], octet->filterPos[i][j], octet->offsets[i][j]);
                                         partCoords.push_back(fcoords);
@@ -544,7 +544,7 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
         octetTmp.partIds=part.partIds;
         for (int i=0;i<3;i++){//compute mean depth
             for (int j=0;j<3;j++){
-                if (octetTmp.partIds[i][j]!=-1){
+                if (octetTmp.partIds[i][j]>=0){
                     meanDepth+= octetTmp.filterPos[i][j].depth;
                     meanPosNorm+=octetTmp.partsPosNorm[i][j].mean;
                     if (min>octetTmp.filterPos[i][j].depth){
@@ -671,7 +671,7 @@ bool NormalImageFilter::findMaxGroupResponse(const std::vector< std::vector<Resp
     for (int i=-config.filterSize/2;i<1+config.filterSize/2;i++){
         for (int j=-config.filterSize/2;j<1+config.filterSize/2;j++){
             std::pair<std::map<int,int>::iterator,bool> ret;
-            if (responseImg[u+i][v+j].first!=-1){
+            if (responseImg[u+i][v+j].first>=0){
                 ret = occurencesMap.insert ( std::pair<int,int>(responseImg[u+i][v+j].first,1) );
                 if (ret.second==false) {
                     occurencesMap[responseImg[u+i][v+j].first]=ret.first->second+1;

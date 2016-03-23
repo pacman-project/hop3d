@@ -789,6 +789,93 @@ void HOP3DBham::inference(void){
 #endif
 }
 
+/// inference
+void HOP3DBham::inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, int categoryNo, int objectNo){
+    if (hierarchy.get()->viewDependentLayers[0].size()==0)
+        throw std::runtime_error("Train or load hierarchy first\n");
+    std::cout << "Start inference\n";
+    for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
+        if (layerNo==0){
+            int imageNo=0;
+            for (const auto& frame : cameraFrames){
+                std::vector<hop3d::Octet> octetsTmp;
+                imageFilterer->computeOctets(frame.first, categoryNo, objectNo, imageNo, octetsTmp, true);
+                imageFilterer->getOctets(categoryNo, objectNo, imageNo, *hierarchy, octetsTmp, true);
+                imageNo++;
+            }
+        }
+        for (int overlapNo=0; overlapNo<3; overlapNo++){
+            for (int imageNo=0; imageNo<(int)cameraFrames.size(); imageNo++){
+                imageFilterer->computePartsImage(overlapNo, categoryNo, objectNo, imageNo, *hierarchy, layerNo, true);
+            }
+        }
+    }
+    objectsInference.resize(1);
+    std::cout << "Create object composition\n";
+    ObjectCompositionOctree object(config.compositionConfig);
+    objectsInference[categoryNo].push_back(object);
+    for (int imageNo=0; imageNo<(int)cameraFrames.size(); imageNo++){
+        std::vector<ViewDependentPart> parts;
+        //get parts of the 3rd layers
+        imageFilterer->getLayerParts(categoryNo, objectNo, imageNo, hierarchy.get()->viewDepPartsFromLayerNo-1, parts, true);
+        //move octets into 3D space and update octree representation of the object
+        objectsInference[categoryNo][objectNo].updatePCLGrid(parts, cameraFrames[imageNo].second);
+    }
+    //ObjectCompositionOctree::setRealisationCounter(imageFilterer->getRealisationsNo()+10000);
+    std::map<std::string,int> objectsCoveragesGlob;
+    for (size_t layerNo=0;layerNo<(size_t)config.viewIndependentLayersNo;layerNo++){
+        std::vector<ViewIndependentPart> voc;
+        objectsInference[categoryNo][objectNo].createNextLayerVocabulary((int)layerNo, *hierarchy, voc);
+        objectsInference[categoryNo][objectNo].updateVoxelsPose((int)layerNo, hierarchy.get()->viewIndependentLayers[layerNo]);
+        std::vector<ViewIndependentPart::Part3D> partView;
+        for (int overlapNo=0;overlapNo<3;overlapNo++){
+            std::vector<ViewIndependentPart::Part3D> partsViewTmp;
+            objectsInference[categoryNo][objectNo].getPartsRealisation(1, overlapNo, partsViewTmp);
+            partView.insert(partView.end(), partsViewTmp.begin(), partsViewTmp.end());
+        }
+        for (auto part : partView){
+            std::map<std::string,int> objectsCoverage;
+            getObjectsBuildFromPart(part.id, 1, objectsCoverage);
+            for (auto &element : objectsCoverage){
+                auto it = objectsCoveragesGlob.find(element.first);
+                if (it != objectsCoverage.end())
+                    objectsCoveragesGlob[element.first]+=element.second;
+                else
+                    objectsCoveragesGlob[element.first]=element.second;
+            }
+        }
+    }
+    double sumCov=0;
+    for (auto &element : objectsCoveragesGlob){
+        sumCov+=element.second;
+        //std::cout << element.first << "-> " << element.second << "\n";
+    }
+    for (auto &element : objectsCoveragesGlob)
+        std::cout << element.first << "-> [%] " << double(element.second)/sumCov << "\n";
+    std::cout << "Inference finished\n";
+    if(config.saveInference){
+        std::cout << "Save to file...\n";
+        std::ofstream ofsInference(config.filename2saveInference);
+        for (size_t categoryNo=0;categoryNo<datasetInfoTest.categories.size();categoryNo++){//for each category
+            for (size_t objectNo=0;objectNo<datasetInfoTest.categories[categoryNo].objects.size();objectNo++){//for each object
+                ofsInference << objectsInference[categoryNo][objectNo];
+            }
+        }
+        ((NormalImageFilter*)imageFilterer)->save2file(ofsInference, true);
+        ofsInference.close();
+        std::cout << "saved\n";
+    }
+    //visualization
+#ifdef QVisualizerBuild
+    if (config.useVisualization){
+        createObjsFromParts(true);
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        notify3Dmodels();
+        createPartClouds(true);
+    }
+#endif
+}
+
 /// notify visualizer
 void HOP3DBham::notifyVisualizer(void){
 #ifdef QVisualizerBuild
