@@ -156,6 +156,8 @@ public:
             bool save2file;
             /// save inference results to file
             bool saveInference;
+            /// inference to layer
+            int inferenceUpToLayer;
             /// inference results filename
             std::string filename2saveInference;
             /// use visualization

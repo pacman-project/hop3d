@@ -87,6 +87,7 @@ HOP3DBham::Config::Config(std::string configFilename){
 
     group->FirstChildElement( "parameters" )->QueryIntAttribute("viewDependentLayersNo", &viewDependentLayersNo);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("viewIndependentLayersNo", &viewIndependentLayersNo);
+    group->FirstChildElement( "parameters" )->QueryIntAttribute("inferenceUpToLayer", &inferenceUpToLayer);
 
     group->FirstChildElement( "save2file" )->QueryBoolAttribute("save2file", &save2file);
     filename2save = group->FirstChildElement( "save2file" )->Attribute( "filename2save" );
@@ -686,7 +687,9 @@ void HOP3DBham::inference(void){
         throw std::runtime_error("Train or load hierarchy first\n");
     datasetTest->getDatasetInfo(datasetInfoTest);
     std::cout << "Start inference\n";
-    for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
+    int toLayerDep = (config.inferenceUpToLayer>config.viewDependentLayersNo) ? config.viewDependentLayersNo : config.inferenceUpToLayer;
+    int toLayerIndep = (config.inferenceUpToLayer>config.viewDependentLayersNo) ? config.inferenceUpToLayer-config.viewDependentLayersNo : 0;
+    for (int layerNo=0;layerNo<toLayerDep;layerNo++){
         if (layerNo==0){
             for (size_t categoryNo=0;categoryNo<datasetInfoTest.categories.size();categoryNo++){
                 for (size_t objectNo=0;objectNo<datasetInfoTest.categories[categoryNo].objects.size();objectNo++){
@@ -728,7 +731,7 @@ void HOP3DBham::inference(void){
     }
     //ObjectCompositionOctree::setRealisationCounter(imageFilterer->getRealisationsNo()+10000);
     std::map<std::string,int> objectsCoveragesGlob;
-    for (size_t layerNo=0;layerNo<(size_t)config.viewIndependentLayersNo;layerNo++){
+    for (size_t layerNo=0;layerNo<(size_t)toLayerIndep;layerNo++){
         for (size_t categoryNo=0;categoryNo<datasetInfoTest.categories.size();categoryNo++){//for each category
             for (size_t objectNo=0;objectNo<datasetInfoTest.categories[categoryNo].objects.size();objectNo++){//for each object
                 std::vector<ViewIndependentPart> voc;
@@ -793,8 +796,10 @@ void HOP3DBham::inference(void){
 void HOP3DBham::inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, int categoryNo, int objectNo){
     if (hierarchy.get()->viewDependentLayers[0].size()==0)
         throw std::runtime_error("Train or load hierarchy first\n");
+    int toLayerDep = (config.inferenceUpToLayer>config.viewDependentLayersNo) ? config.viewDependentLayersNo : config.inferenceUpToLayer;
+    int toLayerIndep = (config.inferenceUpToLayer>config.viewDependentLayersNo) ? config.inferenceUpToLayer-config.viewDependentLayersNo : 0;
     std::cout << "Start inference\n";
-    for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
+    for (int layerNo=0;layerNo<toLayerDep;layerNo++){
         if (layerNo==0){
             int imageNo=0;
             for (const auto& frame : cameraFrames){
@@ -823,7 +828,7 @@ void HOP3DBham::inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, 
     }
     //ObjectCompositionOctree::setRealisationCounter(imageFilterer->getRealisationsNo()+10000);
     std::map<std::string,int> objectsCoveragesGlob;
-    for (size_t layerNo=0;layerNo<(size_t)config.viewIndependentLayersNo;layerNo++){
+    for (size_t layerNo=0;layerNo<(size_t)toLayerIndep;layerNo++){
         std::vector<ViewIndependentPart> voc;
         objectsInference[categoryNo][objectNo].createNextLayerVocabulary((int)layerNo, *hierarchy, voc);
         objectsInference[categoryNo][objectNo].updateVoxelsPose((int)layerNo, hierarchy.get()->viewIndependentLayers[layerNo]);
