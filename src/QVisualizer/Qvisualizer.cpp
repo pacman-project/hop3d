@@ -510,6 +510,91 @@ void QGLVisualizer::transposeGaussians(std::array<std::array<Gaussian3D,3>,3>& g
     gaussians = gaussiansNew;
 }
 
+/// draw VI part
+void QGLVisualizer::createVIPart(const hop3d::ViewIndependentPart& part, const Mat34& pose) const{
+    double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, pose(0,3), pose(1,3), pose(2,3), 1};
+    glPushMatrix();
+    glMultMatrixd(GLmat);
+    glBegin(GL_POINTS);
+        if (part.layerId==4)
+            glColor3ub(0,250,0);
+        else
+            glColor3ub(250,0,0);
+        glPointSize(float(10.0+part.layerId*10));
+        glVertex3d(0,0,0);
+    glEnd();
+    glBegin(GL_LINES);
+    int layNo = part.layerId-3;
+    double side = (pow(3,layNo+1)*0.01)/2;
+            glVertex3d(side,side,side);
+            glVertex3d(side,side,-side);
+            glVertex3d(-side,side,side);
+            glVertex3d(-side,side,-side);
+            glVertex3d(side,-side,side);
+            glVertex3d(side,-side,-side);
+            glVertex3d(-side,-side,side);
+            glVertex3d(-side,-side,-side);
+
+            glVertex3d(side,side,side);
+            glVertex3d(-side,side,side);
+            glVertex3d(side,-side,side);
+            glVertex3d(-side,-side,side);
+            glVertex3d(side,side,-side);
+            glVertex3d(-side,side,-side);
+            glVertex3d(side,-side,-side);
+            glVertex3d(-side,-side,-side);
+
+            glVertex3d(side,side,side);
+            glVertex3d(side,-side,side);
+            glVertex3d(-side,side,side);
+            glVertex3d(-side,-side,side);
+            glVertex3d(side,side,-side);
+            glVertex3d(side,-side,-side);
+            glVertex3d(-side,side,-side);
+            glVertex3d(-side,-side,-side);
+    glEnd();
+    for (int i=0; i<3;i++){
+        for (int j=0; j<3;j++){
+            for (int k=0; k<3;k++){
+                if (part.layerId==3){
+                    //std::cout << "part.clouds[i][j][k] " << part.clouds[i][j][k].size() <<"\n";
+                    for (auto& patch : part.clouds[i][j][k]){
+                        glPushMatrix();
+                        GLmat[12] = patch.position(0); GLmat[13] = patch.position(1); GLmat[14] = patch.position(2);
+                        glMultMatrixd(GLmat);
+                        glColor3ub(200,200,200);
+                        drawPatch(patch.normal);
+                        glPopMatrix();
+                    }
+                }
+                else{
+                    if (part.partIds[i][j][k]>-1){
+                        //std::cout << part.layerId-4 << " layer \n";
+                        //std::cout << "layer size " << hierarchy.get()->viewIndependentLayers[part.layerId-4].size() << "\n";
+                        //std::cout << "part id " << part.partIds[i][j][k] << "\n";
+                        //std::cout << "part.neighbourPoses[i][j][k] " << part.neighbourPoses[i][j][k].matrix() << "\n";
+                        Mat34 poseP(part.neighbourPoses[i][j][k]);
+                        /*if (i==1&&j==1&&k==1){
+                            poseP(0,3)=0; poseP(1,3)=0; poseP(2,3)=0;
+                        }
+                        else{
+                            poseP.matrix().block<3,1>(0,3)-=part.neighbourPoses[1][1][1].matrix().block<3,1>(0,3);
+                        }*/
+                        //std::cout << "pose\n " << poseP.matrix() << "\n";
+                        //std::cout << "poseP.matrix().block<3,1>(0,3) " << poseP.matrix().block<3,1>(0,3) << "\n";
+                        //double GLmat1[16]={poseP(0,0), poseP(1,0), poseP(2,0), 0, poseP(0,1), poseP(1,1), poseP(2,1), 0, poseP(0,2), poseP(1,2), poseP(2,2), 0, poseP(0,3), poseP(1,3), poseP(2,3), 1};
+                        //glPushMatrix();
+                        //glMultMatrixd(GLmat1);
+                        createVIPart(hierarchy.get()->viewIndependentLayers[part.layerId-4][part.partIds[i][j][k]], poseP);
+                        //glPopMatrix();
+                    }
+                }
+            }
+        }
+    }
+    glPopMatrix();
+}
+
 /// Create view independent part list
 GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part){
     // create one display list
@@ -518,15 +603,34 @@ GLuint QGLVisualizer::createVIPartList(hop3d::ViewIndependentPart& part){
     glPushMatrix();
     //int id = part.group.begin()->id;
     Mat34 pose = Mat34::Identity();//part.pose.inverse();
-    double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, 0, 0, 0, 1};
-    for (auto& patch : part.cloud){
-        glPushMatrix();
-        GLmat[12] = patch.position(0); GLmat[13] = patch.position(1); GLmat[14] = patch.position(2);
-        glMultMatrixd(GLmat);
-        glColor3ub(200,200,200);
-        drawPatch(patch.normal);
-        glPopMatrix();
+    //double GLmat[16]={pose(0,0), pose(1,0), pose(2,0), 0, pose(0,1), pose(1,1), pose(2,1), 0, pose(0,2), pose(1,2), pose(2,2), 0, 0, 0, 0, 1};
+    createVIPart(part, pose);
+    /*if (part.layerId==0){
+        for (int i=0; i<3;i++){
+            for (int j=0; j<3;j++){
+                for (int k=0; k<3;k++){
+                    for (auto& patch : part.clouds[i][j][k]){
+                        glPushMatrix();
+                        GLmat[12] = patch.position(0); GLmat[13] = patch.position(1); GLmat[14] = patch.position(2);
+                        glMultMatrixd(GLmat);
+                        glColor3ub(200,200,200);
+                        drawPatch(patch.normal);
+                        glPopMatrix();
+                    }
+                }
+            }
+        }
     }
+    else{
+        for (auto& patch : part.cloud){
+            glPushMatrix();
+            GLmat[12] = patch.position(0); GLmat[13] = patch.position(1); GLmat[14] = patch.position(2);
+            glMultMatrixd(GLmat);
+            glColor3ub(200,200,200);
+            drawPatch(patch.normal);
+            glPopMatrix();
+        }
+    }*/
     glPopMatrix();
     glEndList();
     return index;

@@ -194,11 +194,8 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart:
         for (size_t idB=idA+1;idB<dictionary.size();idB++){
             double dist(0); Mat34 transform;
             if (dictionary[idA].layerId>2){//compute distance from centroid
-                //std::cout << ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idA], config.configGICP, transform) << "\n";
-                //std::cout << transform.matrix() << "\n";
-                //getchar();
-                dist = pow(1+fabs(double(dictionary[idA].cloud.size())-double(dictionary[idB].cloud.size())),2.0)*ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
-                //dist = ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
+                //dist = pow(1+fabs(double(dictionary[idA].cloud.size())-double(dictionary[idB].cloud.size())),2.0)*ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
+                dist = ViewIndependentPart::distanceUmeyama(dictionary[idA], dictionary[idB], transform);
             }
             distanceMatrix[idA][idB]=dist;
             distanceMatrix[idB][idA]=dist;

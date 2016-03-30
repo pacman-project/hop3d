@@ -270,6 +270,29 @@ Mat33 ViewIndependentPart::coordinateFromNormal(const Vec3& _normal){
 }
 
 /// compute distance between view-independent parts
+double ViewIndependentPart::distanceUmeyama(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset){
+    bool theSame=true;
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
+                if (partA.partIds[i][j][k]!=partB.partIds[i][j][k]){
+                    theSame=false;
+                    break;
+                }
+            }
+            if (!theSame) break;
+        }
+        if (!theSame) break;
+    }
+    if (theSame){
+        offset=Mat34::Identity();
+        return 0;
+    }
+    double errorMin = std::numeric_limits<double>::max();
+    return errorMin;
+}
+
+/// compute distance between view-independent parts
 double ViewIndependentPart::distanceGICP(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ConfigGICP& configGICP, Mat34& offset){
     //pcl::PointCloud<pcl::PointNormal> sourceCloud;
     if (!configGICP.verbose){
@@ -277,6 +300,19 @@ double ViewIndependentPart::distanceGICP(const ViewIndependentPart& partA, const
     }
     auto startTime = std::chrono::high_resolution_clock::now();
     pcl::PointCloud<pcl::PointNormal>::Ptr sourceCloud (new pcl::PointCloud<pcl::PointNormal>);
+    if (partA.cloud.size()==partB.cloud.size()){
+        bool thesame=true;
+        for (size_t i=0;i<partA.cloud.size();i++){
+            if (partA.cloud[i].position!=partB.cloud[i].position){
+                thesame=false;
+                break;
+            }
+        }
+        if (thesame){
+            offset=Mat34::Identity();
+            return 0;
+        }
+    }
     //pcl::IterativeClosestPointWithNormals sourceCovariance (new pcl::PointCloud<pcl::PointNormal>);
     for (auto& point : partA.cloud){
         pcl::PointNormal pointPCL;

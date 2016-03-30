@@ -4,7 +4,7 @@
 #include <memory>
 #include <array>
 
-#include <Eigen/Dense>
+#include "../../external/eigen/eigen3.h"
 #include "opencv2/core/core.hpp"
 
 namespace hop3d {

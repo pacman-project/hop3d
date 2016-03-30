@@ -43,7 +43,7 @@ public:
     virtual void getClusters(int layerNo, std::vector< std::set<int>>& clusters) = 0;
 
     /// create next layer vocabulary
-    virtual void createNextLayerVocabulary(int destLayerNo, const Hierarchy& hierarchy, std::vector<ViewIndependentPart>& vocabulary) = 0;
+    virtual void createNextLayerVocabulary(int destLayerNo, std::vector<ViewIndependentPart>& vocabulary) = 0;
 
     /// get octree in layer layerNo
     virtual void getParts(int layerNo, std::vector<ViewIndependentPart>& parts) = 0;

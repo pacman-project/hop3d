@@ -461,6 +461,9 @@ private:
 
     /// draw Part Second Layer
     void drawPartSecondLayer(void) const;
+
+    /// draw VI part
+    void createVIPart(const hop3d::ViewIndependentPart& part, const hop3d::Mat34& pose) const;
 };
 
 #endif // QVISUALIZER_H_INCLUDED

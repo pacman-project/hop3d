@@ -4,8 +4,8 @@
   <!--type:
 	0 - Boris dataset
 	1 - Pacman dataset-->
-  <Dataset datasetType="0" configFilename="hop3dDatasetBoris.xml" configFilenameTest="hop3dDatasetBorisTest.xml">
-<!--    <Dataset datasetType="1" configFilename="hop3dDatasetPacman.xml" configFilenameTest="hop3dDatasetBorisTest.xml"> -->
+   <Dataset datasetType="0" configFilename="hop3dDatasetBoris.xml" configFilenameTest="hop3dDatasetBorisTest.xml">
+<!--     <Dataset datasetType="1" configFilename="hop3dDatasetPacman.xml" configFilenameTest="hop3dDatasetBorisTest.xml"> -->
   </Dataset>
   
   <!-- filter configuration -->
@@ -29,7 +29,7 @@
   
 <!--   Hierarchy configuration -->
   <Hierarchy>
-    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="2" viewDepPartsFromLayerNo="1" train="true" load="false" file2load="hierarchy5Objects7/hop3dHierarchyBoris.h3d" inference="false" loadInferenceResults="false" inferenceFile="hierarchy5Objects7/inferenceResults.h3r"></parameters>
+    <parameters verbose="1" viewDependentLayersNo="2" viewIndependentLayersNo="2" viewDepPartsFromLayerNo="1" train="true" load="false" file2load="hierarchy5Objects7/hop3dHierarchyBoris.h3d" inference="false" loadInferenceResults="false" inferenceFile="hierarchy5Objects7/inferenceResults.h3r" inferenceUpToLayer="2"></parameters>
     <save2file save2file="true" filename2save="hop3dHierarchyBoris.h3d" saveInference="true" filename2saveInference="inferenceResults.h3r"/>
   </Hierarchy>
   
@@ -39,7 +39,7 @@
 
 <!--  depth camera model -->
   <CameraModel configFilename="hop3dKinectModel.xml">
-<!--   <CameraModel configFilename="hop3dKinectModelPacman.xml"> -->
+<!--    <CameraModel configFilename="hop3dKinectModelPacman.xml">  -->
   </CameraModel>
   
 <!--   QVisualizer configuration -->

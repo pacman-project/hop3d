@@ -3,7 +3,7 @@
 
 #include "hop3d/Data/Defs.h"
 #include "hop3d/Data/Cloud.h"
-#include "hop3d/Utilities/kabschEst.h"
+//#include "hop3d/Utilities/kabschEst.h"
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -234,6 +234,9 @@ public:
     /// relative positions of neighbouring parts
     std::array<std::array<std::array<Mat34,3>,3>,3> neighbourPoses;
 
+    /// relative positions of neighbouring parts
+    std::array<std::array<std::array<hop3d::PointCloud,3>,3>,3> clouds;
+
     /// statistics for positions
     std::array<std::array<std::array<GaussianSE3,3>,3>,3> gaussians;
 
@@ -265,6 +268,9 @@ public:
 
     /// compute distance between view-independent parts
     static double distanceGICP(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ConfigGICP& configGICP, Mat34& offset);
+
+    /// compute distance between view-independent parts
+    static double distanceUmeyama(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset);
 
     /// compute distance between view-independent parts
     static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary, Mat34& offset);
