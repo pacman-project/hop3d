@@ -87,6 +87,7 @@ HOP3DBham::Config::Config(std::string configFilename){
 
     group->FirstChildElement( "parameters" )->QueryIntAttribute("viewDependentLayersNo", &viewDependentLayersNo);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("viewIndependentLayersNo", &viewIndependentLayersNo);
+    group->FirstChildElement( "parameters" )->QueryIntAttribute("inferenceUpToLayer", &inferenceUpToLayer);
 
     group->FirstChildElement( "save2file" )->QueryBoolAttribute("save2file", &save2file);
     filename2save = group->FirstChildElement( "save2file" )->Attribute( "filename2save" );
@@ -463,7 +464,7 @@ void HOP3DBham::learn(){
         getchar();*/
         std::cout << layerNo+4 << " layer init vocabulary size: " << vocabulary.size() << "\n";
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-        partSelector->selectParts(vocabulary, int(layerNo+4));
+        partSelector->selectParts(vocabulary, *hierarchy, int(layerNo+4));
         std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
         std::cout << "Clusterization took = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() <<std::endl;
         std::cout << "Dictionary size (" << layerNo+4 << "-th layer): " << vocabulary.size() << "\n";
@@ -471,7 +472,7 @@ void HOP3DBham::learn(){
         hierarchy.get()->viewIndependentLayers[layerNo]=vocabulary;
         for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
             for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
-                objects[categoryNo][objectNo].updateVoxelsPose((int)layerNo, vocabulary);
+                objects[categoryNo][objectNo].updateVoxelsPose((int)layerNo, vocabulary, *hierarchy);
             }
         }
         //std::cout << "data explained\n";
@@ -651,7 +652,6 @@ void HOP3DBham::getObjectsBuildFromPart(int partId, int layerNo, std::map<std::s
                         if (partId == part.id){
                             std::string objectName = datasetInfoTrain.categories[categoryNo].objects[objectNo].name;
                             int coveragePart = (int)hierarchy.get()->viewIndependentLayers[layerNo-3][partId].cloud.size();
-                            std::cout << objectName << "-> " << coveragePart << " jjj\n";
                             auto it = objectNames.find(objectName);
                             if (it != objectNames.end())
                                 objectNames[objectName]+=coveragePart;
@@ -744,7 +744,7 @@ void HOP3DBham::inference(void){
         }
         for (size_t categoryNo=0;categoryNo<datasetInfoTest.categories.size();categoryNo++){//for each category
             for (size_t objectNo=0;objectNo<datasetInfoTest.categories[categoryNo].objects.size();objectNo++){//for each object
-                objectsInference[categoryNo][objectNo].updateVoxelsPose((int)layerNo, hierarchy.get()->viewIndependentLayers[layerNo]);
+                objectsInference[categoryNo][objectNo].updateVoxelsPose((int)layerNo, hierarchy.get()->viewIndependentLayers[layerNo], *hierarchy);
                 std::vector<ViewIndependentPart::Part3D> partView;
                 for (int overlapNo=0;overlapNo<3;overlapNo++){
                     std::vector<ViewIndependentPart::Part3D> partsViewTmp;
@@ -768,7 +768,7 @@ void HOP3DBham::inference(void){
     double sumCov=0;
     for (auto &element : objectsCoveragesGlob){
         sumCov+=element.second;
-        std::cout << element.first << "-> " << element.second << "\n";
+        //std::cout << element.first << "-> " << element.second << "\n";
     }
     for (auto &element : objectsCoveragesGlob)
         std::cout << element.first << "-> [%] " << double(element.second)/sumCov << "\n";
@@ -835,7 +835,7 @@ void HOP3DBham::inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, 
     for (size_t layerNo=0;layerNo<(size_t)toLayerIndep;layerNo++){
         std::vector<ViewIndependentPart> voc;
         objectsInference[categoryNo][objectNo].createNextLayerVocabulary((int)layerNo, voc);
-        objectsInference[categoryNo][objectNo].updateVoxelsPose((int)layerNo, hierarchy.get()->viewIndependentLayers[layerNo]);
+        objectsInference[categoryNo][objectNo].updateVoxelsPose((int)layerNo, hierarchy.get()->viewIndependentLayers[layerNo], *hierarchy);
         std::vector<ViewIndependentPart::Part3D> partView;
         for (int overlapNo=0;overlapNo<3;overlapNo++){
             std::vector<ViewIndependentPart::Part3D> partsViewTmp;

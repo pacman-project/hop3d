@@ -29,8 +29,8 @@
     </Category0>
     <Category1 name="mug" objectsNo="1">
       <Object0 name="mug2" imagesNo="7">
-	<Image0 name="data-points_raw-mug2-2.pcd" />
-	<Image1 name="data-points_raw-mug2-3.pcd" />
+	<Image0 name="data-points_raw-mug2-1.pcd" />
+	<Image1 name="data-points_raw-mug2-2.pcd" />
 	<Image2 name="data-points_raw-mug2-3.pcd" />
 	<Image3 name="data-points_raw-mug2-4.pcd" />
 	<Image4 name="data-points_raw-mug2-5.pcd" />

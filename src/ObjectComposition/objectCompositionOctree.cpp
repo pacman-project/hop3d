@@ -245,7 +245,7 @@ PointNormal ObjectCompositionOctree::computeMeanPosNorm(PointCloud cloud){
 }
 
 /// upodate voxel poses using new vocabulary
-void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary){
+void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, const Hierarchy& hierarchy){
     for (int overlapNo=0;overlapNo<3;overlapNo++){
         for (int idX=0; idX<(*octrees[layerNo][overlapNo]).size(); idX++){///to do z-slicing
             for (int idY=0; idY<(*octrees[layerNo][overlapNo]).size(); idY++){
@@ -256,7 +256,11 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
                         for (auto& word: vocabulary){
                             Mat34 estTransform;
                             //double fitness = pow(1+fabs(double(word.cloud.size())-double((*octrees[layerNo][overlapNo]).at(idX,idY,idZ).cloud.size())),2.0)*ViewIndependentPart::distanceGICP(word,(*octrees[layerNo][overlapNo])(idX,idY,idZ),config.configGICP,estTransform);
-                            double fitness = ViewIndependentPart::distanceUmeyama(word,(*octrees[layerNo][overlapNo])(idX,idY,idZ),estTransform);
+                            double fitness;
+                            if (word.layerId==3)
+                                fitness = ViewIndependentPart::distanceUmeyama(word,(*octrees[layerNo][overlapNo])(idX,idY,idZ), 3, estTransform);
+                            else if (word.layerId==4)
+                                fitness = ViewIndependentPart::distanceUmeyama(word,(*octrees[layerNo][overlapNo])(idX,idY,idZ), 3, hierarchy.viewIndependentLayers[0], estTransform);
                             if (fitness<minDist){//find min distance
                                 minDist=fitness;
                                 (*octrees[layerNo][overlapNo])(idX,idY,idZ).id = wordId;

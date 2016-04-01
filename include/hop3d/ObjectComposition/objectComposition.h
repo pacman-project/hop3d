@@ -58,7 +58,7 @@ public:
     virtual void getRealisationsIds(const Vec3& point, int overlapNo, std::vector<int>& ids) const = 0;
 
     /// upodate voxel poses using new vocabulary
-    virtual void updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary) = 0;
+    virtual void updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, const Hierarchy& hierarchy) = 0;
 
     /// get parts realisations
     virtual void getPartsRealisation(int layerNo, int overlapNo, std::vector<ViewIndependentPart::Part3D>& partsViewTmp) const = 0;

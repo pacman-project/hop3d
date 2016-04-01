@@ -219,11 +219,11 @@ Mat34 PacmanDataset::readCameraPose(std::string& filename){
 std::unique_ptr<hop3d::Dataset> hop3d::createPacmanDataset(void) {
     //datasetPacman.reset(new PacmanDataset());
     //return datasetPacman.get();
-    return make_unique<PacmanDataset>();
+	return hop3d::make_unique<PacmanDataset>();
 }
 
 std::unique_ptr<hop3d::Dataset> hop3d::createPacmanDataset(std::string config, std::string sensorConfig) {
     //datasetPacman.reset(new PacmanDataset(config, sensorConfig));
     //return datasetPacman.get();
-    return make_unique<PacmanDataset>(config, sensorConfig);
+	return hop3d::make_unique<PacmanDataset>(config, sensorConfig);
 }

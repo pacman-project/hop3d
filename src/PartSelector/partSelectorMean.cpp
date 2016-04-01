@@ -71,7 +71,7 @@ PartSelectorMean::Config::Config(std::string configFilename){
 }
 
 /// Select parts from the initial vocabulary
-void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, int layerNo){
+void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
     int clustersNo;
     if (config.useCompressionRate[layerNo-1])
         clustersNo = (int)(config.compressionRate[layerNo-1]*(int)dictionary.size());
@@ -107,9 +107,9 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, int lay
             }
             std::cout << "\n";
         }
-        fit2clusters(centroids, dictionary, clusters, offsets);
+        fit2clusters(centroids, dictionary, clusters, hierarchy, offsets);
         std::vector<int> oldCentroids(centroids);
-        computeCentroids(clusters, centroids, dictionary, offsets);
+        computeCentroids(clusters, centroids, dictionary, hierarchy, offsets);
         if (oldCentroids==centroids){
             if (config.verbose>0)
                 std::cout << "Nothing has changed. Finish clustering after " << i+1 << " iterations\n";
@@ -211,7 +211,7 @@ void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, const Hie
 }
 
 /// assign parts to clusters according to given cetroid
-void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, std::vector<ViewIndependentPart::Seq>& clusters, std::vector<std::vector<Mat34>>& offsets){
+void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, std::vector<ViewIndependentPart::Seq>& clusters, const Hierarchy& hierarchy, std::vector<std::vector<Mat34>>& offsets){
     for (size_t i=0;i<clusters.size();i++){
         clusters[i].clear();
         offsets[i].clear();
@@ -226,7 +226,10 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
             Mat34 offset;
             if (it->layerId>2){//compute distance from centroid
                 //dist = pow(1+fabs(double(it->cloud.size())-double(dictionary[*itCentr].cloud.size())),2.0)*ViewIndependentPart::distanceGICP(*it, dictionary[*itCentr],config.configGICP, offset);
-                dist = ViewIndependentPart::distanceUmeyama(*it, dictionary[*itCentr], offset);
+                if (it->layerId==3)
+                    dist += ViewIndependentPart::distanceUmeyama(*it, dictionary[*itCentr], config.distanceMetric, offset);
+                else if (it->layerId==4)
+                    dist += ViewIndependentPart::distanceUmeyama(*it, dictionary[*itCentr], config.distanceMetric, hierarchy.viewIndependentLayers[0], offset);
                 //dist = ViewIndependentPart::distanceGICP(*it, dictionary[*itCentr],config.configGICP, offset);
             }
             /*if (it->layerId==5){//compute distance from centroid
@@ -321,7 +324,7 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
 }
 
 /// compute centroids for give clusters
-void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, std::vector<std::vector<Mat34>>& offsets){
+void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::Seq>& clusters, std::vector<int>& centroids, const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<Mat34>>& offsets){
     int clusterNo=0;
     for (auto itClust = clusters.begin(); itClust!=clusters.end();itClust++){ //for each cluster
         double distMin = std::numeric_limits<double>::max();
@@ -333,7 +336,10 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewIndependentPart::S
                 Mat34 offset;
                 if (itPart->layerId>2){//compute distance from centroid
                     //distSum += pow(1+fabs(double(itPart->cloud.size())-double(itPart2->cloud.size())),2.0)*ViewIndependentPart::distanceGICP(*itPart, *itPart2, config.configGICP, offset);
-                    distSum += ViewIndependentPart::distanceUmeyama(*itPart, *itPart2, offset);
+                    if (itPart->layerId==3)
+                        distSum += ViewIndependentPart::distanceUmeyama(*itPart, *itPart2, config.distanceMetric, offset);
+                    else if (itPart->layerId==4)
+                        distSum += ViewIndependentPart::distanceUmeyama(*itPart, *itPart2, config.distanceMetric, hierarchy.viewIndependentLayers[0], offset);
                     //distSum += ViewIndependentPart::distanceGICP(*itPart, *itPart2, config.configGICP, offset);
                     offsetsTmp.push_back(offset);
                 }

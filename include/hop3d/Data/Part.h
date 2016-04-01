@@ -270,7 +270,16 @@ public:
     static double distanceGICP(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ConfigGICP& configGICP, Mat34& offset);
 
     /// compute distance between view-independent parts
-    static double distanceUmeyama(const ViewIndependentPart& partA, const ViewIndependentPart& partB, Mat34& offset);
+    static double distanceUmeyama(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int distanceMetric, Mat34& offset);
+
+    /// compute distance between view-independent parts
+    static double distanceUmeyama(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int distanceMetric, const ViewIndependentPart::Seq& vocabulary, Mat34& offset);
+
+    ///find optimal transformation for view independent parts
+    static double findOptimalTransformation(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int distanceMetric, Mat34& transOpt);
+
+    ///find optimal transformation for view independent parts
+    static double findOptimalTransformation(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq& vocabulary, int distanceMetric, Mat34& transOpt);
 
     /// compute distance between view-independent parts
     static double distance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq vocabulary, Mat34& offset);
@@ -300,6 +309,10 @@ private:
     static Mat34 computeOffset(const std::vector<std::pair<Mat34, int>>& partASeq, const std::vector<std::pair<Mat34, int>>&partBSeq, Vec3& meanPosA, Vec3& normA, Vec3& meanPosB, Vec3& normB);
     ///get central points from parts, mean and mean normal vector
     static void getPoints(const ViewIndependentPart&partA, const ViewIndependentPart& partB, std::vector<std::pair<Mat34, int>>& partASeq, std::vector<std::pair<Mat34, int>>& partBSeq, Vec3& meanPosA, Vec3& normA, Vec3& meanPosB, Vec3& normB);
+    /// find rotated coordinates
+    static void findCorrespondence(int idX, int idY, int idZ, int rotX, int rotY, int rotZ, std::array<int,3>& newCoords);
+    /// compute error between tow point clous
+    static double computeError(const ViewIndependentPart& partA, const ViewIndependentPart& partB, hop3d::Mat34& trans, int type, double coeff);
 };
 
 }
