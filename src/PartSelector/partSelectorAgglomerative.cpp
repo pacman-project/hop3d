@@ -68,11 +68,11 @@ PartSelectorAgglomerative::Config::Config(std::string configFilename){
 }
 
 /// Select parts from the initial vocabulary
-void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary, int layerNo){
+void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
     std::vector<std::vector<double>> distanceMatrix(dictionary.size(), std::vector<double>(dictionary.size()));
     std::vector<std::vector<Mat34>> transformMatrix(dictionary.size(), std::vector<Mat34>(dictionary.size()));
     std::cout << "compute distance matrix...\n";
-    computeDistanceMatrix(dictionary, distanceMatrix, transformMatrix);
+    computeDistanceMatrix(dictionary, hierarchy, distanceMatrix, transformMatrix);
     if (config.verbose>0){
         std::cout << "done\n";
         std::cout << "Initial number of words in dictionary: " << dictionary.size() << "\n";
@@ -188,17 +188,17 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::S
 }
 
 /// compute distance matrix for view-independent parts
-void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix){
+void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix){
     while( !priorityQueueDistance.empty() ) priorityQueueDistance.pop();
     for (size_t idA=0;idA<dictionary.size();idA++){
         for (size_t idB=idA+1;idB<dictionary.size();idB++){
             double dist(0); Mat34 transform;
             if (dictionary[idA].layerId>2){//compute distance from centroid
-                //std::cout << ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idA], config.configGICP, transform) << "\n";
-                //std::cout << transform.matrix() << "\n";
-                //getchar();
-                dist = pow(1+fabs(double(dictionary[idA].cloud.size())-double(dictionary[idB].cloud.size())),2.0)*ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
-                //dist = ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
+                //dist = pow(1+fabs(double(dictionary[idA].cloud.size())-double(dictionary[idB].cloud.size())),2.0)*ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
+                if (dictionary[idA].layerId==3)
+                    dist = ViewIndependentPart::distanceUmeyama(dictionary[idA], dictionary[idB], config.distanceMetric, transform);
+                else if (dictionary[idA].layerId==4)
+                    dist = ViewIndependentPart::distanceUmeyama(dictionary[idA], dictionary[idB], config.distanceMetric, hierarchy.viewIndependentLayers[0], transform);
             }
             distanceMatrix[idA][idB]=dist;
             distanceMatrix[idB][idA]=dist;

@@ -12,11 +12,11 @@
 	<layer6 dist="0.55" posZ="2.75"></layer6>
 	<layer7 dist="0.65" posZ="4.0"></layer7>
 	<objectsLayer1 draw="true" dist="1.12" posY="-0.7" posZ="0.0"></objectsLayer1>
-	<objectsLayer2 draw="true" dist="1.12" posY="-0.7" posZ="0.25"></objectsLayer2>
-	<objectsLayer3 draw="true" dist="1.12" posY="-0.7" posZ="0.5"></objectsLayer3>
-	<objectsLayer4 draw="true" dist="1.12" posY="-0.7" posZ="0.75"></objectsLayer4>
-	<objectsLayer5 draw="true" dist="1.12" posY="-0.7" posZ="1.0"></objectsLayer5>
-	<objectsLayer6 draw="true" dist="1.12" posY="-0.7" posZ="1.25"></objectsLayer6>
+	<objectsLayer2 draw="true" dist="1.12" posY="-0.7" posZ="2.55"></objectsLayer2>
+	<objectsLayer3 draw="true" dist="1.12" posY="-0.7" posZ="4.5"></objectsLayer3>
+	<objectsLayer4 draw="true" dist="1.12" posY="-0.7" posZ="6.75"></objectsLayer4>
+	<objectsLayer5 draw="true" dist="1.12" posY="-0.7" posZ="8.0"></objectsLayer5>
+	<objectsLayer6 draw="true" dist="1.12" posY="-0.7" posZ="4.25"></objectsLayer6>
 	<objectsParts drawPartObjects="true" dist="0.3" posY="0.0" posZ="-0.1"></objectsParts>
 	<background red="1.0" green="1.0" blue="1.0" alpha="1.0"></background>
 	<pointCloud drawPointClouds="false" cloudPointSize="3" useNormalCloud="true"></pointCloud>
@@ -24,8 +24,8 @@
 		      1 - mesh-->
 	<surface surfaceType="0" drawSurfaces="false" drawPoints="true" useNormalSurf="true"></surface>
 	<layer2layer drawLayer2Layer="false" red="0.0" green="0.0" blue="0.8" alpha="0.1" width="0.5"></layer2layer>
-	<clusters drawClusters="false" red="0.0" green="0.8" blue="0.0" alpha="0.1"></clusters>
-	<normals drawNormals="false" scale="0.015" red="1.0" green="0.0" blue="0.0" alpha="1.0"></normals>
+	<clusters drawClusters="true" red="0.0" green="0.8" blue="0.0" alpha="0.1"></clusters>
+	<normals drawNormals="true" scale="0.015" red="1.0" green="0.0" blue="0.0" alpha="1.0"></normals>
 	<GICP configFilename="hop3dGICP.xml"></GICP>
 	<inference objectsOffsetY="-0.5" objectsPartsOffsetZ="-0.5"></inference>
   </VisualizerConfig>

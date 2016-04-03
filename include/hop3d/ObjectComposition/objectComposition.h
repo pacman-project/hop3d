@@ -43,7 +43,7 @@ public:
     virtual void getClusters(int layerNo, std::vector< std::set<int>>& clusters) = 0;
 
     /// create next layer vocabulary
-    virtual void createNextLayerVocabulary(int destLayerNo, const Hierarchy& hierarchy, std::vector<ViewIndependentPart>& vocabulary) = 0;
+    virtual void createNextLayerVocabulary(int destLayerNo, std::vector<ViewIndependentPart>& vocabulary) = 0;
 
     /// get octree in layer layerNo
     virtual void getParts(int layerNo, std::vector<ViewIndependentPart>& parts) = 0;
@@ -58,7 +58,7 @@ public:
     virtual void getRealisationsIds(const Vec3& point, int overlapNo, std::vector<int>& ids) const = 0;
 
     /// upodate voxel poses using new vocabulary
-    virtual void updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary) = 0;
+    virtual void updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, const Hierarchy& hierarchy) = 0;
 
     /// get parts realisations
     virtual void getPartsRealisation(int layerNo, int overlapNo, std::vector<ViewIndependentPart::Part3D>& partsViewTmp) const = 0;

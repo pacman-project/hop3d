@@ -15,7 +15,7 @@
     <layer1 maxDist="0.0" maxClusterDist="0.0"></layer1> <!--constant size-->
     <layer2 maxDist="0.43" maxClusterDist="0.44"></layer2>
     <layer3 maxDist="0.14" maxClusterDist="0.15"></layer3>
-    <layer4 maxDist="0.0004" maxClusterDist="0.00041"></layer4>
+    <layer4 maxDist="7.0004" maxClusterDist="7.00041"></layer4>
     <layer5 maxDist="0.02" maxClusterDist="0.021"></layer5>
     <layer6 maxDist="0.09" maxClusterDist="0.091"></layer6>
     <layer7 maxDist="0.7" maxClusterDist="0.7"></layer7>

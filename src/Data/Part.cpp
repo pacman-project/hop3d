@@ -270,6 +270,52 @@ Mat33 ViewIndependentPart::coordinateFromNormal(const Vec3& _normal){
 }
 
 /// compute distance between view-independent parts
+double ViewIndependentPart::distanceUmeyama(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int distanceMetric, const ViewIndependentPart::Seq& vocabulary, Mat34& offset){
+    /*bool theSame=true;
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
+                if (partA.partIds[i][j][k]!=partB.partIds[i][j][k]){
+                    theSame=false;
+                    break;
+                }
+            }
+            if (!theSame) break;
+        }
+        if (!theSame) break;
+    }
+    if (theSame){
+        offset=Mat34::Identity();
+        return 0;
+    }*/
+    /// compute error
+    return findOptimalTransformation(partA, partB, vocabulary, distanceMetric, offset);
+}
+
+/// compute distance between view-independent parts
+double ViewIndependentPart::distanceUmeyama(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int distanceMetric, Mat34& offset){
+    bool theSame=true;
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
+                if (partA.partIds[i][j][k]!=partB.partIds[i][j][k]){
+                    theSame=false;
+                    break;
+                }
+            }
+            if (!theSame) break;
+        }
+        if (!theSame) break;
+    }
+    if (theSame){
+        offset=Mat34::Identity();
+        return 0;
+    }
+    /// compute error
+    return findOptimalTransformation(partA, partB, distanceMetric, offset);
+}
+
+/// compute distance between view-independent parts
 double ViewIndependentPart::distanceGICP(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ConfigGICP& configGICP, Mat34& offset){
     //pcl::PointCloud<pcl::PointNormal> sourceCloud;
     if (!configGICP.verbose){
@@ -277,6 +323,19 @@ double ViewIndependentPart::distanceGICP(const ViewIndependentPart& partA, const
     }
     auto startTime = std::chrono::high_resolution_clock::now();
     pcl::PointCloud<pcl::PointNormal>::Ptr sourceCloud (new pcl::PointCloud<pcl::PointNormal>);
+    if (partA.cloud.size()==partB.cloud.size()){
+        bool thesame=true;
+        for (size_t i=0;i<partA.cloud.size();i++){
+            if (partA.cloud[i].position!=partB.cloud[i].position){
+                thesame=false;
+                break;
+            }
+        }
+        if (thesame){
+            offset=Mat34::Identity();
+            return 0;
+        }
+    }
     //pcl::IterativeClosestPointWithNormals sourceCovariance (new pcl::PointCloud<pcl::PointNormal>);
     for (auto& point : partA.cloud){
         pcl::PointNormal pointPCL;
@@ -355,6 +414,59 @@ double ViewIndependentPart::distanceGICP(const ViewIndependentPart& partA, const
         std::cout << "It took " << std::chrono::duration_cast<std::chrono::microseconds>(time).count() << " us to run.\n";
     }
     return errorMin;
+}
+
+/// compute error between tow point clous
+double ViewIndependentPart::computeError(const ViewIndependentPart& partA, const ViewIndependentPart& partB, hop3d::Mat34& trans, int type, double coeff){
+    double errorRot=0;
+    double errorPos=0;
+    //partA.print();
+    //partB.print();
+    //std::cout << "transformation \n" << transformation.matrix() << "\n";
+    for (size_t i=0; i<partA.partIds.size();i++){
+        for (size_t j=0; j<partA.partIds.size();j++){
+            for (size_t k=0; k<partA.partIds.size();k++){
+                if ((partA.partIds[i][j][k]>=0)&&(partB.partIds[i][j][k]>=0)){
+                    if ((type == 1)||((type == 3))){
+                        Eigen::Matrix<double, 4, 1> posPrim;
+                        posPrim(0) = partA.clouds[i][j][k][0].position(0); posPrim(1) = partA.clouds[i][j][k][0].position(1); posPrim(2) = partA.clouds[i][j][k][0].position(2); posPrim(3) = 1;
+                        posPrim = trans * posPrim;
+                        errorPos+= sqrt((posPrim.block<3,1>(0,0)-partB.clouds[i][j][k][0].position).transpose()*(posPrim.block<3,1>(0,0)-partB.clouds[i][j][k][0].position));
+                        //std::cout << "error pos " << errorPos << "\n";
+                    }
+                    if ((type == 2)||((type == 3))){
+                        double dotprodA = (trans.rotation()*partA.clouds[i][j][k][0].normal).adjoint()*partB.clouds[i][j][k][0].normal;
+                        if (dotprodA>1.0) dotprodA=1.0;
+                        if (dotprodA<-1.0) dotprodA=-1.0;
+                        double anglePart = acos(dotprodA);
+                        double dotprodB = (trans.rotation()*partA.clouds[i][j][k][0].normal).adjoint()*partB.clouds[i][j][k][0].normal;
+                        if (dotprodB>1.0) dotprodB=1.0;
+                        if (dotprodB<-1.0) dotprodB=-1.0;
+                        double angleCenter = acos(dotprodB);
+                        errorRot+=fabs(anglePart-angleCenter);
+                        //std::cout << "error tmp " << errorRot << "\n";
+                    }
+                }
+                else if ((partA.partIds[i][j][k]<0)&&(partB.partIds[i][j][k]<0)){
+                    errorPos+=0.0;
+                    errorRot+=0.0;
+                    //std::cout << "error bckgr rot " << errorRot << "\n";
+                    //std::cout << "error bckgr pos " << errorPos << "\n";
+                }
+                else if ((partA.partIds[i][j][k]<0&&partB.partIds[i][j][k]>=0)||(partA.partIds[i][j][k]>=0&&partB.partIds[i][j][k]<0)){
+                    errorPos+=0.5;
+                    errorRot+=0.5;
+                    //std::cout << "error bckgr diff rot " << errorRot << "\n";
+                    //std::cout << "error bckgr diff pos " << errorPos << "\n";
+                }
+            }
+        }
+    }
+    //std::cout << "distpos " << errorPos << " dist rot: " << errorRot << "\n";
+    //std::cout << transformation.matrix() << "\n";
+    //std::cout << "error final " << errorPos+coeff*errorRot << "\n";
+    //getchar();
+    return errorPos+coeff*errorRot;
 }
 
 /// compute error between tow point clous
@@ -738,6 +850,79 @@ bool ViewDependentPart::findSE3Transformation(const PointsSecondLayer& pointsA, 
         trans = Mat34::Identity();
         return false;
     }
+}
+
+///find optimal transformation for view independent parts
+double ViewIndependentPart::findOptimalTransformation(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq& vocabulary, int distanceMetric, Mat34& transOpt){
+    return std::numeric_limits<double>::max();
+}
+
+/// find rotated coordinates
+void ViewIndependentPart::findCorrespondence(int idX, int idY, int idZ, int rotX, int rotY, int rotZ, std::array<int,3>& newCoords){
+    hop3d::Quaternion quat;
+    Eigen::AngleAxis<double> aaX(rotX*(M_PI/4.0), Eigen::Vector3d::UnitX());
+    Eigen::AngleAxis<double> aaY(rotY*(M_PI/4.0), Eigen::Vector3d::UnitY());
+    Eigen::AngleAxis<double> aaZ(rotZ*(M_PI/4.0), Eigen::Vector3d::UnitZ());
+    quat = aaX * aaY * aaZ;
+    Mat33 rot = quat.matrix();
+    Vec3 initPos(idX-1, idY-1, idZ-1);
+    initPos.normalize();
+    Vec3 newPos(rot*initPos);
+    for (int i=0;i<3;i++){
+        newCoords[i]=int(newPos(i)+1.5);
+    }
+}
+
+///find optimal transformation for view independent parts
+double ViewIndependentPart::findOptimalTransformation(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int distanceMetric, Mat34& transOpt){
+    double minDist = std::numeric_limits<double>::max();
+    int rotNo=0;
+    for (int rotX=0; rotX<8;rotX++){//for each
+        for (int rotY=0; rotY<8;rotY++){
+            //std::cout << "rotNo " << rotNo << "\n";
+            int pairsNo=0;
+            std::vector<Vec3> setA; std::vector<Vec3> setB;
+            for (int idX=0;idX<3;idX++){// for each subpart
+                for (int idY=0;idY<3;idY++){
+                    for (int idZ=0;idZ<3;idZ++){
+                        std::array<int,3> newCoords = {0,0,0};
+                        if (!(idX==1&&idY==1&&idZ==1))
+                            findCorrespondence(idX, idY, idZ, rotX, rotY, 0, newCoords);
+                        if (partA.partIds[idX][idY][idZ]>=0&&partB.partIds[newCoords[0]][newCoords[1]][newCoords[2]]>=0){
+                            for (size_t pointNo=0; pointNo<partA.clouds[idX][idY][idZ].size(); pointNo++){//do not takes into accoun normal vectors
+                                setA.push_back(partA.clouds[idX][idY][idZ][pointNo].position);
+                                setB.push_back(partB.clouds[newCoords[0]][newCoords[1]][newCoords[2]][pointNo].position);
+                                pairsNo++;
+                            }
+                        }
+                        //std::cout << "old " << idX << ", " << idY << ", " << idZ << " rot by " << rotX*(M_PI/4.0)*180/3.14 << ", " << rotY*(M_PI/4.0)*180/3.14 << ", " << " new coords " << newCoords[0] << ", " << newCoords[1] << ", " << newCoords[2] << "\n";
+                    }
+                }
+            }
+            rotNo++;
+            if (pairsNo>=3){ // it's possible to find SE3 transformation
+                Eigen::MatrixXd pointsA(3,pairsNo);
+                Eigen::MatrixXd pointsB(3,pairsNo);
+                for (int pairNo=0;pairNo<pairsNo;pairNo++){
+                    for (int col=0;col<3;col++){
+                        pointsA(col,pairNo) = setA[pairNo](col);
+                        pointsB(col,pairNo) = setB[pairNo](col);
+                    }
+                }
+                Eigen::Matrix4d trans = Eigen::umeyama(pointsA,pointsB,false);
+                Mat34 trans1;
+                trans1.matrix() = trans;
+
+                double error = computeError(partA, partB, trans1, distanceMetric, 0.1);
+                if (error<minDist){
+                    minDist=error;
+                    transOpt = trans;
+                }
+            }
+        }
+    }
+    //std::cout << minDist << ", ";
+    return minDist;
 }
 
 ///find optimal transformation between normals

@@ -5,7 +5,7 @@
     <name>ObjectComposition</name>
 <!--    verbose : 0 -> no debug
 		  1 -> show debug output -->
-    <parameters verbose="0" voxelSize="0.015" voxelsNo="512" minPatchesNo="4"></parameters>
-    <pointCloudGrid voxelSizeGrid="0.002" voxelsNoGrid="1024" maxAngleGrid="0.7854"></pointCloudGrid>
+    <parameters verbose="0" voxelSize="0.01" voxelsNo="512" minPatchesNo="4"></parameters>
+    <pointCloudGrid voxelSizeGrid="0.01" voxelsNoGrid="512" maxAngleGrid="3.14"></pointCloudGrid>
     <GICP configFilename="hop3dGICP.xml"></GICP>
   </ObjectComposition>

@@ -309,6 +309,9 @@ private:
     /// clusters list
     std::vector< std::vector< GLuint > > objects3Dlist;
 
+    /// clusters list
+    std::vector<std::vector< std::vector< GLuint > >> objects3DlistExplode;
+
     /// objects drawn from filter poses
     std::vector<std::vector<std::vector<Part3D>>> objectsFromParts;
 
@@ -335,6 +338,9 @@ private:
 
     /// active overlapNo for partObjects
     int activeOverlapNo;
+
+    /// explode objects
+    int explode;
 
     /// draw objects
     void draw();
@@ -394,10 +400,10 @@ private:
     GLuint createVIPartList(hop3d::ViewIndependentPart& part);
 
     /// Create objects lists
-    GLuint createObjList(const std::vector<hop3d::ViewIndependentPart>& parts, int layerNo, bool inference);
+    GLuint createObjList(const std::vector<hop3d::ViewIndependentPart>& parts, int layerNo, bool inference, double distExplode);
 
     /// Create point cloud List from filters (planar patches)
-    GLuint createObjList(const std::vector<Part3D>& parts, int layerNo, bool inference);
+    GLuint createObjList(const std::vector<Part3D>& parts, int layerNo, bool inference, double distExplode);
 
     /// Create clusters List
     GLuint createClustersList(hop3d::ViewDependentPart& part, int layerNo);
@@ -461,6 +467,9 @@ private:
 
     /// draw Part Second Layer
     void drawPartSecondLayer(void) const;
+
+    /// draw VI part
+    void createVIPart(const hop3d::ViewIndependentPart& part, const hop3d::Mat34& pose) const;
 };
 
 #endif // QVISUALIZER_H_INCLUDED
