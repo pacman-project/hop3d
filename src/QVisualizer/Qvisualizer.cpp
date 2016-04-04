@@ -612,7 +612,8 @@ void QGLVisualizer::createVIPart(const hop3d::ViewIndependentPart& part, const M
                         //std::cout << "layer size " << hierarchy.get()->viewIndependentLayers[part.layerId-4].size() << "\n";
                         //std::cout << "part id " << part.partIds[i][j][k] << "\n";
                         //std::cout << "part.neighbourPoses[i][j][k] " << part.neighbourPoses[i][j][k].matrix() << "\n";
-                        Mat34 poseP(part.neighbourPoses[i][j][k]);
+                        //Mat34 poseP(part.neighbourPoses[i][j][k]);
+                        Mat34 poseP(part.neighbourPoses[i][j][k]*part.offsets[i][j][k]);
                         /*if (i==1&&j==1&&k==1){
                             poseP(0,3)=0; poseP(1,3)=0; poseP(2,3)=0;
                         }
@@ -621,11 +622,11 @@ void QGLVisualizer::createVIPart(const hop3d::ViewIndependentPart& part, const M
                         }*/
                         //std::cout << "pose\n " << poseP.matrix() << "\n";
                         //std::cout << "poseP.matrix().block<3,1>(0,3) " << poseP.matrix().block<3,1>(0,3) << "\n";
-                        //double GLmat1[16]={poseP(0,0), poseP(1,0), poseP(2,0), 0, poseP(0,1), poseP(1,1), poseP(2,1), 0, poseP(0,2), poseP(1,2), poseP(2,2), 0, poseP(0,3), poseP(1,3), poseP(2,3), 1};
-                        //glPushMatrix();
-                        //glMultMatrixd(GLmat1);
-                        createVIPart(hierarchy.get()->viewIndependentLayers[part.layerId-4][part.partIds[i][j][k]], poseP);
-                        //glPopMatrix();
+                        double GLmat1[16]={poseP(0,0), poseP(1,0), poseP(2,0), 0, poseP(0,1), poseP(1,1), poseP(2,1), 0, poseP(0,2), poseP(1,2), poseP(2,2), 0, poseP(0,3), poseP(1,3), poseP(2,3), 1};
+                        glPushMatrix();
+                        glMultMatrixd(GLmat1);
+                        createVIPart(hierarchy.get()->viewIndependentLayers[part.layerId-4][part.partIds[i][j][k]], Mat34::Identity());
+                        glPopMatrix();
                     }
                 }
             }

@@ -294,7 +294,7 @@ double ViewIndependentPart::distanceUmeyama(const ViewIndependentPart& partA, co
 
 /// compute distance between view-independent parts
 double ViewIndependentPart::distanceUmeyama(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int distanceMetric, Mat34& offset){
-    bool theSame=true;
+    /*bool theSame=true;
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             for (int k=0;k<3;k++){
@@ -310,7 +310,7 @@ double ViewIndependentPart::distanceUmeyama(const ViewIndependentPart& partA, co
     if (theSame){
         offset=Mat34::Identity();
         return 0;
-    }
+    }*/
     /// compute error
     return findOptimalTransformation(partA, partB, distanceMetric, offset);
 }
@@ -854,7 +854,20 @@ bool ViewDependentPart::findSE3Transformation(const PointsSecondLayer& pointsA, 
 
 ///find optimal transformation for view independent parts
 double ViewIndependentPart::findOptimalTransformation(const ViewIndependentPart& partA, const ViewIndependentPart& partB, const ViewIndependentPart::Seq& vocabulary, int distanceMetric, Mat34& transOpt){
-    return std::numeric_limits<double>::max();
+    double minDist = std::numeric_limits<double>::max();
+    for (int rotX=0; rotX<8;rotX++){//for each
+        for (int rotY=0; rotY<8;rotY++){
+            //std::cout << "rotNo " << rotNo << "\n";
+            Mat34 trans;
+            double error = computeVIPartsDistance(partA, partB,rotX, rotY, vocabulary, distanceMetric, trans);
+            if (error<minDist){
+                minDist=error;
+                transOpt = trans;
+            }
+        }
+    }
+    //std::cout << minDist << ", ";
+    return minDist;
 }
 
 /// find rotated coordinates
@@ -873,51 +886,94 @@ void ViewIndependentPart::findCorrespondence(int idX, int idY, int idZ, int rotX
     }
 }
 
+/// Compute distance between two parts
+double ViewIndependentPart::computeVIPartsDistance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int rotX, int rotY, int distanceMetric, Mat34& transOpt){
+    std::vector<Vec3> setA; std::vector<Vec3> setB;
+    getCorrespondingPoints(partA, partB, rotX, rotY, setA, setB);
+    if (setA.size()>=3){ // it's possible to find SE3 transformation
+        Eigen::MatrixXd pointsA(3,setA.size());
+        Eigen::MatrixXd pointsB(3,setA.size());
+        for (int pairNo=0;pairNo<(int)setA.size();pairNo++){
+            for (int col=0;col<3;col++){
+                pointsA(col,pairNo) = setA[pairNo](col);
+                pointsB(col,pairNo) = setB[pairNo](col);
+            }
+        }
+        Eigen::Matrix4d trans = Eigen::umeyama(pointsA,pointsB,false);
+        transOpt.matrix() = trans;
+        return computeError(partA, partB, transOpt, distanceMetric, 0.1);
+    }
+    else
+        return std::numeric_limits<double>::max();
+}
+
+/// Get corresponding points from parts
+void ViewIndependentPart::getCorrespondingPoints(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int rotX, int rotY, std::vector<Vec3>& setA, std::vector<Vec3>& setB){
+    for (int idX=0;idX<3;idX++){// for each subpart
+        for (int idY=0;idY<3;idY++){
+            for (int idZ=0;idZ<3;idZ++){
+                std::array<int,3> newCoords = {0,0,0};
+                if (!(idX==1&&idY==1&&idZ==1))
+                    findCorrespondence(idX, idY, idZ, rotX, rotY, 0, newCoords);
+                if (partA.partIds[idX][idY][idZ]>=0&&partB.partIds[newCoords[0]][newCoords[1]][newCoords[2]]>=0){
+                    for (size_t pointNo=0; pointNo<partA.clouds[idX][idY][idZ].size(); pointNo++){//do not takes into accoun normal vectors
+                        setA.push_back(partA.clouds[idX][idY][idZ][pointNo].position);
+                        setB.push_back(partB.clouds[newCoords[0]][newCoords[1]][newCoords[2]][pointNo].position);
+                    }
+                }
+                //std::cout << "old " << idX << ", " << idY << ", " << idZ << " rot by " << rotX*(M_PI/4.0)*180/3.14 << ", " << rotY*(M_PI/4.0)*180/3.14 << ", " << " new coords " << newCoords[0] << ", " << newCoords[1] << ", " << newCoords[2] << "\n";
+            }
+        }
+    }
+}
+
+/// Compute distance between two parts
+double ViewIndependentPart::computeVIPartsDistance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int rotX, int rotY, const ViewIndependentPart::Seq vocabulary, int distanceMetric, Mat34& transOpt){
+    std::vector<Vec3> setA; std::vector<Vec3> setB;
+    for (int idX=0;idX<3;idX++){// for each subpart
+        for (int idY=0;idY<3;idY++){
+            for (int idZ=0;idZ<3;idZ++){
+                int idA = partA.partIds[idX][idY][idZ];
+                int idB = partB.partIds[idX][idY][idZ];
+                if (idA>0&&idB>0){
+                    std::vector<Vec3> setAtmp; std::vector<Vec3> setBtmp;
+                    getCorrespondingPoints(vocabulary[idA], vocabulary[idB], rotX, rotY, setAtmp, setBtmp);
+                    /// transform parts
+
+                    setA.insert(setA.end(), setAtmp.begin(), setAtmp.end());
+                    setB.insert(setB.end(), setBtmp.begin(), setBtmp.end());
+                }
+            }
+        }
+    }
+    if (setA.size()>=3){ // it's possible to find SE3 transformation
+        Eigen::MatrixXd pointsA(3,setA.size());
+        Eigen::MatrixXd pointsB(3,setA.size());
+        for (int pairNo=0;pairNo<(int)setA.size();pairNo++){
+            for (int col=0;col<3;col++){
+                pointsA(col,pairNo) = setA[pairNo](col);
+                pointsB(col,pairNo) = setB[pairNo](col);
+            }
+        }
+        Eigen::Matrix4d trans = Eigen::umeyama(pointsA,pointsB,false);
+        transOpt.matrix() = trans;
+        return computeError(partA, partB, transOpt, distanceMetric, 0.1);
+    }
+    else
+        return std::numeric_limits<double>::max();
+}
+
 ///find optimal transformation for view independent parts
 double ViewIndependentPart::findOptimalTransformation(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int distanceMetric, Mat34& transOpt){
     double minDist = std::numeric_limits<double>::max();
-    int rotNo=0;
     for (int rotX=0; rotX<8;rotX++){//for each
         for (int rotY=0; rotY<8;rotY++){
             //std::cout << "rotNo " << rotNo << "\n";
-            int pairsNo=0;
-            std::vector<Vec3> setA; std::vector<Vec3> setB;
-            for (int idX=0;idX<3;idX++){// for each subpart
-                for (int idY=0;idY<3;idY++){
-                    for (int idZ=0;idZ<3;idZ++){
-                        std::array<int,3> newCoords = {0,0,0};
-                        if (!(idX==1&&idY==1&&idZ==1))
-                            findCorrespondence(idX, idY, idZ, rotX, rotY, 0, newCoords);
-                        if (partA.partIds[idX][idY][idZ]>=0&&partB.partIds[newCoords[0]][newCoords[1]][newCoords[2]]>=0){
-                            for (size_t pointNo=0; pointNo<partA.clouds[idX][idY][idZ].size(); pointNo++){//do not takes into accoun normal vectors
-                                setA.push_back(partA.clouds[idX][idY][idZ][pointNo].position);
-                                setB.push_back(partB.clouds[newCoords[0]][newCoords[1]][newCoords[2]][pointNo].position);
-                                pairsNo++;
-                            }
-                        }
-                        //std::cout << "old " << idX << ", " << idY << ", " << idZ << " rot by " << rotX*(M_PI/4.0)*180/3.14 << ", " << rotY*(M_PI/4.0)*180/3.14 << ", " << " new coords " << newCoords[0] << ", " << newCoords[1] << ", " << newCoords[2] << "\n";
-                    }
-                }
-            }
-            rotNo++;
-            if (pairsNo>=3){ // it's possible to find SE3 transformation
-                Eigen::MatrixXd pointsA(3,pairsNo);
-                Eigen::MatrixXd pointsB(3,pairsNo);
-                for (int pairNo=0;pairNo<pairsNo;pairNo++){
-                    for (int col=0;col<3;col++){
-                        pointsA(col,pairNo) = setA[pairNo](col);
-                        pointsB(col,pairNo) = setB[pairNo](col);
-                    }
-                }
-                Eigen::Matrix4d trans = Eigen::umeyama(pointsA,pointsB,false);
-                Mat34 trans1;
-                trans1.matrix() = trans;
-
-                double error = computeError(partA, partB, trans1, distanceMetric, 0.1);
-                if (error<minDist){
-                    minDist=error;
-                    transOpt = trans;
-                }
+            Mat34 trans;
+            double error = computeVIPartsDistance(partA, partB,rotX, rotY, distanceMetric, trans);
+            if (error<minDist){
+                minDist=error;
+                transOpt = trans;
             }
         }
     }
@@ -1385,6 +1441,16 @@ std::ostream& operator<<(std::ostream& os, const ViewIndependentPart& part){
     for (auto& p3d : part.parts){
         os << p3d;
     }
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
+                os << part.clouds[i][j][k].size() << " ";
+                for (auto &point : part.clouds[i][j][k]){
+                    os << point;
+                }
+            }
+        }
+    }
     os << "\n";
     return os;
 }
@@ -1433,6 +1499,20 @@ std::istream& operator>>(std::istream& is, ViewIndependentPart& part){
         for (int j=0;j<3;j++){
             for (int k=0;k<3;k++){
                 is >> part.neighbourPoses[i][j][k];
+            }
+        }
+    }
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
+                is >> cloudSize;
+                part.clouds[i][j][k].clear();
+                part.clouds[i][j][k].reserve(cloudSize);
+                for (int i=0;i<cloudSize;i++){
+                    PointNormal point;
+                    is >> point;
+                    part.clouds[i][j][k].push_back(point);
+                }
             }
         }
     }
