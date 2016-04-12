@@ -240,6 +240,9 @@ public:
     /// statistics for positions
     std::array<std::array<std::array<GaussianSE3,3>,3>,3> gaussians;
 
+    /// SE3 offset betwen part realization and word from dictionary
+    std::array<std::array<std::array<Mat34,3>,3>,3> offsets;
+
     ViewIndependentPart() : pose(Mat34::Identity()), offset(Mat34::Identity()){
 		for (int i=0;i<3;i++)
 			for (int j=0;j<3;j++)
@@ -313,6 +316,12 @@ private:
     static void findCorrespondence(int idX, int idY, int idZ, int rotX, int rotY, int rotZ, std::array<int,3>& newCoords);
     /// compute error between tow point clous
     static double computeError(const ViewIndependentPart& partA, const ViewIndependentPart& partB, hop3d::Mat34& trans, int type, double coeff);
+    /// Compute distance between two parts
+    static double computeVIPartsDistance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int rotX, int rotY, int distanceMetric, Mat34& transOpt);
+    /// Compute distance between two parts
+    static double computeVIPartsDistance(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int rotX, int rotY, const ViewIndependentPart::Seq vocabulary, int distanceMetric, Mat34& transOpt);
+    /// Get corresponding points from parts
+    static void getCorrespondingPoints(const ViewIndependentPart& partA, const ViewIndependentPart& partB, int rotX, int rotY, std::vector<Vec3>& setA, std::vector<Vec3>& setB);
 };
 
 }

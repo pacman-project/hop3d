@@ -256,11 +256,14 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
                         for (auto& word: vocabulary){
                             Mat34 estTransform;
                             //double fitness = pow(1+fabs(double(word.cloud.size())-double((*octrees[layerNo][overlapNo]).at(idX,idY,idZ).cloud.size())),2.0)*ViewIndependentPart::distanceGICP(word,(*octrees[layerNo][overlapNo])(idX,idY,idZ),config.configGICP,estTransform);
-                            double fitness;
+                            double fitness(0);
                             if (word.layerId==3)
                                 fitness = ViewIndependentPart::distanceUmeyama(word,(*octrees[layerNo][overlapNo])(idX,idY,idZ), 3, estTransform);
                             else if (word.layerId==4)
                                 fitness = ViewIndependentPart::distanceUmeyama(word,(*octrees[layerNo][overlapNo])(idX,idY,idZ), 3, hierarchy.viewIndependentLayers[0], estTransform);
+                            else{
+                                throw std::runtime_error("Layer not supported.\n");
+                            }
                             if (fitness<minDist){//find min distance
                                 minDist=fitness;
                                 (*octrees[layerNo][overlapNo])(idX,idY,idZ).id = wordId;
@@ -608,6 +611,7 @@ int ObjectCompositionOctree::createNextLayerPart(ViewIndependentPart& newPart, i
                         //if ((*octrees[layerNo][overlapNo])(x+3*i,y+3*j,z+3*k).incomingIds.size()>0)
                         //    newPart.partIds[i+1][j+1][k+1] = *(*octrees[layerNo][overlapNo])(x+3*i,y+3*j,z+3*k).incomingIds.begin();//(*octrees[layerNo][overlapNo])(x+i,y+j,z+k).id;
                         //newPart.partIds[i+1][j+1][k+1] = (*octrees[layerNo][overlapNo])(x+3*i,y+3*j,z+3*k).id;
+                        newPart.offsets[i+1][j+1][k+1] = (*octrees[layerNo][0]).at(x+3*i,y+3*j,z+3*k).offset;
                         newPart.partIds[i+1][j+1][k+1] = (*octrees[layerNo][0]).at(x+3*i,y+3*j,z+3*k).id;
                         //std::cout << "(*octrees[layerNo][overlapNo])(x+i,y+j,z+k).id " << (*octrees[layerNo][overlapNo])(x+3*i,y+3*j,z+3*k).id << "\n";
                         //getchar();
