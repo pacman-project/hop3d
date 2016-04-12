@@ -1437,10 +1437,6 @@ std::ostream& operator<<(std::ostream& os, const ViewIndependentPart& part){
             }
         }
     }
-    os << part.parts.size() << " ";
-    for (auto& p3d : part.parts){
-        os << p3d;
-    }
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             for (int k=0;k<3;k++){
@@ -1450,6 +1446,10 @@ std::ostream& operator<<(std::ostream& os, const ViewIndependentPart& part){
                 }
             }
         }
+    }
+    os << part.parts.size() << " ";
+    for (auto& p3d : part.parts){
+        os << p3d;
     }
     os << "\n";
     return os;
@@ -1508,7 +1508,7 @@ std::istream& operator>>(std::istream& is, ViewIndependentPart& part){
                 is >> cloudSize;
                 part.clouds[i][j][k].clear();
                 part.clouds[i][j][k].reserve(cloudSize);
-                for (int i=0;i<cloudSize;i++){
+                for (int pointNo=0;pointNo<cloudSize;pointNo++){
                     PointNormal point;
                     is >> point;
                     part.clouds[i][j][k].push_back(point);
