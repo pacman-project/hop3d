@@ -386,7 +386,7 @@ endif(BUILD_HOP3D)
 if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_STATS)
 
         SET(DEMO_FILES
-                ${PROJECT_ROOT}/resources/hop3dConfigGlobal.xml
+                ${CMAKE_SOURCE_DIR}/resources/hop3dConfigGlobal.xml
         )
 
         SET(DEMO_STATS_SOURCES ./src/Apps/DemoStatsBuilder/statsBuilder.cpp)
