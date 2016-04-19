@@ -797,6 +797,17 @@ void HOP3DBham::inference(void){
 }
 
 /// inference
+void HOP3DBham::inference(std::vector<std::pair<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr, Mat34>>& cameraFrames, int categoryNo, int objectNo){
+    std::vector<std::pair<cv::Mat, Mat34>> cameraFramesImg;
+    for (const auto element : cameraFrames){
+        cv::Mat image;
+        BorisDataset::cloud2Image(element.first, image, *depthCameraModel);
+        cameraFramesImg.push_back(std::make_pair(image,element.second));
+    }
+    inference(cameraFramesImg,categoryNo,objectNo);
+}
+
+/// inference
 void HOP3DBham::inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, int categoryNo, int objectNo){
     if (hierarchy.get()->viewDependentLayers[0].size()==0)
         throw std::runtime_error("Train or load hierarchy first\n");

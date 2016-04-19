@@ -11,6 +11,8 @@
 #include "../Data/Vocabulary.h"
 #include "hop3d/Utilities/observer.h"
 #include <unordered_map>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
 
 namespace hop3d {
 
@@ -49,6 +51,9 @@ public:
 
     /// inference
     virtual void inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, int categoryNo, int objectNo) = 0;
+
+    /// inference
+    virtual void inference(std::vector<std::pair<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr, Mat34>>& cameraFrames, int categoryNo, int objectNo) = 0;
 
     /// get set of ids from hierarchy for the given input point
     //virtual void getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const = 0;

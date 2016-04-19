@@ -1,6 +1,4 @@
 #include "../include/hop3d/Dataset/datasetBoris.h"
-#include <pcl/io/pcd_io.h>
-#include <pcl/point_types.h>
 //#include "opencv2/contrib/contrib.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include <memory>
@@ -125,8 +123,11 @@ void BorisDataset::readDepthImage(int categoryNo, int objectNo, int imageNo, cv:
     if (pcl::io::loadPCDFile<pcl::PointXYZRGBNormal> (path, *cloud) == -1){//* load the file
         PCL_ERROR ("Couldn't read pcd file \n");
     }
-    //Mat34 R(Eigen::Translation<double, 3>(0,0,0)*Quaternion(cloud->sensor_orientation_));
-    //Mat34 t(Eigen::Translation<double, 3>(cloud->sensor_origin_(0), cloud->sensor_origin_(1), cloud->sensor_origin_(2))*Quaternion(1,0,0,0));
+    cloud2Image(cloud,depthImage, sensorModel);
+}
+
+/// convert point cloud to cv::mat
+void BorisDataset::cloud2Image(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud, cv::Mat& depthImage, const DepthSensorModel& sensorModel){
     Mat34 cameraPose(Eigen::Translation<double, 3>(cloud->sensor_origin_(0), cloud->sensor_origin_(1), cloud->sensor_origin_(2))*Quaternion(cloud->sensor_orientation_));
     Mat34 cameraPoseInv(cameraPose.inverse());
     cv::Mat image(cloud->height,cloud->width, CV_16U,cv::Scalar(0));

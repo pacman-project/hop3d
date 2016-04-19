@@ -11,6 +11,8 @@
 #include "tinyXML/tinyxml2.h"
 #include "hop3d/Utilities/depthSensorModel.h"
 #include <string>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
 #include <unordered_map>
 
 namespace hop3d {
@@ -49,6 +51,9 @@ public:
 
     /// get point from the point cloud
     void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const;
+
+    /// convert point cloud to cv::mat
+    static void cloud2Image(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud, cv::Mat& depthImage, const DepthSensorModel& sensorModel);
 
     /// Destruction
     ~BorisDataset(void);
