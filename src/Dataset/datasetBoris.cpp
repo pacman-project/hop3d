@@ -202,6 +202,8 @@ Mat34 BorisDataset::getCameraPose(int categoryNo, int objectNo, int imageNo) con
 
 /// translate path to filename into category, object, image numbers
 void BorisDataset::translateString(const std::string& path, int& categoryNo, int& objectNo, int& imageNo) const{
+    if (isObjectInDataset(path, categoryNo, objectNo, imageNo))
+        return;
     size_t found = path.find_last_of("/\\");
     std::string folder = path.substr(0,found);
     size_t foundFolder = folder.find_last_of("/\\");
@@ -227,6 +229,52 @@ Mat34 BorisDataset::readCameraPose(std::string& filename){
     offset(0,3)=0.0800444; offset(1,3)=-0.041683; offset(2,3)=0.0753622;
     cameraPose=cameraPose*offset;*/
     return cameraPose;
+}
+
+/// add new data to the dataset
+void BorisDataset::addData(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, const std::string& categoryName, const std::string& imageName){
+    int categoryNo;    int objectNo;    int imageNo;
+    if (!isObjectInDataset(imageName, categoryNo, objectNo, imageNo)){
+        categoryNo = (int)config.dataset.categories.size();
+        config.dataset.categories.resize(categoryNo+1);
+        objectNo = 0;
+        config.dataset.categories[categoryNo].objects.resize(objectNo+1);
+        imageNo=0;
+    }
+    else{
+        throw std::runtime_error("Object " + imageName + " already exists in the dataset\n");
+    }
+    config.dataset.categories[categoryNo].name = categoryName;
+    config.dataset.categories[categoryNo].objects[objectNo].name = categoryName;
+    config.dataset.categories[categoryNo].objects[objectNo].images.resize(imageNo+1);
+    config.dataset.categories[categoryNo].objects[objectNo].fullPaths.resize(imageNo+1);
+    config.dataset.categories[categoryNo].objects[objectNo].poses.resize(imageNo+1);
+    config.dataset.categories[categoryNo].objects[objectNo].images[imageNo] = imageName;
+    std::string filePath(config.path + "/" + config.dataset.categories[categoryNo].objects[objectNo].images[imageNo]);
+    config.dataset.categories[categoryNo].objects[objectNo].fullPaths[imageNo] = filePath;
+    if (pcl::io::savePCDFile(config.path, *cloud) == -1){//* load the file
+        PCL_ERROR ("Couldn't write pcd file \n");
+    }
+    config.dataset.categories[categoryNo].objects[objectNo].poses[imageNo] = readCameraPose(filePath);
+}
+
+/// check if object is in the dataset
+bool BorisDataset::isObjectInDataset(const std::string& imageName, int& categoryNo, int& objectNo, int& imageNo) const{
+    categoryNo=0;
+    for (auto cat : config.dataset.categories){
+        objectNo=0;
+        for (auto obj : cat.objects){
+            imageNo=0;
+            for (auto img : obj.images){
+                if (imageName == img)
+                    return true;
+                imageNo++;
+            }
+            objectNo++;
+        }
+        categoryNo++;
+    }
+    return false;
 }
 
 std::unique_ptr<hop3d::Dataset> hop3d::createBorisDataset(void) {

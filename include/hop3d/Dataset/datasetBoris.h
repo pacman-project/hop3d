@@ -55,6 +55,9 @@ public:
     /// convert point cloud to cv::mat
     static void cloud2Image(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud, cv::Mat& depthImage, const DepthSensorModel& sensorModel);
 
+    /// add new data to the dataset
+    void addData(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, const std::string& categoryName, const std::string& imageName);
+
     /// Destruction
     ~BorisDataset(void);
 
@@ -93,6 +96,9 @@ private:
 
     /// read camera pose from file
     static Mat34 readCameraPose(std::string& filename);
+
+    /// check if object is in the dataset
+    bool isObjectInDataset(const std::string& imageName, int& categoryNo, int& objectNo, int& imageNo) const;
 };
 
 }

@@ -53,7 +53,7 @@ public:
     virtual void inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, int categoryNo, int objectNo) = 0;
 
     /// inference
-    virtual void inference(std::vector<std::pair<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr, Mat34>>& cameraFrames, int categoryNo, int objectNo) = 0;
+    virtual void inference(std::map<std::string, pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr>& images) = 0;
 
     /// get set of ids from hierarchy for the given input point
     //virtual void getPartsIds(const std::string& path, int u, int v, std::vector<int>& ids) const = 0;

@@ -134,7 +134,7 @@ void PacmanDataset::getDatasetInfo(hop3d::DatasetInfo& dataset) const{
 
 /// read depth image from dataset
 void PacmanDataset::readDepthImage(int categoryNo, int objectNo, int imageNo, cv::Mat& depthImage) const{
-    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
+    //pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
     std::string path = config.path + "/" + config.dataset.categories[categoryNo].name + "/" + config.dataset.categories[categoryNo].objects[objectNo].name + "/depth/" + config.dataset.categories[categoryNo].objects[objectNo].images[imageNo];
     if (config.verbose>1)
         std::cout << "load " << path << "\n";
@@ -191,6 +191,8 @@ Mat34 PacmanDataset::getCameraPose(int categoryNo, int objectNo, int imageNo) co
 
 /// translate path to filename into category, object, image numbers
 void PacmanDataset::translateString(const std::string& path, int& categoryNo, int& objectNo, int& imageNo) const{
+    if (isObjectInDataset(path, categoryNo, objectNo, imageNo))
+        return;
     size_t found = path.find_last_of("/\\");
     std::string folder = path.substr(0,found);
     size_t foundFolder = folder.find_last_of("/\\");
@@ -214,6 +216,30 @@ Mat34 PacmanDataset::readCameraPose(std::string& filename){
     Quaternion orientation(m);
     Mat34 cameraPose(Eigen::Translation<double, 3>(0,0,0.5)*Quaternion(orientation.w(),orientation.x(),orientation.y(),orientation.z()));
     return cameraPose;
+}
+
+/// add new data to the dataset
+void PacmanDataset::addData(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, const std::string& categoryName, const std::string& imageName){
+    std::cout << "Not implemented:\n" << categoryName << imageName << (*cloud).size();
+}
+
+/// check if object is in the dataset
+bool PacmanDataset::isObjectInDataset(const std::string& imageName, int& categoryNo, int& objectNo, int& imageNo) const{
+    categoryNo=0;
+    for (auto cat : config.dataset.categories){
+        objectNo=0;
+        for (auto obj : cat.objects){
+            int imageNo=0;
+            for (auto img : obj.images){
+                if (imageName == img)
+                    return true;
+                imageNo++;
+            }
+            objectNo++;
+        }
+        categoryNo++;
+    }
+    return false;
 }
 
 std::unique_ptr<hop3d::Dataset> hop3d::createPacmanDataset(void) {

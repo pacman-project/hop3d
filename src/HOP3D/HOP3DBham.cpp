@@ -8,12 +8,12 @@ using namespace hop3d;
 /// A single instance of unbiased stats builder
 HOP3DBham::Ptr hop3dBham;
 
-HOP3DBham::HOP3DBham(void) : HOP3D("Unbiased Statistics Builder", HOP3D_BHAM) {
+HOP3DBham::HOP3DBham(void) : HOP3D("Unbiased Statistics Builder", HOP3D_BHAM), categoryInferenceCount(0) {
 }
 
 /// Construction
 HOP3DBham::HOP3DBham(std::string _config) :
-        HOP3D("Unbiased Statistics Builder", HOP3D_BHAM), config(_config) {
+        HOP3D("Unbiased Statistics Builder", HOP3D_BHAM), config(_config), categoryInferenceCount(0) {
     statsBuilder = hop3d::createUnbiasedStatsBuilder(config.statsConfig);
     hierarchy.reset(new Hierarchy(_config));
     if (config.partSelectorType==hop3d::PartSelector::SELECTOR_MEAN)
@@ -797,14 +797,21 @@ void HOP3DBham::inference(void){
 }
 
 /// inference
-void HOP3DBham::inference(std::vector<std::pair<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr, Mat34>>& cameraFrames, int categoryNo, int objectNo){
+void HOP3DBham::inference(std::map<std::string, pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr>& images){
+//void HOP3DBham::inference(std::vector<std::pair<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr, Mat34>>& cameraFrames, int categoryNo, int objectNo){
     std::vector<std::pair<cv::Mat, Mat34>> cameraFramesImg;
-    for (const auto element : cameraFrames){
+    int categoryNo; int objectNo; int imageNo;
+    for (const auto element : images){
         cv::Mat image;
-        BorisDataset::cloud2Image(element.first, image, *depthCameraModel);
-        cameraFramesImg.push_back(std::make_pair(image,element.second));
+        BorisDataset::cloud2Image(element.second, image, *depthCameraModel);
+        std::string catName = "category" + std::to_string(categoryInferenceCount);
+        datasetTest->addData(element.second, catName, element.first);
+        datasetTest->translateString(element.first, categoryNo, objectNo, imageNo);
+        cameraFramesImg.push_back(std::make_pair(image,datasetTest->getCameraPose(categoryNo, objectNo, imageNo)));
+        imageNo++;
     }
     inference(cameraFramesImg,categoryNo,objectNo);
+    categoryInferenceCount++;
 }
 
 /// inference

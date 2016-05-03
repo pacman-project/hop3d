@@ -50,6 +50,9 @@ public:
     /// get point from the point cloud
     void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const;
 
+    /// add new data to the dataset
+    void addData(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, const std::string& categoryName, const std::string& imageName);
+
     /// Destruction
     ~PacmanDataset(void);
 
@@ -89,6 +92,8 @@ private:
     /// read camera pose from file
     static Mat34 readCameraPose(std::string& filename);
 
+    /// check if object is in the dataset
+    bool isObjectInDataset(const std::string& imageName, int& categoryNo, int& objectNo, int& imageNo) const;
 };
 
 }

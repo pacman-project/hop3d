@@ -8,7 +8,8 @@
 #define _DATASET_H_
 
 #include "../Data/Defs.h"
-
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
 namespace hop3d {
 
 template<typename T, typename ...Args>
@@ -53,6 +54,9 @@ public:
 
     /// get point from the point cloud
     virtual void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const = 0;
+
+    /// add new data to the dataset
+    virtual void addData(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, const std::string& categoryName, const std::string& imageName) = 0;
 
     /// Virtual descrutor
     virtual ~Dataset() {
