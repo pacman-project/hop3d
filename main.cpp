@@ -34,6 +34,15 @@ int main(void){
             }
             frames.push_back(std::make_pair(depthImage, hop3d::Mat34::Identity()));
             lhop3d->inference(frames,0,0);*/
+//            pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
+//            std::string path = "cloudInf.pcd";
+//            std::cout << "load " << path << "\n";
+//            if (pcl::io::loadPCDFile<pcl::PointXYZRGBNormal> (path, *cloud) == -1){//* load the file
+//                PCL_ERROR ("Couldn't read pcd file \n");
+//            }
+//            std::map<std::string, pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr> clouds;
+//            clouds.insert(std::make_pair("mrmuscle",cloud));
+//            lhop3d->inference(clouds);
         }
         if (loadInferenceResults)
             lhop3d->loadInference(inferenceFile);

@@ -3,6 +3,8 @@
 #include "hop3d/QVisualizer/Qvisualizer.h"
 #include "hop3d/HOP3D/HOP3DBham.h"
 #include <GL/glut.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
 #include <qapplication.h>
 #include <iostream>
 #include <thread>
@@ -26,6 +28,14 @@ void runHOP3D(bool train, bool load, bool inference, bool loadInference, std::st
         }
         frames.push_back(std::make_pair(depthImage, hop3d::Mat34::Identity()));
         lhop3d->inference(frames,0,0);*/
+//        pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
+//        std::string path = "cloudInf.pcd";
+//        if (pcl::io::loadPCDFile<pcl::PointXYZRGBNormal> (path, *cloud) == -1){//* load the file
+//            PCL_ERROR ("Couldn't read pcd file \n");
+//        }
+//        std::map<std::string, pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr> clouds;
+//        clouds.insert(std::make_pair("mrmuscle.pcd",cloud));
+//        lhop3d->inference(clouds);
     }
     if (loadInference)
         lhop3d->loadInference(inferenceFile);

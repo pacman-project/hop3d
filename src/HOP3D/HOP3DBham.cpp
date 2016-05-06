@@ -821,12 +821,20 @@ void HOP3DBham::inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, 
     int toLayerDep = (config.inferenceUpToLayer>config.viewDependentLayersNo) ? config.viewDependentLayersNo : config.inferenceUpToLayer;
     int toLayerIndep = (config.inferenceUpToLayer>config.viewDependentLayersNo) ? config.inferenceUpToLayer-config.viewDependentLayersNo : 0;
     std::cout << "Start inference\n";
+    datasetTest->getDatasetInfo(datasetInfoTest);
     for (int layerNo=0;layerNo<toLayerDep;layerNo++){
         if (layerNo==0){
             int imageNo=0;
             for (const auto& frame : cameraFrames){
                 std::vector<hop3d::Octet> octetsTmp;
                 imageFilterer->computeOctets(frame.first, categoryNo, objectNo, imageNo, octetsTmp, true);
+                imageNo++;
+            }
+        }
+        if (layerNo==1){
+            int imageNo=0;
+            for (size_t frameNo=0; frameNo<cameraFrames.size(); frameNo++){
+                std::vector<hop3d::Octet> octetsTmp;
                 imageFilterer->getOctets(categoryNo, objectNo, imageNo, *hierarchy, octetsTmp, true);
                 imageNo++;
             }
@@ -837,9 +845,10 @@ void HOP3DBham::inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, 
             }
         }
     }
-    objectsInference.resize(1);
+    objectsInference.resize(categoryNo+1);
     std::cout << "Create object composition\n";
     ObjectCompositionOctree object(config.compositionConfig);
+    objectsInference.size();
     objectsInference[categoryNo].push_back(object);
     for (int imageNo=0; imageNo<(int)cameraFrames.size(); imageNo++){
         std::vector<ViewDependentPart> parts;
@@ -989,6 +998,8 @@ void HOP3DBham::createObjsFromParts(bool inference){
     }
     for (size_t categoryNo=0;categoryNo<datasetInfo->categories.size();categoryNo++){//for each category
         for (auto & object : (*objComp)[categoryNo]){
+            int objectNo = 0;
+            objectNo++;
             std::vector<ViewIndependentPart> objectParts;
             for (size_t i=0;i<hierarchy.get()->viewIndependentLayers.size();i++){
                 object.getParts((int)i, objectParts);

@@ -250,9 +250,15 @@ void BorisDataset::addData(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& c
     config.dataset.categories[categoryNo].objects[objectNo].fullPaths.resize(imageNo+1);
     config.dataset.categories[categoryNo].objects[objectNo].poses.resize(imageNo+1);
     config.dataset.categories[categoryNo].objects[objectNo].images[imageNo] = imageName;
-    std::string filePath(config.path + "/" + config.dataset.categories[categoryNo].objects[objectNo].images[imageNo]);
+    std::string filePath(config.path + "/" + config.dataset.categories[categoryNo].objects[objectNo].name + "/" + config.dataset.categories[categoryNo].objects[objectNo].images[imageNo]);
     config.dataset.categories[categoryNo].objects[objectNo].fullPaths[imageNo] = filePath;
-    if (pcl::io::savePCDFile(config.path, *cloud) == -1){//* load the file
+    boost::filesystem::path dir(config.path + "/" + config.dataset.categories[categoryNo].objects[objectNo].name);
+    if (std::strcmp(imageName.substr(imageName.size() - 4).c_str(),".pcd")!=0)
+        throw std::runtime_error("cloud name should have '.pcd' extension\n");
+    if (!boost::filesystem::is_directory(dir))
+        if (!boost::filesystem::create_directory(dir))
+            throw std::runtime_error("could not create directory " + config.path + "/" + config.dataset.categories[categoryNo].objects[objectNo].name + " \n");
+    if (pcl::io::savePCDFile(filePath, *cloud) == -1){//* load the file
         PCL_ERROR ("Couldn't write pcd file \n");
     }
     config.dataset.categories[categoryNo].objects[objectNo].poses[imageNo] = readCameraPose(filePath);
