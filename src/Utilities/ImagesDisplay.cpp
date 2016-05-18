@@ -1,6 +1,4 @@
 #include "hop3d/Utilities/ImagesDisplay.h"
-#include "opencv2/contrib/contrib.hpp"
-#include "opencv2/highgui/highgui.hpp"
 
 hop3d::ImagesDisplay::ImagesDisplay(){
 

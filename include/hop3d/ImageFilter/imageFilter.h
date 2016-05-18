@@ -57,7 +57,7 @@ public:
     virtual void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference) = 0;
 
     /// get set of ids for the given input point
-    virtual void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart) = 0;
+    virtual void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference) = 0;
 
     /// returs filter ids and their position on the image
     virtual void getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords, bool inference) const = 0;
@@ -72,7 +72,7 @@ public:
     virtual void getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& cloud) const = 0;
 
     /// returs parts ids and their position on the image
-    virtual void getPartsRealisation(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const = 0;
+    virtual void getPartsRealisation(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts, bool inference) = 0;
 
     /// get input point
     //virtual void getPoint(int categoryNo, int objectNo, int imageNo, int u, int v, hop3d::Vec3& point) const = 0;

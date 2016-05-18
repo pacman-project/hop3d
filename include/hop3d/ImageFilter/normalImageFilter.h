@@ -78,7 +78,7 @@ public:
     void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference);
 
     /// get set of ids for the given input point
-    void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart);
+    void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference);
 
     /// returs filter ids and their position on the image
     void getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords, bool inference) const;
@@ -93,7 +93,7 @@ public:
     void getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& cloud) const;
 
     /// returs parts ids and their position on the image
-    void getPartsRealisation(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const;
+    void getPartsRealisation(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts, bool inference);
 
     /// Insertion operator
 //    friend std::ostream& operator<<(std::ostream& os, const NormalImageFilter& filter);

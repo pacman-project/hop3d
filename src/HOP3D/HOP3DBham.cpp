@@ -127,10 +127,7 @@ void HOP3DBham::getDatasetInfo(hop3d::DatasetInfo& _dataset, bool inference) con
 void HOP3DBham::getCloudPaths(std::vector<std::string>& paths, bool inference) const{
     paths.clear();
     hop3d::DatasetInfo info;
-    if (inference)
-        datasetTest->getDatasetInfo(info);
-    else
-        datasetTrain->getDatasetInfo(info);
+    getDatasetInfo(info,inference);
     for (const auto &category : info.categories)
         for (const auto &object : category.objects)
             for (const auto &path : object.fullPaths)
@@ -138,13 +135,8 @@ void HOP3DBham::getCloudPaths(std::vector<std::string>& paths, bool inference) c
 }
 
 /// get cloud from dataset
-void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud, bool inference) const{
+void HOP3DBham::getCloud(const cv::Mat& depthImage, hop3d::PointCloud& cloud) const{
     hop3d::PointCloudUV cloudUV;
-    cv::Mat depthImage;
-    if (inference)
-        datasetTest->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
-    else
-        datasetTrain->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
     imageFilterer->getCloud(depthImage, cloudUV);
     cloud.clear();
     cloud.reserve(cloudUV.size());
@@ -158,20 +150,32 @@ void HOP3DBham::getCloud(int categoryNo, int objectNo, int imageNo, hop3d::Point
 /// get cloud from dataset
 void HOP3DBham::getCloud(const std::string& path, hop3d::PointCloud& cloud, bool inference) const{
     int categoryNo(0), objectNo(0), imageNo(0);
-    if (inference)
-        datasetTest->translateString(path, categoryNo, objectNo, imageNo);
-    else
+    cv::Mat depthImage;
+    if (inference){
+        std::map<std::string, InferenceObject>::const_iterator infDataIt;
+        if (inferenceData.find(path,categoryNo, objectNo, imageNo, infDataIt)){
+            depthImage = infDataIt->second.depthImage;
+        }
+        else{
+            datasetTest->translateString(path, categoryNo, objectNo, imageNo);
+            datasetTest->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+        }
+        getCloud(depthImage, cloud);
+    }
+    else {
         datasetTrain->translateString(path, categoryNo, objectNo, imageNo);
-    getCloud(categoryNo, objectNo, imageNo, cloud, inference);
+        datasetTrain->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+        getCloud(depthImage, cloud);
+    }
 }
 
 /// get number of points in the point cloud
-size_t HOP3DBham::getNumOfPoints(int categoryNo, int objectNo, int imageNo, bool inference) const {
-    if (inference)
-        return datasetTest->getNumOfPoints(categoryNo, objectNo, imageNo);
-    else
-        return datasetTrain->getNumOfPoints(categoryNo, objectNo, imageNo);
-}
+//size_t HOP3DBham::getNumOfPoints(int categoryNo, int objectNo, int imageNo, bool inference) const {
+//    if (inference)
+//        return datasetTest->getNumOfPoints(categoryNo, objectNo, imageNo);
+//    else
+//        return datasetTrain->getNumOfPoints(categoryNo, objectNo, imageNo);
+//}
 
 /// get point from the point cloud
 /*void HOP3DBham::getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const{
@@ -179,19 +183,25 @@ size_t HOP3DBham::getNumOfPoints(int categoryNo, int objectNo, int imageNo, bool
 }*/
 
 /// get camera pose
-void HOP3DBham::getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose, bool inference) const{
-    if (inference)
-        cameraPose = datasetTest->getCameraPose(categoryNo, objectNo, imageNo);
-    else
-        cameraPose = datasetTrain->getCameraPose(categoryNo, objectNo, imageNo);
-}
+//void HOP3DBham::getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose, bool inference) const{
+//    if (inference)
+//        cameraPose = datasetTest->getCameraPose(categoryNo, objectNo, imageNo);
+//    else
+//        cameraPose = datasetTrain->getCameraPose(categoryNo, objectNo, imageNo);
+//}
 
 /// get camera pose
 void HOP3DBham::getSensorFrame(const std::string& path, Mat34& cameraPose, bool inference) const{
     int categoryNo(0), objectNo(0), imageNo(0);
     if (inference) {
-        datasetTest->translateString(path, categoryNo, objectNo, imageNo);
-        cameraPose = datasetTest->getCameraPose(categoryNo, objectNo, imageNo);
+        std::map<std::string, InferenceObject>::const_iterator infDataIt;
+        if (inferenceData.find(path,categoryNo, objectNo, imageNo, infDataIt)){
+            cameraPose = infDataIt->second.cameraPose;
+        }
+        else{
+            datasetTest->translateString(path, categoryNo, objectNo, imageNo);
+            cameraPose = datasetTest->getCameraPose(categoryNo, objectNo, imageNo);
+        }
     }
     else{
         datasetTrain->translateString(path, categoryNo, objectNo, imageNo);
@@ -205,19 +215,14 @@ void HOP3DBham::getHierarchy(Hierarchy::IndexSeqMap& hierarchyGraph) const{
 }
 
 /// get parts realization
-void HOP3DBham::getPartsRealisation(int categoryNo, int objectNo, int imageNo, std::vector<ViewIndependentPart::Part3D>& parts, bool inference) const{
+void HOP3DBham::getPartsRealisation(int categoryNo, int objectNo, int imageNo, const Mat34& cameraPose, std::vector<ViewIndependentPart::Part3D>& parts, bool inference) const{
     parts.clear();
-    Mat34 cameraPose;
-    if (inference)
-        cameraPose = datasetTest->getCameraPose(categoryNo, objectNo, imageNo);
-    else
-        cameraPose = datasetTrain->getCameraPose(categoryNo, objectNo, imageNo);
     int idIncrement=10000;
     for (int layerNo = 0;layerNo<(int)hierarchy.get()->viewDependentLayers.size()+1;layerNo++){
         std::vector<ViewDependentPart> partsView;
         for (int overlapNo=0;overlapNo<3;overlapNo++){
             std::vector<ViewDependentPart> partsViewTmp;
-            imageFilterer->getPartsRealisation(overlapNo, categoryNo, objectNo, imageNo,layerNo,partsViewTmp);
+            imageFilterer->getPartsRealisation(overlapNo, categoryNo, objectNo, imageNo,layerNo,partsViewTmp, inference);
             partsView.insert(partsView.end(), partsViewTmp.begin(), partsViewTmp.end());
         }
         for (auto& part : partsView){
@@ -236,7 +241,10 @@ void HOP3DBham::getPartsRealisation(int categoryNo, int objectNo, int imageNo, s
     for (int layerNo = 0;layerNo<(int)hierarchy.get()->viewIndependentLayers.size();layerNo++){
         for (int overlapNo=0;overlapNo<3;overlapNo++){
             std::vector<ViewIndependentPart::Part3D> partsViewTmp;
-            objects[categoryNo][objectNo].getPartsRealisation(layerNo, overlapNo, partsViewTmp);
+            if (inference)
+                objectsInference[categoryNo][objectNo].getPartsRealisation(layerNo, overlapNo, partsViewTmp);
+            else
+                objects[categoryNo][objectNo].getPartsRealisation(layerNo, overlapNo, partsViewTmp);
             for (auto& part : partsViewTmp){
                 part.id += ((int)hierarchy.get()->viewDependentLayers.size()+1+layerNo)*idIncrement;
             }
@@ -246,10 +254,10 @@ void HOP3DBham::getPartsRealisation(int categoryNo, int objectNo, int imageNo, s
 }
 
 /// get parts realization
-void HOP3DBham::getPartsRealisationCloud(int categoryNo, int objectNo, int imageNo, PartsClouds& parts, bool inference) const{
+void HOP3DBham::getPartsRealisationCloud(int categoryNo, int objectNo, int imageNo, const cv::Mat& depthImage, const Mat34& cameraPose, PartsClouds& parts, bool inference) const{
     parts.clear();
     Hierarchy::IndexSeqMap points2parts;
-    getCloud2PartsMap(categoryNo, objectNo, imageNo, points2parts, inference);
+    getCloud2PartsMap(categoryNo, objectNo, imageNo, depthImage, cameraPose, points2parts, inference);
     convertPartsMap2PartsCloud(points2parts, parts);
     /*for (auto &element : parts){
         std::cout << "part id: " << element.first << " points: ";
@@ -263,27 +271,37 @@ void HOP3DBham::getPartsRealisationCloud(int categoryNo, int objectNo, int image
 /// get realisations graph
 void HOP3DBham::getRealisationsGraph(const std::string& path, Hierarchy::IndexSetMap& realisationsGraph, bool inference) const{
     int categoryNo(0), objectNo(0), imageNo(0);
-    if (inference)
-        datasetTest->translateString(path, categoryNo, objectNo, imageNo);
-    else
+    Mat34 cameraPose;
+    cv::Mat depthImage;
+    if (inference) {
+        std::map<std::string, InferenceObject>::const_iterator infDataIt;
+        if (inferenceData.find(path,categoryNo, objectNo, imageNo, infDataIt)){
+            cameraPose = infDataIt->second.cameraPose;
+            depthImage = infDataIt->second.depthImage;
+        }
+        else{
+            datasetTest->translateString(path, categoryNo, objectNo, imageNo);
+            cameraPose = datasetTest->getCameraPose(categoryNo, objectNo, imageNo);
+            datasetTest->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+        }
+    }
+    else{
         datasetTrain->translateString(path, categoryNo, objectNo, imageNo);
-    getRealisationsGraph(categoryNo, objectNo, imageNo, realisationsGraph, inference);
+        cameraPose = datasetTrain->getCameraPose(categoryNo, objectNo, imageNo);
+        datasetTrain->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+    }
+    getRealisationsGraph(categoryNo, objectNo, imageNo, depthImage, cameraPose, realisationsGraph, inference);
 }
 
 /// get realisations graph
-void HOP3DBham::getRealisationsGraph(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSetMap& realisationsGraph, bool inference) const{
+void HOP3DBham::getRealisationsGraph(int categoryNo, int objectNo, int imageNo, const cv::Mat& depthImage, const Mat34& cameraPose, Hierarchy::IndexSetMap& realisationsGraph, bool inference) const{
     PointCloudUV cloud;
     realisationsGraph.clear();
-    cv::Mat depthImage;
-    if (inference)
-        datasetTest->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
-    else
-        datasetTrain->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
     imageFilterer->getCloud(depthImage, cloud);
     for (auto &point : cloud){
         for (int overlapNo=0;overlapNo<3;overlapNo++){
             std::vector<int> ids;
-            getRealisationsIds(overlapNo, categoryNo, objectNo, imageNo,point.u,point.v,point.position(2),ids);
+            getRealisationsIds(overlapNo, categoryNo, objectNo, imageNo, cameraPose, point.u,point.v,point.position(2),ids, inference);
             int idPrev=-1;
             int idNo=0;
             for (auto & partId : ids){
@@ -316,29 +334,39 @@ void HOP3DBham::getRealisationsGraph(int categoryNo, int objectNo, int imageNo, 
 void HOP3DBham::getPartsRealisationCloud(const std::string& path, PartsClouds& parts, bool inference) const{
     parts.clear();
     int categoryNo(0), objectNo(0), imageNo(0);
-    if (inference)
-        datasetTest->translateString(path, categoryNo, objectNo, imageNo);
-    else
+    cv::Mat depthImage;
+    Mat34 cameraPose;
+    if (inference) {
+        std::map<std::string, InferenceObject>::const_iterator infDataIt;
+        if (inferenceData.find(path,categoryNo, objectNo, imageNo, infDataIt)){
+            depthImage = infDataIt->second.depthImage;
+            cameraPose = infDataIt->second.cameraPose;
+        }
+        else{
+            datasetTest->translateString(path, categoryNo, objectNo, imageNo);
+            datasetTest->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+            cameraPose = datasetTest->getCameraPose(categoryNo, objectNo, imageNo);
+        }
+    }
+    else{
         datasetTrain->translateString(path, categoryNo, objectNo, imageNo);
-    getPartsRealisationCloud(categoryNo, objectNo, imageNo, parts, inference);
+        datasetTrain->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+        cameraPose = datasetTrain->getCameraPose(categoryNo, objectNo, imageNo);
+    }
+    getPartsRealisationCloud(categoryNo, objectNo, imageNo, depthImage, cameraPose, parts, inference);
 }
 
 /// get maps from point to part realisation
-void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSeqMap& points2parts, bool inference) const{
+void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, const cv::Mat& depthImage, const Mat34& cameraPose, Hierarchy::IndexSeqMap& points2parts, bool inference) const{
     points2parts.clear();
     PointCloudUV cloud;
-    cv::Mat depthImage;
-    if (inference)
-        datasetTest->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
-    else
-        datasetTrain->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
     imageFilterer->getCloud(depthImage, cloud);
     std::uint32_t pointIdx=0;
     for (auto &point : cloud){
         std::vector<std::uint32_t> idsParts;
         for (int overlapNo=0;overlapNo<3;overlapNo++){
             std::vector<int> ids;
-            getRealisationsIds(overlapNo, categoryNo,objectNo,imageNo,point.u,point.v, point.position(2),ids);
+            getRealisationsIds(overlapNo, categoryNo,objectNo,imageNo, cameraPose, point.u,point.v, point.position(2),ids, inference);
             for (size_t layerNo=0;layerNo<ids.size();layerNo++){
                 if (ids[layerNo]>=0){
                     idsParts.push_back((std::uint32_t)ids[layerNo]);
@@ -356,22 +384,44 @@ void HOP3DBham::getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hie
 void HOP3DBham::getCloud2PartsMap(const std::string& path, Hierarchy::IndexSeqMap& points2parts, bool inference) const{
     points2parts.clear();
     int categoryNo(0), objectNo(0), imageNo(0);
-    if (inference)
-        datasetTest->translateString(path, categoryNo, objectNo, imageNo);
-    else
+    cv::Mat depthImage;
+    Mat34 cameraPose;
+    if (inference) {
+        std::map<std::string, InferenceObject>::const_iterator infDataIt;
+        if (inferenceData.find(path,categoryNo, objectNo, imageNo, infDataIt)){
+            depthImage = infDataIt->second.depthImage;
+            cameraPose = infDataIt->second.cameraPose;
+        }
+        else{
+            datasetTest->translateString(path, categoryNo, objectNo, imageNo);
+            datasetTest->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+            cameraPose = datasetTest->getCameraPose(categoryNo, objectNo, imageNo);
+        }
+    }
+    else{
         datasetTrain->translateString(path, categoryNo, objectNo, imageNo);
-    getCloud2PartsMap(categoryNo, objectNo, imageNo, points2parts, inference);
+        datasetTrain->getDepthImage(categoryNo, objectNo, imageNo, depthImage);
+        cameraPose = datasetTrain->getCameraPose(categoryNo, objectNo, imageNo);
+    }
+    getCloud2PartsMap(categoryNo, objectNo, imageNo, depthImage, cameraPose, points2parts, inference);
 }
 
 /// get parts realization
 void HOP3DBham::getPartsRealisation(const std::string& path, std::vector<ViewIndependentPart::Part3D>& parts, bool inference) const{
     parts.clear();
     int categoryNo(0), objectNo(0), imageNo(0);
-    if (inference)
-        datasetTest->translateString(path, categoryNo, objectNo, imageNo);
-    else
+    Mat34 cameraPose;
+    if (inference){
+        std::map<std::string, InferenceObject>::const_iterator infDataIt;
+        if (!inferenceData.find(path,categoryNo, objectNo, imageNo, infDataIt))
+            datasetTest->translateString(path, categoryNo, objectNo, imageNo);
+        cameraPose = datasetTest->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo);
+    }
+    else{
         datasetTrain->translateString(path, categoryNo, objectNo, imageNo);
-    getPartsRealisation(categoryNo, objectNo, imageNo, parts, inference);
+        cameraPose = datasetTrain->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo);
+    }
+    getPartsRealisation(categoryNo, objectNo, imageNo, cameraPose, parts, inference);
 }
 
 /// learining from the dataset
@@ -637,6 +687,7 @@ void HOP3DBham::loadInference(std::string filename){
         createPartClouds(true);
     }
 #endif
+    std::cout << "Finished\n";
 }
 
 /// return object which are build from part id
@@ -692,7 +743,7 @@ void HOP3DBham::inference(void){
     datasetTest->getDatasetInfo(datasetInfoTest);
     int toLayerDep = (config.inferenceUpToLayer>config.viewDependentLayersNo) ? config.viewDependentLayersNo : config.inferenceUpToLayer;
     int toLayerIndep = (config.inferenceUpToLayer>config.viewDependentLayersNo) ? config.inferenceUpToLayer-config.viewDependentLayersNo : 0;
-    std::cout << "Start inference\n";
+    std::cout << "Start inference dataset\n";
     for (int layerNo=0;layerNo<toLayerDep;layerNo++){
         if (layerNo==0){
             for (size_t categoryNo=0;categoryNo<datasetInfoTest.categories.size();categoryNo++){
@@ -794,34 +845,50 @@ void HOP3DBham::inference(void){
         createPartClouds(true);
     }
 #endif
+    std::cout << "Finished\n";
 }
 
 /// inference
 void HOP3DBham::inference(std::map<std::string, pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr>& images){
 //void HOP3DBham::inference(std::vector<std::pair<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr, Mat34>>& cameraFrames, int categoryNo, int objectNo){
     std::vector<std::pair<cv::Mat, Mat34>> cameraFramesImg;
-    int categoryNo; int objectNo; int imageNo;
+    int imageNo=0;
+    std::vector<std::string> names;
     for (const auto element : images){
         cv::Mat image;
+        pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr tt;
+        tt->sensor_origin_;
+        Eigen::Vector4f origin = element.second->sensor_origin_;
+        Eigen::Quaternionf rot = element.second->sensor_orientation_;
+        Mat34 cameraPose(Eigen::Translation<double, 3>(origin(0),origin(1),origin(2))*Quaternion(rot.w(),rot.x(),rot.y(),rot.z()));
         BorisDataset::cloud2Image(element.second, image, *depthCameraModel);
-        std::string catName = "category" + std::to_string(categoryInferenceCount);
-        datasetTest->addData(element.second, catName, element.first);
-        datasetTest->translateString(element.first, categoryNo, objectNo, imageNo);
-        cameraFramesImg.push_back(std::make_pair(image,datasetTest->getCameraPose(categoryNo, objectNo, imageNo)));
+        cameraFramesImg.push_back(std::make_pair(image,cameraPose));
+        names.push_back(element.first);
         imageNo++;
     }
-    inference(cameraFramesImg,categoryNo,objectNo);
+    inference(cameraFramesImg, names);
     categoryInferenceCount++;
 }
 
 /// inference
-void HOP3DBham::inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, int categoryNo, int objectNo){
+void HOP3DBham::inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, std::vector<std::string>& names){
     if (hierarchy.get()->viewDependentLayers[0].size()==0)
         throw std::runtime_error("Train or load hierarchy first\n");
+    if (cameraFrames.size()!=names.size())
+        throw std::runtime_error("cameraFrames vector and names vector should have the same size\n");
+    inferenceData.clear();
+    int frameNo=0;
+    for (const auto& frame : cameraFrames){
+        inferenceData.insert(names[frameNo],frame.first,frame.second);
+        frameNo++;
+    }
+
     int toLayerDep = (config.inferenceUpToLayer>config.viewDependentLayersNo) ? config.viewDependentLayersNo : config.inferenceUpToLayer;
     int toLayerIndep = (config.inferenceUpToLayer>config.viewDependentLayersNo) ? config.inferenceUpToLayer-config.viewDependentLayersNo : 0;
-    std::cout << "Start inference\n";
-    datasetTest->getDatasetInfo(datasetInfoTest);
+    std::cout << "Start inference depth images\n";
+    //datasetTest->getDatasetInfo(datasetInfoTest);
+    int categoryNo = 0;
+    int objectNo = 0;
     for (int layerNo=0;layerNo<toLayerDep;layerNo++){
         if (layerNo==0){
             int imageNo=0;
@@ -845,10 +912,10 @@ void HOP3DBham::inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, 
             }
         }
     }
+    objectsInference.clear();
     objectsInference.resize(categoryNo+1);
     std::cout << "Create object composition\n";
     ObjectCompositionOctree object(config.compositionConfig);
-    objectsInference.size();
     objectsInference[categoryNo].push_back(object);
     for (int imageNo=0; imageNo<(int)cameraFrames.size(); imageNo++){
         std::vector<ViewDependentPart> parts;
@@ -889,27 +956,24 @@ void HOP3DBham::inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, 
     for (auto &element : objectsCoveragesGlob)
         std::cout << element.first << "-> [%] " << double(element.second)/sumCov << "\n";
     std::cout << "Inference finished\n";
-    if(config.saveInference){
+    /*if(config.saveInference){
         std::cout << "Save to file...\n";
         std::ofstream ofsInference(config.filename2saveInference);
-        for (size_t categoryNo=0;categoryNo<datasetInfoTest.categories.size();categoryNo++){//for each category
-            for (size_t objectNo=0;objectNo<datasetInfoTest.categories[categoryNo].objects.size();objectNo++){//for each object
-                ofsInference << objectsInference[categoryNo][objectNo];
-            }
-        }
+        ofsInference << objectsInference[categoryNo][objectNo];
         ((NormalImageFilter*)imageFilterer)->save2file(ofsInference, true);
         ofsInference.close();
         std::cout << "saved\n";
-    }
+    }*/
     //visualization
 #ifdef QVisualizerBuild
     if (config.useVisualization){
-        createObjsFromParts(true);
+        createObjsFromParts();
         std::this_thread::sleep_for(std::chrono::seconds(5));
         notify3Dmodels();
         createPartClouds(true);
     }
 #endif
+    std::cout << "Finished\n";
 }
 
 /// notify visualizer
@@ -1010,6 +1074,63 @@ void HOP3DBham::createObjsFromParts(bool inference){
     }
 }
 
+/// create objects from parts
+void HOP3DBham::createObjsFromParts(void){
+    std::vector<std::vector<ObjectCompositionOctree>>* objComp = &objectsInference;//objects compositions
+    int categoryNo=0;
+    int objectNo=0;
+    for (int layerNo=0;layerNo<config.viewDependentLayersNo+1;layerNo++){//create objects from parts
+        int imageNo=0;
+        for (auto & inputData : inferenceData.data){//for each depth image
+            std::vector<PartCoords> partCoords;
+            std::vector<PartCoordsEucl> partCoordsEucl;
+            for (int overlapNo=0; overlapNo<3; overlapNo++){
+                if (layerNo==0){
+                    std::vector<PartCoords> partCoordsTmp;
+                    imageFilterer->getResponseFilters(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, partCoordsTmp, true);
+                    partCoords.insert(partCoords.end(), partCoordsTmp.begin(), partCoordsTmp.end());
+                }
+                else{
+                    std::vector<PartCoordsEucl> partCoordsEuclTmp;
+                    imageFilterer->getParts3D(overlapNo,(int)categoryNo, (int)objectNo, (int)imageNo, layerNo, partCoordsEuclTmp, true);
+                    partCoordsEucl.insert(partCoordsEucl.end(), partCoordsEuclTmp.begin(), partCoordsEuclTmp.end());
+                }
+            }
+            Mat34 cameraPose(inputData.second.cameraPose);
+            std::vector<std::pair<int, Mat34>> filtersPoses;
+            if (layerNo<1){
+                for (auto& filterCoord : partCoords){
+                    Vec3 point3d;
+                    depthCameraModel.get()->getPoint(filterCoord.coords.u, filterCoord.coords.v, filterCoord.coords.depth, point3d);
+                    Mat34 pointPose(Mat34::Identity());
+                    pointPose.translation() = point3d;
+                    pointPose = cameraPose * pointPose*filterCoord.offset;
+                    filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
+                }
+            }
+            else{
+                for (auto& filterCoord : partCoordsEucl){
+                    Mat34 pointPose(Mat34::Identity());
+                    pointPose.translation() = filterCoord.coords;
+                    pointPose = cameraPose * pointPose*filterCoord.offset;
+                    filtersPoses.push_back(std::make_pair(filterCoord.filterId,pointPose));
+                }
+            }
+            //compute object index
+            notify(filtersPoses,objectNo, layerNo, true);
+            imageNo++;
+        }
+    }
+    for (auto & object : (*objComp)[categoryNo]){
+        std::vector<ViewIndependentPart> objectParts;
+        for (size_t i=0;i<hierarchy.get()->viewIndependentLayers.size();i++){
+            object.getParts((int)i, objectParts);
+            notify(objectParts, (int)(i+hierarchy.get()->viewDependentLayers.size()+1), true);
+            //std::cout << "(int)(i+hierarchy.get()->viewDependentLayers.size()+1) " < < (int)(i+hierarchy.get()->viewDependentLayers.size()+1) << "\n";
+        }
+    }
+}
+
 /// get set of ids from hierarchy for the given input point
 void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids, bool inference) const{
     ids.clear();
@@ -1038,21 +1159,24 @@ void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int ima
 }
 
 /// get realisations ids
-void HOP3DBham::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const{
+void HOP3DBham::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Mat34& cameraPose, int u, int v, double depth, std::vector<int>& ids, bool inference) const{
     ids.clear();
     ViewDependentPart lastVDpart;
     std::vector<int> idsTmp;
-    imageFilterer->getRealisationsIds(overlapNo, categoryNo, objectNo, imageNo, u, v, depth, idsTmp, lastVDpart);
+    imageFilterer->getRealisationsIds(overlapNo, categoryNo, objectNo, imageNo, u, v, depth, idsTmp, lastVDpart, inference);
     ids.insert(ids.end(),idsTmp.begin(),idsTmp.end());
     //std::cout << ids[0] << ", " << ids[1] << ", " << ids[2] << "\n";
     /// view independent ids
-    Mat34 cameraPose(datasetTrain->getCameraPose(categoryNo, objectNo, imageNo));
+    //Mat34 cameraPose(datasetTrain->getCameraPose(categoryNo, objectNo, imageNo));
     Vec3 point(Vec3(NAN,NAN,NAN));
     depthCameraModel.get()->getPoint(u, v, depth, point);
     if ((!std::isnan(point(0)))&&(!std::isnan(point(1)))){
         point = (cameraPose*Vec4(point(0),point(1),point(2),1.0)).block<3,1>(0,0);
         idsTmp.clear();
-        objects[categoryNo][objectNo].getRealisationsIds(point, overlapNo, idsTmp);
+        if (inference)
+            objectsInference[categoryNo][objectNo].getRealisationsIds(point, overlapNo, idsTmp);
+        else
+            objects[categoryNo][objectNo].getRealisationsIds(point, overlapNo, idsTmp);
         ids.insert(ids.end(),idsTmp.begin(),idsTmp.end());
     }
     else{
@@ -1088,27 +1212,32 @@ void HOP3DBham::getPointsModels(int overlapNo, int categoryNo, int objectNo, int
     }
 }
 
+/// assign random colors to parts
+void HOP3DBham::randomColors(int layersNo){
+    colors.resize(layersNo);
+    colors[0].resize(hierarchy.get()->firstLayer.size());
+    std::uniform_real_distribution<double> uniformDist(0.0,1.0);
+    std::default_random_engine engine;
+    for (int layerNo=0;layerNo<(int)hierarchy.get()->viewDependentLayers.size();layerNo++){
+        colors[layerNo+1].resize(hierarchy.get()->viewDependentLayers[layerNo].size());
+    }
+    for (int layerNo=0;layerNo<(int)hierarchy.get()->viewIndependentLayers.size();layerNo++){
+        colors[layerNo+(int)hierarchy.get()->viewDependentLayers.size()+1].resize(hierarchy.get()->viewIndependentLayers[layerNo].size());
+    }
+    for (size_t layerNo=0;layerNo<colors.size();layerNo++){
+        for (size_t partNo=0;partNo<colors[layerNo].size();partNo++){
+            std::array<double,4> color = {uniformDist(engine), uniformDist(engine), uniformDist(engine), 1.0};
+            colors[layerNo][partNo] = color;
+        }
+    }
+}
+
 /// create part-coloured point clouds
 void HOP3DBham::createPartClouds(bool inference){
     /// clouds for the first layer
     int layersNo=6;//(int)hierarchy.get()->viewDependentLayers.size()+(int)hierarchy.get()->viewIndependentLayers.size()+1;
     if (colors.size()==0){
-        colors.resize(layersNo);
-        colors[0].resize(hierarchy.get()->firstLayer.size());
-        std::uniform_real_distribution<double> uniformDist(0.0,1.0);
-        std::default_random_engine engine;
-        for (int layerNo=0;layerNo<(int)hierarchy.get()->viewDependentLayers.size();layerNo++){
-            colors[layerNo+1].resize(hierarchy.get()->viewDependentLayers[layerNo].size());
-        }
-        for (int layerNo=0;layerNo<(int)hierarchy.get()->viewIndependentLayers.size();layerNo++){
-            colors[layerNo+(int)hierarchy.get()->viewDependentLayers.size()+1].resize(hierarchy.get()->viewIndependentLayers[layerNo].size());
-        }
-        for (size_t layerNo=0;layerNo<colors.size();layerNo++){
-            for (size_t partNo=0;partNo<colors[layerNo].size();partNo++){
-                std::array<double,4> color = {uniformDist(engine), uniformDist(engine), uniformDist(engine), 1.0};
-                colors[layerNo][partNo] = color;
-            }
-        }
+        randomColors(layersNo);
     }
     DatasetInfo* datasetInfo;
     Dataset* dataset;
@@ -1186,6 +1315,79 @@ void HOP3DBham::createPartClouds(bool inference){
         }
     }
     notify(cloudsObj, inference);
+    createPartObjects();
+}
+
+/// create part-coloured point clouds
+void HOP3DBham::createPartClouds(void){
+    /// clouds for the first layer
+    int layersNo=6;//(int)hierarchy.get()->viewDependentLayers.size()+(int)hierarchy.get()->viewIndependentLayers.size()+1;
+    if (colors.size()==0){
+        randomColors(layersNo);
+    }
+    int overlapsNo=4;
+    /// point clouds (index: overlapNo->layerNo->objectNo)
+    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> cloudsObj(overlapsNo, std::vector<std::vector<hop3d::PointCloudRGBA>>(layersNo)); // vector of coloured objects
+    size_t categoriesNo = 1; size_t objectsNo = 1;
+    for (int overlapNo=0; overlapNo<overlapsNo; overlapNo++){
+        for (size_t categoryNo=0;categoryNo<categoriesNo;categoryNo++){
+            for (size_t objectNo=0;objectNo<objectsNo;objectNo++){
+                std::vector<hop3d::PointCloudRGBA> objsTmp(layersNo);
+                int imageNo = 0;
+                for (auto & inputData : inferenceData.data){
+                    hop3d::PartsCloud cloudParts;
+                    if (overlapNo<3){
+                        getPointsModels(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, cloudParts, true);
+                        Mat34 cameraPose = inputData.second.cameraPose;
+                        for (auto &pointPart : cloudParts){
+                            for (int el=0;el<(int)pointPart.partsIds.size();el++){
+                                int layNo=pointPart.partsIds[el].first;
+                                PointColor pointRGBA(pointPart.position,std::array<double,4>({0.0,0.0,0.0,1.0}));
+                                if (pointPart.partsIds[layNo].second>=0){
+                                    pointRGBA.color = colors[layNo][pointPart.partsIds[layNo].second];
+                                }
+                                if (!std::isnan(pointPart.position(0))){
+                                    Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(pointPart.position(0),pointPart.position(1),pointPart.position(2)));
+                                    Mat34 pointWorld = cameraPose*pointCam;
+                                    pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(2)=pointWorld(2,3); pointRGBA.position(1)=pointWorld(1,3);
+                                    if (layNo<3)
+                                        pointRGBA.position(1)+=0.2*double(imageNo);
+                                    objsTmp[layNo].push_back(pointRGBA);
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        for (int layNo=0;layNo<layersNo;layNo++){
+                            //compute object index
+                            int objNo=1;
+                            for (int pointNo=0;pointNo<(int)cloudsObj[0][layNo][objNo].size();pointNo++){
+                                PointColor pointRGBA(cloudsObj[0][layNo][objNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
+                                int colorsNo=0;
+                                for (int overNo=0;overNo<3;overNo++){
+                                    if (cloudsObj[overNo][layNo][objNo][pointNo].color[0]>0||cloudsObj[overNo][layNo][objNo][pointNo].color[1]>0||cloudsObj[overNo][layNo][objNo][pointNo].color[2]>0){
+                                        colorsNo++;
+                                        for (int colorId=0;colorId<3;colorId++)
+                                            pointRGBA.color[colorId]+=cloudsObj[overNo][layNo][objNo][pointNo].color[colorId];
+                                    }
+                                }
+                                if (colorsNo>0){
+                                    for (int colorId=0;colorId<3;colorId++)
+                                        pointRGBA.color[colorId]/=double(colorsNo);
+                                }
+                                objsTmp[layNo].push_back(pointRGBA);
+                            }
+                        }
+                    }
+                    imageNo++;
+                }
+                for (size_t layerNo=0;layerNo<objsTmp.size();layerNo++){
+                    cloudsObj[overlapNo][layerNo].push_back(objsTmp[layerNo]);
+                }
+            }
+        }
+    }
+    notify(cloudsObj, true);
     createPartObjects();
 }
 

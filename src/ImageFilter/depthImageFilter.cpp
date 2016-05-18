@@ -230,11 +230,11 @@ void DepthImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo, 
 }
 
 /// get set of ids for the given input point
-void DepthImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart){
+void DepthImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference){
     std::cout << "not implemented\n";
     ids.clear();
     std::cout << lastVDpart.id << "\n";
-    std::cout << overlapNo << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << depth << "\n";
+    std::cout << overlapNo << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << depth << inference << "\n";
 }
 
 /// returs filter ids and their position on the image
@@ -262,9 +262,9 @@ void DepthImageFilter::getCloud(const cv::Mat& depthImage, hop3d::PointCloudUV& 
 }
 
 /// returs parts ids and their position on the image
-void DepthImageFilter::getPartsRealisation(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts) const{
+void DepthImageFilter::getPartsRealisation(int overlapNo, int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts, bool inference){
     parts.clear();
-    std::cout << overlapNo << categoryNo << " " << objectNo << imageNo << layerNo << "\n";
+    std::cout << overlapNo << categoryNo << " " << objectNo << imageNo << layerNo << inference << "\n";
 }
 
 /// get input point

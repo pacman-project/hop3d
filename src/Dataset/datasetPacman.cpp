@@ -229,7 +229,7 @@ bool PacmanDataset::isObjectInDataset(const std::string& imageName, int& categor
     for (auto cat : config.dataset.categories){
         objectNo=0;
         for (auto obj : cat.objects){
-            int imageNo=0;
+            imageNo=0;
             for (auto img : obj.images){
                 if (imageName == img)
                     return true;

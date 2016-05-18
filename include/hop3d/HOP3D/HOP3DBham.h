@@ -36,6 +36,61 @@ public:
     /// Pointer
     typedef std::unique_ptr<HOP3DBham> Ptr;
 
+    class InferenceObject{
+    public:
+        /// depth image
+        cv::Mat depthImage;
+
+        /// cloud
+        pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud;
+
+        /// camera pose
+        Mat34 cameraPose;
+
+        /// category no
+        int categoryNo;
+
+        /// object no
+        int objectNo;
+
+        /// image no
+        int imageNo;
+
+        InferenceObject(int _categoryNo, int _objectNo, int _imageNo) : categoryNo(_categoryNo), objectNo(_objectNo), imageNo(_imageNo){}
+    };
+
+    class InferenceData{
+    public:
+        /// data to inference
+        std::map<std::string, InferenceObject> data;
+        /// clear
+        inline void clear(void) {data.clear();}
+        /// insert
+        void insert(std::string _name, const cv::Mat& _depthImage, const Mat34& _pose){
+            auto it = data.find(_name);
+            if (it != data.end()){
+                it->second.depthImage = _depthImage;
+                it->second.cameraPose = _pose;
+            }
+            else {
+                InferenceObject object(0,0,(int)data.size());
+                object.depthImage = _depthImage; object.cameraPose = _pose;
+                data.insert(std::make_pair(_name,object));
+            }
+        }
+        bool find(const std::string _name, int &categoryNo, int &objectNo, int &imageNo, std::map<std::string, InferenceObject>::const_iterator& it) const{
+            it = data.find(_name);
+            if (it != data.end()){
+                categoryNo = it->second.categoryNo;
+                objectNo = it->second.objectNo;
+                imageNo = it->second.imageNo;
+                return true;
+            }
+            else
+                return false;
+        }
+    };
+
     /// Construction
     HOP3DBham(void);
 
@@ -55,7 +110,7 @@ public:
     void inference(void);
 
     /// inference
-    void inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, int categoryNo, int objectNo);
+    void inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, std::vector<std::string>& names);
 
     /// inference
     void inference(std::map<std::string, pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr>& images);
@@ -70,9 +125,6 @@ public:
     void getCloudPaths(std::vector<std::string>& paths, bool inference) const;
 
     /// get cloud from dataset
-    void getCloud(int categoryNo, int objectNo, int imageNo, hop3d::PointCloud& cloud, bool inference) const;
-
-    /// get cloud from dataset
     void getCloud(const std::string& path, hop3d::PointCloud& cloud, bool inference) const;
 
     /// get hierarchy graph
@@ -82,34 +134,13 @@ public:
     void getPartsRealisation(const std::string& path, std::vector<ViewIndependentPart::Part3D>& parts, bool inference) const;
 
     /// get parts realization
-    void getPartsRealisation(int categoryNo, int objectNo, int imageNo, std::vector<ViewIndependentPart::Part3D>& parts, bool inference) const;
-
-    /// get parts realization
-    void getPartsRealisationCloud(int categoryNo, int objectNo, int imageNo, PartsClouds& parts, bool inference) const;
-
-    /// get parts realization
     void getPartsRealisationCloud(const std::string& path, PartsClouds& parts, bool inference) const;
 
     /// get maps from point to part realisation
     void getCloud2PartsMap(const std::string& path, Hierarchy::IndexSeqMap& points2parts, bool inference) const;
 
-    /// get maps from point to part realisation
-    void getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSeqMap& points2parts, bool inference) const;
-
-    /// get number of points in the point cloud
-    size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo, bool inference) const;
-
-    /// get point from the point cloud
-    //void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const;
-
-    /// get camera pose
-    void getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose, bool inference) const;
-
     /// get camera pose
     void getSensorFrame(const std::string& path, Mat34& cameraPose, bool inference) const;
-
-    /// get realisations graph
-    void getRealisationsGraph(int categoryNo, int objectNo, int imageNo, Hierarchy::IndexSetMap& realisationsGraph, bool inference) const;
 
     /// get realisations graph
     void getRealisationsGraph(const std::string& path, Hierarchy::IndexSetMap& realisationsGraph, bool inference) const;
@@ -177,13 +208,22 @@ private:
     void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids, bool inference) const;
 
     /// get set of ids from hierarchy for the given input point
-    void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids) const;
+    void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Mat34& cameraPose, int u, int v, double depth, std::vector<int>& ids, bool inference) const;
 
     /// create part-coloured point clouds
     void createPartClouds(bool inference);
 
+    /// create part-coloured point clouds
+    void createPartClouds(void);
+
+    /// assign random colors to parts
+    void randomColors(int layersNo);
+
     /// create objects from parts
     void createObjsFromParts(bool inference);
+
+    /// create objects from parts
+    void createObjsFromParts(void);
 
     /// get points realisation for the cloud
     void getPointsModels(int overlapNo, int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts, bool inference) const;
@@ -196,6 +236,30 @@ private:
 
     /// return object which are build from part id
     void getObjectsBuildFromPart(int partId, int layerNo, std::map<std::string,int>& objectNames);
+
+    /// get cloud from dataset
+    void getCloud(const cv::Mat& depthImage, hop3d::PointCloud& cloud) const;
+
+    /// get parts realization
+    void getPartsRealisation(int categoryNo, int objectNo, int imageNo, const Mat34& cameraPose, std::vector<ViewIndependentPart::Part3D>& parts, bool inference) const;
+
+    /// get parts realization
+    void getPartsRealisationCloud(int categoryNo, int objectNo, int imageNo, const cv::Mat& depthImage, const Mat34& cameraPose, PartsClouds& parts, bool inference) const;
+
+    /// get maps from point to part realisation
+    void getCloud2PartsMap(int categoryNo, int objectNo, int imageNo, const cv::Mat& depthImage, const Mat34& cameraPose, Hierarchy::IndexSeqMap& points2parts, bool inference) const;
+
+    /// get number of points in the point cloud
+//    size_t getNumOfPoints(int categoryNo, int objectNo, int imageNo, bool inference) const;
+
+    /// get point from the point cloud
+    //void getPoint(int categoryNo, int objectNo, int imageNo, size_t pointNo, Vec3& point) const;
+
+    /// get camera pose
+//    void getSensorFrame(int categoryNo, int objectNo, int imageNo, Mat34& cameraPose, bool inference) const;
+
+    /// get realisations graph
+    void getRealisationsGraph(int categoryNo, int objectNo, int imageNo, const cv::Mat& depthImage, const Mat34& cameraPose, Hierarchy::IndexSetMap& realisationsGraph, bool inference) const;
 
     /// Configuration of the module
     Config config;
@@ -236,6 +300,9 @@ private:
     std::vector<std::vector<std::array<double,4>>> colors;
 
     int categoryInferenceCount;
+
+    /// inference data
+    InferenceData inferenceData;
 };
 }
 #endif // HOP3DBHAM_H_INCLUDED
