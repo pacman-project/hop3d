@@ -970,7 +970,7 @@ void HOP3DBham::inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, 
         createObjsFromParts();
         std::this_thread::sleep_for(std::chrono::seconds(5));
         notify3Dmodels();
-        createPartClouds(true);
+        createPartClouds();
     }
 #endif
     std::cout << "Finished\n";
@@ -1139,12 +1139,7 @@ void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int ima
 }
 
 /// get set of ids from hierarchy for the given input point (view-independent layers)
-void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids, bool inference) const{
-    Mat34 cameraPose;
-    if (inference)
-        cameraPose = datasetTest->getCameraPose(categoryNo, objectNo, imageNo);
-    else
-        cameraPose = datasetTrain->getCameraPose(categoryNo, objectNo, imageNo);
+void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, const Mat34& cameraPose, const Vec3& point, std::vector<int>& ids, bool inference) const{
     if ((!std::isnan(point(0)))&&(!std::isnan(point(1)))){
         Vec3 pointGlob = (cameraPose*Vec4(point(0),point(1),point(2),1.0)).block<3,1>(0,0);
         if (inference)
@@ -1186,12 +1181,7 @@ void HOP3DBham::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, 
 }
 
 /// get points realisation for the cloud
-void HOP3DBham::getPointsModels(int overlapNo, int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts, bool inference) const{
-    cv::Mat depthImage;
-    if (inference)
-        datasetTest->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo, depthImage);
-    else
-        datasetTrain->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo, depthImage);
+void HOP3DBham::getPointsModels(int overlapNo, int categoryNo, int objectNo, int imageNo, const cv::Mat& depthImage, const Mat34& cameraPose, hop3d::PartsCloud& cloudParts, bool inference) const{
     PointCloudUV cloudUV;
     imageFilterer->getCloud(depthImage,cloudUV);
     for (const auto &pointuv : cloudUV){
@@ -1204,7 +1194,7 @@ void HOP3DBham::getPointsModels(int overlapNo, int categoryNo, int objectNo, int
         }
         int idsSize = (int)ids.size();
         ids.clear();
-        getPartsIds(overlapNo, categoryNo, objectNo, imageNo, pointuv.position, ids, inference);
+        getPartsIds(overlapNo, categoryNo, objectNo, cameraPose, pointuv.position, ids, inference);
         for (int i=0;i<(int)ids.size();i++){
             pointPart.partsIds.push_back(std::make_pair(i+idsSize,ids[i]));
         }
@@ -1262,8 +1252,10 @@ void HOP3DBham::createPartClouds(bool inference){
                 for (size_t imageNo=0;imageNo<datasetInfo->categories[categoryNo].objects[objectNo].images.size();imageNo++){
                     hop3d::PartsCloud cloudParts;
                     if (overlapNo<3){
-                        getPointsModels(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, cloudParts, inference);
+                        cv::Mat depthImage;
+                        dataset->getDepthImage((int)categoryNo, (int)objectNo, (int)imageNo, depthImage);
                         Mat34 cameraPose(dataset->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+                        getPointsModels(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, depthImage, cameraPose, cloudParts, inference);
                         for (auto &pointPart : cloudParts){
                             for (int el=0;el<(int)pointPart.partsIds.size();el++){
                                 int layNo=pointPart.partsIds[el].first;
@@ -1337,8 +1329,9 @@ void HOP3DBham::createPartClouds(void){
                 for (auto & inputData : inferenceData.data){
                     hop3d::PartsCloud cloudParts;
                     if (overlapNo<3){
-                        getPointsModels(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, cloudParts, true);
-                        Mat34 cameraPose = inputData.second.cameraPose;
+                        cv::Mat depthImage(inputData.second.depthImage);
+                        Mat34 cameraPose(inputData.second.cameraPose);
+                        getPointsModels(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, depthImage, cameraPose, cloudParts, true);
                         for (auto &pointPart : cloudParts){
                             for (int el=0;el<(int)pointPart.partsIds.size();el++){
                                 int layNo=pointPart.partsIds[el].first;
@@ -1360,7 +1353,8 @@ void HOP3DBham::createPartClouds(void){
                     else{
                         for (int layNo=0;layNo<layersNo;layNo++){
                             //compute object index
-                            int objNo=1;
+                            int objNo=0;
+                            std::cout << "cloudsObj[0][layNo][objNo].size() " << cloudsObj[0][layNo][objNo].size() << "\n";
                             for (int pointNo=0;pointNo<(int)cloudsObj[0][layNo][objNo].size();pointNo++){
                                 PointColor pointRGBA(cloudsObj[0][layNo][objNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
                                 int colorsNo=0;

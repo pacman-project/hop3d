@@ -205,7 +205,7 @@ private:
     void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids, bool inference) const;
 
     /// get set of ids from hierarchy for the given input point (view-independent layers)
-    void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Vec3& point, std::vector<int>& ids, bool inference) const;
+    void getPartsIds(int overlapNo, int categoryNo, int objectNo, const Mat34& cameraPose, const Vec3& point, std::vector<int>& ids, bool inference) const;
 
     /// get set of ids from hierarchy for the given input point
     void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Mat34& cameraPose, int u, int v, double depth, std::vector<int>& ids, bool inference) const;
@@ -226,7 +226,7 @@ private:
     void createObjsFromParts(void);
 
     /// get points realisation for the cloud
-    void getPointsModels(int overlapNo, int categoryNo, int objectNo, int imageNo, hop3d::PartsCloud& cloudParts, bool inference) const;
+    void getPointsModels(int overlapNo, int categoryNo, int objectNo, int imageNo, const cv::Mat& depthImage, const Mat34& cameraPose, hop3d::PartsCloud& cloudParts, bool inference) const;
 
     /// convert parts map to parts cloud
     void convertPartsMap2PartsCloud(const Hierarchy::IndexSeqMap& points2parts, PartsClouds& partsCloud) const;
