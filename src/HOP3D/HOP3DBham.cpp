@@ -8,12 +8,12 @@ using namespace hop3d;
 /// A single instance of unbiased stats builder
 HOP3DBham::Ptr hop3dBham;
 
-HOP3DBham::HOP3DBham(void) : HOP3D("Unbiased Statistics Builder", HOP3D_BHAM), categoryInferenceCount(0) {
+HOP3DBham::HOP3DBham(void) : HOP3D("Unbiased Statistics Builder", HOP3D_BHAM){
 }
 
 /// Construction
 HOP3DBham::HOP3DBham(std::string _config) :
-        HOP3D("Unbiased Statistics Builder", HOP3D_BHAM), config(_config), categoryInferenceCount(0) {
+        HOP3D("Unbiased Statistics Builder", HOP3D_BHAM), config(_config) {
     statsBuilder = hop3d::createUnbiasedStatsBuilder(config.statsConfig);
     hierarchy.reset(new Hierarchy(_config));
     if (config.partSelectorType==hop3d::PartSelector::SELECTOR_MEAN)
@@ -867,7 +867,6 @@ void HOP3DBham::inference(std::map<std::string, pcl::PointCloud<pcl::PointXYZRGB
         imageNo++;
     }
     inference(cameraFramesImg, names);
-    categoryInferenceCount++;
 }
 
 /// inference
@@ -1123,9 +1122,11 @@ void HOP3DBham::createObjsFromParts(void){
     }
     for (auto & object : (*objComp)[categoryNo]){
         std::vector<ViewIndependentPart> objectParts;
+        std::cout << "object composition\n";
         for (size_t i=0;i<hierarchy.get()->viewIndependentLayers.size();i++){
             object.getParts((int)i, objectParts);
             notify(objectParts, (int)(i+hierarchy.get()->viewDependentLayers.size()+1), true);
+            std::cout << "objectsParts.size(): " << objectParts.size() << "\n";
             //std::cout << "(int)(i+hierarchy.get()->viewDependentLayers.size()+1) " < < (int)(i+hierarchy.get()->viewDependentLayers.size()+1) << "\n";
         }
     }

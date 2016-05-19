@@ -293,8 +293,9 @@ void QGLVisualizer::update(const std::vector<ViewIndependentPart>& objectParts, 
 /// update object from parts
 void QGLVisualizer::update(std::vector<std::pair<int, Mat34>>& partsPoses, int objectNo, int layerNo, bool inference){
     std::vector<std::vector<std::vector<Part3D>>>* objParts;
-    if (inference)
+    if (inference){
         objParts = &objectsFromPartsInference;
+    }
     else
         objParts = &objectsFromParts;
     if ((*objParts)[layerNo].size()<=(size_t)objectNo){
@@ -340,16 +341,17 @@ void QGLVisualizer::update3Dobjects(void){
                 objects3Dlist[layerNo].push_back(createObjList(object,layerNo+(int)hierarchy.get()->viewDepPartsFromLayerNo, true,0.0));
                 objectNo++;
             }
-            layersOfObjectsInference[layerNo].clear();
+            //layersOfObjectsInference[layerNo].clear();
             layerNo++;
         }
         for (layerNo = 0;layerNo<3;layerNo++){//objects from parts of View-dependent layers
             for (auto& object : objectsFromPartsInference[layerNo]){
                 objects3Dlist[layerNo].push_back(createObjList(object, layerNo, true,0.0));
             }
-            objectsFromPartsInference[layerNo].clear();
+            //objectsFromPartsInference[layerNo].clear();
         }
 
+        objects3DlistExplode.resize(10);
         for (int i=0;i<10;i++){
             int layerNo=0;
             std::vector< std::vector< GLuint > > objectslist;
@@ -371,7 +373,33 @@ void QGLVisualizer::update3Dobjects(void){
                 if (i==9)
                     objectsFromParts[layerNo].clear();
             }
-            objects3DlistExplode.push_back(objectslist);
+
+            //inference
+            layerNo=0;
+            for (auto & layer : layersOfObjectsInference){//view independent layers
+                int objectNo=0;
+                for (auto & object : layer){
+                    objectslist[layerNo].push_back(createObjList(object,layerNo+(int)hierarchy.get()->viewDepPartsFromLayerNo, false,(9-i)*1.0));
+                    objectNo++;
+                }
+                if (i==9)
+                    layersOfObjectsInference[layerNo].clear();
+                layerNo++;
+            }
+            for (layerNo = 0;layerNo<3;layerNo++){//objects from parts of View-dependent layers
+                int objectNo=0;
+                for (auto& object : objectsFromPartsInference[layerNo]){
+                    objectslist[layerNo].push_back(createObjList(object, layerNo, false,(9-i)*1.0));
+                    objectNo++;
+                }
+                if (i==9)
+                    objectsFromPartsInference[layerNo].clear();
+            }
+            objects3DlistExplode[i].resize(7);
+            //objects3DlistExplode[i].insert(objects3DlistExplode[i].end(),objectslist.begin(), objectslist.end());
+            for (int layerNo=0; layerNo<(int)objects3DlistExplode[i].size();layerNo++){
+                std::move(objectslist[layerNo].begin(), objectslist[layerNo].end(), std::back_inserter(objects3DlistExplode[i][layerNo]));
+            }
         }
     }
 }
@@ -456,7 +484,7 @@ void QGLVisualizer::draw3Dobjects(void){
    if(explode<(int)objects3DlistExplode.size()){
         for (int layerNo=0;layerNo<6;layerNo++){
             for (size_t i = 0;i<objects3DlistExplode[explode][layerNo].size();i++){
-                double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.objectsDist[layerNo]*double(i)-((double)objects3Dlist[layerNo].size()/2)*config.objectsDist[layerNo]), config.objectsPosY[layerNo], config.objectsPosZ[layerNo], 1};
+                double GLmat[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (double)(config.objectsDist[layerNo]*double(i)-((double)objects3DlistExplode[explode][layerNo].size()/2)*config.objectsDist[layerNo]), config.objectsPosY[layerNo], config.objectsPosZ[layerNo], 1};
                 glPushMatrix();
                     //glColor3ub(200,200,200);
                     glMultMatrixd(GLmat);

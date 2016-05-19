@@ -299,8 +299,6 @@ private:
 
     std::vector<std::vector<std::array<double,4>>> colors;
 
-    int categoryInferenceCount;
-
     /// inference data
     InferenceData inferenceData;
 };
