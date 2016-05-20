@@ -1440,6 +1440,13 @@ std::ostream& operator<<(std::ostream& os, const ViewIndependentPart& part){
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             for (int k=0;k<3;k++){
+                os << part.offsets[i][j][k];
+            }
+        }
+    }
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            for (int k=0;k<3;k++){
                 os << part.clouds[i][j][k].size() << " ";
                 for (auto &point : part.clouds[i][j][k]){
                     os << point;
@@ -1502,6 +1509,13 @@ std::istream& operator>>(std::istream& is, ViewIndependentPart& part){
             }
         }
     }
+//    for (int i=0;i<3;i++){
+//        for (int j=0;j<3;j++){
+//            for (int k=0;k<3;k++){
+//                is >> part.offsets[i][j][k];
+//            }
+//        }
+//    }
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
             for (int k=0;k<3;k++){
