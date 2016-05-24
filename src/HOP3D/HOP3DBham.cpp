@@ -867,6 +867,25 @@ void HOP3DBham::inference(std::map<std::string, pcl::PointCloud<pcl::PointXYZRGB
         imageNo++;
     }
     inference(cameraFramesImg, names);
+    hop3d::PointCloud cloud;
+    /*
+    getCloud("mrmuscle.pcd", cloud, true);
+
+    Mat34 frameHop;
+    getSensorFrame("mrmuscle.pcd", frameHop, true);
+
+    // convert realisation graph
+    hop3d::Hierarchy::IndexSetMap realisationsHop;
+    getRealisationsGraph("mrmuscle.pcd", realisationsHop, true);
+
+    // convert parts
+    std::vector<hop3d::ViewIndependentPart::Part3D> partsHop;
+    getPartsRealisation("mrmuscle.pcd", partsHop, true);
+
+    // convert indices
+    hop3d::HOP3D::PartsClouds indicesHop;
+    getPartsRealisationCloud("mrmuscle.pcd", indicesHop, true);
+    */
 }
 
 /// inference
@@ -1355,7 +1374,6 @@ void HOP3DBham::createPartClouds(void){
                         for (int layNo=0;layNo<layersNo;layNo++){
                             //compute object index
                             int objNo=0;
-                            std::cout << "cloudsObj[0][layNo][objNo].size() " << cloudsObj[0][layNo][objNo].size() << "\n";
                             for (int pointNo=0;pointNo<(int)cloudsObj[0][layNo][objNo].size();pointNo++){
                                 PointColor pointRGBA(cloudsObj[0][layNo][objNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
                                 int colorsNo=0;

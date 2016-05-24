@@ -19,7 +19,7 @@ void runHOP3D(bool train, bool load, bool inference, bool loadInference, std::st
     if (load)
         lhop3d->load(file2load);
     if (inference){
-        lhop3d->inference();
+//        lhop3d->inference();
 //        std::vector<std::pair<cv::Mat, hop3d::Mat34>> frames;
 //        std::string path = "depth.png";
 //        cv::Mat depthImage = cv::imread(path, CV_LOAD_IMAGE_ANYDEPTH );
@@ -29,14 +29,14 @@ void runHOP3D(bool train, bool load, bool inference, bool loadInference, std::st
 //        frames.push_back(std::make_pair(depthImage, hop3d::Mat34::Identity()));
 //        std::vector<std::string> names; names.push_back("depth");
 //        lhop3d->inference(frames,names);
-//        pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
-//        std::string path = "cloudInf.pcd";
-//        if (pcl::io::loadPCDFile<pcl::PointXYZRGBNormal> (path, *cloud) == -1){//* load the file
-//            PCL_ERROR ("Couldn't read pcd file \n");
-//        }
-//        std::map<std::string, pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr> clouds;
-//        clouds.insert(std::make_pair("mrmuscle.pcd",cloud));
-//        lhop3d->inference(clouds);
+        pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
+        std::string path = "cloudInf.pcd";
+        if (pcl::io::loadPCDFile<pcl::PointXYZRGBNormal> (path, *cloud) == -1){//* load the file
+            PCL_ERROR ("Couldn't read pcd file \n");
+        }
+        std::map<std::string, pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr> clouds;
+        clouds.insert(std::make_pair("mrmuscle.pcd",cloud));
+        lhop3d->inference(clouds);
     }
     if (loadInference)
         lhop3d->loadInference(inferenceFile);

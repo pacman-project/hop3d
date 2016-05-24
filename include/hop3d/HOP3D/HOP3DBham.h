@@ -86,8 +86,9 @@ public:
                 imageNo = it->second.imageNo;
                 return true;
             }
-            else
+            else {
                 return false;
+            }
         }
     };
 
