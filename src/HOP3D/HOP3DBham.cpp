@@ -413,9 +413,13 @@ void HOP3DBham::getPartsRealisation(const std::string& path, std::vector<ViewInd
     Mat34 cameraPose;
     if (inference){
         std::map<std::string, InferenceObject>::const_iterator infDataIt;
-        if (!inferenceData.find(path,categoryNo, objectNo, imageNo, infDataIt))
+        if (!inferenceData.find(path,categoryNo, objectNo, imageNo, infDataIt)){
             datasetTest->translateString(path, categoryNo, objectNo, imageNo);
-        cameraPose = datasetTest->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo);
+            cameraPose = datasetTest->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo);
+        }
+        else {
+            cameraPose = infDataIt->second.cameraPose;
+        }
     }
     else{
         datasetTrain->translateString(path, categoryNo, objectNo, imageNo);
