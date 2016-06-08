@@ -756,39 +756,14 @@ void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, con
                         bool hasDoubleSurface = octet.hasDoubleSurface(config.distThresholdSecondLayer,biggerGroupSize, smallerGroupSize);
                         if (biggerGroupSize>=config.minOctetSizeSecondLayer){
                             computeRelativePositions(octet, 2);
-                            for (int k=0;k<3;k++){
-                                for (int l=0;l<3;l++){
-                                    if (octet.partIds[k][l]>=0){
-                                        if (!(k==1&&l==1)){
-                                            if (fabs(octet.partsPosNorm[k][l].mean(2))>0.1){
-                                                std::cout << octet.partsPosNorm[k][l].mean(2) << "\n";
-                                               // getchar();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
                             octet.isBackground=false;
                             if (hasDoubleSurface&&config.splitSurfaces){
                                 octet.splitSurfaces(config.distThresholdSecondLayer, config.minOctetSizeSecondLayer, smallerGroupSize);
                             }
                             updateRealisationIds(octet);
                             octets.push_back(octet);
-                            if (octet.secondOctet.size()>0){
+                            if (octet.secondOctet.size()>0)
                                 octets.push_back(octet.secondOctet[0]);
-                                for (int k=0;k<3;k++){
-                                    for (int l=0;l<3;l++){
-                                        if (octet.secondOctet[0].partIds[k][l]>=0){
-                                            if (!(k==1&&l==1)){
-                                                if (fabs(octet.secondOctet[0].partsPosNorm[k][l].mean(2))>0.1){
-                                                    std::cout << octet.secondOctet[0].partsPosNorm[k][l].mean(2) << " second\n";
-                                                    //getchar();
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
                             nextLayerOctetsImg[u][v].reset(new Octet(octet));
                         }
                     }
@@ -1378,7 +1353,7 @@ void NormalImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo,
                 if ((*oImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
                     //ViewDependentPart.partsPosNorm[1][1]
                     Octet * octet = (*oImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get();
-                    if (octet->partIds[((u-overlapNo*(3*config.filterSize))/(config.filterSize*3))%3][((v-overlapNo*(3*config.filterSize))/(config.filterSize*3))%3]==-2){
+                    if (octet->partIds[((u-overlapNo*(3*config.filterSize))/(config.filterSize*3))%3][((v-overlapNo*(3*config.filterSize))/(config.filterSize*3))%3]<-1){
                         if (octet->secondOctet.size()>0){
                             if (fabs(octet->secondOctet[0].partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer))
                                 ids.push_back(-2);

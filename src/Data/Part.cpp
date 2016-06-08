@@ -736,7 +736,7 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
 }
 
 /// create point cloud from second layer part
-int ViewDependentPart::createPointsMatrix(const ViewDependentPart& part, const ViewDependentPart::Seq& vocabulary, int rotIndex, PointsSecondLayer& points){
+int ViewDependentPart::createPointsMatrix(const ViewDependentPart& part, const ViewDependentPart::Seq& vocabulary, int rotIndex, PointsSecondLayer& points, Eigen::MatrixXd& partIds){
     typedef std::vector<std::pair<int, int>> PointCorrespondence;
     PointCorrespondence pointCorrespondence = {{0,0}, {0,1}, {0,2}, {1,2}, {2,2}, {2,1}, {2,0}, {1,0}};
     std::vector<std::vector<PointCorrespondence>> ids(3,std::vector<PointCorrespondence>(3));
@@ -774,6 +774,7 @@ int ViewDependentPart::createPointsMatrix(const ViewDependentPart& part, const V
                 for (int i=0;i<3;i++){
                     for (int j=0;j<3;j++){
                         int newCoords[2]={ids[rowId][partId][rotIndex].first*3+ids[i][j][rotIndex].first, ids[rowId][partId][rotIndex].second*3+ids[i][j][rotIndex].second};
+                        partIds(newCoords[0],newCoords[1])=vocabulary[part.partIds[rowId][partId]].partIds[i][j];
                         if (vocabulary[part.partIds[rowId][partId]].partIds[i][j]>=0){
                             Vec3 posElement;
                             if (i==1&&j==1)
@@ -812,6 +813,7 @@ int ViewDependentPart::createPointsMatrix(const ViewDependentPart& part, const V
                         int newCoords[2]={ids[rowId][partId][rotIndex].first*3+ids[i][j][rotIndex].first, ids[rowId][partId][rotIndex].second*3+ids[i][j][rotIndex].second};
                         points[newCoords[0]][newCoords[1]].mean.block<3,1>(0,0)=Vec3(NAN,NAN,NAN);
                         points[newCoords[0]][newCoords[1]].mean.block<3,1>(3,0)=Vec3(0,0,1);
+                        partIds(newCoords[0],newCoords[1])=part.partIds[rowId][partId];
                     }
                 }
             }
@@ -986,54 +988,16 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
     double minDist = std::numeric_limits<double>::max();
     for (size_t i=0;i<8;i++){
         PointsSecondLayer pointsA, pointsB; //9x9
-        int pointsNoA = createPointsMatrix(partA, vocabulary, 0, pointsA);
-        /*for (auto &row : pointsA){
-            for (auto &el : row){
-                std::cout <<  el.mean.block<6,1>(0,0).transpose() << ", ";
-            }
-            std::cout << "\n";
-        }
-        ViewDependentPart::Seq voc;
-        for (int j=0;j<9;j++){
-            ViewDependentPart p1;
-            for (int k=0;k<3;k++){
-                for (int l=0;l<3;l++){
-                    p1.partIds[k][l]=1;
-                    p1.partsPosNorm[k][l].mean.block<3,1>(0,0)=Vec3(k,l,0);
-                }
-            }
-            p1.partsPosNorm[1][1].mean.block<3,1>(0,0)=Vec3(0,0,-double(j));
-            voc.push_back(p1);
-            //p1.print();
-        }
-        ViewDependentPart p1;
-        int idx=0;
-        for (int k=0;k<3;k++){
-            for (int l=0;l<3;l++){
-                p1.partIds[k][l]=idx;
-                p1.partsPosNorm[k][l].mean.block<3,1>(0,0)=Vec3(0,0,idx);
-                idx++;
-            }
-        }
-        p1.partsPosNorm[1][1].mean.block<3,1>(0,0)=Vec3(-1,-2,-3);
-        //p1.print();
-        */
-        //int pointsNoB = createPointsMatrix(p1, voc, (int)i, pointsB);
-        int pointsNoB = createPointsMatrix(partB, vocabulary, (int)i, pointsB);
-        //std::cout << "another part\n";
-        /*for (auto &row : pointsB){
-            for (auto &el : row){
-                std::cout <<  el.mean.block<6,1>(0,0).transpose() << ", ";
-            }
-            std::cout << "\n";
-        }*/
-        //getchar();
+        Eigen::MatrixXd partAids(9,9);
+        Eigen::MatrixXd partBids(9,9);
+        int pointsNoA = createPointsMatrix(partA, vocabulary, 0, pointsA, partAids);
+        int pointsNoB = createPointsMatrix(partB, vocabulary, (int)i, pointsB, partBids);
         if (pointsNoA>4&&pointsNoB>4){
             Mat34 trans;
             if (findSE3Transformation(pointsA, pointsB,trans)){
                 Mat34 trans1(trans);
                 trans(2,3)=0;
-                double error = computeError(pointsA, pointsB, trans, distanceMetric, 0.5);
+                double error = computeError(pointsA, pointsB, partAids, partBids, trans, distanceMetric, 1.0);
                 trans(2,3)=trans1(2,3);
                 if (error<minDist){
                     minDist=error;
@@ -1097,13 +1061,13 @@ double ViewDependentPart::computeError(const ViewDependentPart& partA, const Vie
 }
 
 /// view invariant error for two second layer parts with known SE3 transformation
-double ViewDependentPart::computeError(const PointsSecondLayer& partA, const PointsSecondLayer& partB, const Mat34& transformation, int type, double coeff){
+double ViewDependentPart::computeError(const PointsSecondLayer& partA, const PointsSecondLayer& partB, const Eigen::MatrixXd& partAids, const Eigen::MatrixXd& partBids, const Mat34& transformation, int type, double coeff){
     double errorRot=0;
     double errorPos=0;
     int correspondencesNo=0;
     for (size_t i=0; i<partA.size();i++){
         for (size_t j=0; j<partA[i].size();j++){
-            if (!isnan(partA[i][j].mean(0))&&!isnan(partB[i][j].mean(0))){
+            if ((partAids(i,j)>=0)&&(partBids(i,j)>=0)){
                 correspondencesNo++;
                 if ((type == 1)||((type == 3))){
                     Eigen::Matrix<double, 4, 1> posPrim;
@@ -1130,15 +1094,25 @@ double ViewDependentPart::computeError(const PointsSecondLayer& partA, const Poi
                     //std::cout << "error rot " << errorRot << "\n";
                 }
             }
-            else if (isnan(partA[i][j].mean(0))&&isnan(partB[i][j].mean(0))){
+            else if ((partAids(i,j)==-1||partAids(i,j)==-2)&&(partBids(i,j)==-1||partBids(i,j)<-2)){
                 errorPos+=0.0;
                 errorRot+=0.0;
             }
-            else if ((isnan(partA[i][j].mean(0))&&!isnan(partB[i][j].mean(0)))||(!isnan(partA[i][j].mean(0))&&isnan(partB[i][j].mean(0)))){
+            else if ((partAids(i,j)==-3)&&(partBids(i,j)==-3)){
+                errorPos+=0.0;
+                errorRot+=0.0;
+            }
+            else if ((partAids(i,j)<0&&partBids(i,j)>=0)||(partAids(i,j)>=0&&partBids(i,j)<0)){
                 errorPos+=0.5;
                 errorRot+=0.5;
-                //std::cout << "error pos1 " << errorPos << "\n";
-                //std::cout << "error rot1 " << errorRot << "\n";
+            }
+            else if ((partAids(i,j)==-3&&partBids(i,j)>=0)||(partAids(i,j)>=0&&partBids(i,j)==-3)){
+                errorPos+=0.5;
+                errorRot+=0.5;
+            }
+            else if ((partAids(i,j)==-3&&(partBids(i,j)==-1||partBids(i,j)==-2))||((partAids(i,j)==-1||partAids(i,j)==-2)&&partBids(i,j)==-3)){
+                errorPos+=0.5;
+                errorRot+=0.5;
             }
         }
     }

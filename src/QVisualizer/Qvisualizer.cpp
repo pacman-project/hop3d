@@ -953,12 +953,12 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
                         glCallList(backgroundList[layerNo-1]);
                     }
                     else{
-                        glColor3d(0.5,0.5,0.5);
+                        glColor3d(0.1,0.9,0.1);
                         Mat34 offset = part.offsets[n][m];
                         double GLmat2[16]={offset(0,0), offset(1,0), offset(2,0), 0, offset(0,1), offset(1,1), offset(2,1), 0, offset(0,2), offset(1,2), offset(2,2), 0, offset(0,3), offset(1,3), offset(2,3), 1};
                         glMultMatrixd(GLmat2);
                         glPushMatrix();
-                            drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, 0.5,0.5,0.5);
+                        drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, 0.5,0.5,0.5);
                         glPopMatrix();
                     }
                 glPopMatrix();

@@ -14,7 +14,7 @@
     <parameters verbose="0" distanceMetric="3" layersNo="7" maxIter="10"></parameters>
     <layer1 maxDist="0.0" maxClusterDist="0.0"></layer1> <!--constant size-->
     <layer2 maxDist="0.45" maxClusterDist="0.46"></layer2>
-    <layer3 maxDist="0.2" maxClusterDist="0.21"></layer3>
+    <layer3 maxDist="0.50" maxClusterDist="0.51"></layer3>
     <layer4 maxDist="4.0004" maxClusterDist="4.00041"></layer4>
     <layer5 maxDist="0.02" maxClusterDist="0.021"></layer5>
     <layer6 maxDist="0.09" maxClusterDist="0.091"></layer6>

@@ -142,7 +142,7 @@ public:
     static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& vocabulary, int distanceMetric, Mat34& transOpt);
 
     /// create point cloud from second layer part
-    static int createPointsMatrix(const ViewDependentPart& part, const ViewDependentPart::Seq& vocabulary, int rotIndex, PointsSecondLayer& points);
+    static int createPointsMatrix(const ViewDependentPart& part, const ViewDependentPart::Seq& vocabulary, int rotIndex, PointsSecondLayer& points, Eigen::MatrixXd& partIds);
 
     /// find SE3 transformation
     static bool findSE3Transformation(const PointsSecondLayer& pointsA, const PointsSecondLayer& pointsB, Mat34& trans);
@@ -163,7 +163,7 @@ public:
     static double computeError(const ViewDependentPart& partA, const ViewDependentPart& partB, const Mat34& transformation, int type, double coeff);
 
     /// view invariant error for two second layer parts with known SE3 transformation
-    static double computeError(const PointsSecondLayer& partA, const PointsSecondLayer& partB, const Mat34& transformation, int type, double coeff);
+    static double computeError(const PointsSecondLayer& partA, const PointsSecondLayer& partB, const Eigen::MatrixXd& partAids, const Eigen::MatrixXd& partBids, const Mat34& transformation, int type, double coeff);
 
     ///get normal vector related to that part
     void getNormal(Vec3& normal, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters) const;

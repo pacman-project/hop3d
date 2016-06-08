@@ -157,6 +157,7 @@ namespace hop3d {
 /// split double surfaces
 void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGroupSize){
         std::vector<double> depth;
+        Octet oldOctet = *this;
         for (int i=0;i<3;i++){//detect two surfaces
             for (int j=0;j<3;j++){
                 if (partIds[i][j]>=0){
@@ -169,65 +170,69 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
         }
         std::sort(depth.begin(),depth.end());
         double distThr=0;
-        int isBackground(true);
+        int isBackgroundLarger(true);
         for (size_t i=0;i<depth.size()-1;i++){
             if (depth[i+1]-depth[i]>distThreshold){
                 if (i+1>depth.size()-(i+1))
-                    isBackground = true;
+                    isBackgroundLarger = false;
                 else
-                    isBackground = false;
+                    isBackgroundLarger = true;
                 distThr = depth[i];
                 break;
             }
         }
         // create second octet
         if (smallerGroupSize>=minOctetSize){
-            Octet background;
+            Octet secondOct;
             Vec3 meanPos(0,0,0);
-            for (int i=0;i<3;i++){//detect two surfaces
+            for (int i=0;i<3;i++){
                 for (int j=0;j<3;j++){
                     double dist;
                     if (i==1&&j==1)
                         dist = 0;
                     else
                         dist = partsPosNorm[i][j].mean(2);
-                    if (partIds[i][j]>=0&&dist>distThr&&isBackground){
-                        background.partsPosNorm[i][j] = partsPosNorm[i][j];
-                        background.partsPosEucl[i][j] = partsPosEucl[i][j];
-                        background.partIds[i][j] = partIds[i][j];
+                    if (partIds[i][j]>=0&&dist>distThr&&!isBackgroundLarger){//update econd octet
+                        secondOct.partsPosNorm[i][j] = partsPosNorm[i][j];
+                        secondOct.partsPosEucl[i][j] = partsPosEucl[i][j];
+                        secondOct.partIds[i][j] = partIds[i][j];
                         partIds[i][j] = -2;
-                        background.offsets[i][j] = offsets[i][j];
-                        background.filterPos[i][j] = filterPos[i][j];
-                        meanPos+=background.partsPosNorm[i][j].mean.block<3,1>(0,0);
+                        secondOct.offsets[i][j] = offsets[i][j];
+                        secondOct.filterPos[i][j] = filterPos[i][j];
+                        meanPos+=secondOct.partsPosNorm[i][j].mean.block<3,1>(0,0);
                     }
-                    if (partIds[i][j]>=0&&dist<(distThr+std::numeric_limits<double>::epsilon())&&!isBackground){
-                        background.partsPosNorm[i][j] = partsPosNorm[i][j];
-                        background.partsPosEucl[i][j] = partsPosEucl[i][j];
-                        background.partIds[i][j] = partIds[i][j];
-                        partIds[i][j] = -2;
-                        background.offsets[i][j] = offsets[i][j];
-                        background.filterPos[i][j] = filterPos[i][j];
-                        meanPos+=background.partsPosNorm[i][j].mean.block<3,1>(0,0);
+                    else if (partIds[i][j]>=0&&dist<(distThr+std::numeric_limits<double>::epsilon())&&isBackgroundLarger){
+                        secondOct.partsPosNorm[i][j] = partsPosNorm[i][j];
+                        secondOct.partsPosEucl[i][j] = partsPosEucl[i][j];
+                        secondOct.partIds[i][j] = partIds[i][j];
+                        partIds[i][j] = -3;
+                        secondOct.offsets[i][j] = offsets[i][j];
+                        secondOct.filterPos[i][j] = filterPos[i][j];
+                        meanPos+=secondOct.partsPosNorm[i][j].mean.block<3,1>(0,0);
+                    }
+                    if (partIds[i][j]>=0&&dist<(distThr+std::numeric_limits<double>::epsilon())&&!isBackgroundLarger){
+                        secondOct.partIds[i][j] = -3;
+                    }
+                    if (partIds[i][j]>=0&&dist>distThr&&isBackgroundLarger){
+                        secondOct.partIds[i][j] = -2;
                     }
                 }
             }
-            Vec3 middleElement(0,0,0);
-            if (background.partIds[1][1]<0){
+            if (secondOct.partIds[1][1]<0){
+                Vec3 middleElement(0,0,0);
                 middleElement = meanPos*double(1.0/double(smallerGroupSize));
-                background.partsPosNorm[1][1].mean.block<3,1>(0,0) =middleElement;
-                background.partsPosEucl[1][1] =middleElement;
+                secondOct.partsPosNorm[1][1].mean.block<3,1>(0,0)=middleElement+partsPosNorm[1][1].mean.block<3,1>(0,0);
+                secondOct.partsPosEucl[1][1]=middleElement+partsPosEucl[1][1];
                 for (int i=0;i<3;i++)
                     for (int j=0;j<3;j++)
-                        if ((background.partIds[i][j]>=0)&&(!(i==1&&j==1))) {
-                            background.partsPosNorm[i][j].mean.block<3,1>(0,0)-=middleElement;
-                            background.partsPosEucl[i][j]-=middleElement;
+                        if ((secondOct.partIds[i][j]>=0)&&(!(i==1&&j==1))) {
+                            secondOct.partsPosNorm[i][j].mean.block<3,1>(0,0)-=middleElement;
+                            secondOct.partsPosEucl[i][j]-=middleElement;
                         }
+                std::cout << secondOct.partsPosEucl[1][1] << "\n";
             }
-            else{
-                middleElement = background.partsPosNorm[1][1].mean.block<3,1>(0,0);
-            }
-            background.isBackground = false;
-            secondOctet.push_back(background);
+            secondOct.isBackground = false;
+            secondOctet.push_back(secondOct);
         }
         else{// clean second surface
             for (int i=0;i<3;i++){
@@ -237,12 +242,14 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
                         dist = 0;
                     else
                         dist = partsPosNorm[i][j].mean(2);
-                    if (partIds[i][j]>=0&&dist>distThr&&isBackground){
+                    if (partIds[i][j]>=0&&dist>distThr&&!isBackgroundLarger){
                         partIds[i][j] = -2;
                     }
-                    if (partIds[i][j]>=0&&dist<=(distThr+std::numeric_limits<double>::epsilon())&&!isBackground){
+                    if (partIds[i][j]>=0&&dist<=(distThr+std::numeric_limits<double>::epsilon())&&isBackgroundLarger){
                         partIds[i][j] = -2;
                     }
+                    if (partIds[i][j]>=0&&dist<(distThr+std::numeric_limits<double>::epsilon())&&isBackgroundLarger)
+                        partIds[i][j] = -3;
                 }
             }
         }
