@@ -60,6 +60,21 @@ public:
     /// compute graph from hierarchy structure
     void computeGraph(IndexSeqMap& hierarchyGraph);
 
+    /// add parts to existing clusters
+    void addParts(const ViewDependentPart::Seq& parts, int layerNo);
+
+    /// add parts to existing clusters
+    void addParts(const ViewIndependentPart::Seq& parts, int layerNo);
+
+    /// add parts (new clusters)
+    void addNewParts(const ViewDependentPart::Seq& parts, int layerNo);
+
+    /// add parts (new clusters)
+    void addNewParts(const ViewIndependentPart::Seq& parts, int layerNo);
+
+    /// show info
+    void showInfo(void);
+
     /// Construction
     Hierarchy(std::string configFilename);
 

@@ -280,6 +280,39 @@ void ObjectCompositionOctree::updateVoxelsPose(int layerNo, const std::vector<Vi
     }
 }
 
+/// find new parts in composition
+void ObjectCompositionOctree::identifyParts(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, const Hierarchy& hierarchy, double distThreshold, std::vector<ViewIndependentPart>& oldParts, std::vector<ViewIndependentPart>& newParts){
+    for (int overlapNo=0;overlapNo<3;overlapNo++){
+        for (int idX=0; idX<(*octrees[layerNo][overlapNo]).size(); idX++){///to do z-slicing
+            for (int idY=0; idY<(*octrees[layerNo][overlapNo]).size(); idY++){
+                for (int idZ=0; idZ<(*octrees[layerNo][overlapNo]).size(); idZ++){
+                    if ((*octrees[layerNo][overlapNo]).at(idX,idY,idZ).id>=0){
+                        double minDist=std::numeric_limits<double>::max();
+                        for (auto& word: vocabulary){
+                            Mat34 estTransform;
+                            double fitness(0);
+                            if (word.layerId==3)
+                                fitness = ViewIndependentPart::distanceUmeyama(word,(*octrees[layerNo][overlapNo])(idX,idY,idZ), 3, estTransform);
+                            else if (word.layerId==4)
+                                fitness = ViewIndependentPart::distanceUmeyama(word,(*octrees[layerNo][overlapNo])(idX,idY,idZ), 3, hierarchy.viewIndependentLayers[0], estTransform);
+                            else{
+                                throw std::runtime_error("Layer not supported.\n");
+                            }
+                            if (fitness<minDist){//find min distance
+                                minDist=fitness;
+                            }
+                        }
+                        if (minDist<distThreshold)
+                            oldParts.push_back((*octrees[layerNo][overlapNo]).at(idX,idY,idZ));
+                        else
+                            newParts.push_back((*octrees[layerNo][overlapNo]).at(idX,idY,idZ));
+                    }
+                }
+            }
+        }
+    }
+}
+
 /// get set of ids for the given input point
 void ObjectCompositionOctree::getPartsIds(const Vec3& point, int overlapNo, std::vector<int>& ids) const{
     int x,y,z;
@@ -544,7 +577,8 @@ int ObjectCompositionOctree::createFirstLayerPart(ViewIndependentPart& newPart, 
                             for (int coord = 0; coord<3; coord++){
                                 patch.position(coord)-=center[coord];
                                 if (patch.position(coord)>0.015){
-                                    std::cout << "F\n";
+                                    std::cout << "coord " << coord << "\n";
+                                    std::cout << "patch.position(coord) " << patch.position(coord) << "\n";
                                     getchar();
                                 }
                             }

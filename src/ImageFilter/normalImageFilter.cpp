@@ -856,13 +856,14 @@ void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int obj
             if (octetsImage[i][j].get()!=nullptr){
                 if (!octetsImage[i][j]->isBackground){
                     Mat34 offset;
-                    int id = findId(hierarchy, layerNo,*(octetsImage[i][j]), offset);
+                    double distance;
+                    int id = findId(hierarchy, layerNo,*(octetsImage[i][j]), distance, offset);
                     part = hierarchy.viewDependentLayers[layerNo][id];
                     part.offset = offset;
                     part.id = id;
                     part.realisationId = partRealisationsCounter;
                     partRealisationsCounter++;
-                    part.layerId=layerNo+1;
+                    part.layerId=layerNo+2;
                     part.location = octetsImage[i][j]->filterPos[1][1];
                     part.locationEucl = octetsImage[i][j]->partsPosEucl[1][1];
                     part.group.clear();
@@ -872,13 +873,14 @@ void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int obj
                     if (octetsImage[i][j].get()->secondOctet.size()>0){
                         ViewDependentPart secondPart;
                         if (!octetsImage[i][j].get()->secondOctet[0].isBackground){
-                            id = findId(hierarchy, layerNo, octetsImage[i][j].get()->secondOctet[0], offset);
+                            double distParts;
+                            id = findId(hierarchy, layerNo, octetsImage[i][j].get()->secondOctet[0], distParts, offset);
                             secondPart = hierarchy.viewDependentLayers[layerNo][id];
                             secondPart.offset = offset;
                             secondPart.id = id;
                             secondPart.realisationId = partRealisationsCounter;
                             partRealisationsCounter++;
-                            secondPart.layerId=layerNo+1;
+                            secondPart.layerId=layerNo+2;
                             secondPart.location = octetsImage[i][j].get()->secondOctet[0].filterPos[1][1];
                             secondPart.locationEucl = octetsImage[i][j].get()->secondOctet[0].partsPosEucl[1][1];
                             secondPart.gaussians[1][1].mean=Vec3(octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].u, octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].v, octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].depth);
@@ -896,6 +898,76 @@ void NormalImageFilter::computePartsImage(int overlapNo, int categoryNo, int obj
         updatePartsImages(categoryNo, objectNo, imageNo, layerNo, overlapNo, partsImagesInference, partsImage);
     else
         updatePartsImages(categoryNo, objectNo, imageNo, layerNo, overlapNo, partsImages, partsImage);
+}
+
+/// define 2rd layer octet images using selected words from third layer
+void NormalImageFilter::identifyParts(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo, bool inference, double distThreshold, std::vector<ViewDependentPart>& oldParts, std::vector<ViewDependentPart>& newParts){
+    newParts.clear();
+    oldParts.clear();
+    OctetsImage octetsImage;
+    if (inference)
+        octetsImage = octetsImagesInference[layerNo][overlapNo][categoryNo][objectNo][imageNo];
+    else
+        octetsImage = octetsImages[layerNo][overlapNo][categoryNo][objectNo][imageNo];
+    for (size_t i=0; i<octetsImage.size();i++){
+        for (size_t j=0; j<octetsImage.back().size();j++){
+            ViewDependentPart part;
+            part.id=-1;
+            if (octetsImage[i][j].get()!=nullptr){
+                if (!octetsImage[i][j]->isBackground){
+                    Mat34 offset;
+                    double distance;
+                    int id = findId(hierarchy, layerNo,*(octetsImage[i][j]), distance, offset);
+                    part = hierarchy.viewDependentLayers[layerNo][id];
+                    part.offset = offset;
+                    part.realisationId = partRealisationsCounter;
+                    partRealisationsCounter++;
+                    part.layerId=layerNo+2;
+                    part.location = octetsImage[i][j]->filterPos[1][1];
+                    part.locationEucl = octetsImage[i][j]->partsPosEucl[1][1];
+                    //part.gaussians = Octet.o .gaussians;
+                    part.partIds = octetsImage[i][j].get()->partIds;
+                    part.offsets = octetsImage[i][j]->offsets;
+                    part.partsPosNorm = octetsImage[i][j]->partsPosNorm;
+                    part.group.clear();
+                    //part.locationEucl = octetsImage[i][j]->partsPosNorm[1][1].mean.block<3,1>(0,0);
+                    part.gaussians[1][1].mean=Vec3(octetsImage[i][j]->filterPos[1][1].u, octetsImage[i][j]->filterPos[1][1].v, octetsImage[i][j]->filterPos[1][1].depth);
+                    if (distance<distThreshold){
+                        part.id = id;
+                        oldParts.push_back(part);
+                    }
+                    else
+                        newParts.push_back(part);
+                    if (octetsImage[i][j].get()->secondOctet.size()>0){
+                        ViewDependentPart secondPart;
+                        if (!octetsImage[i][j].get()->secondOctet[0].isBackground){
+                            double distParts;
+                            id = findId(hierarchy, layerNo, octetsImage[i][j].get()->secondOctet[0], distParts, offset);
+                            secondPart = hierarchy.viewDependentLayers[layerNo][id];
+                            secondPart.offset = offset;
+                            secondPart.realisationId = partRealisationsCounter;
+                            partRealisationsCounter++;
+                            secondPart.layerId=layerNo+2;
+                            secondPart.location = octetsImage[i][j].get()->secondOctet[0].filterPos[1][1];
+                            secondPart.locationEucl = octetsImage[i][j].get()->secondOctet[0].partsPosEucl[1][1];
+                            secondPart.gaussians[1][1].mean=Vec3(octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].u, octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].v, octetsImage[i][j].get()->secondOctet[0].filterPos[1][1].depth);
+                            secondPart.offsets = octetsImage[i][j].get()->secondOctet[0].offsets;
+                            //part.gaussians = Octet.o .gaussians;
+                            secondPart.partIds = octetsImage[i][j].get()->partIds;
+                            secondPart.partsPosNorm = octetsImage[i][j]->partsPosNorm;
+                            secondPart.group.clear();
+                            if (distParts<distThreshold){
+                                secondPart.id = id;
+                                oldParts.push_back(secondPart);
+                            }
+                            else
+                                newParts.push_back(secondPart);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// get last view dependent layer parts from the image
@@ -926,8 +998,10 @@ int NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const Hierarc
         for (int j=-1;j<2;j++){
             Mat34 offset(Mat34::Identity());
             int id;
-            if (octetsImage[u+i][v+j].get()!=nullptr)
-                id = findId(hierarchy, 0, *octetsImage[u+i][v+j], offset);
+            if (octetsImage[u+i][v+j].get()!=nullptr){
+                double distance;
+                id = findId(hierarchy, 0, *octetsImage[u+i][v+j], distance, offset);
+            }
             else
                 id = -1;
             octet.offsets[i+1][j+1]=offset;
@@ -983,7 +1057,7 @@ int NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const Hierarc
 }*/
 
 /// determine id of the part using dictionary
-int NormalImageFilter::findId(const hop3d::Hierarchy& hierarchy, int layerNo, const Octet& octet, Mat34& offset) const{
+int NormalImageFilter::findId(const hop3d::Hierarchy& hierarchy, int layerNo, const Octet& octet, double& distance, Mat34& offset) const{
     if (octet.isBackground)//background
         return -1;
     int id=0; int foundId(0);
@@ -1013,6 +1087,7 @@ int NormalImageFilter::findId(const hop3d::Hierarchy& hierarchy, int layerNo, co
         }
         id++;
     }
+    distance = minDist;
     return foundId;
 }
 
@@ -1505,6 +1580,64 @@ void NormalImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int ob
     filter.save2file(os, inference);
     return os;
 }*/
+
+/// merge octets and parts images
+void NormalImageFilter::mergeTrainAndInfResults(void){
+    size_t layerNo=0;
+    for (auto &layer : octetsImagesInference){
+        size_t overlapNo=0;
+        for (auto &overlap : layer){
+            auto& overlapTrain = octetsImages[layerNo];
+            size_t categoryNo=0;
+            for (auto &category : overlap){
+                auto& categoryTrain = overlapTrain[overlapNo];
+                categoryTrain.resize(categoryTrain.size()+1);
+                size_t objectNo=0;
+                for (auto &object : category){
+                    auto& objectTrain = categoryTrain[categoryTrain.size()-1];
+                    objectTrain.resize(objectTrain.size()+1);
+                    size_t imageNo=0;
+                    for (auto &image : object){
+                        auto& imageTrain = objectTrain[objectTrain.size()-1];
+                        imageTrain.push_back(image);
+                        imageNo++;
+                    }
+                    objectNo++;
+                }
+                categoryNo++;
+            }
+            overlapNo++;
+        }
+        layerNo++;
+    }
+    layerNo=0;
+    for (auto &layer : partsImagesInference){
+        size_t overlapNo=0;
+        for (auto &overlap : layer){
+            auto& overlapTrain = partsImages[layerNo];
+            size_t categoryNo=0;
+            for (auto &category : overlap){
+                auto& categoryTrain = overlapTrain[overlapNo];
+                categoryTrain.resize(categoryTrain.size()+1);
+                size_t objectNo=0;
+                for (auto &object : category){
+                    auto& objectTrain = categoryTrain[categoryTrain.size()-1];
+                    objectTrain.resize(objectTrain.size()+1);
+                    size_t imageNo=0;
+                    for (auto &image : object){
+                        auto& imageTrain = objectTrain[objectTrain.size()-1];
+                        imageTrain.push_back(image);
+                        imageNo++;
+                    }
+                    objectNo++;
+                }
+                categoryNo++;
+            }
+            overlapNo++;
+        }
+        layerNo++;
+    }
+}
 
 /// save to file
 void NormalImageFilter::save2file(std::ostream& os, bool inference) const{

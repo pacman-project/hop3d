@@ -10,8 +10,9 @@ int main(void){
             std::cout << "unable to load global config file.\n";
             return 1;
         }
-        bool train, load, inference, loadInferenceResults;
+        bool train, trainIncremental, load, inference, loadInferenceResults;
         config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("train", &train);
+        config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("trainIncremental", &trainIncremental);
         config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("load", &load);
         config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("inference", &inference);
         config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("loadInferenceResults", &loadInferenceResults);
@@ -23,6 +24,8 @@ int main(void){
             lhop3d->learn();
         if (load)
             lhop3d->load(file2load);
+        if (trainIncremental)
+            lhop3d->learnIncremental();
         if (inference){
             lhop3d->inference();
             /*std::vector<std::pair<cv::Mat, hop3d::Mat34>> frames;

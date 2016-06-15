@@ -131,6 +131,53 @@ std::istream& operator>>(std::istream& is, Hierarchy& hierarchy){
     return is;
 }
 
+/// show info
+void Hierarchy::showInfo(void){
+    std::cout << "First layer size: " << this->firstLayer.size() << "\n";
+    for (size_t i=0;i<viewDependentLayers.size();i++){
+        std::cout << "VD layer " << i+1 << " size: " << viewDependentLayers[i].size() << "\n";
+    }
+    for (size_t i=0;i<viewIndependentLayers.size();i++){
+        std::cout << "Volumetric layer " << i+1 << " size: " << viewIndependentLayers[i].size() << "\n";
+    }
+}
+
+/// add parts to existing clusters
+void Hierarchy::addParts(const ViewDependentPart::Seq& parts, int layerNo){
+    for (const auto& part : parts)
+        viewDependentLayers[layerNo][part.id].group.push_back(part);
+}
+
+/// add parts to existing clusters
+void Hierarchy::addParts(const ViewIndependentPart::Seq& parts, int layerNo){
+    for (const auto& part : parts){
+        for (auto& partVoc : viewIndependentLayers[layerNo]){
+            if (part.id==partVoc.id){
+                partVoc.group.push_back(part);
+                break;
+            }
+        }
+    }
+}
+
+/// add new parts (new clusters)
+void Hierarchy::addNewParts(const ViewDependentPart::Seq& parts, int layerNo){
+    for (const auto& part : parts){
+        ViewDependentPart pAdd(part);
+        pAdd.id = viewDependentLayers[layerNo].back().id+1;
+        viewDependentLayers[layerNo].push_back(pAdd);
+    }
+}
+
+/// add new parts (new clusters)
+void Hierarchy::addNewParts(const ViewIndependentPart::Seq& parts, int layerNo){
+    for (const auto& part : parts){
+        ViewIndependentPart pAdd(part);
+        pAdd.id = viewIndependentLayers[layerNo].back().id+1;
+        viewIndependentLayers[layerNo].push_back(pAdd);
+    }
+}
+
 /// get normal vector related to the part
 void Hierarchy::getNormal(const ViewDependentPart& part, Vec3& normal) const{
     if (part.layerId>2){

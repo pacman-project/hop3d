@@ -45,6 +45,7 @@ HOP3DBham::HOP3DBham(std::string _config) :
     if (config.datasetType==hop3d::Dataset::DATASET_BORIS){
         datasetTrain = hop3d::createBorisDataset(config.datasetConfig,config.cameraConfig);
         datasetTest = hop3d::createBorisDataset(config.configFilenameTest,config.cameraConfig);
+        datasetIncremental = hop3d::createBorisDataset(config.datasetConfigIncremental,config.cameraConfig);
     }
     else if (config.datasetType==hop3d::Dataset::DATASET_PACMAN){
         datasetTrain = hop3d::createPacmanDataset(config.datasetConfig,config.cameraConfig);
@@ -53,6 +54,7 @@ HOP3DBham::HOP3DBham(std::string _config) :
     else {// default dataset
         datasetTrain = hop3d::createBorisDataset(config.datasetConfig,config.cameraConfig);
         datasetTest = hop3d::createBorisDataset(config.configFilenameTest,config.cameraConfig);
+        datasetIncremental = hop3d::createBorisDataset(config.datasetConfigIncremental,config.cameraConfig);
     }
     if (config.verbose == 1) {
         std::cout << "Done\n";
@@ -102,6 +104,7 @@ HOP3DBham::Config::Config(std::string configFilename){
     cameraConfig = prefix+(config.FirstChildElement( "CameraModel" )->Attribute( "configFilename" ));
     datasetConfig = prefix+(config.FirstChildElement( "Dataset" )->Attribute( "configFilename" ));
     configFilenameTest = prefix+(config.FirstChildElement( "Dataset" )->Attribute( "configFilenameTest" ));
+    datasetConfigIncremental = prefix+(config.FirstChildElement( "Dataset" )->Attribute( "configFilenameIncremental" ));
 
     config.FirstChildElement( "Filterer" )->QueryIntAttribute("filterType", &filterType);
     config.FirstChildElement( "Dataset" )->QueryIntAttribute("datasetType", &datasetType);
@@ -591,7 +594,149 @@ void HOP3DBham::learn(){
     //getPartsIds(0,0,1, 339, 292, ids);
     //getPartsIds(0,0,1, 350, 290, ids);
     //getPartsIds(0,0,1, 333, 292, ids);
+    hierarchy->showInfo();
     std::cout << "Finished\n";
+}
+
+/// learning from the dataset
+void HOP3DBham::learnIncremental(void){
+    if (hierarchy.get()->viewDependentLayers[0].size()==0)
+        throw std::runtime_error("Train or load hierarchy first\n");
+    datasetIncremental->getDatasetInfo(datasetInfoIncremental);
+    std::cout << "Start incremental learning\n";
+    for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
+        for (size_t categoryNo=0;categoryNo<datasetInfoIncremental.categories.size();categoryNo++){
+            for (size_t objectNo=0;objectNo<datasetInfoIncremental.categories[categoryNo].objects.size();objectNo++){
+                for (size_t imageNo=0;imageNo<datasetInfoIncremental.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                    cv::Mat image;
+                    datasetIncremental->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo,image);
+                    std::vector<hop3d::Octet> octetsTmp;
+                    if (layerNo==0)
+                        imageFilterer->computeOctets(image, (int)categoryNo, (int)objectNo, (int)imageNo, octetsTmp, true);
+                    else if (layerNo==1)
+                        imageFilterer->getOctets((int)categoryNo, (int)objectNo, (int)imageNo, *hierarchy, octetsTmp, true);
+                }
+            }
+        }
+        std::vector<ViewDependentPart> oldParts;
+        std::vector<ViewDependentPart> newParts;
+        for (int overlapNo=0; overlapNo<3; overlapNo++){
+            for (size_t categoryNo=0;categoryNo<datasetInfoIncremental.categories.size();categoryNo++){
+                for (size_t objectNo=0;objectNo<datasetInfoIncremental.categories[categoryNo].objects.size();objectNo++){
+                    for (size_t imageNo=0;imageNo<datasetInfoIncremental.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                        double maxDist(0);
+                        if (layerNo==0)
+                            maxDist = 0.45;
+                        else if (layerNo==1)
+                            maxDist = 0.5;
+                        std::vector<ViewDependentPart> oldPartsTmp;
+                        std::vector<ViewDependentPart> newPartsTmp;
+                        imageFilterer->identifyParts(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, *hierarchy, (int)layerNo, true, maxDist,oldPartsTmp, newPartsTmp);
+                        newParts.insert(newParts.end(), newPartsTmp.begin(), newPartsTmp.end());
+                        oldParts.insert(oldParts.end(), oldPartsTmp.begin(), oldPartsTmp.end());
+                    }
+                }
+            }
+        }
+        std::cout << "oldParts " << oldParts.size() << "\n";
+        std::cout << "newParts " << newParts.size() << "\n";
+        std::cout << "Compute statistics for " << newParts.size() << " octets (" << layerNo+2 << " layer)\n";
+        hierarchy.get()->addParts(oldParts,layerNo);
+        partSelector->selectParts(newParts, *hierarchy, layerNo+2);
+        std::cout << "Dictionary size after clusterization: " << newParts.size() << "\n";
+        hierarchy.get()->addNewParts(newParts, layerNo);
+
+        for (int overlapNo=0; overlapNo<3; overlapNo++){
+            for (size_t categoryNo=0;categoryNo<datasetInfoIncremental.categories.size();categoryNo++){
+                for (size_t objectNo=0;objectNo<datasetInfoIncremental.categories[categoryNo].objects.size();objectNo++){
+                    for (size_t imageNo=0;imageNo<datasetInfoIncremental.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                        imageFilterer->computePartsImage(overlapNo, (int)categoryNo, (int)objectNo, (int)imageNo, *hierarchy, (int)layerNo, true);
+                    }
+                }
+            }
+        }
+    }
+    objectsInference.resize(datasetInfoIncremental.categories.size());
+    for (size_t categoryNo=0;categoryNo<datasetInfoIncremental.categories.size();categoryNo++){//for each category
+        for (size_t objectNo=0;objectNo<datasetInfoIncremental.categories[categoryNo].objects.size();objectNo++){//for each object
+            std::cout << "Create object composition\n";
+            ObjectCompositionOctree object(config.compositionConfig);
+            objectsInference[categoryNo].push_back(object);
+            for (size_t imageNo=0;imageNo<datasetInfoIncremental.categories[categoryNo].objects[objectNo].images.size();imageNo++){//for each depth image
+                std::vector<ViewDependentPart> parts;
+                //get parts of the 3rd layers
+                imageFilterer->getLayerParts((int)categoryNo, (int)objectNo, (int)imageNo, hierarchy.get()->viewDepPartsFromLayerNo-1, parts, true);
+                //move octets into 3D space and update octree representation of the object
+                Mat34 cameraPose(datasetIncremental->getCameraPose((int)categoryNo, (int)objectNo, (int)imageNo));
+                objectsInference[categoryNo][objectNo].updatePCLGrid(parts, cameraPose);
+            }
+        }
+    }
+    ObjectCompositionOctree::setRealisationCounter(imageFilterer->getRealisationsNo()+10000);
+    for (size_t layerNo=0;layerNo<(size_t)config.viewIndependentLayersNo;layerNo++){
+        std::vector<ViewIndependentPart> vocabulary;
+        for (size_t categoryNo=0;categoryNo<datasetInfoIncremental.categories.size();categoryNo++){//for each category
+            for (size_t objectNo=0;objectNo<datasetInfoIncremental.categories[categoryNo].objects.size();objectNo++){//for each object
+                std::vector<ViewIndependentPart> voc;
+                objectsInference[categoryNo][objectNo].createNextLayerVocabulary((int)layerNo, voc);
+                vocabulary.insert( vocabulary.end(), voc.begin(), voc.end() );
+            }
+        }
+        std::vector<ViewIndependentPart> oldParts;
+        std::vector<ViewIndependentPart> newParts;
+        for (size_t categoryNo=0;categoryNo<datasetInfoIncremental.categories.size();categoryNo++){//for each category
+            for (size_t objectNo=0;objectNo<datasetInfoIncremental.categories[categoryNo].objects.size();objectNo++){//for each object
+                std::vector<ViewIndependentPart> oldPartsTmp;
+                std::vector<ViewIndependentPart> newPartsTmp;
+                double maxDist(0);
+                if (layerNo==0)
+                    maxDist = 4.004;
+                else if (layerNo==1)
+                    maxDist = 0.002;
+                objectsInference[categoryNo][objectNo].identifyParts((int)layerNo, hierarchy.get()->viewIndependentLayers[layerNo], *hierarchy, maxDist,oldPartsTmp, newPartsTmp);
+                newParts.insert(newParts.end(), newPartsTmp.begin(), newPartsTmp.end());
+                oldParts.insert(oldParts.end(), oldPartsTmp.begin(), oldPartsTmp.end());
+            }
+        }
+
+        std::cout << "oldParts " << oldParts.size() << "\n";
+        std::cout << "newParts " << newParts.size() << "\n";
+
+        hierarchy.get()->addParts(oldParts, (int)layerNo);
+        partSelector->selectParts(newParts, *hierarchy, (int)layerNo+2);
+        std::cout << "Dictionary size after clusterization: " << newParts.size() << "\n";
+        hierarchy.get()->addNewParts(newParts, (int)layerNo);
+
+        for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
+            for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
+                objectsInference[categoryNo][objectNo].updateVoxelsPose((int)layerNo, hierarchy.get()->viewIndependentLayers[layerNo], *hierarchy);
+            }
+        }
+    }
+    hierarchy->showInfo();
+    // save hierarchy to file
+    if(config.save2file){
+        std::cout << "save 2 file\n";
+        std::ofstream ofsHierarchy(config.filename2save);
+        ofsHierarchy << *hierarchy;
+        for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
+            for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
+                ofsHierarchy << objects[categoryNo][objectNo];
+            }
+        }
+        for (size_t categoryNo=0;categoryNo<datasetInfoIncremental.categories.size();categoryNo++){//for each category
+            for (size_t objectNo=0;objectNo<datasetInfoIncremental.categories[categoryNo].objects.size();objectNo++){//for each object
+                ofsHierarchy << objectsInference[categoryNo][objectNo];
+            }
+        }
+        std::cout << "dfdf\n";
+        ((NormalImageFilter*)imageFilterer)->mergeTrainAndInfResults();
+        std::cout << "dfdf1\n";
+        ((NormalImageFilter*)imageFilterer)->save2file(ofsHierarchy, false);
+        //((NormalImageFilter*)imageFilterer)->save2file(ofsHierarchy, true);
+        ofsHierarchy.close();
+        std::cout << "saved\n";
+    }
 }
 
 /// load hierarchy from the file
@@ -609,7 +754,12 @@ void HOP3DBham::load(std::string filename){
     }
     ((NormalImageFilter*)imageFilterer)->loadFromfile(ifsHierarchy, false);
     ifsHierarchy.close();
+    /*for (auto part : hierarchy.get()->viewDependentLayers[0][0].group){
+        part.print();
+        getchar();
+    }*/
     std::cout << "Loaded\n";
+    hierarchy->showInfo();
     //visualization
     notifyVisualizer();
     std::cout << "Finished\n";

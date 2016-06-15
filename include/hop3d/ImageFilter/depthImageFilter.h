@@ -90,6 +90,9 @@ public:
     /// get numbers of realisations
     int getRealisationsNo(void) const;
 
+    /// define 2rd layer octet images using selected words from third layer
+    void identifyParts(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo, bool inference, double distThreshold, std::vector<ViewDependentPart>& oldParts, std::vector<ViewDependentPart>& newParts);
+
     class Config{
       public:
         Config() {

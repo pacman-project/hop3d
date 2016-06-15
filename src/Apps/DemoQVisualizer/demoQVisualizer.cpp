@@ -13,11 +13,13 @@ using namespace std;
 
 hop3d::HOP3D* lhop3d;
 // run HOP3D
-void runHOP3D(bool train, bool load, bool inference, bool loadInference, std::string file2load, std::string inferenceFile){
+void runHOP3D(bool train, bool trainIncremental, bool load, bool inference, bool loadInference, std::string file2load, std::string inferenceFile){
     if (train)
         lhop3d->learn();
     if (load)
         lhop3d->load(file2load);
+    if (trainIncremental)
+        lhop3d->learnIncremental();
     if (inference){
         lhop3d->inference();
 //        std::vector<std::pair<cv::Mat, hop3d::Mat34>> frames;
@@ -53,8 +55,9 @@ int main(int argc, char** argv)
             return 1;
         }
         std::string configFile(prefix+config.FirstChildElement( "QVisualizer" )->Attribute( "configFilename" ));
-        bool train, load, inference, loadInferenceResults;
+        bool train, trainIncremental, load, inference, loadInferenceResults;
         config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("train", &train);
+        config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("trainIncremental", &trainIncremental);
         config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("load", &load);
         config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("inference", &inference);
         config.FirstChildElement("Hierarchy")->FirstChildElement("parameters")->QueryBoolAttribute("loadInferenceResults", &loadInferenceResults);
@@ -76,7 +79,7 @@ int main(int argc, char** argv)
         visu.show();
         ((hop3d::HOP3DBham*)lhop3d)->attachVisualizer(&visu);
         // run HOP3D
-        std::thread tHOP3D(runHOP3D, train, load, inference, loadInferenceResults, file2load, inferenceFile);
+        std::thread tHOP3D(runHOP3D, train, trainIncremental, load, inference, loadInferenceResults, file2load, inferenceFile);
         // Run main loop.
         application.exec();
         tHOP3D.join();

@@ -59,6 +59,9 @@ public:
     /// upodate voxel poses using new vocabulary
     void updateVoxelsPose(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, const Hierarchy& hierarchy);
 
+    /// find new parts in composition
+    void identifyParts(int layerNo, const std::vector<ViewIndependentPart>& vocabulary, const Hierarchy& hierarchy, double distThreshold, std::vector<ViewIndependentPart>& oldParts, std::vector<ViewIndependentPart>& newParts);
+
     /// get parts realisations
     void getPartsRealisation(int layerNo, int overlapNo, std::vector<ViewIndependentPart::Part3D>& partsViewTmp) const;
 

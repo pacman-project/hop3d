@@ -98,8 +98,11 @@ public:
     /// Construction
     HOP3DBham(std::string config);
 
-    /// learining from the dataset
+    /// learning from the dataset
     void learn(void);
+
+    /// learning from the dataset
+    void learnIncremental(void);
 
     /// load hierarchy from the file
     void load(std::string filename);
@@ -185,6 +188,8 @@ public:
             std::string datasetConfig;
             /// dataset config filename (testing)
             std::string configFilenameTest;
+            /// dataset config filename (incremental learning)
+            std::string datasetConfigIncremental;
             /// dataset type
             int datasetType;
             /// save hierarchy to file
@@ -280,11 +285,17 @@ private:
     /// dataset
     std::unique_ptr<Dataset> datasetTest;
 
+    /// dataset incremental training
+    std::unique_ptr<Dataset> datasetIncremental;
+
     /// structure which stores info about dataset
     DatasetInfo datasetInfoTrain;
 
     /// structure which stores info about dataset
     DatasetInfo datasetInfoTest;
+
+    /// structure which stores info about dataset (incremental training)
+    DatasetInfo datasetInfoIncremental;
 
     ///structure to store hierarchy
     std::unique_ptr<Hierarchy> hierarchy;

@@ -157,7 +157,6 @@ namespace hop3d {
 /// split double surfaces
 void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGroupSize){
         std::vector<double> depth;
-        Octet oldOctet = *this;
         for (int i=0;i<3;i++){//detect two surfaces
             for (int j=0;j<3;j++){
                 if (partIds[i][j]>=0){
@@ -229,7 +228,6 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
                             secondOct.partsPosNorm[i][j].mean.block<3,1>(0,0)-=middleElement;
                             secondOct.partsPosEucl[i][j]-=middleElement;
                         }
-                std::cout << secondOct.partsPosEucl[1][1] << "\n";
             }
             secondOct.isBackground = false;
             secondOctet.push_back(secondOct);

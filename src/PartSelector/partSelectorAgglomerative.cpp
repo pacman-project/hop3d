@@ -150,8 +150,7 @@ void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary
 
 /// compute distance matrix
 void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) {
-    for (int i=0;i<(int)priorityQueueDistance.size();i++)
-        priorityQueueDistance.pop();
+    while( !priorityQueueDistance.empty() ) priorityQueueDistance.pop();
     for (size_t idA=0;idA<dictionary.size();idA++){
         for (size_t idB=idA;idB<dictionary.size();idB++){
             if (idA==idB){
@@ -173,6 +172,9 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::S
                     }
                     else
                         dist = ViewDependentPart::distance(dictionary[idA], dictionary[idB], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
+                }
+                else{
+                    throw std::runtime_error("Error for layer id " + std::to_string(dictionary[idA].layerId) + " not supported\n");
                 }
                 distanceMatrix[idA][idB]=dist;
                 distanceMatrix[idB][idA]=dist;
@@ -214,9 +216,8 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart:
 
 /// find min distance int the distance matrix
 double PartSelectorAgglomerative::findMinDistance(const std::vector<std::vector<double>>& distanceMatrix, std::pair<int,int>& pairedIds){
-    double minDist=std::numeric_limits<double>::max();
     DistanceElement element = priorityQueueDistance.top();
-    minDist = element.distance;
+    double minDist = element.distance;
     pairedIds = element.partsIds;
     priorityQueueDistance.pop();
     distanceMatrix[0][0];
@@ -427,7 +428,7 @@ void PartSelectorAgglomerative::computeCentroids(const std::vector<std::vector<i
 void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
     std::vector<std::vector<double>> distanceMatrix(dictionary.size(), std::vector<double>(dictionary.size()));
     std::vector<std::vector<Mat34>> transformMatrix(dictionary.size(), std::vector<Mat34>(dictionary.size()));
-    std::cout << "compute distance matrix...\n";
+    std::cout << "compute distance matrix....\n";
     //std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     computeDistanceMatrix(dictionary, hierarchy, distanceMatrix, transformMatrix);
     //std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();

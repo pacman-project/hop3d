@@ -80,6 +80,9 @@ public:
     /// get numbers of realisations
     virtual int getRealisationsNo(void) const = 0;
 
+    /// define 2rd layer octet images using selected words from third layer
+    virtual void identifyParts(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo, bool inference, double distThreshold, std::vector<ViewDependentPart>& oldParts, std::vector<ViewDependentPart>& newParts) = 0;
+
     /// Virtual descrutor
     virtual ~ImageFilter() {
     }

@@ -113,6 +113,12 @@ public:
     /// get numbers of realisations
     int getRealisationsNo(void) const;
 
+    /// define 2rd layer octet images using selected words from third layer
+    void identifyParts(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo, bool inference, double distThreshold, std::vector<ViewDependentPart>& oldParts, std::vector<ViewDependentPart>& newParts);
+
+    /// merge octets and parts images
+    void mergeTrainAndInfResults(void);
+
     class Config{
       public:
         Config() {
@@ -223,7 +229,7 @@ private:
     //int findId(const ViewDependentPart::Seq& dictionary, const Octet& octet) const;
 
     /// determine id of the part using dictionary
-    int findId(const hop3d::Hierarchy& hierarchy, int layerNo, const Octet& octet, Mat34& offset) const;
+    int findId(const hop3d::Hierarchy& hierarchy, int layerNo, const Octet& octet, double& distance, Mat34& offset) const;
 
     /// update structure which holds octets images
     void updateOctetsImage(int layerNo, int overlapNo, int categoryNo, int objectNo, int imageNo, OctetsImages& _octetsImages, const OctetsImage& octetsImage);

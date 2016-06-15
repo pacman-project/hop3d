@@ -364,6 +364,11 @@ int DepthImageFilter::getRealisationsNo(void) const{
     return 0;
 }
 
+/// define 2rd layer octet images using selected words from third layer
+void DepthImageFilter::identifyParts(int overlapNo, int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, int layerNo, bool inference, double distThreshold, std::vector<ViewDependentPart>& oldParts, std::vector<ViewDependentPart>& newParts){
+    std::cout << overlapNo << categoryNo << objectNo << imageNo << layerNo << inference << distThreshold << oldParts.size() << newParts.size() << hierarchy.viewDependentLayers.size() << "\n";
+}
+
 hop3d::ImageFilter* hop3d::createDepthImageFilter(void) {
     filter.reset(new DepthImageFilter());
     return filter.get();
