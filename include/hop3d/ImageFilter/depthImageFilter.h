@@ -48,7 +48,7 @@ public:
     void getOctets(Octet::Seq& octets);
 
     /// compute set of octets from set of the ids image
-    void getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets, bool inference);
+    void getOctets(int layerNo, int categoryNo, int objectNo, int imageNo, Octet::Seq& octets, bool inference);
 
     /// get filters
     void getFilters(Filter::Seq& _filters) const;
@@ -64,10 +64,10 @@ public:
     void getLayerParts(int categoryNo, int objectNo, int imageNo, int layerNo, std::vector<ViewDependentPart>& parts, bool inference) const;
 
     /// get set of ids for the given input point
-    void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference);
+    void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, bool inference);
 
     /// get set of ids for the given input point
-    void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference);
+    void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, bool inference);
 
     /// returs filter ids and their position on the image
     void getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords, bool inference) const;

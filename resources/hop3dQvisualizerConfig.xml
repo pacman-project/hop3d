@@ -3,20 +3,37 @@
   <VisualizerConfig>
   	<name>QGLVisualizer</name>
 	<parameters verbose="0"></parameters>
-	<hierarchy pixelSize="0.001" useEuclideanCoordinates="true" filterDepthScale="0.0008" draw3Dobjects="true" voxelSize="0.02"></hierarchy>
-	<layer1 dist="0.03" posZ="0.1"></layer1>
-	<layer2 dist="0.25" posZ="0.5"></layer2>
-	<layer3 dist="0.25" posZ="1.0"></layer3>
-	<layer4 dist="0.35" posZ="1.5"></layer4>
-	<layer5 dist="0.45" posZ="2.0"></layer5>
-	<layer6 dist="0.55" posZ="2.75"></layer6>
-	<layer7 dist="0.65" posZ="4.0"></layer7>
-	<objectsLayer1 draw="true" dist="1.12" posY="-0.7" posZ="0.0"></objectsLayer1>
-	<objectsLayer2 draw="true" dist="1.12" posY="-0.7" posZ="2.55"></objectsLayer2>
-	<objectsLayer3 draw="true" dist="1.12" posY="-0.7" posZ="4.5"></objectsLayer3>
-	<objectsLayer4 draw="true" dist="1.12" posY="-0.7" posZ="6.75"></objectsLayer4>
-	<objectsLayer5 draw="true" dist="1.12" posY="-0.7" posZ="8.0"></objectsLayer5>
-	<objectsLayer6 draw="true" dist="1.12" posY="-0.7" posZ="4.25"></objectsLayer6>
+	<hierarchy pixelSize="0.0005" useEuclideanCoordinates="true" filterDepthScale="0.0008" draw3Dobjects="true" voxelSize="0.02"></hierarchy>
+	<layerVD1 dist="0.03" posZ="0.1"></layerVD1>
+	<layerVD2 dist="0.25" posZ="0.5"></layerVD2>
+	<layerVD3 dist="0.25" posZ="1.0"></layerVD3>
+	<layerVD4 dist="0.35" posZ="1.5"></layerVD4>
+	<layerVD5 dist="0.45" posZ="2.0"></layerVD5>
+	<layerVD6 dist="0.55" posZ="2.75"></layerVD6>
+	<layerVD7 dist="0.65" posZ="4.0"></layerVD7>
+	
+	<layerVolumetric1 dist="0.45" posZ="2.0"></layerVolumetric1>
+	<layerVolumetric2 dist="0.55" posZ="2.75"></layerVolumetric2>
+	<layerVolumetric3 dist="0.25" posZ="1.0"></layerVolumetric3>
+	<layerVolumetric4 dist="0.35" posZ="1.5"></layerVolumetric4>
+	<layerVolumetric5 dist="0.45" posZ="2.0"></layerVolumetric5>
+	<layerVolumetric6 dist="0.55" posZ="2.75"></layerVolumetric6>
+	<layerVolumetric7 dist="0.65" posZ="4.0"></layerVolumetric7>
+	
+	<objectsLayerVD1 draw="true" dist="1.12" posY="-0.7" posZ="0.0"></objectsLayerVD1>
+	<objectsLayerVD2 draw="true" dist="1.12" posY="-0.7" posZ="1.5"></objectsLayerVD2>
+	<objectsLayerVD3 draw="true" dist="1.12" posY="-0.7" posZ="3.0"></objectsLayerVD3>
+	<objectsLayerVD4 draw="true" dist="1.12" posY="-0.7" posZ="3.5"></objectsLayerVD4>
+	<objectsLayerVD5 draw="true" dist="1.12" posY="-0.7" posZ="5.0"></objectsLayerVD5>
+	<objectsLayerVD6 draw="true" dist="1.12" posY="-0.7" posZ="4.25"></objectsLayerVD6>
+	
+	<objectsLayerVolumetric1 draw="true" dist="1.12" posY="-0.7" posZ="-1.5"></objectsLayerVolumetric1>
+	<objectsLayerVolumetric2 draw="true" dist="1.12" posY="-0.7" posZ="-3.0"></objectsLayerVolumetric2>
+	<objectsLayerVolumetric3 draw="true" dist="1.12" posY="-0.7" posZ="-3.5"></objectsLayerVolumetric3>
+	<objectsLayerVolumetric4 draw="true" dist="1.12" posY="-0.7" posZ="-6.75"></objectsLayerVolumetric4>
+	<objectsLayerVolumetric5 draw="true" dist="1.12" posY="-0.7" posZ="-8.0"></objectsLayerVolumetric5>
+	<objectsLayerVolumetric6 draw="true" dist="1.12" posY="-0.7" posZ="-4.25"></objectsLayerVolumetric6>
+	
 	<objectsParts drawPartObjects="true" dist="0.3" posY="0.0" posZ="-0.1"></objectsParts>
 	<background red="1.0" green="1.0" blue="1.0" alpha="1.0"></background>
 	<pointCloud drawPointClouds="false" cloudPointSize="3" useNormalCloud="true"></pointCloud>

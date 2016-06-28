@@ -38,6 +38,7 @@ NormalImageFilter::Config::Config(std::string configFilename){
     model->FirstChildElement( "parameters" )->QueryIntAttribute("minOctetSizeSecondLayer", &minOctetSizeSecondLayer);
     model->FirstChildElement( "parameters" )->QueryIntAttribute("minPointsNoSecondLayer", &minPointsNoSecondLayer);
     model->FirstChildElement( "parameters" )->QueryDoubleAttribute("distThresholdSecondLayer", &distThresholdSecondLayer);
+    model->FirstChildElement( "parameters" )->QueryDoubleAttribute("distThresholdThirdLayer", &distThresholdThirdLayer);
     model->FirstChildElement( "parameters" )->QueryBoolAttribute("useEuclideanCoordinates", &useEuclideanCoordinates);
     model->FirstChildElement( "parameters" )->QueryBoolAttribute("splitSurfaces", &splitSurfaces);
 
@@ -546,9 +547,11 @@ void NormalImageFilter::computeRelativePositions(Octet& octet, int layerNo) cons
             ViewDependentPart::removeSecondSurface(part,config.PCADistThreshold);
         else if (layerNo==2)
             ViewDependentPart::removeSecondSurface(part,config.distThresholdSecondLayer);
+        else if (layerNo==3){
+            ViewDependentPart::removeSecondSurface(part,config.distThresholdSecondLayer);
+        }
         else{
-            std::cout << "dist threshold for layer undefined\n";
-            getchar();
+            throw std::runtime_error("Distance threshold for layer " + std::to_string(layerNo) + " undefined\n");
         }
         Octet octetTmp(octet);
         octetTmp.partIds=part.partIds;
@@ -736,14 +739,19 @@ bool NormalImageFilter::findMaxGroupResponse(const std::vector< std::vector<Resp
 }
 
 /// compute set of octets from set of the ids image
-void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets, bool inference){
+void NormalImageFilter::getOctets(int layerNo, int categoryNo, int objectNo, int imageNo, Octet::Seq& octets, bool inference){
     octets.clear();
     for (int overlapNo=0;overlapNo<3;overlapNo++){
         OctetsImage octetsImage;
-        if (inference)
-            octetsImage = octetsImagesInference[0][overlapNo][categoryNo][objectNo][imageNo];
-        else
-            octetsImage = octetsImages[0][overlapNo][categoryNo][objectNo][imageNo];
+        PartsImage partsImage;
+        if (inference){
+            octetsImage = octetsImagesInference[layerNo-1][overlapNo][categoryNo][objectNo][imageNo];
+            partsImage = partsImagesInference[layerNo-1][overlapNo][categoryNo][objectNo][imageNo];
+        }
+        else{
+            octetsImage = octetsImages[layerNo-1][overlapNo][categoryNo][objectNo][imageNo];
+            partsImage = partsImages[layerNo-1][overlapNo][categoryNo][objectNo][imageNo];
+        }
         OctetsImage nextLayerOctetsImg(octetsImage.size()/3, std::vector<std::shared_ptr<Octet>> (octetsImage.back().size()/3));
         int u=0;
         for (size_t i=1+overlapNo; i<octetsImage.size()-1;i=i+3){
@@ -751,11 +759,11 @@ void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, con
             for (size_t j=1+overlapNo; j<octetsImage[0].size()-1;j=j+3){
                 Octet octet;
                 if (!isBackground(octetsImage, (int)i, (int)j)){
-                    if (fillInOctet(octetsImage, hierarchy, (int)i, (int)j, octet)>=config.minOctetSizeSecondLayer){
+                    if (fillInOctet(octetsImage, partsImage, (int)i, (int)j, octet)>=config.minOctetSizeSecondLayer){
                         int biggerGroupSize, smallerGroupSize;
                         bool hasDoubleSurface = octet.hasDoubleSurface(config.distThresholdSecondLayer,biggerGroupSize, smallerGroupSize);
                         if (biggerGroupSize>=config.minOctetSizeSecondLayer){
-                            computeRelativePositions(octet, 2);
+                            computeRelativePositions(octet, layerNo+1);
                             octet.isBackground=false;
                             if (hasDoubleSurface&&config.splitSurfaces){
                                 octet.splitSurfaces(config.distThresholdSecondLayer, config.minOctetSizeSecondLayer, smallerGroupSize);
@@ -773,9 +781,9 @@ void NormalImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, con
             u++;
         }
         if (inference)
-            updateOctetsImage(1, overlapNo, categoryNo, objectNo, imageNo, octetsImagesInference, nextLayerOctetsImg);
+            updateOctetsImage(layerNo, overlapNo, categoryNo, objectNo, imageNo, octetsImagesInference, nextLayerOctetsImg);
         else
-            updateOctetsImage(1, overlapNo, categoryNo, objectNo, imageNo, octetsImages, nextLayerOctetsImg);
+            updateOctetsImage(layerNo, overlapNo, categoryNo, objectNo, imageNo, octetsImages, nextLayerOctetsImg);
     }
 }
 
@@ -992,15 +1000,20 @@ void NormalImageFilter::getLayerParts(int categoryNo, int objectNo, int imageNo,
 }
 
 /// Fill in octet
-int NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const Hierarchy& hierarchy, int u, int v, Octet& octet) const{
+int NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const PartsImage& partsImage, int u, int v, Octet& octet) const{
     int elementsNo=0;
     for (int i=-1;i<2;i++){
         for (int j=-1;j<2;j++){
             Mat34 offset(Mat34::Identity());
-            int id;
+            int id(-1);
             if (octetsImage[u+i][v+j].get()!=nullptr){
-                double distance;
-                id = findId(hierarchy, 0, *octetsImage[u+i][v+j], distance, offset);
+                if (partsImage[u+i][v+j].get()!=nullptr){
+//                    if(partsImage[u+i][v+j].get()->secondVDPart.size()>0){
+//                        std::cout <<"secon octet\n";
+//                    }
+                    id = partsImage[u+i][v+j].get()->id;
+                    offset = partsImage[u+i][v+j].get()->offset;
+                }
             }
             else
                 id = -1;
@@ -1074,6 +1087,9 @@ int NormalImageFilter::findId(const hop3d::Hierarchy& hierarchy, int layerNo, co
             dist = ViewDependentPart::distanceInvariant(part, partVD, 3, offsetTmp);
         else if (layerNo==1) {
             dist = ViewDependentPart::distanceInvariant(part, partVD, 3, hierarchy.viewDependentLayers[0], offsetTmp);
+        }
+        else if (layerNo==2) {
+            dist = ViewDependentPart::distanceInvariant(part, partVD, 3, hierarchy.viewDependentLayers[0],hierarchy.viewDependentLayers[1], offsetTmp);
         }
         partID++;
         if (dist==0){
@@ -1350,7 +1366,7 @@ Mat33 NormalImageFilter::coordinateFromNormal(const Vec3& _normal){
 }*/
 
 /// get set of ids for the given input point
-void NormalImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference){
+void NormalImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, bool inference){
     OctetsImages* oImages;
     PartsImages* pImages;
     if (inference){
@@ -1383,7 +1399,6 @@ void NormalImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo,
     }
     if (octetCoords[0]<(*pImages)[0][overlapNo][categoryNo][objectNo][imageNo].size()&&octetCoords[1]<(*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][0].size()){
         if ((*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
-            lastVDpart = *(*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
             if (!(*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->isBackground()){
                 if ((*oImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
                     //ViewDependentPart.partsPosNorm[1][1]
@@ -1417,13 +1432,11 @@ void NormalImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo,
             ids.push_back(-2);
     }
     else{
-        lastVDpart=ViewDependentPart();
         ids.push_back(-2);
     }
     unsigned int octetCoords2nd[2]={(u-overlapNo*(3*config.filterSize))/(config.filterSize*3*3),(v-overlapNo*(3*config.filterSize))/(config.filterSize*3*3)};
     if ((octetCoords2nd[0]>0)&&(octetCoords2nd[1]>0)&&(octetCoords2nd[0]<(*pImages)[1][overlapNo][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<(*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][0].size())){
         if ((*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
-            lastVDpart = *(*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
             if (!(*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->isBackground()){
                 if ((*oImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
                     //ViewDependentPart.partsPosNorm[1][1]
@@ -1458,12 +1471,87 @@ void NormalImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo,
     }
     else{
         ids.push_back(-2); //point wasn't used to create part (2nd layer)
-        lastVDpart.id = -2;
+    }
+    unsigned int octetCoords3rd[2]={(u-(overlapNo*(3*3*config.filterSize)))/(config.filterSize*3*3*3),(v-(overlapNo*(3*3*config.filterSize)))/(config.filterSize*3*3*3)};
+    /*std::cout << "octetCoords2nd[2] " << octetCoords2nd[0] << " - " << octetCoords2nd[1] << "\n";
+    std::cout << "octetCoords3rd[2] " << octetCoords3rd[0] << " - " << octetCoords3rd[1] << "\n";
+    for (int over=0;over<3;over++){
+        std::cout << "overlap lay prev="  << over << "\n";
+        for (auto & row : (*pImages)[1][over][categoryNo][objectNo][imageNo]){
+            for (auto & part : row){
+                if (part.get()!=nullptr){
+                    if(!part->isBackground()){
+                        std::cout << part->id << " ";
+                    }
+                    else
+                        std::cout << "-2 ";
+                }
+                else
+                    std::cout << "-2 ";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "\n";
+    }
+    for (int over=0;over<3;over++){
+        std::cout << "overlap="  << over << "\n";
+        for (auto & row : (*pImages)[2][over][categoryNo][objectNo][imageNo]){
+            for (auto & part : row){
+                if (part.get()!=nullptr){
+                    if(!part->isBackground()){
+                        std::cout << part->id << " ";
+                    }
+                    else
+                        std::cout << "-2 ";
+                }
+                else
+                    std::cout << "-2 ";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "\n";
+    }*/
+    if ((octetCoords3rd[0]>0)&&(octetCoords3rd[1]>0)&&(octetCoords3rd[0]<(*pImages)[2][overlapNo][categoryNo][objectNo][imageNo].size())&&(octetCoords3rd[1]<(*pImages)[2][overlapNo][categoryNo][objectNo][imageNo][0].size())){
+        if ((*pImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]].get()!=nullptr){
+            if (!(*pImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]]->isBackground()){
+               // if ((*oImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]].get()!=nullptr){
+                    //Octet * octet = (*oImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]].get();
+                    ViewDependentPart* octet = (*pImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]].get();
+                    if (octet->partIds[((u-overlapNo*(3*3*config.filterSize))/(config.filterSize*3*3))%3][((v-overlapNo*(3*3*config.filterSize))/(config.filterSize*3*3))%3]<-1){
+                        if (octet->secondVDPart.size()>0){
+                            if (fabs(octet->secondVDPart[0].partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer+config.distThresholdThirdLayer))
+                                ids.push_back(-2);
+                            else
+                                ids.push_back((*pImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]]->secondVDPart[0].id);
+                        }
+                        else
+                            ids.push_back(-2);
+                    }
+                    else {
+                        if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer+config.distThresholdThirdLayer))
+                            ids.push_back(-2);
+                        else
+                            ids.push_back((*pImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]]->id);
+                    }
+                /*}
+                else {
+                    std::cout <<"something is wrong with octets image\n";
+                    getchar();
+                }*/
+            }
+            else
+                ids.push_back(-2);
+        }
+        else
+            ids.push_back(-2);
+    }
+    else{
+        ids.push_back(-2); //point wasn't used to create part (2nd layer)
     }
 }
 
 /// get set of ids for the given input point
-void NormalImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference){
+void NormalImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, bool inference){
     OctetsImages* oImages;
     PartsImages* pImages;
     if (inference){
@@ -1496,7 +1584,6 @@ void NormalImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int ob
     }
     if (octetCoords[0]<(*pImages)[0][overlapNo][categoryNo][objectNo][imageNo].size()&&octetCoords[1]<(*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][0].size()){
         if ((*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
-            lastVDpart = *(*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]];
             if (!(*pImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]]->isBackground()){
                 if ((*oImages)[0][overlapNo][categoryNo][objectNo][imageNo][octetCoords[0]][octetCoords[1]].get()!=nullptr){
                     //ViewDependentPart.partsPosNorm[1][1]
@@ -1530,13 +1617,11 @@ void NormalImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int ob
             ids.push_back(-2);
     }
     else{
-        lastVDpart=ViewDependentPart();
         ids.push_back(-2);
     }
     unsigned int octetCoords2nd[2]={u/(config.filterSize*3*3),v/(config.filterSize*3*3)};
     if ((octetCoords2nd[0]<(*pImages)[1][overlapNo][categoryNo][objectNo][imageNo].size())&&(octetCoords2nd[1]<(*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][0].size())){
         if ((*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
-            lastVDpart = *(*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]];
             if (!(*pImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]]->isBackground()){
                 if ((*oImages)[1][overlapNo][categoryNo][objectNo][imageNo][octetCoords2nd[0]][octetCoords2nd[1]].get()!=nullptr){
                     //ViewDependentPart.partsPosNorm[1][1]
@@ -1571,7 +1656,44 @@ void NormalImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int ob
     }
     else{
         ids.push_back(-2); //point wasn't used to create part (2nd layer)
-        lastVDpart.id = -2;
+    }
+    unsigned int octetCoords3rd[2]={(u-(overlapNo*(3*3*config.filterSize)))/(config.filterSize*3*3*3),(v-(overlapNo*(3*3*config.filterSize)))/(config.filterSize*3*3*3)};
+    if ((octetCoords3rd[0]>0)&&(octetCoords3rd[1]>0)&&(octetCoords3rd[0]<(*pImages)[2][overlapNo][categoryNo][objectNo][imageNo].size())&&(octetCoords3rd[1]<(*pImages)[2][overlapNo][categoryNo][objectNo][imageNo][0].size())){
+        if ((*pImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]].get()!=nullptr){
+            if (!(*pImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]]->isBackground()){
+               // if ((*oImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]].get()!=nullptr){
+                    //Octet * octet = (*oImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]].get();
+                    ViewDependentPart* octet = (*pImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]].get();
+                    if (octet->partIds[((u-overlapNo*(3*3*config.filterSize))/(config.filterSize*3*3))%3][((v-overlapNo*(3*3*config.filterSize))/(config.filterSize*3*3))%3]<-1){
+                        if (octet->secondVDPart.size()>0){
+                            if (fabs(octet->secondVDPart[0].partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer+config.distThresholdThirdLayer))
+                                ids.push_back(-2);
+                            else
+                                ids.push_back((*pImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]]->secondVDPart[0].realisationId);
+                        }
+                        else
+                            ids.push_back(-2);
+                    }
+                    else {
+                        if (fabs(octet->partsPosNorm[1][1].mean(2)-depth)>(config.PCADistThreshold+config.distThresholdSecondLayer+config.distThresholdThirdLayer))
+                            ids.push_back(-2);
+                        else
+                            ids.push_back((*pImages)[2][overlapNo][categoryNo][objectNo][imageNo][octetCoords3rd[0]][octetCoords3rd[1]]->realisationId);
+                    }
+                /*}
+                else {
+                    std::cout <<"something is wrong with octets image\n";
+                    getchar();
+                }*/
+            }
+            else
+                ids.push_back(-2);
+        }
+        else
+            ids.push_back(-2);
+    }
+    else{
+        ids.push_back(-2); //point wasn't used to create part (2nd layer)
     }
 }
 

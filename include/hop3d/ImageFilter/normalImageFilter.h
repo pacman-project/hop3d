@@ -54,7 +54,7 @@ public:
     void computeOctets(const cv::Mat& depthImage, int categoryNo, int objectNo, int imageNo, hop3d::Octet::Seq& octets, bool inference);
 
     /// compute set of octets from set of the ids image
-    void getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets, bool inference);
+    void getOctets(int layerNo, int categoryNo, int objectNo, int imageNo, Octet::Seq& octets, bool inference);
 
     /// get filters
     void getFilters(Filter::Seq& _filters) const;
@@ -75,10 +75,10 @@ public:
     static Mat33 coordinateFromNormal(const Vec3& _normal);
 
     /// get set of ids for the given input point
-    void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference);
+    void getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, bool inference);
 
     /// get set of ids for the given input point
-    void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference);
+    void getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, bool inference);
 
     /// returs filter ids and their position on the image
     void getResponseFilters(int overlapNo, int categoryNo, int objectNo, int imageNo, std::vector<PartCoords>& partCoords, bool inference) const;
@@ -146,6 +146,8 @@ public:
             int minPointsNoSecondLayer;
             /// distance between points -- slpit surfaces
             double distThresholdSecondLayer;
+            /// distance between points -- slpit surfaces
+            double distThresholdThirdLayer;
             /// use median filter
             bool useMedianFilter;
             /// kernel size
@@ -220,7 +222,7 @@ private:
     bool findMeanResponse(const std::vector< std::vector<hop3d::PointNormal> >& cloudOrd, int u, int v, Octet& octet, int idx, int idy) const;
 
     /// Fill in octet
-    int fillInOctet(const OctetsImage& octetsImage, const Hierarchy& hierarchy, int u, int v, Octet& octet) const;
+    int fillInOctet(const OctetsImage& octetsImage, const PartsImage& partsImage, int u, int v, Octet& octet) const;
 
     //set relative position for octets
     void computeRelativePositions(Octet& octet, int layerNo) const;

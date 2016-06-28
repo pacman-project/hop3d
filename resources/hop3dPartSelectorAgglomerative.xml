@@ -12,12 +12,21 @@
 		  3 -> view invariant metric
     -->
     <parameters verbose="0" distanceMetric="3" layersNo="7" maxIter="10"></parameters>
-    <layer1 maxDist="0.0" maxClusterDist="0.0"></layer1> <!--constant size-->
-    <layer2 maxDist="0.45" maxClusterDist="0.46"></layer2>
-    <layer3 maxDist="0.50" maxClusterDist="0.51"></layer3>
-    <layer4 maxDist="4.0004" maxClusterDist="4.00041"></layer4>
-    <layer5 maxDist="0.02" maxClusterDist="0.021"></layer5>
-    <layer6 maxDist="0.09" maxClusterDist="0.091"></layer6>
-    <layer7 maxDist="0.7" maxClusterDist="0.7"></layer7>
+    <!--View dependent layers-->
+    <layerVD1 maxDist="0.0" maxClusterDist="0.0"></layerVD1> <!--constant size-->
+    <layerVD2 maxDist="0.45" maxClusterDist="0.46"></layerVD2>
+    <layerVD3 maxDist="0.70" maxClusterDist="0.71"></layerVD3>
+    <layerVD4 maxDist="0.60" maxClusterDist="0.61"></layerVD4>
+    <layerVD5 maxDist="0.02" maxClusterDist="0.021"></layerVD5>
+    <layerVD6 maxDist="0.09" maxClusterDist="0.091"></layerVD6>
+    <layerVD7 maxDist="0.7" maxClusterDist="0.7"></layerVD7>
+    <!--Volumetric layers-->
+    <layerVolumetric1 maxDist="4.0004" maxClusterDist="4.0004"></layerVolumetric1> <!--constant size-->
+    <layerVolumetric2 maxDist="0.02" maxClusterDist="0.021"></layerVolumetric2>
+    <layerVolumetric3 maxDist="0.50" maxClusterDist="0.51"></layerVolumetric3>
+    <layerVolumetric4 maxDist="4.0004" maxClusterDist="4.00041"></layerVolumetric4>
+    <layerVolumetric5 maxDist="0.02" maxClusterDist="0.021"></layerVolumetric5>
+    <layerVolumetric6 maxDist="0.09" maxClusterDist="0.091"></layerVolumetric6>
+    <layerVolumetric7 maxDist="0.7" maxClusterDist="0.7"></layerVolumetric7>    
     <GICP configFilename="hop3dGICP.xml"></GICP>
   </PartSelector>

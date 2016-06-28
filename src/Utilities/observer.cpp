@@ -46,10 +46,18 @@ void Subject::notify(const hop3d::PointsSecondLayer& points){
     }
 }
 
-void Subject::notify(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& clouds, bool inference){
+void Subject::notifyVD(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& clouds, bool inference){
     for(vector<Observer*>::const_iterator iter = list.begin(); iter != list.end(); ++iter){
         if(*iter != 0) {
-            (*iter)->update(clouds, inference);
+            (*iter)->updateVD(clouds, inference);
+        }
+    }
+}
+
+void Subject::notifyVolumetric(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& clouds, bool inference){
+    for(vector<Observer*>::const_iterator iter = list.begin(); iter != list.end(); ++iter){
+        if(*iter != 0) {
+            (*iter)->updateVolumetric(clouds, inference);
         }
     }
 }

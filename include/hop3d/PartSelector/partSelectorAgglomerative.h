@@ -10,6 +10,8 @@
 #include "hop3d/PartSelector/partSelector.h"
 #include "tinyXML/tinyxml2.h"
 #include <queue>
+#include <thread>
+#include <mutex>
 
 namespace hop3d {
     /// create a single part selector
@@ -74,9 +76,13 @@ public:
             /// Numbber of layers
             int layersNo;
             /// max distance
-            std::vector<double> maxDist;
+            std::vector<double> maxDistVD;
             /// max distance
-            std::vector<double> maxClusterDist;
+            std::vector<double> maxClusterDistVD;
+            /// max distance
+            std::vector<double> maxDistVolumetric;
+            /// max distance
+            std::vector<double> maxClusterDistVolumetric;
             /// config GICP
             ConfigGICP configGICP;
     };
@@ -86,6 +92,11 @@ private:
 private:
     ///Configuration of the module
     Config config;
+    /// mutex for parallel computation of distance matrix
+    std::mutex mtxDistMat;
+    /// Optimization thread
+    std::array<std::unique_ptr<std::thread>,8> distMatThr;
+
     /// distance priority queue
     std::priority_queue<DistanceElement, std::vector<DistanceElement>, DistanceElement > priorityQueueDistance;
 
@@ -96,10 +107,10 @@ private:
     int centerOfCluster(const std::set<int>& cluster, const ViewDependentPart::Seq& vocabulary, const Hierarchy& hierarchy) const;
 
     /// compute distance matrix
-    void computeDistanceMatrix(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix);
+    void computeDistanceMatrixVD(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix, int minId=-1, int maxId=-1);
 
     /// compute distance matrix for view-independent parts
-    void computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix);
+    void computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix, int minId=-1, int maxId=-1);
 
     /// find min distance int the distance matrix
     double findMinDistance(const std::vector<std::vector<double>>& distanceMatrix, std::pair<int,int>& pairedIds);
@@ -108,7 +119,7 @@ private:
     void findPartsInClusters(const std::vector<std::vector<int>>& clusters, const std::pair<int,int>& pairedIds, std::pair<int,int>& clustersIds) const;
 
     /// merge two clusters
-    bool mergeTwoClusters(std::vector<std::vector<int>>& clusters, const std::vector<int>& centroids, const std::pair<int,int>& clustersIds, const std::vector<std::vector<double>>& distanceMatrix, int layerNo) const;
+    bool mergeTwoClusters(std::vector<std::vector<int>>& clusters, const std::vector<int>& centroids, const std::pair<int,int>& clustersIds, const std::vector<std::vector<double>>& distanceMatrix, double maxClusterDist) const;
 
     /// compute centroids using pre-computed distance in distance matrix
     void computeCentroids(const std::vector<std::vector<int>>& clusters, const std::vector<std::vector<double>>& distanceMatrix, std::vector<int>& centroids) const;

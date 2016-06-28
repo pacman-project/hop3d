@@ -34,16 +34,27 @@ PartSelectorMean::Config::Config(std::string configFilename){
     group->FirstChildElement( "parameters" )->QueryIntAttribute("maxIter", &maxIter);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("distanceMetric", &distanceMetric);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("layersNo", &layersNo);
-    useCompressionRate.resize(layersNo);
-    clustersNo.resize(layersNo);
-    compressionRate.resize(layersNo);
+    useCompressionRateVD.resize(layersNo);
+    clustersNoVD.resize(layersNo);
+    compressionRateVD.resize(layersNo);
+    for (int i=0;i<layersNo;i++){
+        std::string layerName = "layerVD" + std::to_string(i+1);
+        bool ucr;
+        group->FirstChildElement( layerName.c_str() )->QueryBoolAttribute("useCompressionRate", &ucr);
+        useCompressionRateVD[i]=ucr;
+        group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("compressionRate", &compressionRateVD[i]);
+        group->FirstChildElement( layerName.c_str() )->QueryIntAttribute("clusters", &clustersNoVD[i]);
+    }
+    useCompressionRateVolumetric.resize(layersNo);
+    clustersNoVolumetric.resize(layersNo);
+    compressionRateVolumetric.resize(layersNo);
     for (int i=0;i<layersNo;i++){
         std::string layerName = "layer" + std::to_string(i+1);
         bool ucr;
         group->FirstChildElement( layerName.c_str() )->QueryBoolAttribute("useCompressionRate", &ucr);
-        useCompressionRate[i]=ucr;
-        group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("compressionRate", &compressionRate[i]);
-        group->FirstChildElement( layerName.c_str() )->QueryIntAttribute("clusters", &clustersNo[i]);
+        useCompressionRateVolumetric[i]=ucr;
+        group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("compressionRate", &compressionRateVolumetric[i]);
+        group->FirstChildElement( layerName.c_str() )->QueryIntAttribute("clusters", &clustersNoVolumetric[i]);
     }
 
     std::string GICPConfig = (group->FirstChildElement( "GICP" )->Attribute( "configFilename" ));
@@ -73,10 +84,10 @@ PartSelectorMean::Config::Config(std::string configFilename){
 /// Select parts from the initial vocabulary
 void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
     int clustersNo;
-    if (config.useCompressionRate[layerNo-1])
-        clustersNo = (int)(config.compressionRate[layerNo-1]*(int)dictionary.size());
+    if (config.useCompressionRateVolumetric[layerNo])
+        clustersNo = (int)(config.compressionRateVolumetric[layerNo]*(int)dictionary.size());
     else
-        clustersNo = config.clustersNo[layerNo-1];
+        clustersNo = config.clustersNoVolumetric[layerNo];
     if ((size_t)clustersNo > dictionary.size())
         clustersNo = (int)dictionary.size();
     if (config.verbose>0){
@@ -145,10 +156,10 @@ void PartSelectorMean::selectParts(ViewIndependentPart::Seq& dictionary, const H
 /// Select parts from the initial vocabulary
 void PartSelectorMean::selectParts(ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, int layerNo){
     int clustersNo;
-    if (config.useCompressionRate[layerNo-1])
-        clustersNo = (int)(config.compressionRate[layerNo-1]*(int)dictionary.size());
+    if (config.useCompressionRateVD[layerNo])
+        clustersNo = (int)(config.compressionRateVD[layerNo]*(int)dictionary.size());
     else
-        clustersNo = config.clustersNo[layerNo-1];
+        clustersNo = config.clustersNoVD[layerNo];
     if ((size_t)clustersNo > dictionary.size())
         clustersNo = (int)dictionary.size();
     if (config.verbose>0){

@@ -1,4 +1,5 @@
 #include "hop3d/HOP3D/HOP3DBham.h"
+#include "hop3d/Utilities/stopwatch.h"
 #include <random>
 #include <thread>
 #include <chrono>
@@ -82,7 +83,7 @@ HOP3DBham::Config::Config(std::string configFilename){
     tinyxml2::XMLElement * group = config.FirstChildElement( "Hierarchy" );
     group->FirstChildElement( "parameters" )->QueryIntAttribute("verbose", &verbose);
     if (verbose == 1) {
-        std::cout << "Load HOP3DBham parameters...\n";
+        std::cout << "Load HOP3DBham parameters...";
     }
     size_t found = configFilename.find_last_of("/\\");
     std::string prefix = configFilename.substr(0,found+1);
@@ -109,6 +110,7 @@ HOP3DBham::Config::Config(std::string configFilename){
     config.FirstChildElement( "Filterer" )->QueryIntAttribute("filterType", &filterType);
     config.FirstChildElement( "Dataset" )->QueryIntAttribute("datasetType", &datasetType);
     config.FirstChildElement( "QVisualizer" )->QueryBoolAttribute("useVisualization", &useVisualization);
+    std::cout << "Done\n";
 }
 
 /// get set of ids from hierarchy for the given input point
@@ -433,48 +435,48 @@ void HOP3DBham::getPartsRealisation(const std::string& path, std::vector<ViewInd
 
 /// learining from the dataset
 void HOP3DBham::learn(){
+    Stopwatch<std::chrono::seconds> watchLearn;
+    watchLearn.start();
     imageFilterer->getFilters(hierarchy.get()->firstLayer);
     hop3d::ViewDependentPart::Seq dictionary;
     datasetTrain->getDatasetInfo(datasetInfoTrain);
-    std::vector<hop3d::Octet> octets;
     int startId = (int)hierarchy.get()->firstLayer.size();
+    Stopwatch<std::chrono::seconds> watchTmp;
     for (int layerNo=0;layerNo<config.viewDependentLayersNo;layerNo++){
-        if (layerNo==0){
-            for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){
-                for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){
-                    for (size_t imageNo=0;imageNo<datasetInfoTrain.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+        std::vector<hop3d::Octet> octets;
+        watchTmp.start();
+        for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){
+            for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){
+                for (size_t imageNo=0;imageNo<datasetInfoTrain.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                    if (layerNo==0){
                         cv::Mat image;
                         datasetTrain->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo,image);
                         std::vector<hop3d::Octet> octetsTmp;
                         imageFilterer->computeOctets(image, (int)categoryNo, (int)objectNo, (int)imageNo, octetsTmp, false);
                         octets.insert(octets.end(), octetsTmp.begin(), octetsTmp.end());
                     }
-                }
-            }
-        }
-        else if (layerNo==1){
-            octets.clear();
-            startId = int(hierarchy.get()->firstLayer.size()+10000);
-            for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){
-                for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){
-                    for (size_t imageNo=0;imageNo<datasetInfoTrain.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                    else if (layerNo>0){
                         std::vector<hop3d::Octet> octetsTmp;
-                        imageFilterer->getOctets((int)categoryNo, (int)objectNo, (int)imageNo, *hierarchy, octetsTmp, false);
+                        imageFilterer->getOctets(layerNo, (int)categoryNo, (int)objectNo, (int)imageNo, octetsTmp, false);
                         octets.insert(octets.end(), octetsTmp.begin(), octetsTmp.end());
                     }
                 }
             }
         }
+        watchTmp.stop();
+        std::cout << "Compute octets took " << watchTmp.elapsed() << " seconds\n";
+        watchTmp.start();
         std::cout << "Compute statistics for " << octets.size() << " octets (" << layerNo+2 << " layer)\n";
         //statsBuilder->computeStatistics(octets, layerNo+2, startId, dictionary);
         statsBuilder->vocabularyFromOctets(octets, layerNo+2, startId, dictionary);
         std::cout << "Dictionary size (" << layerNo+2 << " layer): " << dictionary.size() << "\n";
-        partSelector->selectParts(dictionary, *hierarchy, layerNo+2);
+        partSelector->selectParts(dictionary, *hierarchy, layerNo+1);
         std::cout << "Dictionary size after clusterization: " << dictionary.size() << "\n";
         hierarchy.get()->viewDependentLayers[layerNo]=dictionary;
-    }
-    //represent/explain all images in parts from i-th layer
-    for (size_t layerNo=0; layerNo< hierarchy.get()->viewDependentLayers.size();layerNo++){
+        watchTmp.stop();
+        std::cout << "Compute vocabulary took " << watchTmp.elapsed() << " seconds\n";
+        //represent/explain all images in parts from i-th layer
+        watchTmp.start();
         for (int overlapNo=0; overlapNo<3; overlapNo++){
             for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){
                 for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){
@@ -486,7 +488,10 @@ void HOP3DBham::learn(){
                 }
             }
         }
+        watchTmp.stop();
+        std::cout << "Compute parts image " << watchTmp.elapsed() << " seconds\n";
     }
+    watchTmp.start();
     objects.resize(datasetInfoTrain.categories.size());
     for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
         for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
@@ -504,10 +509,13 @@ void HOP3DBham::learn(){
             }
         }
     }
+    watchTmp.stop();
+    std::cout << "pcl grid " << watchTmp.elapsed() << " seconds\n";
     std::vector<ViewIndependentPart> vocabulary;
     ObjectCompositionOctree::setRealisationCounter(imageFilterer->getRealisationsNo()+10000);
     for (size_t layerNo=0;layerNo<(size_t)config.viewIndependentLayersNo;layerNo++){
         vocabulary.clear();
+        watchTmp.start();
         for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
             for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
                 std::vector<ViewIndependentPart> voc;
@@ -515,23 +523,31 @@ void HOP3DBham::learn(){
                 vocabulary.insert( vocabulary.end(), voc.begin(), voc.end() );
             }
         }
+        watchTmp.stop();
+        std::cout << "create next layer ind took " << watchTmp.elapsed() << " seconds\n";
         /*for (auto &word : vocabulary){
             word.print();
         }
         getchar();*/
+        watchTmp.start();
         std::cout << layerNo+4 << " layer init vocabulary size: " << vocabulary.size() << "\n";
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-        partSelector->selectParts(vocabulary, *hierarchy, int(layerNo+4));
+        partSelector->selectParts(vocabulary, *hierarchy, int(layerNo));
         std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
         std::cout << "Clusterization took = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() <<std::endl;
         std::cout << "Dictionary size (" << layerNo+4 << "-th layer): " << vocabulary.size() << "\n";
         /// First view-independent layer (three and a half layer)
         hierarchy.get()->viewIndependentLayers[layerNo]=vocabulary;
+        watchTmp.stop();
+        std::cout << "Compute vocabulary VD took " << watchTmp.elapsed() << " seconds\n";
+        watchTmp.start();
         for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category
             for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){//for each object
                 objects[categoryNo][objectNo].updateVoxelsPose((int)layerNo, vocabulary, *hierarchy);
             }
         }
+        watchTmp.stop();
+        std::cout << "Update voxels pose took " << watchTmp.elapsed() << " seconds\n";
         //std::cout << "data explained\n";
     }
     // save hierarchy to file
@@ -548,6 +564,8 @@ void HOP3DBham::learn(){
         ofsHierarchy.close();
         std::cout << "saved\n";
     }
+    watchLearn.stop();
+    std::cout << "Training took " << watchLearn.elapsed() << " seconds (" << watchLearn.elapsed()/60 << " minutes, " << watchLearn.elapsed()/(60*60) << " hours\n";
     //visualization
     notifyVisualizer();
     /*Hierarchy::IndexSeqMap hierarchyGraph;
@@ -614,7 +632,7 @@ void HOP3DBham::learnIncremental(void){
                     if (layerNo==0)
                         imageFilterer->computeOctets(image, (int)categoryNo, (int)objectNo, (int)imageNo, octetsTmp, true);
                     else if (layerNo==1)
-                        imageFilterer->getOctets((int)categoryNo, (int)objectNo, (int)imageNo, *hierarchy, octetsTmp, true);
+                        imageFilterer->getOctets(layerNo, (int)categoryNo, (int)objectNo, (int)imageNo, octetsTmp, true);
                 }
             }
         }
@@ -642,7 +660,7 @@ void HOP3DBham::learnIncremental(void){
         std::cout << "newParts " << newParts.size() << "\n";
         std::cout << "Compute statistics for " << newParts.size() << " octets (" << layerNo+2 << " layer)\n";
         hierarchy.get()->addParts(oldParts,layerNo);
-        partSelector->selectParts(newParts, *hierarchy, layerNo+2);
+        partSelector->selectParts(newParts, *hierarchy, layerNo+1);
         std::cout << "Dictionary size after clusterization: " << newParts.size() << "\n";
         hierarchy.get()->addNewParts(newParts, layerNo);
 
@@ -703,7 +721,7 @@ void HOP3DBham::learnIncremental(void){
         std::cout << "newParts " << newParts.size() << "\n";
 
         hierarchy.get()->addParts(oldParts, (int)layerNo);
-        partSelector->selectParts(newParts, *hierarchy, (int)layerNo+2);
+        partSelector->selectParts(newParts, *hierarchy, (int)layerNo);
         std::cout << "Dictionary size after clusterization: " << newParts.size() << "\n";
         hierarchy.get()->addNewParts(newParts, (int)layerNo);
 
@@ -907,7 +925,7 @@ void HOP3DBham::inference(void){
                         datasetTest->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo,image);
                         std::vector<hop3d::Octet> octetsTmp;
                         imageFilterer->computeOctets(image, (int)categoryNo, (int)objectNo, (int)imageNo, octetsTmp, true);
-                        imageFilterer->getOctets((int)categoryNo, (int)objectNo, (int)imageNo, *hierarchy, octetsTmp, true);
+                        imageFilterer->getOctets(layerNo, (int)categoryNo, (int)objectNo, (int)imageNo, octetsTmp, true);
                     }
                 }
             }
@@ -1070,11 +1088,11 @@ void HOP3DBham::inference(std::vector<std::pair<cv::Mat, Mat34>>& cameraFrames, 
                 imageNo++;
             }
         }
-        if (layerNo==1){
+        if (layerNo>0){
             int imageNo=0;
             for (size_t frameNo=0; frameNo<cameraFrames.size(); frameNo++){
                 std::vector<hop3d::Octet> octetsTmp;
-                imageFilterer->getOctets(categoryNo, objectNo, imageNo, *hierarchy, octetsTmp, true);
+                imageFilterer->getOctets(layerNo, categoryNo, objectNo, imageNo, octetsTmp, true);
                 imageNo++;
             }
         }
@@ -1223,7 +1241,7 @@ void HOP3DBham::createObjsFromParts(bool inference){
                         }
                     }
                     //compute object index
-                    int objNo=0;
+                    size_t objNo=objectNo;
                     for (size_t catNo=0;catNo<categoryNo;catNo++){
                         objNo+=(int)datasetInfo->categories[catNo].objects.size();
                     }
@@ -1239,7 +1257,7 @@ void HOP3DBham::createObjsFromParts(bool inference){
             std::vector<ViewIndependentPart> objectParts;
             for (size_t i=0;i<hierarchy.get()->viewIndependentLayers.size();i++){
                 object.getParts((int)i, objectParts);
-                notify(objectParts, (int)(i+hierarchy.get()->viewDependentLayers.size()+1), inference);
+                notify(objectParts, (int)(i), inference);
                 //std::cout << "(int)(i+hierarchy.get()->viewDependentLayers.size()+1) " < < (int)(i+hierarchy.get()->viewDependentLayers.size()+1) << "\n";
             }
         }
@@ -1308,8 +1326,7 @@ void HOP3DBham::createObjsFromParts(void){
 /// get set of ids from hierarchy for the given input point
 void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, int u, int v, double depth, std::vector<int>& ids, bool inference) const{
     ids.clear();
-    ViewDependentPart lastVDpart;
-    imageFilterer->getPartsIds(overlapNo, categoryNo, objectNo, imageNo, u, v, depth, ids, lastVDpart, inference);
+    imageFilterer->getPartsIds(overlapNo, categoryNo, objectNo, imageNo, u, v, depth, ids, inference);
 }
 
 /// get set of ids from hierarchy for the given input point (view-independent layers)
@@ -1330,9 +1347,8 @@ void HOP3DBham::getPartsIds(int overlapNo, int categoryNo, int objectNo, const M
 /// get realisations ids
 void HOP3DBham::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, const Mat34& cameraPose, int u, int v, double depth, std::vector<int>& ids, bool inference) const{
     ids.clear();
-    ViewDependentPart lastVDpart;
     std::vector<int> idsTmp;
-    imageFilterer->getRealisationsIds(overlapNo, categoryNo, objectNo, imageNo, u, v, depth, idsTmp, lastVDpart, inference);
+    imageFilterer->getRealisationsIds(overlapNo, categoryNo, objectNo, imageNo, u, v, depth, idsTmp, inference);
     ids.insert(ids.end(),idsTmp.begin(),idsTmp.end());
     //std::cout << ids[0] << ", " << ids[1] << ", " << ids[2] << "\n";
     /// view independent ids
@@ -1418,11 +1434,13 @@ void HOP3DBham::createPartClouds(bool inference){
     }
     int overlapsNo=4;
     /// point clouds (index: overlapNo->layerNo->objectNo)
-    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> cloudsObj(overlapsNo, std::vector<std::vector<hop3d::PointCloudRGBA>>(layersNo)); // vector of coloured objects
+    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> cloudsObjVD(overlapsNo, std::vector<std::vector<hop3d::PointCloudRGBA>>(layersNo)); // vector of coloured objects
+    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> cloudsObjVolumetric(overlapsNo, std::vector<std::vector<hop3d::PointCloudRGBA>>(layersNo)); // vector of coloured objects
     for (int overlapNo=0; overlapNo<overlapsNo; overlapNo++){
         for (size_t categoryNo=0;categoryNo<datasetInfo->categories.size();categoryNo++){
             for (size_t objectNo=0;objectNo<datasetInfo->categories[categoryNo].objects.size();objectNo++){
-                std::vector<hop3d::PointCloudRGBA> objsTmp(layersNo);
+                std::vector<hop3d::PointCloudRGBA> objsTmpVD(layersNo);
+                std::vector<hop3d::PointCloudRGBA> objsTmpVolumetric(layersNo);
                 for (size_t imageNo=0;imageNo<datasetInfo->categories[categoryNo].objects[objectNo].images.size();imageNo++){
                     hop3d::PartsCloud cloudParts;
                     if (overlapNo<3){
@@ -1441,9 +1459,13 @@ void HOP3DBham::createPartClouds(bool inference){
                                     Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(pointPart.position(0),pointPart.position(1),pointPart.position(2)));
                                     Mat34 pointWorld = cameraPose*pointCam;
                                     pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(2)=pointWorld(2,3); pointRGBA.position(1)=pointWorld(1,3);
-                                    if (layNo<3)
+                                    if (layNo<=(int)hierarchy.get()->viewDependentLayers.size()){
                                         pointRGBA.position(1)+=0.2*double(imageNo);
-                                    objsTmp[layNo].push_back(pointRGBA);
+                                        objsTmpVD[layNo].push_back(pointRGBA);
+                                    }
+                                    else{
+                                        objsTmpVolumetric[layNo-hierarchy.get()->viewDependentLayers.size()-1].push_back(pointRGBA);
+                                    }
                                 }
                             }
                         }
@@ -1451,36 +1473,61 @@ void HOP3DBham::createPartClouds(bool inference){
                     else{
                         for (int layNo=0;layNo<layersNo;layNo++){
                             //compute object index
-                            int objNo=0;
+                            size_t objNo=objectNo;
                             for (size_t catNo=0;catNo<categoryNo;catNo++){
                                 objNo+=(int)datasetInfo->categories[catNo].objects.size();
                             }
-                            for (int pointNo=0;pointNo<(int)cloudsObj[0][layNo][objNo].size();pointNo++){
-                                PointColor pointRGBA(cloudsObj[0][layNo][objNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
-                                int colorsNo=0;
-                                for (int overNo=0;overNo<3;overNo++){
-                                    if (cloudsObj[overNo][layNo][objNo][pointNo].color[0]>0||cloudsObj[overNo][layNo][objNo][pointNo].color[1]>0||cloudsObj[overNo][layNo][objNo][pointNo].color[2]>0){
-                                        colorsNo++;
-                                        for (int colorId=0;colorId<3;colorId++)
-                                            pointRGBA.color[colorId]+=cloudsObj[overNo][layNo][objNo][pointNo].color[colorId];
+                            if (layNo<=(int)hierarchy.get()->viewDependentLayers.size()){
+                                for (int pointNo=0;pointNo<(int)cloudsObjVD[0][layNo][objNo].size();pointNo++){
+                                    PointColor pointRGBA(cloudsObjVD[0][layNo][objNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
+                                    int colorsNo=0;
+                                    for (int overNo=0;overNo<3;overNo++){
+                                        if (cloudsObjVD[overNo][layNo][objNo][pointNo].color[0]>0||cloudsObjVD[overNo][layNo][objNo][pointNo].color[1]>0||cloudsObjVD[overNo][layNo][objNo][pointNo].color[2]>0){
+                                            colorsNo++;
+                                            for (int colorId=0;colorId<3;colorId++)
+                                                pointRGBA.color[colorId]+=cloudsObjVD[overNo][layNo][objNo][pointNo].color[colorId];
+                                        }
                                     }
+                                    if (colorsNo>0){
+                                        for (int colorId=0;colorId<3;colorId++)
+                                            pointRGBA.color[colorId]/=double(colorsNo);
+                                    }
+                                    objsTmpVD[layNo].push_back(pointRGBA);
                                 }
-                                if (colorsNo>0){
-                                    for (int colorId=0;colorId<3;colorId++)
-                                        pointRGBA.color[colorId]/=double(colorsNo);
+                            }
+                            else{
+                                for (int pointNo=0;pointNo<(int)cloudsObjVolumetric[0][layNo-(int)hierarchy.get()->viewDependentLayers.size()-1][objNo].size();pointNo++){
+                                    PointColor pointRGBA(cloudsObjVolumetric[0][layNo-(int)hierarchy.get()->viewDependentLayers.size()-1][objNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
+                                    int colorsNo=0;
+                                    for (int overNo=0;overNo<3;overNo++){
+                                        if (cloudsObjVolumetric[overNo][layNo-(int)hierarchy.get()->viewDependentLayers.size()-1][objNo][pointNo].color[0]>0||cloudsObjVolumetric[overNo][layNo-(int)hierarchy.get()->viewDependentLayers.size()-1][objNo][pointNo].color[1]>0||cloudsObjVolumetric[overNo][layNo-(int)hierarchy.get()->viewDependentLayers.size()-1][objNo][pointNo].color[2]>0){
+                                            colorsNo++;
+                                            for (int colorId=0;colorId<3;colorId++)
+                                                pointRGBA.color[colorId]+=cloudsObjVolumetric[overNo][layNo-(int)hierarchy.get()->viewDependentLayers.size()-1][objNo][pointNo].color[colorId];
+                                        }
+                                    }
+                                    if (colorsNo>0){
+                                        for (int colorId=0;colorId<3;colorId++)
+                                            pointRGBA.color[colorId]/=double(colorsNo);
+                                    }
+                                    objsTmpVolumetric[layNo-hierarchy.get()->viewDependentLayers.size()-1].push_back(pointRGBA);
                                 }
-                                objsTmp[layNo].push_back(pointRGBA);
                             }
                         }
                     }
+                    //imageNo++;
                 }
-                for (size_t layerNo=0;layerNo<objsTmp.size();layerNo++){
-                    cloudsObj[overlapNo][layerNo].push_back(objsTmp[layerNo]);
+                for (size_t layerNo=0;layerNo<objsTmpVD.size();layerNo++) {
+                    cloudsObjVD[overlapNo][layerNo].push_back(objsTmpVD[layerNo]);
+                }
+                for (size_t layerNo=0;layerNo<objsTmpVolumetric.size();layerNo++){
+                    cloudsObjVolumetric[overlapNo][layerNo].push_back(objsTmpVolumetric[layerNo]);
                 }
             }
         }
     }
-    notify(cloudsObj, inference);
+    notifyVD(cloudsObjVD, inference);
+    notifyVolumetric(cloudsObjVolumetric, inference);
     createPartObjects();
 }
 
@@ -1493,12 +1540,14 @@ void HOP3DBham::createPartClouds(void){
     }
     int overlapsNo=4;
     /// point clouds (index: overlapNo->layerNo->objectNo)
-    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> cloudsObj(overlapsNo, std::vector<std::vector<hop3d::PointCloudRGBA>>(layersNo)); // vector of coloured objects
+    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> cloudsObjVD(overlapsNo, std::vector<std::vector<hop3d::PointCloudRGBA>>(layersNo)); // vector of coloured objects
+    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> cloudsObjVolumetric(overlapsNo, std::vector<std::vector<hop3d::PointCloudRGBA>>(layersNo)); // vector of coloured objects
     size_t categoriesNo = 1; size_t objectsNo = 1;
     for (int overlapNo=0; overlapNo<overlapsNo; overlapNo++){
         for (size_t categoryNo=0;categoryNo<categoriesNo;categoryNo++){
             for (size_t objectNo=0;objectNo<objectsNo;objectNo++){
-                std::vector<hop3d::PointCloudRGBA> objsTmp(layersNo);
+                std::vector<hop3d::PointCloudRGBA> objsTmpVD(layersNo);
+                std::vector<hop3d::PointCloudRGBA> objsTmpVolumetric(layersNo);
                 int imageNo = 0;
                 for (auto & inputData : inferenceData.data){
                     hop3d::PartsCloud cloudParts;
@@ -1517,9 +1566,12 @@ void HOP3DBham::createPartClouds(void){
                                     Mat34 pointCam(Quaternion(1,0,0,0)*Eigen::Translation<double, 3>(pointPart.position(0),pointPart.position(1),pointPart.position(2)));
                                     Mat34 pointWorld = cameraPose*pointCam;
                                     pointRGBA.position(0)=pointWorld(0,3); pointRGBA.position(2)=pointWorld(2,3); pointRGBA.position(1)=pointWorld(1,3);
-                                    if (layNo<3)
+                                    if (layNo<=(int)hierarchy.get()->viewDependentLayers.size()){
                                         pointRGBA.position(1)+=0.2*double(imageNo);
-                                    objsTmp[layNo].push_back(pointRGBA);
+                                        objsTmpVD[layNo].push_back(pointRGBA);
+                                    }
+                                    else
+                                        objsTmpVolumetric[layNo-hierarchy.get()->viewDependentLayers.size()].push_back(pointRGBA);
                                 }
                             }
                         }
@@ -1527,34 +1579,59 @@ void HOP3DBham::createPartClouds(void){
                     else{
                         for (int layNo=0;layNo<layersNo;layNo++){
                             //compute object index
-                            int objNo=0;
-                            for (int pointNo=0;pointNo<(int)cloudsObj[0][layNo][objNo].size();pointNo++){
-                                PointColor pointRGBA(cloudsObj[0][layNo][objNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
-                                int colorsNo=0;
-                                for (int overNo=0;overNo<3;overNo++){
-                                    if (cloudsObj[overNo][layNo][objNo][pointNo].color[0]>0||cloudsObj[overNo][layNo][objNo][pointNo].color[1]>0||cloudsObj[overNo][layNo][objNo][pointNo].color[2]>0){
-                                        colorsNo++;
-                                        for (int colorId=0;colorId<3;colorId++)
-                                            pointRGBA.color[colorId]+=cloudsObj[overNo][layNo][objNo][pointNo].color[colorId];
+                            size_t objNo=objectNo;
+                            for (size_t catNo=0;catNo<categoryNo;catNo++){
+                                objNo+=(int)datasetInfo->categories[catNo].objects.size();
+                            }
+                            if (layNo<=(int)hierarchy.get()->viewDependentLayers.size()){
+                                for (int pointNo=0;pointNo<(int)cloudsObjVD[0][layNo][objNo].size();pointNo++){
+                                    PointColor pointRGBA(cloudsObjVD[0][layNo][objNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
+                                    int colorsNo=0;
+                                    for (int overNo=0;overNo<3;overNo++){
+                                        if (cloudsObjVD[overNo][layNo][objNo][pointNo].color[0]>0||cloudsObjVD[overNo][layNo][objNo][pointNo].color[1]>0||cloudsObjVD[overNo][layNo][objNo][pointNo].color[2]>0){
+                                            colorsNo++;
+                                            for (int colorId=0;colorId<3;colorId++)
+                                                pointRGBA.color[colorId]+=cloudsObjVD[overNo][layNo][objNo][pointNo].color[colorId];
+                                        }
                                     }
+                                    if (colorsNo>0){
+                                        for (int colorId=0;colorId<3;colorId++)
+                                            pointRGBA.color[colorId]/=double(colorsNo);
+                                    }
+                                    objsTmpVD[layNo].push_back(pointRGBA);
                                 }
-                                if (colorsNo>0){
-                                    for (int colorId=0;colorId<3;colorId++)
-                                        pointRGBA.color[colorId]/=double(colorsNo);
+                            }
+                            else{
+                                for (int pointNo=0;pointNo<(int)cloudsObjVolumetric[0][layNo][objNo].size();pointNo++){
+                                    PointColor pointRGBA(cloudsObjVolumetric[0][layNo][objNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
+                                    int colorsNo=0;
+                                    for (int overNo=0;overNo<3;overNo++){
+                                        if (cloudsObjVolumetric[overNo][layNo][objNo][pointNo].color[0]>0||cloudsObjVolumetric[overNo][layNo][objNo][pointNo].color[1]>0||cloudsObjVolumetric[overNo][layNo][objNo][pointNo].color[2]>0){
+                                            colorsNo++;
+                                            for (int colorId=0;colorId<3;colorId++)
+                                                pointRGBA.color[colorId]+=cloudsObjVolumetric[overNo][layNo][objNo][pointNo].color[colorId];
+                                        }
+                                    }
+                                    if (colorsNo>0){
+                                        for (int colorId=0;colorId<3;colorId++)
+                                            pointRGBA.color[colorId]/=double(colorsNo);
+                                    }
+                                    objsTmpVolumetric[layNo-hierarchy.get()->viewDependentLayers.size()].push_back(pointRGBA);
                                 }
-                                objsTmp[layNo].push_back(pointRGBA);
                             }
                         }
                     }
                     imageNo++;
                 }
-                for (size_t layerNo=0;layerNo<objsTmp.size();layerNo++){
-                    cloudsObj[overlapNo][layerNo].push_back(objsTmp[layerNo]);
-                }
+                for (size_t layerNo=0;layerNo<objsTmpVD.size();layerNo++)
+                    cloudsObjVD[overlapNo][layerNo].push_back(objsTmpVD[layerNo]);
+                for (size_t layerNo=0;layerNo<objsTmpVolumetric.size();layerNo++)
+                    cloudsObjVolumetric[overlapNo][layerNo].push_back(objsTmpVolumetric[layerNo]);
             }
         }
     }
-    notify(cloudsObj, true);
+    notifyVD(cloudsObjVD, true);
+    notifyVolumetric(cloudsObjVolumetric, true);
     createPartObjects();
 }
 

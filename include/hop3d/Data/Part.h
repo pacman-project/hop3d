@@ -19,6 +19,8 @@ bool isCloseToZero(T x)
 
 /// position and normal
 typedef std::array<std::array<GaussianSE3,9>,9> PointsSecondLayer;
+/// position and normal
+typedef std::array<std::array<GaussianSE3,27>,27> PointsThirdLayer;
 
 class ConfigGICP{
 public:
@@ -141,11 +143,20 @@ public:
     ///find optimal transformation between normals
     static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& vocabulary, int distanceMetric, Mat34& transOpt);
 
+    ///find optimal transformation between normals
+    static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& vocabularyLayer2, const ViewDependentPart::Seq& vocabularyLayer3, int distanceMetric, Mat34& transOpt);
+
     /// create point cloud from second layer part
     static int createPointsMatrix(const ViewDependentPart& part, const ViewDependentPart::Seq& vocabulary, int rotIndex, PointsSecondLayer& points, Eigen::MatrixXd& partIds);
 
+    /// create point cloud from second layer part
+    static int createPointsMatrix(const ViewDependentPart& part, const ViewDependentPart::Seq& vocabularyLayer2, const ViewDependentPart::Seq& vocabularyLayer3, int rotIndex, PointsThirdLayer& points, Eigen::MatrixXd& partIds);
+
     /// find SE3 transformation
     static bool findSE3Transformation(const PointsSecondLayer& pointsA, const PointsSecondLayer& pointsB, Mat34& trans);
+
+    /// find SE3 transformation
+    static bool findSE3Transformation(const PointsThirdLayer& pointsA, const PointsThirdLayer& pointsB, Mat34& trans);
 
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters, int distanceMetric);
@@ -156,6 +167,9 @@ public:
     /// compute distance between view dependent parts (invariant version)
     static double distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, const ViewDependentPart::Seq& vocabulary, Mat34& estimatedTransform);
 
+    /// compute distance between view dependent parts (invariant version) for fourth layer
+    static double distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, const ViewDependentPart::Seq& vocabularyLayer2, const ViewDependentPart::Seq& vocabularyLayer3, Mat34& estimatedTransform);
+
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters, int distanceMetric);
 
@@ -164,6 +178,9 @@ public:
 
     /// view invariant error for two second layer parts with known SE3 transformation
     static double computeError(const PointsSecondLayer& partA, const PointsSecondLayer& partB, const Eigen::MatrixXd& partAids, const Eigen::MatrixXd& partBids, const Mat34& transformation, int type, double coeff);
+
+    /// view invariant error for two second layer parts with known SE3 transformation
+    static double computeError(const PointsThirdLayer& partA, const PointsThirdLayer& partB, const Eigen::MatrixXd& partAids, const Eigen::MatrixXd& partBids, const Mat34& transformation, int type, double coeff);
 
     ///get normal vector related to that part
     void getNormal(Vec3& normal, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters) const;

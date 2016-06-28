@@ -72,27 +72,48 @@ public:
             model->FirstChildElement( "hierarchy" )->QueryBoolAttribute("useEuclideanCoordinates", &useEuclideanCoordinates);
 
             int layersNo=7;
-            partDist.resize(layersNo);
-            posZ.resize(layersNo);
+            partDistVD.resize(layersNo);
+            posZVD.resize(layersNo);
             for (int i=0;i<layersNo;i++){
-                std::string layerName = "layer" + std::to_string (i+1);
-                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("dist", &partDist[i]);
-                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posZ", &posZ[i]);
+                std::string layerName = "layerVD" + std::to_string (i+1);
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("dist", &partDistVD[i]);
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posZ", &posZVD[i]);
+            }
+            partDistVolumetric.resize(layersNo);
+            posZVolumetric.resize(layersNo);
+            for (int i=0;i<layersNo;i++){
+                std::string layerName = "layerVolumetric" + std::to_string (i+1);
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("dist", &partDistVolumetric[i]);
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posZ", &posZVolumetric[i]);
             }
 
             layersNo=6;
-            objectsDraw.resize(layersNo);
-            objectsDist.resize(layersNo);
-            objectsPosY.resize(layersNo);
-            objectsPosZ.resize(layersNo);
+            objectsDrawVD.resize(layersNo);
+            objectsDistVD.resize(layersNo);
+            objectsPosYVD.resize(layersNo);
+            objectsPosZVD.resize(layersNo);
             for (int i=0;i<layersNo;i++){
-                std::string layerName = "objectsLayer" + std::to_string (i+1);
+                std::string layerName = "objectsLayerVD" + std::to_string (i+1);
                 bool drawObj;
                 model->FirstChildElement( layerName.c_str() )->QueryBoolAttribute("draw", &drawObj);
-                objectsDraw[i] = drawObj;
-                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("dist", &objectsDist[i]);
-                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posY", &objectsPosY[i]);
-                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posZ", &objectsPosZ[i]);
+                objectsDrawVD[i] = drawObj;
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("dist", &objectsDistVD[i]);
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posY", &objectsPosYVD[i]);
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posZ", &objectsPosZVD[i]);
+            }
+
+            objectsDrawVolumetric.resize(layersNo);
+            objectsDistVolumetric.resize(layersNo);
+            objectsPosYVolumetric.resize(layersNo);
+            objectsPosZVolumetric.resize(layersNo);
+            for (int i=0;i<layersNo;i++){
+                std::string layerName = "objectsLayerVolumetric" + std::to_string (i+1);
+                bool drawObj;
+                model->FirstChildElement( layerName.c_str() )->QueryBoolAttribute("draw", &drawObj);
+                objectsDrawVolumetric[i] = drawObj;
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("dist", &objectsDistVolumetric[i]);
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posY", &objectsPosYVolumetric[i]);
+                model->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("posZ", &objectsPosZVolumetric[i]);
             }
 
             model->FirstChildElement( "objectsParts" )->QueryBoolAttribute("drawPartObjects", &drawPartObjects);
@@ -177,9 +198,13 @@ public:
         ///voxel size
         double voxelSize;
         /// distance between parts in i-th layers
-        std::vector<double> partDist;
+        std::vector<double> partDistVD;
         /// "z" coordinate of the i-t hierarchy layer
-        std::vector<double> posZ;
+        std::vector<double> posZVD;
+        /// distance between parts in i-th layers
+        std::vector<double> partDistVolumetric;
+        /// "z" coordinate of the i-t hierarchy layer
+        std::vector<double> posZVolumetric;
         /// Draw layer 2 layer link
         bool drawLayer2Layer;
         /// link color color
@@ -203,13 +228,21 @@ public:
         /// scale normal vector
         double normalsScale;
         /// draw flags for objects
-        std::vector<bool> objectsDraw;
+        std::vector<bool> objectsDrawVD;
         /// distance between objects in i-th layers (x coordinate)
-        std::vector<double> objectsDist;
+        std::vector<double> objectsDistVD;
         /// "z" coordinate of the objects at i-th hierarchy layer
-        std::vector<double> objectsPosZ;
+        std::vector<double> objectsPosZVD;
         /// "y" coordinate of the objects at i-th hierarchy layer
-        std::vector<double> objectsPosY;
+        std::vector<double> objectsPosYVD;
+        /// draw flags for objects
+        std::vector<bool> objectsDrawVolumetric;
+        /// distance between objects in i-th layers (x coordinate)
+        std::vector<double> objectsDistVolumetric;
+        /// "z" coordinate of the objects at i-th hierarchy layer
+        std::vector<double> objectsPosZVolumetric;
+        /// "y" coordinate of the objects at i-th hierarchy layer
+        std::vector<double> objectsPosYVolumetric;
 
         /// draw objects colored by part id
         bool drawPartObjects;
@@ -247,7 +280,10 @@ public:
     void update3Dmodels(void);
 
     /// update part clouds
-    void update(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& objects, bool inference);
+    void updateVD(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& objects, bool inference);
+
+    /// update part clouds
+    void updateVolumetric(std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>>& objects, bool inference);
 
     /// update object from filters
     void update(std::vector<std::pair<int, hop3d::Mat34>>& filtersPoses, int objectNo, int layerNo, bool inference);
@@ -276,14 +312,23 @@ private:
     /// updatePartsObjectsFlag
     bool updatePartsObjectsFlag;
 
-    /// cloud list
-    std::vector< std::vector<GLuint> > cloudsListLayers;
+    /// cloud list VD
+    std::vector< std::vector<GLuint> > cloudsListLayersVD;
+
+    /// cloud listVolumetric
+    std::vector< std::vector<GLuint> > cloudsListLayersVolumetric;
 
     /// layer2layer list
-    std::vector< std::vector< GLuint > > linksLists;
+    std::vector< std::vector< GLuint > > linksListsVD;
+
+    /// layer2layer list
+    std::vector< std::vector< GLuint > > linksListsVolumetric;
 
     /// clusters list
-    std::vector< std::vector< GLuint > > clustersList;
+    std::vector< std::vector< GLuint > > clustersListVD;
+
+    /// clusters list
+    std::vector< std::vector< GLuint > > clustersListVolumetric;
 
     /// background list
     std::vector< GLuint > backgroundList;
@@ -295,31 +340,58 @@ private:
     std::vector<hop3d::PointsSecondLayer> pointParts2update;
 
     /// objects indexed by layerNo
-    std::vector<Object3DSeq> layersOfObjects;
+    std::vector<Object3DSeq> layersOfObjectsVD;
 
     /// objects indexed by layerNo
-    std::vector<Object3DSeq> layersOfObjectsInference;
+    std::vector<Object3DSeq> layersOfObjectsVolumetric;
+
+    /// objects indexed by layerNo
+    std::vector<Object3DSeq> layersOfObjectsInferenceVD;
+
+    /// objects indexed by layerNo
+    std::vector<Object3DSeq> layersOfObjectsInferenceVolumetric;
 
     /// object clouds coloured by part id (overlapNo->layerNo->objectNo)
-    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> partCloudsTrain;
+    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> partCloudsTrainVD;
 
     /// object clouds coloured by part id (overlapNo->layerNo->objectNo)
-    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> partCloudsInference;
+    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> partCloudsTrainVolumetric;
 
-    /// clusters list
-    std::vector< std::vector< GLuint > > objects3Dlist;
+    /// object clouds coloured by part id (overlapNo->layerNo->objectNo)
+    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> partCloudsInferenceVD;
 
-    /// clusters list
-    std::vector<std::vector< std::vector< GLuint > >> objects3DlistExplode;
+    /// object clouds coloured by part id (overlapNo->layerNo->objectNo)
+    std::vector<std::vector<std::vector<hop3d::PointCloudRGBA>>> partCloudsInferenceVolumetric;
+
+    /// objects from parts list
+    std::vector< std::vector< GLuint > > objects3DlistVD;
+
+    /// objects from parts list
+    std::vector< std::vector< GLuint > > objects3DlistVolumetric;
+
+    /// objects from parts list
+    std::vector<std::vector< std::vector< GLuint > >> objects3DlistExplodeVD;
+
+    /// objects from parts list
+    std::vector<std::vector< std::vector< GLuint > >> objects3DlistExplodeVolumetric;
 
     /// objects drawn from filter poses
-    std::vector<std::vector<std::vector<Part3D>>> objectsFromParts;
+    std::vector<std::vector<std::vector<Part3D>>> objectsFromPartsVD;
+
+    /// objects drawn from filter poses
+    std::vector<std::vector<std::vector<Part3D>>> objectsFromPartsVolumetric;
 
     /// objects drawn from filter poses inference
-    std::vector<std::vector<std::vector<Part3D>>> objectsFromPartsInference;
+    std::vector<std::vector<std::vector<Part3D>>> objectsFromPartsInferenceVD;
+
+    /// objects drawn from filter poses inference
+    std::vector<std::vector<std::vector<Part3D>>> objectsFromPartsInferenceVolumetric;
 
     /// partObjects list (overlapNo->layerNo->objectNo)
-    std::vector<std::vector<std::vector<GLuint>>> partObjectsLists;
+    std::vector<std::vector<std::vector<GLuint>>> partObjectsListsVD;
+
+    /// partObjects list (overlapNo->layerNo->objectNo)
+    std::vector<std::vector<std::vector<GLuint>>> partObjectsListsVolumetric;
 
     /// parts coordinates list
     std::vector<GLuint> partsCoordinatesList;
@@ -338,6 +410,9 @@ private:
 
     /// active overlapNo for partObjects
     int activeOverlapNo;
+
+    /// draw object for volumetric or VD layers
+    bool drawVolumetric;
 
     /// explode objects
     int explode;

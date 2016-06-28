@@ -2,6 +2,7 @@
 #include "hop3d/ImageFilter/normalImageFilter.h"
 #include <ctime>
 #include <chrono>
+#include <thread>
 
 using namespace hop3d;
 
@@ -35,12 +36,19 @@ PartSelectorAgglomerative::Config::Config(std::string configFilename){
     group->FirstChildElement( "parameters" )->QueryIntAttribute("maxIter", &maxIter);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("distanceMetric", &distanceMetric);
     group->FirstChildElement( "parameters" )->QueryIntAttribute("layersNo", &layersNo);
-    maxDist.resize(layersNo);
-    maxClusterDist.resize(layersNo);
+    maxDistVD.resize(layersNo);
+    maxClusterDistVD.resize(layersNo);
     for (int i=0;i<layersNo;i++){
-        std::string layerName = "layer" + std::to_string(i+1);
-        group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("maxDist", &maxDist[i]);
-        group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("maxClusterDist", &maxClusterDist[i]);
+        std::string layerName = "layerVD" + std::to_string(i+1);
+        group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("maxDist", &maxDistVD[i]);
+        group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("maxClusterDist", &maxClusterDistVD[i]);
+    }
+    maxDistVolumetric.resize(layersNo);
+    maxClusterDistVolumetric.resize(layersNo);
+    for (int i=0;i<layersNo;i++){
+        std::string layerName = "layerVolumetric" + std::to_string(i+1);
+        group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("maxDist", &maxDistVolumetric[i]);
+        group->FirstChildElement( layerName.c_str() )->QueryDoubleAttribute("maxClusterDist", &maxClusterDistVolumetric[i]);
     }
 
     std::string GICPConfig = (group->FirstChildElement( "GICP" )->Attribute( "configFilename" ));
@@ -72,11 +80,22 @@ void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary
     std::vector<std::vector<double>> distanceMatrix(dictionary.size(), std::vector<double>(dictionary.size()));
     std::vector<std::vector<Mat34>> transformMatrix(dictionary.size(), std::vector<Mat34>(dictionary.size()));
     std::cout << "compute distance matrix...\n";
-    computeDistanceMatrix(dictionary, hierarchy, distanceMatrix, transformMatrix);
+    //computeDistanceMatrix(dictionary, hierarchy, distanceMatrix, transformMatrix);
+    int fromId = (int)dictionary.size();
+    int threadsNo=4;
+    for (int i=0;i<threadsNo;i++){
+        int toId = (int)sqrt((pow(fromId,2))-(pow((int)dictionary.size(),2)/threadsNo));
+        if (i==threadsNo-1) toId = 0;
+        distMatThr[i].reset(new std::thread(&PartSelectorAgglomerative::computeDistanceMatrix, this, std::ref(dictionary), std::ref(hierarchy), std::ref(distanceMatrix), std::ref(transformMatrix), dictionary.size()-fromId, dictionary.size()-toId));
+        //std::cout << "dist mat "<< dictionary.size()-fromId << " , " << dictionary.size()-toId << "\n";
+        fromId = toId;
+    }
+    for (int i=0;i<threadsNo;i++)    distMatThr[i].get()->join();
+
     if (config.verbose>0){
         std::cout << "done\n";
         std::cout << "Initial number of words in dictionary: " << dictionary.size() << "\n";
-        std::cout << "Max dist: " << config.maxDist[layerNo-1] << "\n";
+        std::cout << "Max dist: " << config.maxDistVolumetric[layerNo] << "\n";
     }
     std::vector<std::vector<int>> clusters(dictionary.size());
     std::vector<int> centroids(dictionary.size());//index in dictionary of part assigned to the centroid;
@@ -95,8 +114,8 @@ void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary
         //std::cout << "find min dist between " << pairedIds.first << "->" << pairedIds.second << "\n";
         distanceMatrix[pairedIds.first][pairedIds.second] = -1;
   //      bool finishClusterization(false);
-        //std::cout << "dist " << minDist << " max dist " << config.maxDist[layerNo-1] << "\n";
-        if (minDist>=config.maxDist[layerNo-1]||clusters.size()==1)
+        //std::cout << "dist " << minDist << " max dist " << config.maxDistVolumetric[layerNo] << "\n";
+        if (minDist>=config.maxDistVolumetric[layerNo]||clusters.size()==1)
             break;
             //finishClusterization = true;
         //merge two centroids
@@ -105,7 +124,7 @@ void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary
         //std::cout << pairedIds.first << " is in cluster " << clustersIds.first << "\n";
         //std::cout << pairedIds.second << " is in cluster " << clustersIds.second << "\n";
         if (clustersIds.first!=clustersIds.second){
-            if (mergeTwoClusters(clusters, centroids, clustersIds, distanceMatrix, layerNo))
+            if (mergeTwoClusters(clusters, centroids, clustersIds, distanceMatrix, config.maxClusterDistVolumetric[layerNo]))
                 updateCentroids(clusters, distanceMatrix, centroids, clustersIds);
             else {
                 reduceEntropy(clusters, centroids, clustersIds, distanceMatrix);
@@ -149,13 +168,21 @@ void PartSelectorAgglomerative::selectParts(ViewIndependentPart::Seq& dictionary
 }
 
 /// compute distance matrix
-void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix) {
+void PartSelectorAgglomerative::computeDistanceMatrixVD(const ViewDependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix, int minId, int maxId) {
+    mtxDistMat.lock();
     while( !priorityQueueDistance.empty() ) priorityQueueDistance.pop();
-    for (size_t idA=0;idA<dictionary.size();idA++){
+    mtxDistMat.unlock();
+    size_t startId(0), endId(dictionary.size());
+    if (minId>=0) startId=(size_t)minId;
+    if (maxId>=0) endId=(size_t)maxId;
+    //std::cout << "compute dist matrix from " << startId << " to " << endId << "\n";
+    for (size_t idA=startId;idA<endId;idA++){
         for (size_t idB=idA;idB<dictionary.size();idB++){
             if (idA==idB){
+                mtxDistMat.lock();
                 distanceMatrix[idB][idA]=0;
                 transformMatrix[idA][idB] = Mat34::Identity();
+                mtxDistMat.unlock();
             }
             else{
                 double dist(0); Mat34 transform;
@@ -173,43 +200,71 @@ void PartSelectorAgglomerative::computeDistanceMatrix(const ViewDependentPart::S
                     else
                         dist = ViewDependentPart::distance(dictionary[idA], dictionary[idB], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
                 }
+                else if (dictionary[idA].layerId==4){
+                    if (config.distanceMetric==3){
+                        dist=ViewDependentPart::distanceInvariant(dictionary[idA], dictionary[idB], 3, hierarchy.viewDependentLayers[0], hierarchy.viewDependentLayers[1], transform);
+                    }
+                }
                 else{
                     throw std::runtime_error("Error for layer id " + std::to_string(dictionary[idA].layerId) + " not supported\n");
                 }
+                mtxDistMat.lock();
                 distanceMatrix[idA][idB]=dist;
                 distanceMatrix[idB][idA]=dist;
                 transformMatrix[idA][idB] = transform;
                 transformMatrix[idB][idA] = transform;
+                mtxDistMat.unlock();
                 DistanceElement element;
                 element.distance = dist;
                 element.partsIds = std::make_pair(idA,idB);
+                mtxDistMat.lock();
                 priorityQueueDistance.push(element);
+                mtxDistMat.unlock();
             }
         }
     }
+    //std::cout << startId << " to " << endId << "done\n";
 }
 
 /// compute distance matrix for view-independent parts
-void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix){
+void PartSelectorAgglomerative::computeDistanceMatrix(const ViewIndependentPart::Seq& dictionary, const Hierarchy& hierarchy, std::vector<std::vector<double>>& distanceMatrix, std::vector<std::vector<Mat34>>& transformMatrix, int minId, int maxId){
+    mtxDistMat.lock();
     while( !priorityQueueDistance.empty() ) priorityQueueDistance.pop();
-    for (size_t idA=0;idA<dictionary.size();idA++){
-        for (size_t idB=idA+1;idB<dictionary.size();idB++){
+    mtxDistMat.unlock();
+    size_t startId(0), endId(dictionary.size());
+    if (minId>=0) startId=(size_t)minId;
+    if (maxId>=0) endId=(size_t)maxId;
+    //std::cout << "compute dist matrix from " << startId << " to " << endId << "\n";
+    for (size_t idA=startId;idA<endId;idA++){
+        for (size_t idB=idA;idB<dictionary.size();idB++){
             double dist(0); Mat34 transform;
-            if (dictionary[idA].layerId>2){//compute distance from centroid
-                //dist = pow(1+fabs(double(dictionary[idA].cloud.size())-double(dictionary[idB].cloud.size())),2.0)*ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
-                if (dictionary[idA].layerId==3)
-                    dist = ViewIndependentPart::distanceUmeyama(dictionary[idA], dictionary[idB], config.distanceMetric, transform);
-                else if (dictionary[idA].layerId==4)
-                    dist = ViewIndependentPart::distanceUmeyama(dictionary[idA], dictionary[idB], config.distanceMetric, hierarchy.viewIndependentLayers[0], transform);
+            if (idA==idB){
+                mtxDistMat.lock();
+                distanceMatrix[idB][idA]=0;
+                transformMatrix[idA][idB] = Mat34::Identity();
+                mtxDistMat.unlock();
             }
-            distanceMatrix[idA][idB]=dist;
-            distanceMatrix[idB][idA]=dist;
-            transformMatrix[idA][idB] = transform;
-            transformMatrix[idB][idA] = transform.inverse();
-            DistanceElement element;
-            element.distance = dist;
-            element.partsIds = std::make_pair(idA,idB);
-            priorityQueueDistance.push(element);
+            else{
+                if (dictionary[idA].layerId>2){//compute distance from centroid
+                    //dist = pow(1+fabs(double(dictionary[idA].cloud.size())-double(dictionary[idB].cloud.size())),2.0)*ViewIndependentPart::distanceGICP(dictionary[idA], dictionary[idB], config.configGICP, transform);
+                    if (dictionary[idA].layerId==3)
+                        dist = ViewIndependentPart::distanceUmeyama(dictionary[idA], dictionary[idB], config.distanceMetric, transform);
+                    else if (dictionary[idA].layerId==4)
+                        dist = ViewIndependentPart::distanceUmeyama(dictionary[idA], dictionary[idB], config.distanceMetric, hierarchy.viewIndependentLayers[0], transform);
+                }
+                mtxDistMat.lock();
+                distanceMatrix[idA][idB]=dist;
+                distanceMatrix[idB][idA]=dist;
+                transformMatrix[idA][idB] = transform;
+                transformMatrix[idB][idA] = transform.inverse();
+                mtxDistMat.unlock();
+                DistanceElement element;
+                element.distance = dist;
+                element.partsIds = std::make_pair(idA,idB);
+                mtxDistMat.lock();
+                priorityQueueDistance.push(element);
+                mtxDistMat.unlock();
+            }
         }
     }
 }
@@ -269,9 +324,9 @@ double PartSelectorAgglomerative::computeMaxDist(const std::vector<std::vector<i
 }
 
 /// merge two clusters
-bool PartSelectorAgglomerative::mergeTwoClusters(std::vector<std::vector<int>>& clusters, const std::vector<int>& centroids, const std::pair<int,int>& clustersIds, const std::vector<std::vector<double>>& distanceMatrix, int layerNo) const{
+bool PartSelectorAgglomerative::mergeTwoClusters(std::vector<std::vector<int>>& clusters, const std::vector<int>& centroids, const std::pair<int,int>& clustersIds, const std::vector<std::vector<double>>& distanceMatrix, double maxClusterDist) const{
     double maxDist = computeMaxDist(clusters, clustersIds, centroids, distanceMatrix);
-    if (maxDist<config.maxClusterDist[layerNo-1]){
+    if (maxDist<maxClusterDist){
         if (clustersIds.first<clustersIds.second){
             // merge clusters
             clusters[clustersIds.first].insert(clusters[clustersIds.first].end(), clusters[clustersIds.second].begin(), clusters[clustersIds.second].end());
@@ -430,13 +485,25 @@ void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, 
     std::vector<std::vector<Mat34>> transformMatrix(dictionary.size(), std::vector<Mat34>(dictionary.size()));
     std::cout << "compute distance matrix....\n";
     //std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-    computeDistanceMatrix(dictionary, hierarchy, distanceMatrix, transformMatrix);
+
+    int fromId = (int)dictionary.size();
+    int threadsNo=4;
+    for (int i=0;i<threadsNo;i++){
+        int toId = (int)sqrt((pow(fromId,2))-(pow((int)dictionary.size(),2)/threadsNo));
+        if (i==threadsNo-1) toId = 0;
+        distMatThr[i].reset(new std::thread(&PartSelectorAgglomerative::computeDistanceMatrixVD, this, std::ref(dictionary), std::ref(hierarchy), std::ref(distanceMatrix), std::ref(transformMatrix), dictionary.size()-fromId, dictionary.size()-toId));
+        //std::cout << "dist mat "<< dictionary.size()-fromId << " , " << dictionary.size()-toId << "\n";
+        fromId = toId;
+    }
+    for (int i=0;i<threadsNo;i++)    distMatThr[i].get()->join();
+
+    //computeDistanceMatrixVD(dictionary, hierarchy, distanceMatrix, transformMatrix);
     //std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
     //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::endl;
     if (config.verbose>0){
         std::cout << "done\n";
         std::cout << "Initial number of words in dictionary: " << dictionary.size() << "\n";
-        std::cout << "Max dist: " << config.maxDist[layerNo-1] << "\n";
+        std::cout << "Max dist: " << config.maxDistVD[layerNo] << "\n";
     }
     std::vector<std::vector<int>> clusters(dictionary.size());
     std::vector<int> centroids(dictionary.size());//index in dictionary of part assigned to the centroid;
@@ -458,8 +525,8 @@ void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, 
         //std::cout << "Time difference1 = " << std::chrono::duration_cast<std::chrono::microseconds>(end1 - begin1).count() << " us" << std::endl;
         //std::cout << "find min dist between " << pairedIds.first << "->" << pairedIds.second << "\n";
         distanceMatrix[pairedIds.first][pairedIds.second] = -1;
-        //std::cout << "dist " << minDist << " max dist " << config.maxDist[layerNo-1] << "\n";
-        if (minDist>=config.maxDist[layerNo-1])
+        //std::cout << "dist " << minDist << " max dist " << config.maxDist[layerNo] << "\n";
+        if (minDist>=config.maxDistVD[layerNo])
             break;
         //merge two centroids
         std::pair<int,int> clustersIds;
@@ -471,7 +538,7 @@ void PartSelectorAgglomerative::selectParts(ViewDependentPart::Seq& dictionary, 
         //std::cout << pairedIds.second << " is in cluster " << clustersIds.second << "\n";
         //std::chrono::steady_clock::time_point begin3 = std::chrono::steady_clock::now();
         if (clustersIds.first!=clustersIds.second){
-            if (mergeTwoClusters(clusters, centroids, clustersIds, distanceMatrix, layerNo))
+            if (mergeTwoClusters(clusters, centroids, clustersIds, distanceMatrix, config.maxClusterDistVD[layerNo]))
                 updateCentroids(clusters, distanceMatrix, centroids, clustersIds);
             else {
                 reduceEntropy(clusters, centroids, clustersIds, distanceMatrix);

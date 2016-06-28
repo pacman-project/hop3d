@@ -186,9 +186,9 @@ void DepthImageFilter::getOctets(Octet::Seq& octets){
 }
 
 /// compute set of octets from set of the ids image
-void DepthImageFilter::getOctets(int categoryNo, int objectNo, int imageNo, const Hierarchy& hierarchy, Octet::Seq& octets, bool inference){
-    std::cout << categoryNo << " " << objectNo << " " << imageNo << " " << inference << "\n";
-    std::cout << hierarchy.viewDependentLayers.size();
+void DepthImageFilter::getOctets(int layerNo, int categoryNo, int objectNo, int imageNo, Octet::Seq& octets, bool inference){
+    std::cout << layerNo << categoryNo << " " << objectNo << " " << imageNo << " " << inference << "\n";
+   // std::cout << hierarchy.viewDependentLayers.size();
     std::cout << octets.size();
 }
 
@@ -222,18 +222,16 @@ void DepthImageFilter::getLayerParts(int categoryNo, int objectNo, int imageNo, 
 }
 
 /// get set of ids for the given input point
-void DepthImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference){
+void DepthImageFilter::getPartsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, bool inference){
     std::cout << "not implemented\n";
     ids.clear();
-    std::cout << lastVDpart.id << "\n";
     std::cout << overlapNo << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << depth << " " << inference << "\n";
 }
 
 /// get set of ids for the given input point
-void DepthImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, ViewDependentPart& lastVDpart, bool inference){
+void DepthImageFilter::getRealisationsIds(int overlapNo, int categoryNo, int objectNo, int imageNo, unsigned int u, unsigned int v, double depth, std::vector<int>& ids, bool inference){
     std::cout << "not implemented\n";
     ids.clear();
-    std::cout << lastVDpart.id << "\n";
     std::cout << overlapNo << categoryNo << " " << objectNo << " " << imageNo << " " << u << " " << v  << depth << inference << "\n";
 }
 

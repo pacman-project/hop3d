@@ -12,12 +12,21 @@
 		  3 -> view invariant metric
     -->
     <parameters verbose="1" distanceMetric="3" layersNo="7" maxIter="10"></parameters>
-    <layer1 clusters="-1" useCompressionRate="false" compressionRate="-1"></layer1> <!--constant size-->
-    <layer2 clusters="430" useCompressionRate="true" compressionRate="0.02"></layer2>
-    <layer3 clusters="100" useCompressionRate="true" compressionRate="0.4"></layer3>
-    <layer4 clusters="7" useCompressionRate="false" compressionRate="0.07"></layer4>
-    <layer5 clusters="43" useCompressionRate="true" compressionRate="1.0"></layer5>
-    <layer6 clusters="5" useCompressionRate="true" compressionRate="1.0"></layer6>
-    <layer7 clusters="5" useCompressionRate="true" compressionRate="1.0"></layer7>
+    <!--View dependent layers-->
+    <layerVD1 clusters="-1" useCompressionRate="false" compressionRate="-1"></layerVD1> <!--constant size-->
+    <layerVD2 clusters="430" useCompressionRate="true" compressionRate="0.02"></layerVD2>
+    <layerVD3 clusters="100" useCompressionRate="true" compressionRate="0.4"></layerVD3>
+    <layerVD4 clusters="7" useCompressionRate="false" compressionRate="0.07"></layerVD4>
+    <layerVD5 clusters="43" useCompressionRate="true" compressionRate="1.0"></layerVD5>
+    <layerVD6 clusters="5" useCompressionRate="true" compressionRate="1.0"></layerVD6>
+    <layerVD7 clusters="5" useCompressionRate="true" compressionRate="1.0"></layerVD7>
+    <!--Volumetric layers-->
+    <layerVolumetric1 maxDist="4.0004" maxClusterDist="4.0004"></layerVolumetric1> <!--constant size-->
+    <layerVolumetric2 maxDist="0.02" maxClusterDist="0.021"></layerVolumetric2>
+    <layerVolumetric3 maxDist="0.50" maxClusterDist="0.51"></layerVolumetric3>
+    <layerVolumetric4 maxDist="4.0004" maxClusterDist="4.00041"></layerVolumetric4>
+    <layerVolumetric5 maxDist="0.02" maxClusterDist="0.021"></layerVolumetric5>
+    <layerVolumetric6 maxDist="0.09" maxClusterDist="0.091"></layerVolumetric6>
+    <layerVolumetric7 maxDist="0.7" maxClusterDist="0.7"></layerVolumetric7>
     <GICP verbose="0" guessesNo="50" correspondenceDist="100" alphaMin="-1.57" alphaMax="1.57" betaMin="-1.57" betaMax="1.57" gammaMin="-1.57" gammaMax="1.57"></GICP>
   </PartSelector>

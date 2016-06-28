@@ -57,11 +57,17 @@ public:
             /// Numbber of layers
             int layersNo;
             /// use compression rate
-            std::vector<bool> useCompressionRate;
+            std::vector<bool> useCompressionRateVD;
             /// clusters numbers
-            std::vector<int> clustersNo;
+            std::vector<int> clustersNoVD;
             /// compressionRate
-            std::vector<double> compressionRate;
+            std::vector<double> compressionRateVD;
+            /// use compression rate
+            std::vector<bool> useCompressionRateVolumetric;
+            /// clusters numbers
+            std::vector<int> clustersNoVolumetric;
+            /// compressionRate
+            std::vector<double> compressionRateVolumetric;
             /// config GICP
             ConfigGICP configGICP;
     };
