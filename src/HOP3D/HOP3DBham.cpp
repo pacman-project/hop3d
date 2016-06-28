@@ -1580,9 +1580,6 @@ void HOP3DBham::createPartClouds(void){
                         for (int layNo=0;layNo<layersNo;layNo++){
                             //compute object index
                             size_t objNo=objectNo;
-                            for (size_t catNo=0;catNo<categoryNo;catNo++){
-                                objNo+=(int)datasetInfo->categories[catNo].objects.size();
-                            }
                             if (layNo<=(int)hierarchy.get()->viewDependentLayers.size()){
                                 for (int pointNo=0;pointNo<(int)cloudsObjVD[0][layNo][objNo].size();pointNo++){
                                     PointColor pointRGBA(cloudsObjVD[0][layNo][objNo][pointNo].position,std::array<double,4>({0.0,0.0,0.0,1.0}));
