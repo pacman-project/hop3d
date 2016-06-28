@@ -925,6 +925,16 @@ void HOP3DBham::inference(void){
                         datasetTest->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo,image);
                         std::vector<hop3d::Octet> octetsTmp;
                         imageFilterer->computeOctets(image, (int)categoryNo, (int)objectNo, (int)imageNo, octetsTmp, true);
+                    }
+                }
+            }
+        }
+        else{for (size_t categoryNo=0;categoryNo<datasetInfoTest.categories.size();categoryNo++){
+                for (size_t objectNo=0;objectNo<datasetInfoTest.categories[categoryNo].objects.size();objectNo++){
+                    for (size_t imageNo=0;imageNo<datasetInfoTest.categories[categoryNo].objects[objectNo].images.size();imageNo++){
+                        cv::Mat image;
+                        datasetTest->getDepthImage((int)categoryNo,(int)objectNo,(int)imageNo,image);
+                        std::vector<hop3d::Octet> octetsTmp;
                         imageFilterer->getOctets(layerNo, (int)categoryNo, (int)objectNo, (int)imageNo, octetsTmp, true);
                     }
                 }
