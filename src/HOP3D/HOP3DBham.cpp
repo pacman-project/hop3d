@@ -761,6 +761,7 @@ void HOP3DBham::learnIncremental(void){
 void HOP3DBham::load(std::string filename){
     std::ifstream ifsHierarchy(filename);
     ifsHierarchy >> *hierarchy;
+    hierarchy->computeStats();
     datasetTrain->getDatasetInfo(datasetInfoTrain);
     objects.resize(datasetInfoTrain.categories.size());
     for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){//for each category

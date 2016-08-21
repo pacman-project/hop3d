@@ -93,6 +93,9 @@ public:
     typedef std::vector<ViewDependentPart> Seq;
     /// Pointer
     typedef std::unique_ptr<ViewDependentPart> Ptr;
+    /// probability subparts
+    typedef std::map<int,double> SubpartsProb;
+
 
     /// Position of the part on the image
     ImageCoordsDepth location;
@@ -107,6 +110,9 @@ public:
 
     /// SE3 offset betwen part realization and word from dictionary
     std::array<std::array<Mat34,3>,3> offsets;
+
+    /// probability of subparts
+    std::array<std::array<SubpartsProb,3>,3> subpartsProb;
 
     /// part aggregated from the same level vocabulary
     std::vector<ViewDependentPart> group;
@@ -138,13 +144,13 @@ public:
     }
 
     ///find optimal transformation between normals
-    static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& transOpt);
+    static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& transOpt, int& rotId);
 
     ///find optimal transformation between normals
-    static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& vocabulary, int distanceMetric, Mat34& transOpt);
+    static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& vocabulary, int distanceMetric, Mat34& transOpt, int& rotId);
 
     ///find optimal transformation between normals
-    static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& vocabularyLayer2, const ViewDependentPart::Seq& vocabularyLayer3, int distanceMetric, Mat34& transOpt);
+    static double findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& vocabularyLayer2, const ViewDependentPart::Seq& vocabularyLayer3, int distanceMetric, Mat34& transOpt, int& rotId);
 
     /// create point cloud from second layer part
     static int createPointsMatrix(const ViewDependentPart& part, const ViewDependentPart::Seq& vocabulary, int rotIndex, PointsSecondLayer& points, Eigen::MatrixXd& partIds);
@@ -162,13 +168,13 @@ public:
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters, int distanceMetric);
 
     /// compute distance between view dependent parts
-    static double distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& estimatedTransform);
+    static double distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& estimatedTransform, int& rotId);
 
     /// compute distance between view dependent parts (invariant version)
-    static double distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, const ViewDependentPart::Seq& vocabulary, Mat34& estimatedTransform);
+    static double distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, const ViewDependentPart::Seq& vocabulary, Mat34& estimatedTransform, int& rotId);
 
     /// compute distance between view dependent parts (invariant version) for fourth layer
-    static double distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, const ViewDependentPart::Seq& vocabularyLayer2, const ViewDependentPart::Seq& vocabularyLayer3, Mat34& estimatedTransform);
+    static double distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, const ViewDependentPart::Seq& vocabularyLayer2, const ViewDependentPart::Seq& vocabularyLayer3, Mat34& estimatedTransform, int& rotId);
 
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& layer2vocabulary, const Filter::Seq& filters, int distanceMetric);

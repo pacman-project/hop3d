@@ -22,6 +22,163 @@ Hierarchy::Hierarchy(std::string configFilename) {
     this->viewIndependentLayers.resize(VIndLayersNo);
 }
 
+/// compute statisticts (results are written to representative parts)
+void Hierarchy::computeStats(void){
+    int layerNo = 0;
+    for (auto & layer : viewDependentLayers){//compute mean position and probability of id
+        for (auto& part : layer){
+            std::array<std::array<ViewDependentPart::SubpartsProb,3>,3> subpartsProb;
+            std::array<std::array<GaussianSE3,3>,3> subpartsPos;
+            std::array<std::array<int,3>,3> subpartsNo = {{{0,0,0},{0,0,0},{0,0,0}}};
+            /*std::cout << "before:\n";
+            for (int i=0;i<3;i++){
+                for (int j=0;j<3;j++){
+                    std::cout << "ij " << i << ", " << j << " id " << part.partIds[i][j] << " mean " << part.partsPosNorm[i][j].mean.transpose() << "\n";
+                }
+            }*/
+            std::vector<std::pair<int, int>> pointCorrespondence = {{0,0}, {0,1}, {0,2}, {1,2}, {2,2}, {2,1}, {2,0}, {1,0}};
+            std::vector<std::pair<int,Mat34>> optRot;
+            for (auto& partFromCluster : part.group){
+                Mat34 estTrans;
+                int rotIdx;
+                if (layerNo==0)
+                    ViewDependentPart::distanceInvariant(part,partFromCluster,3,estTrans, rotIdx);
+                else if (layerNo==1)
+                    ViewDependentPart::distanceInvariant(part,partFromCluster,3, viewDependentLayers[0],estTrans, rotIdx);
+                else if (layerNo==2)
+                    ViewDependentPart::distanceInvariant(part,partFromCluster,3, viewDependentLayers[0], viewDependentLayers[1],estTrans, rotIdx);
+                estTrans=estTrans.inverse();
+                //std::cout << "trans \n" << estTrans.matrix() << "\n";
+                //std::cout << "rotidxc \n" << rotIdx << "\n";
+                optRot.push_back(std::make_pair(rotIdx,estTrans));
+                size_t idx=rotIdx;
+                /*std::cout << "subpart:\n";
+                for (int i=0;i<3;i++){
+                    for (int j=0;j<3;j++){
+                        std::cout << "ij " << i << ", " << j << " id " << partFromCluster.partIds[i][j] << " mean " << partFromCluster.partsPosNorm[i][j].mean.transpose() << "\n";
+                    }
+                }*/
+                for (size_t j=0;j<pointCorrespondence.size();j++){
+                    int coordA[2]={pointCorrespondence[j].first, pointCorrespondence[j].second};//partA is not rotated
+                    int coordB[2]={pointCorrespondence[idx%(pointCorrespondence.size())].first, pointCorrespondence[idx%(pointCorrespondence.size())].second};//partA is not rotated
+                    //std::cout << "correspondence " << coordA[0] << ", " << coordA[1] << " -> " << coordB[0] << ", " << coordB[1] << "\n";
+                    std::pair<std::map<int,double>::iterator,bool> ret;
+                    ret = subpartsProb[coordA[0]][coordA[1]].insert( std::pair<int, double>(partFromCluster.partIds[coordB[0]][coordB[1]],1.0) );
+                    if (ret.second==false) {//element exists
+                        ret.first->second+=1;
+                    }
+                    if (part.partIds[coordA[0]][coordA[1]]>=0&&partFromCluster.partIds[coordB[0]][coordB[1]]>=0){
+                        Vec4 posPoint(partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(0,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(1,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(2,0),1.0);
+                        //std::cout << "before trans " << posPoint.transpose() << "\n";
+                        posPoint = estTrans*posPoint;
+                        //std::cout << "after trans " << posPoint.transpose() << "\n";
+                        Vec3 norm3(partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(3,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(4,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(5,0));
+                        //std::cout << "norm before trans " << norm3.transpose() << "\n";
+                        norm3 = estTrans.rotation()*norm3;
+                        //std::cout << "norm after trans " << norm3.transpose() << "\n";
+                        Vec6 newPosNorm;
+                        newPosNorm(0)=posPoint(0); newPosNorm(1)=posPoint(1); newPosNorm(2)=posPoint(2);
+                        newPosNorm(3)=norm3(0); newPosNorm(4)=norm3(1); newPosNorm(5)=norm3(2);
+                        subpartsPos[coordA[0]][coordA[1]].mean+=newPosNorm;
+                        subpartsNo[coordA[0]][coordA[1]]++;
+                    }
+                    idx++;
+                    //getchar();
+                }
+                /// for central subpart
+                std::pair<std::map<int,double>::iterator,bool> ret;
+                ret = subpartsProb[1][1].insert( std::pair<int, double>(partFromCluster.partIds[1][1],1.0) );
+                if (ret.second==false) {//element exists
+                    ret.first->second+=1;
+                }
+                if (partFromCluster.partIds[1][1]>=0){
+                    Vec4 posPoint(partFromCluster.partsPosNorm[1][1].mean(0,0), partFromCluster.partsPosNorm[1][1].mean(1,0), partFromCluster.partsPosNorm[1][1].mean(2,0),1.0);
+                    posPoint = estTrans*posPoint;
+                    Vec3 norm3(partFromCluster.partsPosNorm[1][1].mean(3,0), partFromCluster.partsPosNorm[1][1].mean(4,0), partFromCluster.partsPosNorm[1][1].mean(5,0));
+                    norm3 = estTrans.rotation()*norm3;
+                    Vec6 newPosNorm;
+                    newPosNorm(0)=posPoint(0); newPosNorm(1)=posPoint(1); newPosNorm(2)=posPoint(2);
+                    newPosNorm(3)=norm3(0); newPosNorm(4)=norm3(1); newPosNorm(5)=norm3(2);
+                    subpartsPos[1][1].mean+=newPosNorm;
+                    subpartsNo[1][1]++;
+                }
+                /*for (int i=0;i<3;i++){
+                    for (int j=0;j<3;j++){
+                        std::pair<std::map<int,double>::iterator,bool> ret;
+                        ret = subpartsProb[i][j].insert( std::pair<int, double>(partFromCluster.partIds[i][j],1.0) );
+                        if (ret.second==false) {//element exists
+                            ret.first->second+=1;
+                        }
+                        if (partFromCluster.partIds[i][j]>=0){
+                            subpartsPos[i][j].mean+=partFromCluster.partsPosNorm[i][j].mean;
+                            subpartsNo[i][j]++;
+                        }
+                    }
+                }*/
+            }
+            for (int i=0;i<3;i++){
+                for (int j=0;j<3;j++){
+                    if (part.partIds[i][j]>=0){
+                        subpartsPos[i][j].mean/=double(subpartsNo[i][j]);
+                        subpartsPos[i][j].mean.block<3,1>(3,0).normalized();
+                    }
+                    for (auto & subpartProb : subpartsProb[i][j]){
+                        subpartProb.second/=double(part.group.size());
+                    }
+                    subpartsPos[i][j].covariance.setZero();
+                }
+            }
+            part.subpartsProb=subpartsProb;
+            //compute covariance matrix
+            int partNo=0;
+            for (auto& partFromCluster : part.group){
+                int idx = optRot[partNo].first;
+                for (size_t j=0;j<pointCorrespondence.size();j++){
+                    Mat34 estTrans = optRot[partNo].second;
+                    int coordA[2]={pointCorrespondence[j].first, pointCorrespondence[j].second};//partA is not rotated
+                    int coordB[2]={pointCorrespondence[idx%(pointCorrespondence.size())].first, pointCorrespondence[idx%(pointCorrespondence.size())].second};//partA is not rotated
+                    if (partFromCluster.partIds[coordA[0]][coordA[1]]>=0&&partFromCluster.partIds[coordB[0]][coordB[1]]>=0){
+                        Vec4 posPoint(partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(0,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(1,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(2,0),1.0);
+                        posPoint = estTrans*posPoint;
+                        Vec3 norm3(partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(3,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(4,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(5,0));
+                        norm3 = estTrans.rotation()*norm3;
+                        Vec6 newPosNorm;
+                        newPosNorm(0)=posPoint(0); newPosNorm(1)=posPoint(1); newPosNorm(2)=posPoint(2);
+                        newPosNorm(3)=norm3(0); newPosNorm(4)=norm3(1); newPosNorm(5)=norm3(2);
+                        subpartsPos[coordA[0]][coordA[1]].covariance+=(newPosNorm-subpartsPos[coordA[0]][coordA[1]].mean)*(newPosNorm-subpartsPos[coordA[0]][coordA[1]].mean).transpose();
+                        subpartsNo[coordA[0]][coordA[1]]++;
+                    }
+                    idx++;
+                }
+                partNo++;
+            }
+            for (int i=0;i<3;i++){
+                for (int j=0;j<3;j++){
+                    if (part.partIds[i][j]>=0){
+                        subpartsPos[i][j].covariance*=1.0/double(subpartsNo[i][j]);
+                        if (i==1&&j==1)
+                            part.partsPosNorm[i][j].mean.block<3,1>(3,0)=subpartsPos[i][j].mean.block<3,1>(3,0);
+                        else
+                            part.partsPosNorm[i][j].mean=subpartsPos[i][j].mean;
+                        //part.partsPosNorm[i][j].mean.block<3,1>(0,0)=subpartsPos[i][j].mean.block<3,1>(0,0);
+                        part.partsPosNorm[i][j].covariance=subpartsPos[i][j].covariance;
+                    }
+                }
+            }
+            /*std::cout << "subparts no " << part.group.size() << "\n";
+            std::cout << "after:\n";
+            for (int i=0;i<3;i++){
+                for (int j=0;j<3;j++){
+                    std::cout << "ij " << i << ", " << j << " mean " << part.partsPosNorm[i][j].mean.transpose() << "\n";
+                }
+            }*/
+            //getchar();
+        }
+        layerNo++;
+    }
+    //getchar();
+}
+
 // Insertion operator
 std::ostream& operator<<(std::ostream& os, const Hierarchy& hierarchy){
     os << hierarchy.viewDepPartsFromLayerNo << "\n";

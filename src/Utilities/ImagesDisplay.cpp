@@ -28,11 +28,11 @@ int hop3d::ImagesDisplay::displayDepthImage(const cv::Mat &inputImage)
     // function is found in contrib module, so include contrib.hpp
     // and link accordingly
     cv::Mat falseColorsMap;
-    cv::applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_AUTUMN);
+/*    cv::applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_AUTUMN);
     //cv::applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_AUTUMN);
     cv::namedWindow("Depth image", CV_WINDOW_AUTOSIZE );
     cv::imshow("Depth image", falseColorsMap);
-    cv::waitKey(0);
+    cv::waitKey(0);*/
     adjMap.release();
     falseColorsMap.release();
     return 0;
@@ -53,11 +53,11 @@ int hop3d::ImagesDisplay::displayDepthImage(const cv::Mat &inputImage, double mi
     // function is found in contrib module, so include contrib.hpp
     // and link accordingly
     cv::Mat falseColorsMap;
-    cv::applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_AUTUMN);
+/*    cv::applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_AUTUMN);
     //cv::applyColorMap(adjMap, falseColorsMap, cv::COLORMAP_AUTUMN);
     cv::namedWindow("Depth image", CV_WINDOW_AUTOSIZE );
     cv::imshow("Depth image", falseColorsMap);
-    cv::waitKey(0);
+    cv::waitKey(0);*/
     adjMap.release();
     falseColorsMap.release();
     return 0;

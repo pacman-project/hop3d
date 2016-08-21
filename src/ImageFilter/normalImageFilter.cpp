@@ -1,4 +1,5 @@
 #include "hop3d/ImageFilter/normalImageFilter.h"
+#include <opencv2/imgproc/imgproc.hpp>
 #include <chrono>
 
 using namespace hop3d;
@@ -1083,13 +1084,14 @@ int NormalImageFilter::findId(const hop3d::Hierarchy& hierarchy, int layerNo, co
     int partID=0;
     for (auto & part : hierarchy.viewDependentLayers[layerNo]){
         double dist(0);
+        int rotIdx;
         if (layerNo==0)
-            dist = ViewDependentPart::distanceInvariant(part, partVD, 3, offsetTmp);
+            dist = ViewDependentPart::distanceInvariant(part, partVD, 3, offsetTmp, rotIdx);
         else if (layerNo==1) {
-            dist = ViewDependentPart::distanceInvariant(part, partVD, 3, hierarchy.viewDependentLayers[0], offsetTmp);
+            dist = ViewDependentPart::distanceInvariant(part, partVD, 3, hierarchy.viewDependentLayers[0], offsetTmp, rotIdx);
         }
         else if (layerNo==2) {
-            dist = ViewDependentPart::distanceInvariant(part, partVD, 3, hierarchy.viewDependentLayers[0],hierarchy.viewDependentLayers[1], offsetTmp);
+            dist = ViewDependentPart::distanceInvariant(part, partVD, 3, hierarchy.viewDependentLayers[0],hierarchy.viewDependentLayers[1], offsetTmp, rotIdx);
         }
         partID++;
         if (dist==0){

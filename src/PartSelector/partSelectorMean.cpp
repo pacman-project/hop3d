@@ -291,10 +291,11 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
         int centroidId = 0;
         for (auto itCentr = centroids.begin();itCentr!=centroids.end();itCentr++){//for each cluster
             double dist = 0;
+            int rotIdx;
             if (it->layerId==2){//compute distance from centroid
                 if (config.distanceMetric==3){
                     Mat34 transform;
-                    dist=ViewDependentPart::distanceInvariant(*it,dictionary[*itCentr], 3, transform);
+                    dist=ViewDependentPart::distanceInvariant(*it,dictionary[*itCentr], 3, transform, rotIdx);
                 }
                 else
                     dist = ViewDependentPart::distance(*it,dictionary[*itCentr],hierarchy.firstLayer, config.distanceMetric);
@@ -302,7 +303,7 @@ void PartSelectorMean::fit2clusters(const std::vector<int>& centroids, const Vie
             else if (it->layerId==3){//compute distance from centroid
                 if (config.distanceMetric==3){
                     Mat34 transform;
-                    dist=ViewDependentPart::distanceInvariant(*it,dictionary[*itCentr], 3, transform);
+                    dist=ViewDependentPart::distanceInvariant(*it,dictionary[*itCentr], 3, transform, rotIdx);
                 }
                 else
                     dist = ViewDependentPart::distance(*it,dictionary[*itCentr], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
@@ -389,10 +390,11 @@ int PartSelectorMean::centerOfCluster(const std::set<int>& cluster, const ViewDe
         double distSum = 0; //compute new centroid
         for (auto& id2 : cluster){//compute mean dist for each part as a centroid
             double dist=0;
+            int rotIdx;
             if (vocabulary[id].layerId==2){
                 if (config.distanceMetric==3){
                     Mat34 transform;
-                    dist=ViewDependentPart::distanceInvariant(vocabulary[id],vocabulary[id2], 3, transform);
+                    dist=ViewDependentPart::distanceInvariant(vocabulary[id],vocabulary[id2], 3, transform, rotIdx);
                 }
                 else
                     dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2],hierarchy.firstLayer, config.distanceMetric);
@@ -400,7 +402,7 @@ int PartSelectorMean::centerOfCluster(const std::set<int>& cluster, const ViewDe
             else if (vocabulary[id].layerId==3){
                 if (config.distanceMetric==3){
                     Mat34 transform;
-                    dist=ViewDependentPart::distanceInvariant(vocabulary[id],vocabulary[id2], 3, hierarchy.viewDependentLayers[0], transform);
+                    dist=ViewDependentPart::distanceInvariant(vocabulary[id],vocabulary[id2], 3, hierarchy.viewDependentLayers[0], transform, rotIdx);
                 }
                 else
                     dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
@@ -425,10 +427,11 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
             double distSum = 0; //compute new centroid
             for (auto itPart2 = cluster.begin(); itPart2!=cluster.end();itPart2++){//compute mean dist for each part as a centroid
                 double dist=0;
+                int rotIdx;
                 if (itPart->layerId==2){
                     if (config.distanceMetric==3){
                         Mat34 transform;
-                        dist=ViewDependentPart::distanceInvariant(*itPart,*itPart2, 3, transform);
+                        dist=ViewDependentPart::distanceInvariant(*itPart,*itPart2, 3, transform, rotIdx);
                     }
                     else
                         dist=ViewDependentPart::distance(*itPart,*itPart2,hierarchy.firstLayer, config.distanceMetric);
@@ -436,7 +439,7 @@ void PartSelectorMean::computeCentroids(const std::vector<ViewDependentPart::Seq
                 else if (itPart->layerId==3){
                     if (config.distanceMetric==3){
                         Mat34 transform;
-                        dist=ViewDependentPart::distanceInvariant(*itPart,*itPart2, 3, transform);
+                        dist=ViewDependentPart::distanceInvariant(*itPart,*itPart2, 3, transform, rotIdx);
                     }
                     else
                         dist=ViewDependentPart::distance(*itPart,*itPart2, hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);

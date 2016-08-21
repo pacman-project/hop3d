@@ -16,7 +16,7 @@ SET( PROJ_PATH      ${CMAKE_SOURCE_DIR} )
 SET( PROJ_OUT_PATH  ${CMAKE_BINARY_DIR} )
 
 IF (UNIX)
-        SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread -O0 -fPIC")
+        SET(CMAKE_CXX_FLAGS "-std=c++11 -pthread -O0 -fPIC -VERBOSE=1")
 ELSE()
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_CRT_SECURE_NO_DEPRECATE")
         SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ox")
@@ -228,7 +228,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_UTILITIES)
         )
 
         ADD_LIBRARY(hop3dUtilities STATIC ${UTILITIES_SOURCES} ${UTILITIES_HEADERS})
-        target_link_libraries(hop3dUtilities tinyxml2 opencv_core opencv_highgui opencv_contrib ${Boost_LIBRARIES})
+        target_link_libraries(hop3dUtilities tinyxml2 ${OpenCV_LIBS} ${Boost_LIBRARIES})
         INSTALL(TARGETS hop3dUtilities RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${UTILITIES_HEADERS} DESTINATION include/hop3d/Utilities/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_UTILITIES)
@@ -352,7 +352,7 @@ if(BUILD_HOP3D AND BUILD_HOP3D_DATASET)
             "${CMAKE_SOURCE_DIR}/include/hop3d/Dataset/*.h"
         )
         ADD_LIBRARY(hop3dDataset STATIC ${DATASET_SOURCES} ${DATASET_HEADERS})
-        TARGET_LINK_LIBRARIES(hop3dDataset tinyxml2 ${PCL_LIBRARIES})
+        TARGET_LINK_LIBRARIES(hop3dDataset tinyxml2 ${PCL_LIBRARIES} ${OpenCV_LIBS})
         INSTALL(TARGETS hop3dDataset RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
         INSTALL(FILES ${DATASET_HEADERS} DESTINATION include/hop3d/Dataset/)
 endif(BUILD_HOP3D AND BUILD_HOP3D_DATASET)
@@ -431,9 +431,20 @@ if(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_NORMAL_FILTERER)
         INSTALL(TARGETS hop3dNormalFiltererDemo RUNTIME DESTINATION bin)
 endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_NORMAL_FILTERER)
 
-ADD_EXECUTABLE(hop3dDemo "main.cpp")
-TARGET_LINK_LIBRARIES(hop3dDemo hop3d)
+###############################################################################
+#
+# HOP3D demo Normal filterer
+#
+###############################################################################
 
+if(BUILD_HOP3D_DEMO)
+        #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath ./")
+        SET(DEMO_SOURCES main.cpp)
+        ADD_EXECUTABLE(hop3dDemo ${DEMO_SOURCES})
+#        add_dependencies(demoVisualizer Map)
+        TARGET_LINK_LIBRARIES(hop3dDemo tinyxml2 hop3d ${Boost_LIBRARIES})
+        INSTALL(TARGETS hop3dDemo RUNTIME DESTINATION bin)
+endif(BUILD_HOP3D_DEMO)
 
 #TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 #TARGET_LINK_LIBRARIES( ${PROJ_NAME} ${PROJ_LIBRARIES} "${PROJ_NAME}_data" "${PROJ_NAME}_core" Utilities imageFilter tinyxml2 opencv_core)

@@ -654,7 +654,7 @@ bool ViewDependentPart::removeSecondSurface(ViewDependentPart& part, double dist
 }
 
 ///find optimal transformation between normals
-double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& transOpt){
+double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& transOpt, int& rotId){
     std::vector<std::pair<int, int>> pointCorrespondence = {{0,0}, {0,1}, {0,2}, {1,2}, {2,2}, {2,1}, {2,0}, {1,0}};
     double minDist = std::numeric_limits<double>::max();
     ViewDependentPart partC(partA);
@@ -729,6 +729,7 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
             if (error<minDist){
                 minDist=error;
                 transOpt = trans;
+                rotId = (int)i;
             }
         }
     }
@@ -792,11 +793,11 @@ int ViewDependentPart::createPointsMatrix(const ViewDependentPart& part, const V
                             pointsNo++;
                             //std::cout << points[newCoords[0]][newCoords[1]].mean.transpose() << " feee\n";
                             //getchar();
-                            if (points[newCoords[0]][newCoords[1]].mean.block<3,1>(3,0)(0)==0&&points[newCoords[0]][newCoords[1]].mean.block<3,1>(3,0)(1)==0&&points[newCoords[0]][newCoords[1]].mean.block<3,1>(3,0)(2)==0){
+                            /*if (points[newCoords[0]][newCoords[1]].mean.block<3,1>(3,0)(0)==0&&points[newCoords[0]][newCoords[1]].mean.block<3,1>(3,0)(1)==0&&points[newCoords[0]][newCoords[1]].mean.block<3,1>(3,0)(2)==0){
                                 std::cout << "ij "<< i << " " << j << "\n";
                                 vocabulary[part.partIds[rowId][partId]].print();
                                 getchar();
-                            }
+                            }*/
                         }
                         else{
                             points[newCoords[0]][newCoords[1]].mean.block<3,1>(0,0)=Vec3(NAN,NAN,NAN);
@@ -1071,7 +1072,7 @@ double ViewIndependentPart::findOptimalTransformation(const ViewIndependentPart&
 }
 
 ///find optimal transformation between normals
-double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& vocabulary, int distanceMetric, Mat34& transOpt){
+double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& vocabulary, int distanceMetric, Mat34& transOpt, int& rotId){
     double minDist = std::numeric_limits<double>::max();
     for (size_t i=0;i<8;i++){
         PointsSecondLayer pointsA, pointsB; //9x9
@@ -1089,6 +1090,7 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
                 if (error<minDist){
                     minDist=error;
                     transOpt = trans;
+                    rotId = (int)i;
                 }
             }
         }
@@ -1097,7 +1099,7 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
 }
 
 ///find optimal transformation between normals
-double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& vocabularyLayer2, const ViewDependentPart::Seq& vocabularyLayer3, int distanceMetric, Mat34& transOpt){
+double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, const ViewDependentPart::Seq& vocabularyLayer2, const ViewDependentPart::Seq& vocabularyLayer3, int distanceMetric, Mat34& transOpt, int& rotId){
     double minDist = std::numeric_limits<double>::max();
     for (size_t i=0;i<8;i++){
         PointsThirdLayer pointsA, pointsB; //27x27
@@ -1115,6 +1117,7 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
                 if (error<minDist){
                     minDist=error;
                     transOpt = trans;
+                    rotId = (int)i;
                 }
             }
         }
@@ -1292,7 +1295,7 @@ double ViewDependentPart::computeError(const PointsThirdLayer& partA, const Poin
 }
 
 /// compute distance between view dependent parts (invariant version)
-double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& estimatedTransform){
+double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& estimatedTransform, int& rotId){
     /*if (partA.partIds==partB.partIds){//fast
         estimatedTransform=Mat34::Identity();
         return 0;
@@ -1340,7 +1343,7 @@ double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, cons
         }
     }*/
 
-    sum = findOptimalTransformation(partA, partB, distanceMetric, estimatedTransform);
+    sum = findOptimalTransformation(partA, partB, distanceMetric, estimatedTransform, rotId);
     //std::cout << "sum " << sum << "n\n";
     //std::cout << "est trans\n" << estimatedTransform.matrix() << "\n";
     //getchar();
@@ -1348,10 +1351,10 @@ double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, cons
 }
 
 /// compute distance between view dependent parts (invariant version)
-double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, const ViewDependentPart::Seq& vocabulary, Mat34& estimatedTransform){
+double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, const ViewDependentPart::Seq& vocabulary, Mat34& estimatedTransform, int& rotId){
     estimatedTransform=Mat34::Identity();
     double sum = 9;
-    sum = findOptimalTransformation(partA, partB, vocabulary, distanceMetric, estimatedTransform);
+    sum = findOptimalTransformation(partA, partB, vocabulary, distanceMetric, estimatedTransform, rotId);
     if (estimatedTransform(2,2)<0){
         sum+=0.01;
     }
@@ -1362,10 +1365,10 @@ double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, cons
 }
 
 /// compute distance between view dependent parts (invariant version) for fourth layer
-double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, const ViewDependentPart::Seq& vocabularyLayer2, const ViewDependentPart::Seq& vocabularyLayer3, Mat34& estimatedTransform){
+double ViewDependentPart::distanceInvariant(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, const ViewDependentPart::Seq& vocabularyLayer2, const ViewDependentPart::Seq& vocabularyLayer3, Mat34& estimatedTransform, int& rotId){
     estimatedTransform=Mat34::Identity();
     double sum = 9;
-    sum = findOptimalTransformation(partA, partB, vocabularyLayer2, vocabularyLayer3, distanceMetric, estimatedTransform);
+    sum = findOptimalTransformation(partA, partB, vocabularyLayer2, vocabularyLayer3, distanceMetric, estimatedTransform, rotId);
     if (estimatedTransform(2,2)<0){
         sum+=0.01;
     }

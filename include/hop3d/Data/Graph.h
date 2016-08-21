@@ -3,6 +3,7 @@
 #include <iostream>
 #include "Vocabulary.h"
 #include <cstdint>
+#include <map>
 
 namespace hop3d {
 
@@ -74,6 +75,9 @@ public:
 
     /// show info
     void showInfo(void);
+
+    /// compute statisticts (results are written to representative parts)
+    void computeStats(void);
 
     /// Construction
     Hierarchy(std::string configFilename);

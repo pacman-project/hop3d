@@ -1321,12 +1321,13 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
     int componentNo=0;
     for (auto itComp = part.group.begin(); itComp!=part.group.end();itComp++){
         Mat34 estTrans;
+        int rotIdx;
         if (layerNo==1)
-            ViewDependentPart::distanceInvariant(part,*itComp,3,estTrans);
+            ViewDependentPart::distanceInvariant(part,*itComp,3,estTrans, rotIdx);
         else if (layerNo==2)
-            ViewDependentPart::distanceInvariant(part,*itComp,3, hierarchy.get()->viewDependentLayers[0],estTrans);
+            ViewDependentPart::distanceInvariant(part,*itComp,3, hierarchy.get()->viewDependentLayers[0],estTrans, rotIdx);
         else if (layerNo==3)
-            ViewDependentPart::distanceInvariant(part,*itComp,3, hierarchy.get()->viewDependentLayers[0], hierarchy.get()->viewDependentLayers[1],estTrans);
+            ViewDependentPart::distanceInvariant(part,*itComp,3, hierarchy.get()->viewDependentLayers[0], hierarchy.get()->viewDependentLayers[1],estTrans, rotIdx);
         double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, (double)(config.partDistVD[layerNo]*double(componentNo+1)), 0, 1};
         glPushMatrix();
             glMultMatrixd(GLmat1);

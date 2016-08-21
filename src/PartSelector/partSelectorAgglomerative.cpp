@@ -186,23 +186,24 @@ void PartSelectorAgglomerative::computeDistanceMatrixVD(const ViewDependentPart:
             }
             else{
                 double dist(0); Mat34 transform;
+                int rotIdx;
                 if (dictionary[idA].layerId==2){//compute distance from centroid
                     if (config.distanceMetric==3){
-                        dist=ViewDependentPart::distanceInvariant(dictionary[idA], dictionary[idB], 3, transform);
+                        dist=ViewDependentPart::distanceInvariant(dictionary[idA], dictionary[idB], 3, transform, rotIdx);
                     }
                     else
                         dist = ViewDependentPart::distance(dictionary[idA], dictionary[idB], hierarchy.firstLayer, config.distanceMetric);
                 }
                 else if (dictionary[idA].layerId==3){//compute distance from centroid
                     if (config.distanceMetric==3){
-                        dist=ViewDependentPart::distanceInvariant(dictionary[idA], dictionary[idB], 3, hierarchy.viewDependentLayers[0], transform);
+                        dist=ViewDependentPart::distanceInvariant(dictionary[idA], dictionary[idB], 3, hierarchy.viewDependentLayers[0], transform, rotIdx);
                     }
                     else
                         dist = ViewDependentPart::distance(dictionary[idA], dictionary[idB], hierarchy.viewDependentLayers[0], hierarchy.firstLayer, config.distanceMetric);
                 }
                 else if (dictionary[idA].layerId==4){
                     if (config.distanceMetric==3){
-                        dist=ViewDependentPart::distanceInvariant(dictionary[idA], dictionary[idB], 3, hierarchy.viewDependentLayers[0], hierarchy.viewDependentLayers[1], transform);
+                        dist=ViewDependentPart::distanceInvariant(dictionary[idA], dictionary[idB], 3, hierarchy.viewDependentLayers[0], hierarchy.viewDependentLayers[1], transform, rotIdx);
                     }
                 }
                 else{
@@ -600,10 +601,11 @@ int PartSelectorAgglomerative::centerOfCluster(const std::set<int>& cluster, con
         double distSum = 0; //compute new centroid
         for (auto& id2 : cluster){//compute mean dist for each part as a centroid
             double dist=0;
+            int rotIdx;
             if (vocabulary[id].layerId==2){
                 if (config.distanceMetric==3){
                     Mat34 transform;
-                    dist=ViewDependentPart::distanceInvariant(vocabulary[id],vocabulary[id2], 3, transform);
+                    dist=ViewDependentPart::distanceInvariant(vocabulary[id],vocabulary[id2], 3, transform, rotIdx);
                 }
                 else
                     dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2],hierarchy.firstLayer, config.distanceMetric);
@@ -611,7 +613,7 @@ int PartSelectorAgglomerative::centerOfCluster(const std::set<int>& cluster, con
             else if (vocabulary[id].layerId==3){
                 if (config.distanceMetric==3){
                     Mat34 transform;
-                    dist=ViewDependentPart::distanceInvariant(vocabulary[id],vocabulary[id2], 3, hierarchy.viewDependentLayers[0], transform);
+                    dist=ViewDependentPart::distanceInvariant(vocabulary[id],vocabulary[id2], 3, hierarchy.viewDependentLayers[0], transform, rotIdx);
                 }
                 else
                     dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2],hierarchy.firstLayer, config.distanceMetric);
