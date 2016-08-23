@@ -150,9 +150,11 @@ void QGLVisualizer::drawEllipsoid(unsigned int uiStacks, unsigned int uiSlices, 
         for(double s = -M_PI; s <= M_PI+.0001; s += sStep) {
             glVertex3d(fA * cos(t) * cos(s), fB * cos(t) * sin(s), fC * sin(t));
             double norm = sqrt(pow(fA * cos(t) * cos(s),2.0)+pow(fB * cos(t) * sin(s),2.0) + pow(fC * sin(t),2.0));
+            if (norm==0) norm=std::numeric_limits<double>::epsilon();
             glNormal3d((fA * cos(t) * cos(s))/norm, (fB * cos(t) * sin(s))/norm, (fC * sin(t))/norm);
             glVertex3d(fA * cos(t+tStep) * cos(s), fB * cos(t+tStep) * sin(s), fC * sin(t+tStep));
             norm = sqrt(pow(fA * cos(t+tStep) * cos(s),2.0)+pow(fB * cos(t+tStep) * sin(s),2.0) + pow(fC * sin(t+tStep),2.0));
+            if (norm==0) norm=std::numeric_limits<double>::epsilon();
             glNormal3d((fA * cos(t+tStep) * cos(s))/norm, (fB * cos(t+tStep) * sin(s))/norm, (fC * sin(t+tStep))/norm);
         }
         glEnd();
@@ -812,7 +814,7 @@ void QGLVisualizer::drawCoords(void){
 }
 
 /// draw part
-void QGLVisualizer::drawPart(const ViewDependentPart& part, int layerNo, double r, double g, double b){
+void QGLVisualizer::drawPart(const ViewDependentPart& part, int layerNo, bool drawEllipse, double r, double g, double b){
     glPushMatrix();
     //flipIds(part.partIds);// because it's more natural for user
     //flipGaussians(part.gaussians);
@@ -832,6 +834,10 @@ void QGLVisualizer::drawPart(const ViewDependentPart& part, int layerNo, double 
                 else{
                     glColor3d(r, g, b);
                     drawPatch(Vec3(part.partsPosNorm[n][m].mean.block<3,1>(3,0)));
+                    if (drawEllipse){
+                        glColor3d(config.covarianceColor.red(), config.covarianceColor.green(), config.covarianceColor.blue());
+                        drawEllipsoid(Vec3(0,0,0),part.partsPosNorm[n][m].covariance.block<3,3>(0,0));
+                    }
                 }
             glPopMatrix();
         }
@@ -1035,7 +1041,7 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
         if (config.surfaceType==1)
             drawPartMesh(part,0.5,0.5,0.5);
         else if (config.surfaceType==0)
-            drawPart(part, layerNo,0.5,0.5,0.5);
+            drawPart(part, layerNo,config.drawCovariance, 0.5,0.5,0.5);
     }
     else if (layerNo==2){
         for (size_t n = 0; n < part.partIds.size(); n++){
@@ -1052,12 +1058,15 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
                         glCallList(backgroundList[layerNo-1]);
                     }
                     else{
+                        if (config.drawCovariance)
+                            drawEllipsoid(Vec3(0,0,0),part.partsPosNorm[n][m].covariance.block<3,3>(0,0));
+                        //drawNormal(part.partsPosNorm[n][m].mean.block<3,1>(3,0));
                         glColor3d(0.1,0.9,0.1);
                         Mat34 offset = part.offsets[n][m];
                         double GLmat2[16]={offset(0,0), offset(1,0), offset(2,0), 0, offset(0,1), offset(1,1), offset(2,1), 0, offset(0,2), offset(1,2), offset(2,2), 0, offset(0,3), offset(1,3), offset(2,3), 1};
                         glMultMatrixd(GLmat2);
                         glPushMatrix();
-                        drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, 0.5,0.5,0.5);
+                        drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, config.drawCovariance, 0.5,0.5,0.5);
                         glPopMatrix();
                     }
                 glPopMatrix();
@@ -1085,7 +1094,7 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
                         glMultMatrixd(GLmat2);
                         glPushMatrix();
                         ViewDependentPart part3=hierarchy.get()->viewDependentLayers[1][id];
-                        drawPart(part3, 1,0.5,0.5,0.5);
+                        drawPart(part3, 1, config.drawCovariance, 0.5,0.5,0.5);
                         for (size_t k = 0; k < part3.partIds.size(); k++){
                             for (size_t l = 0; l < part3.partIds[k].size(); l++){
                                 int id3 = part3.partIds[k][l];
@@ -1105,7 +1114,7 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
                                         double GLmat32[16]={offset3(0,0), offset3(1,0), offset3(2,0), 0, offset3(0,1), offset3(1,1), offset3(2,1), 0, offset3(0,2), offset3(1,2), offset3(2,2), 0, offset3(0,3), offset3(1,3), offset3(2,3), 1};
                                         glMultMatrixd(GLmat32);
                                         glPushMatrix();
-                                        drawPart(hierarchy.get()->viewDependentLayers[0][id3], 1, 0.5,0.5,0.5);
+                                        drawPart(hierarchy.get()->viewDependentLayers[0][id3], 1, config.drawCovariance, 0.5,0.5,0.5);
                                         glPopMatrix();
                                     }
                                 glPopMatrix();
@@ -1332,7 +1341,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
         glPushMatrix();
             glMultMatrixd(GLmat1);
             if (layerNo==1){
-                drawPart(*itComp, layerNo,0.5,0.5,0.5);
+                drawPart(*itComp, layerNo,false, 0.5,0.5,0.5);
             }
             else if (layerNo==2){
                 for (size_t n = 0; n < itComp->partIds.size(); n++){
@@ -1359,7 +1368,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                                     double GLmat2[16]={offset(0,0), offset(1,0), offset(2,0), 0, offset(0,1), offset(1,1), offset(2,1), 0, offset(0,2), offset(1,2), offset(2,2), 0, offset(0,3), offset(1,3), offset(2,3), 1};
                                     glMultMatrixd(GLmat2);
                                     glPushMatrix();
-                                        drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, 0.5,0.5,0.5);
+                                        drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, false,0.5,0.5,0.5);
                                     glPopMatrix();
                                 }
                             }
@@ -1408,7 +1417,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                                                 double GLmat32[16]={offset3(0,0), offset3(1,0), offset3(2,0), 0, offset3(0,1), offset3(1,1), offset3(2,1), 0, offset3(0,2), offset3(1,2), offset3(2,2), 0, offset3(0,3), offset3(1,3), offset3(2,3), 1};
                                                 glMultMatrixd(GLmat32);
                                                 glPushMatrix();
-                                                drawPart(hierarchy.get()->viewDependentLayers[0][id3], 1, 0.5,0.5,0.5);
+                                                drawPart(hierarchy.get()->viewDependentLayers[0][id3], 1, false,0.5,0.5,0.5);
                                                 glPopMatrix();
                                             }
                                         glPopMatrix();
@@ -1427,7 +1436,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
         glPushMatrix();
             glMultMatrixd(GLmat2);
             if (layerNo==1){
-                drawPart(part, layerNo,0.5,0,0);
+                drawPart(part, layerNo,false,0.5,0,0);
             }
             else if (layerNo==2){
                 for (size_t n = 0; n < part.partIds.size(); n++){
@@ -1454,7 +1463,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                                     double GLmat2[16]={offset(0,0), offset(1,0), offset(2,0), 0, offset(0,1), offset(1,1), offset(2,1), 0, offset(0,2), offset(1,2), offset(2,2), 0, offset(0,3), offset(1,3), offset(2,3), 1};
                                     glMultMatrixd(GLmat2);
                                     glPushMatrix();
-                                        drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, 0.5,0,0);
+                                        drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, false,0.5,0,0);
                                     glPopMatrix();
                                 }
                             }
@@ -1503,7 +1512,7 @@ GLuint QGLVisualizer::createClustersList(ViewDependentPart& part, int layerNo){
                                                 double GLmat32[16]={offset3(0,0), offset3(1,0), offset3(2,0), 0, offset3(0,1), offset3(1,1), offset3(2,1), 0, offset3(0,2), offset3(1,2), offset3(2,2), 0, offset3(0,3), offset3(1,3), offset3(2,3), 1};
                                                 glMultMatrixd(GLmat32);
                                                 glPushMatrix();
-                                                drawPart(hierarchy.get()->viewDependentLayers[0][id3], 1, 0.5,0.0,0.0);
+                                                drawPart(hierarchy.get()->viewDependentLayers[0][id3], 1, false, 0.5,0.0,0.0);
                                                 glPopMatrix();
                                             }
                                         glPopMatrix();
@@ -1529,37 +1538,37 @@ void QGLVisualizer::drawPatch(const Vec3& normal) const{
         Mat33 rot = NormalImageFilter::coordinateFromNormal(normal);
         glBegin(GL_POLYGON);
         int quadSize=5;
-        Vec3 rightup(quadSize*config.pixelSize,-quadSize*config.pixelSize,-0.0001);
+        Vec3 rightup(quadSize*config.pixelSize,-quadSize*config.pixelSize,-1e-5);
         rightup=rot*rightup;
         if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
         glVertex3d(rightup(0), rightup(1),rightup(2));
-        Vec3 rightdown(quadSize*config.pixelSize,quadSize*config.pixelSize,-0.0001);
+        Vec3 rightdown(quadSize*config.pixelSize,quadSize*config.pixelSize,-1e-5);
         rightdown=rot*rightdown;
         if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
         glVertex3d(rightdown(0), rightdown(1),rightdown(2));
-        Vec3 leftdown(-quadSize*config.pixelSize,quadSize*config.pixelSize,-0.0001);
+        Vec3 leftdown(-quadSize*config.pixelSize,quadSize*config.pixelSize,-1e-5);
         leftdown=rot*leftdown;
         if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
         glVertex3d(leftdown(0), leftdown(1), leftdown(2));
-        Vec3 leftup(-quadSize*config.pixelSize,-quadSize*config.pixelSize,-0.0001);
+        Vec3 leftup(-quadSize*config.pixelSize,-quadSize*config.pixelSize,-1e-5);
         leftup=rot*leftup;
         if (config.useNormalSurf) glNormal3d(-normal(0), -normal(1), -normal(2));
         glVertex3d(leftup(0), leftup(1), leftup(2));
         glEnd();
         glBegin(GL_POLYGON);
-        Vec3 rightupA(quadSize*config.pixelSize,-quadSize*config.pixelSize,0.0001);
+        Vec3 rightupA(quadSize*config.pixelSize,-quadSize*config.pixelSize,1e-5);
         rightupA=rot*rightupA;
         if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
         glVertex3d(rightupA(0), rightupA(1),rightupA(2));
-        Vec3 leftupA(-quadSize*config.pixelSize,-quadSize*config.pixelSize,0.0001);
+        Vec3 leftupA(-quadSize*config.pixelSize,-quadSize*config.pixelSize,1e-5);
         leftupA=rot*leftupA;
         if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
         glVertex3d(leftupA(0), leftupA(1), leftupA(2));
-        Vec3 leftdownA(-quadSize*config.pixelSize,quadSize*config.pixelSize,0.0001);
+        Vec3 leftdownA(-quadSize*config.pixelSize,quadSize*config.pixelSize,1e-5);
         leftdownA=rot*leftdownA;
         if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
         glVertex3d(leftdownA(0), leftdownA(1), leftdownA(2));
-        Vec3 rightdownA(quadSize*config.pixelSize,quadSize*config.pixelSize,0.0001);
+        Vec3 rightdownA(quadSize*config.pixelSize,quadSize*config.pixelSize,1e-5);
         rightdownA=rot*rightdownA;
         if (config.useNormalSurf) glNormal3d(normal(0), normal(1), normal(2));
         glVertex3d(rightdownA(0), rightdownA(1),rightdownA(2));
@@ -1580,20 +1589,24 @@ void QGLVisualizer::drawPatch(const Vec3& normal) const{
                     glNormal3d(-point(0,2), -point(1,2), -point(2,2));
                     glVertex3d(point(0,3), point(1,3), point(2,3));
                     glNormal3d(point(0,2), point(1,2), point(2,2));
-                    glVertex3d(point(0,3), point(1,3), point(2,3)+0.001);
+                    glVertex3d(point(0,3), point(1,3), point(2,3)+1e-5);
                 }
 
             }
         }
         glEnd();
     }
-    if (config.drawNormals){
-        glBegin(GL_LINES);
-            //glColor3d(config.normalsColor.redF(),config.normalsColor.greenF(),config.normalsColor.blueF());
-            glVertex3d(0.0, 0.0, 0.0);
-            glVertex3d(-normal(0)*config.normalsScale, -normal(1)*config.normalsScale, -normal(2)*config.normalsScale);
-        glEnd();
-    }
+    if (config.drawNormals)
+        drawNormal(normal);
+}
+
+/// draw normal vector
+void QGLVisualizer::drawNormal(const Vec3& normal) const{
+    glBegin(GL_LINES);
+        glColor3d(config.normalsColor.redF(),config.normalsColor.greenF(),config.normalsColor.blueF());
+        glVertex3d(0.0, 0.0, 0.0);
+        glVertex3d(-normal(0)*config.normalsScale, -normal(1)*config.normalsScale, -normal(2)*config.normalsScale);
+    glEnd();
 }
 
 /// draw flat patch

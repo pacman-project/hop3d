@@ -22,20 +22,16 @@ Hierarchy::Hierarchy(std::string configFilename) {
     this->viewIndependentLayers.resize(VIndLayersNo);
 }
 
-/// compute statisticts (results are written to representative parts)
-void Hierarchy::computeStats(void){
-    int layerNo = 0;
-    for (auto & layer : viewDependentLayers){//compute mean position and probability of id
-        for (auto& part : layer){
+/// compute statisticts for selected layer (results are written to representative parts)
+void Hierarchy::computeVDStats(int layerNo){
+    if (layerNo>=(int)viewDependentLayers.size()){
+        throw std::runtime_error("Compute stats: wrong layer no \n");
+    }
+    else{
+        for (auto& part : viewDependentLayers[layerNo]){
             std::array<std::array<ViewDependentPart::SubpartsProb,3>,3> subpartsProb;
             std::array<std::array<GaussianSE3,3>,3> subpartsPos;
             std::array<std::array<int,3>,3> subpartsNo = {{{0,0,0},{0,0,0},{0,0,0}}};
-            /*std::cout << "before:\n";
-            for (int i=0;i<3;i++){
-                for (int j=0;j<3;j++){
-                    std::cout << "ij " << i << ", " << j << " id " << part.partIds[i][j] << " mean " << part.partsPosNorm[i][j].mean.transpose() << "\n";
-                }
-            }*/
             std::vector<std::pair<int, int>> pointCorrespondence = {{0,0}, {0,1}, {0,2}, {1,2}, {2,2}, {2,1}, {2,0}, {1,0}};
             std::vector<std::pair<int,Mat34>> optRot;
             for (auto& partFromCluster : part.group){
@@ -48,16 +44,8 @@ void Hierarchy::computeStats(void){
                 else if (layerNo==2)
                     ViewDependentPart::distanceInvariant(part,partFromCluster,3, viewDependentLayers[0], viewDependentLayers[1],estTrans, rotIdx);
                 estTrans=estTrans.inverse();
-                //std::cout << "trans \n" << estTrans.matrix() << "\n";
-                //std::cout << "rotidxc \n" << rotIdx << "\n";
                 optRot.push_back(std::make_pair(rotIdx,estTrans));
                 size_t idx=rotIdx;
-                /*std::cout << "subpart:\n";
-                for (int i=0;i<3;i++){
-                    for (int j=0;j<3;j++){
-                        std::cout << "ij " << i << ", " << j << " id " << partFromCluster.partIds[i][j] << " mean " << partFromCluster.partsPosNorm[i][j].mean.transpose() << "\n";
-                    }
-                }*/
                 for (size_t j=0;j<pointCorrespondence.size();j++){
                     int coordA[2]={pointCorrespondence[j].first, pointCorrespondence[j].second};//partA is not rotated
                     int coordB[2]={pointCorrespondence[idx%(pointCorrespondence.size())].first, pointCorrespondence[idx%(pointCorrespondence.size())].second};//partA is not rotated
@@ -102,19 +90,6 @@ void Hierarchy::computeStats(void){
                     subpartsPos[1][1].mean+=newPosNorm;
                     subpartsNo[1][1]++;
                 }
-                /*for (int i=0;i<3;i++){
-                    for (int j=0;j<3;j++){
-                        std::pair<std::map<int,double>::iterator,bool> ret;
-                        ret = subpartsProb[i][j].insert( std::pair<int, double>(partFromCluster.partIds[i][j],1.0) );
-                        if (ret.second==false) {//element exists
-                            ret.first->second+=1;
-                        }
-                        if (partFromCluster.partIds[i][j]>=0){
-                            subpartsPos[i][j].mean+=partFromCluster.partsPosNorm[i][j].mean;
-                            subpartsNo[i][j]++;
-                        }
-                    }
-                }*/
             }
             for (int i=0;i<3;i++){
                 for (int j=0;j<3;j++){
@@ -165,18 +140,15 @@ void Hierarchy::computeStats(void){
                     }
                 }
             }
-            /*std::cout << "subparts no " << part.group.size() << "\n";
-            std::cout << "after:\n";
-            for (int i=0;i<3;i++){
-                for (int j=0;j<3;j++){
-                    std::cout << "ij " << i << ", " << j << " mean " << part.partsPosNorm[i][j].mean.transpose() << "\n";
-                }
-            }*/
-            //getchar();
         }
-        layerNo++;
     }
-    //getchar();
+}
+
+/// compute statisticts (results are written to representative parts)
+void Hierarchy::computeStats(void){
+    for (int layerNo = 0; layerNo<(int)viewDependentLayers.size();layerNo++){//compute mean position and probability of id
+        computeVDStats(layerNo);
+    }
 }
 
 // Insertion operator

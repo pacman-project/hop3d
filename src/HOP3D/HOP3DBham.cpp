@@ -467,7 +467,7 @@ void HOP3DBham::learn(){
         std::cout << "Compute octets took " << watchTmp.elapsed() << " seconds\n";
         watchTmp.start();
         std::cout << "Compute statistics for " << octets.size() << " octets (" << layerNo+2 << " layer)\n";
-        //statsBuilder->computeStatistics(octets, layerNo+2, startId, dictionary);
+        statsBuilder->computeStatistics(octets, layerNo+2, startId, dictionary);
         statsBuilder->vocabularyFromOctets(octets, layerNo+2, startId, dictionary);
         std::cout << "Dictionary size (" << layerNo+2 << " layer): " << dictionary.size() << "\n";
         partSelector->selectParts(dictionary, *hierarchy, layerNo+1);
@@ -477,6 +477,7 @@ void HOP3DBham::learn(){
         std::cout << "Compute vocabulary took " << watchTmp.elapsed() << " seconds\n";
         //represent/explain all images in parts from i-th layer
         watchTmp.start();
+        hierarchy.get()->computeVDStats(layerNo);
         for (int overlapNo=0; overlapNo<3; overlapNo++){
             for (size_t categoryNo=0;categoryNo<datasetInfoTrain.categories.size();categoryNo++){
                 for (size_t objectNo=0;objectNo<datasetInfoTrain.categories[categoryNo].objects.size();objectNo++){

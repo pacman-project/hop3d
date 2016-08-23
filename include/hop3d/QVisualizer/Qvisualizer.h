@@ -148,6 +148,14 @@ public:
             normalsColor.setRedF(rgba[0]); normalsColor.setGreenF(rgba[1]);
             normalsColor.setBlueF(rgba[2]); normalsColor.setAlphaF(rgba[3]);
 
+            model->FirstChildElement( "covariance" )->QueryBoolAttribute("drawCovariance", &drawCovariance);
+            model->FirstChildElement( "covariance" )->QueryDoubleAttribute("red", &rgba[0]);
+            model->FirstChildElement( "covariance" )->QueryDoubleAttribute("green", &rgba[1]);
+            model->FirstChildElement( "covariance" )->QueryDoubleAttribute("blue", &rgba[2]);
+            model->FirstChildElement( "covariance" )->QueryDoubleAttribute("alpha", &rgba[3]);
+            covarianceColor.setRedF(rgba[0]); covarianceColor.setGreenF(rgba[1]);
+            covarianceColor.setBlueF(rgba[2]); covarianceColor.setAlphaF(rgba[3]);
+
             model->FirstChildElement( "inference" )->QueryDoubleAttribute("objectsOffsetY", &objectsOffsetY);
             model->FirstChildElement( "inference" )->QueryDoubleAttribute("objectsPartsOffsetZ", &objectsPartsOffsetZ);
 
@@ -243,6 +251,10 @@ public:
         std::vector<double> objectsPosZVolumetric;
         /// "y" coordinate of the objects at i-th hierarchy layer
         std::vector<double> objectsPosYVolumetric;
+        /// Covariance color
+        QColor covarianceColor;
+        /// draw covariance ellipsoids
+        bool drawCovariance;
 
         /// draw objects colored by part id
         bool drawPartObjects;
@@ -520,7 +532,7 @@ private:
     void drawEllipsoid(const hop3d::Vec3& pos, const hop3d::Mat33& covariance) const;
 
     /// draw part
-    void drawPart(const hop3d::ViewDependentPart& part, int layerNo, double r, double g, double b);
+    void drawPart(const hop3d::ViewDependentPart& part, int layerNo, bool drawEllipse, double r, double g, double b);
 
     /// draw part
     void drawPartMesh(const hop3d::ViewDependentPart& part, double r, double g, double b);
@@ -536,6 +548,9 @@ private:
 
     /// draw flat patch
     void drawNormals(const std::vector<hop3d::Vec6>& vertices, const std::vector<int>& ids);
+
+    /// draw normal vector
+    void drawNormal(const hop3d::Vec3& normal) const;
 
     /// draw shaded octagon
     void drawOctagon(const std::array<std::array<hop3d::Vec6,3>,3>& part, const std::array<std::array<int,3>,3>& ids, double r, double g, double b) const;

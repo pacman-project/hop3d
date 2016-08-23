@@ -1040,6 +1040,12 @@ int NormalImageFilter::fillInOctet(const OctetsImage& octetsImage, const PartsIm
                 std::cout << i << ", " << j << " " << octet.partsPosEucl[i+1][j+1].transpose() << " pos\n";
                 getchar();*/
                 octet.partsPosNorm[i+1][j+1].mean.block<3,1>(3,0)=octetsImage[u+i][v+j]->partsPosNorm[1][1].mean.block<3,1>(3,0);//dictionary[id].partsPosNorm[1][1].mean.block<3,1>(3,0);
+                /*octet.partsPosNorm[i+1][j+1].mean(0)+=octet.offsets[i+1][j+1](0,3);
+                octet.partsPosNorm[i+1][j+1].mean(1)+=octet.offsets[i+1][j+1](1,3);
+                octet.partsPosNorm[i+1][j+1].mean(2)+=octet.offsets[i+1][j+1](2,3);
+                octet.offsets[i+1][j+1](0,3)=0;
+                octet.offsets[i+1][j+1](1,3)=0;
+                octet.offsets[i+1][j+1](2,3)=0;*/
                 //octet.partsPosNorm[i+1][j+1].mean.block<3,1>(0,0)=(offset*Vec4(octet.partsPosEucl[i+1][j+1](0),octet.partsPosEucl[i+1][j+1](1),octet.partsPosEucl[i+1][j+1](2),1.0)).block<3,1>(0,3);
                 //octet.partsPosNorm[i+1][j+1].mean.block<3,1>(3,0)=offset.rotation()*dictionary[id].partsPosNorm[1][1].mean.block<3,1>(3,0);
             }

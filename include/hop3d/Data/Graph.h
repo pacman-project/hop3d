@@ -79,6 +79,9 @@ public:
     /// compute statisticts (results are written to representative parts)
     void computeStats(void);
 
+    /// compute statisticts for selected layer (results are written to representative parts)
+    void computeVDStats(int layerNo);
+
     /// Construction
     Hierarchy(std::string configFilename);
 
