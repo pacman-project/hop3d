@@ -136,6 +136,9 @@ void Hierarchy::computeVDStats(int layerNo){
                         else
                             part.partsPosNorm[i][j].mean=subpartsPos[i][j].mean;
                         //part.partsPosNorm[i][j].mean.block<3,1>(0,0)=subpartsPos[i][j].mean.block<3,1>(0,0);
+                        if (subpartsPos[i][j].covariance.isZero(0)){
+                            subpartsPos[i][j].covariance = Mat66::Identity()*std::numeric_limits<double>::epsilon();
+                        }
                         part.partsPosNorm[i][j].covariance=subpartsPos[i][j].covariance;
                     }
                 }
@@ -148,6 +151,31 @@ void Hierarchy::computeVDStats(int layerNo){
 void Hierarchy::computeStats(void){
     for (int layerNo = 0; layerNo<(int)viewDependentLayers.size();layerNo++){//compute mean position and probability of id
         computeVDStats(layerNo);
+    }
+}
+
+/// reconstruct part
+void Hierarchy::reconstructPart(ViewDependentPart& _part, size_t layerNo) const{
+    if (layerNo>=viewDependentLayers.size()){
+        throw std::runtime_error("Compute stats: wrong layer no \n");
+    }
+    else{
+        double maxFit = std::numeric_limits<double>::min();
+        int maxId=0;
+        int partId=0;
+        for (const auto& part : viewDependentLayers[layerNo]){
+            if (part.isComplete()){
+                double fit=part.distanceStats(_part);
+                std::cout << "fit " << fit << " fit2 " << _part.distanceStats(part) << "\n";
+                if (fit>maxFit){
+                    maxFit=fit;
+                    maxId=partId;
+                }
+            }
+            partId++;
+        }
+        //restore occluded subparts
+        _part.restoreOccluded(viewDependentLayers[layerNo][maxId]);
     }
 }
 

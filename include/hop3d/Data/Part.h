@@ -111,6 +111,9 @@ public:
     /// SE3 offset betwen part realization and word from dictionary
     std::array<std::array<Mat34,3>,3> offsets;
 
+    /// restored?
+    std::array<std::array<bool,3>,3> restored;
+
     /// probability of subparts
     std::array<std::array<SubpartsProb,3>,3> subpartsProb;
 
@@ -129,6 +132,7 @@ public:
         for (int i=0;i<3;i++){
             for (int j=0;j<3;j++){
                 offsets[i][j]=Mat34::Identity();
+                restored[i][j]=false;
             }
         }
     }
@@ -139,6 +143,7 @@ public:
         for (int i=0;i<3;i++){
             for (int j=0;j<3;j++){
                 offsets[i][j]=Mat34::Identity();
+                restored[i][j]=false;
             }
         }
     }
@@ -202,6 +207,18 @@ public:
 
     /// check if part is background
     bool isBackground(void) const;
+
+    /// Is complete
+    bool isComplete(void) const;
+
+    /// fitness subpart
+    double subpartFitness(const Vec6& point, size_t row, size_t col) const;
+
+    /// restore occluded subparts
+    void restoreOccluded(const ViewDependentPart& fullPart);
+
+    /// restore occluded subparts
+    double distanceStats(const ViewDependentPart& part) const;
 
     /// Print
     void print() const;

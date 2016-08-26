@@ -82,6 +82,9 @@ public:
     /// compute statisticts for selected layer (results are written to representative parts)
     void computeVDStats(int layerNo);
 
+    /// reconstruct part
+    void reconstructPart(ViewDependentPart& _part, size_t layerNo) const;
+
     /// Construction
     Hierarchy(std::string configFilename);
 

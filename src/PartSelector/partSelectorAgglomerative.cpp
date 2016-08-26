@@ -618,6 +618,15 @@ int PartSelectorAgglomerative::centerOfCluster(const std::set<int>& cluster, con
                 else
                     dist=ViewDependentPart::distance(vocabulary[id],vocabulary[id2],hierarchy.firstLayer, config.distanceMetric);
             }
+            else if (vocabulary[id].layerId==4){
+                if (config.distanceMetric==3){
+                    Mat34 transform;
+                    dist=ViewDependentPart::distanceInvariant(vocabulary[id], vocabulary[id2], 3, hierarchy.viewDependentLayers[0], hierarchy.viewDependentLayers[1], transform, rotIdx);
+                }
+            }
+            else{
+                throw std::runtime_error("Error for layer id " + std::to_string(vocabulary[id].layerId) + " not supported\n");
+            }
             distSum+=dist;
         }
         if (distSum<distMin){

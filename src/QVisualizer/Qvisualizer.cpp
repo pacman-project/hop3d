@@ -97,7 +97,7 @@ QGLVisualizer::QGLVisualizer(void) : updatePartsObjectsFlag(false){
     activeLayer=0;
     activeOverlapNo = 0;
     drawVolumetric = false;
-    explode=0;
+    explode=9;
 }
 
 /// Construction
@@ -122,7 +122,7 @@ QGLVisualizer::QGLVisualizer(Config _config): config(_config), updateHierarchyFl
     activeLayer=0;
     activeOverlapNo = 0;
     drawVolumetric = false;
-    explode = 0;
+    explode = 9;
 }
 
 /// Construction
@@ -496,7 +496,10 @@ void QGLVisualizer::updateHierarchy(){
             if (config.verbose==1){
                 std::cout << "layer "<< i+2 << " size: " << hierarchy->viewDependentLayers[i].size() << "\n";
             }
+            std::cout << "layer "<< i+2 << " size: " << hierarchy->viewDependentLayers[i].size() << "\n";
             for (auto &part : hierarchy->viewDependentLayers[i]){
+                if (!part.isComplete())
+                    hierarchy->reconstructPart(part, i);
                 cloudsListLayersVD[i+1].push_back(createPartList(part, int(i+1)));
                 clustersListVD[i+1].push_back(createClustersList(part, int(i+1)));
             }
@@ -830,9 +833,16 @@ void QGLVisualizer::drawPart(const ViewDependentPart& part, int layerNo, bool dr
                 if (id<0){
                     //glColor3ub(100,50,50);
                     glCallList(backgroundList[layerNo-1]);
+                    if (id==-3)
+                        drawEllipsoid(Vec3(0,0,0),Mat33::Identity()*0.00001);
                 }
                 else{
-                    glColor3d(r, g, b);
+                    if (part.restored[n][m]){
+                        glColor3d(1.0,0,0);
+                        //drawEllipsoid(Vec3(0,0,0),Mat33::Identity()*0.00001);
+                    }
+                    else
+                        glColor3d(r, g, b);
                     drawPatch(Vec3(part.partsPosNorm[n][m].mean.block<3,1>(3,0)));
                     if (drawEllipse){
                         glColor3d(config.covarianceColor.red(), config.covarianceColor.green(), config.covarianceColor.blue());
@@ -1066,7 +1076,11 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
                         double GLmat2[16]={offset(0,0), offset(1,0), offset(2,0), 0, offset(0,1), offset(1,1), offset(2,1), 0, offset(0,2), offset(1,2), offset(2,2), 0, offset(0,3), offset(1,3), offset(2,3), 1};
                         glMultMatrixd(GLmat2);
                         glPushMatrix();
-                        drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, config.drawCovariance, 0.5,0.5,0.5);
+                        if (part.restored[n][m]){
+                            drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, config.drawCovariance, 1.0,0,0);
+                        }
+                        else
+                            drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, config.drawCovariance, 0.5,0.5,0.5);
                         glPopMatrix();
                     }
                 glPopMatrix();

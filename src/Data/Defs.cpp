@@ -176,44 +176,41 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
                     isBackgroundLarger = false;
                 else
                     isBackgroundLarger = true;
-                distThr = depth[i];
+                distThr = depth[i]+std::numeric_limits<double>::epsilon();
                 break;
             }
         }
+        //we've got threshold distance and we know which grou is larger. Now its time to split or remove second surface
         // create second octet
         if (smallerGroupSize>=minOctetSize){
             Octet secondOct;
             Vec3 meanPos(0,0,0);
             for (int i=0;i<3;i++){
                 for (int j=0;j<3;j++){
-                    double dist;
-                    if (i==1&&j==1)
-                        dist = 0;
-                    else
-                        dist = partsPosNorm[i][j].mean(2);
-                    if (partIds[i][j]>=0&&dist>distThr&&!isBackgroundLarger){//update econd octet
-                        secondOct.partsPosNorm[i][j] = partsPosNorm[i][j];
-                        secondOct.partsPosEucl[i][j] = partsPosEucl[i][j];
-                        secondOct.partIds[i][j] = partIds[i][j];
-                        partIds[i][j] = -2;
-                        secondOct.offsets[i][j] = offsets[i][j];
-                        secondOct.filterPos[i][j] = filterPos[i][j];
-                        meanPos+=secondOct.partsPosNorm[i][j].mean.block<3,1>(0,0);
-                    }
-                    else if (partIds[i][j]>=0&&dist<(distThr+std::numeric_limits<double>::epsilon())&&isBackgroundLarger){
-                        secondOct.partsPosNorm[i][j] = partsPosNorm[i][j];
-                        secondOct.partsPosEucl[i][j] = partsPosEucl[i][j];
-                        secondOct.partIds[i][j] = partIds[i][j];
-                        partIds[i][j] = -3;
-                        secondOct.offsets[i][j] = offsets[i][j];
-                        secondOct.filterPos[i][j] = filterPos[i][j];
-                        meanPos+=secondOct.partsPosNorm[i][j].mean.block<3,1>(0,0);
-                    }
-                    if (partIds[i][j]>=0&&dist<(distThr+std::numeric_limits<double>::epsilon())&&!isBackgroundLarger){
-                        secondOct.partIds[i][j] = -3;
-                    }
-                    if (partIds[i][j]>=0&&dist>distThr&&isBackgroundLarger){
-                        secondOct.partIds[i][j] = -2;
+                    if (partIds[i][j]>=0){
+                        double dist;
+                        if (i==1&&j==1)
+                            dist = 0;
+                        else
+                            dist = partsPosNorm[i][j].mean(2);
+                        if(dist>distThr&&!isBackgroundLarger){//update second octet
+                            secondOct.partsPosNorm[i][j] = partsPosNorm[i][j];
+                            secondOct.partsPosEucl[i][j] = partsPosEucl[i][j];
+                            secondOct.partIds[i][j] = partIds[i][j];
+                            partIds[i][j] = -2;
+                            secondOct.offsets[i][j] = offsets[i][j];
+                            secondOct.filterPos[i][j] = filterPos[i][j];
+                            meanPos+=secondOct.partsPosNorm[i][j].mean.block<3,1>(0,0);
+                        }
+                        else if (dist<=distThr&&isBackgroundLarger){
+                            secondOct.partsPosNorm[i][j] = partsPosNorm[i][j];
+                            secondOct.partsPosEucl[i][j] = partsPosEucl[i][j];
+                            secondOct.partIds[i][j] = partIds[i][j];
+                            partIds[i][j] = -3;
+                            secondOct.offsets[i][j] = offsets[i][j];
+                            secondOct.filterPos[i][j] = filterPos[i][j];
+                            meanPos+=secondOct.partsPosNorm[i][j].mean.block<3,1>(0,0);
+                        }
                     }
                 }
             }
@@ -235,19 +232,18 @@ void Octet::splitSurfaces(double distThreshold, int minOctetSize, int smallerGro
         else{// clean second surface
             for (int i=0;i<3;i++){
                 for (int j=0;j<3;j++){
-                    double dist;
-                    if (i==1&&j==1)
-                        dist = 0;
-                    else
-                        dist = partsPosNorm[i][j].mean(2);
-                    if (partIds[i][j]>=0&&dist>distThr&&!isBackgroundLarger){
-                        partIds[i][j] = -2;
+                    if (partIds[i][j]>=0){
+                        double dist;
+                        if (i==1&&j==1)
+                            dist = 0;
+                        else
+                            dist = partsPosNorm[i][j].mean(2);
+                        if (dist>distThr&&!isBackgroundLarger)
+                            partIds[i][j] = -2;
+                        if (dist<=distThr&&isBackgroundLarger){
+                            partIds[i][j] = -3;
+                        }
                     }
-                    if (partIds[i][j]>=0&&dist<=(distThr+std::numeric_limits<double>::epsilon())&&isBackgroundLarger){
-                        partIds[i][j] = -2;
-                    }
-                    if (partIds[i][j]>=0&&dist<(distThr+std::numeric_limits<double>::epsilon())&&isBackgroundLarger)
-                        partIds[i][j] = -3;
                 }
             }
         }

@@ -52,12 +52,85 @@ void ViewDependentPart::print() const{
             //std::cout << gaussians[i][j].covariance << "\n";
         }
     }
-    std::cout << "\nParts in group: ";
+    /*std::cout << "\nParts in group: ";
     for (auto it = group.begin();it!=group.end();it++){
         it->print();
         std::cout << it->id << ", ";
     }
-    std::cout << "\n";
+    std::cout << "\n";*/
+}
+
+/// Is complete
+bool ViewDependentPart::isComplete(void) const{
+    for (size_t i=0;i<partIds.size();++i)
+        for (size_t j=0;j<partIds[i].size();++j)
+            if (partIds[i][j]==-3)
+                return false;
+    return true;
+}
+
+/// fitness subpart
+double ViewDependentPart::subpartFitness(const Vec6& point, size_t row, size_t col) const{
+    std::cout << "point " << point.transpose() << "\n";
+    std::cout << "point2 " << partsPosNorm[row][col].mean.transpose() << "\n";
+    std::cout << "res " << (1/sqrt(pow(2*M_PI,6)*partsPosNorm[row][col].mean.norm()))*exp(-0.5*(point-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(point-partsPosNorm[row][col].mean)) << "\n";
+    std::cout << "(1/sqrt(pow(2*M_PI,6)*partsPosNorm[row][col].mean.norm())) " << (1/sqrt(pow(2*M_PI,6)*partsPosNorm[row][col].mean.norm())) << "\n";
+    std::cout << "partsPosNorm[row][col].covariance " << partsPosNorm[row][col].covariance.matrix() << "\n";
+    std::cout << "partsPosNorm[row][col].covariance.inverse() " << partsPosNorm[row][col].covariance.inverse() << "\n";
+    std::cout << "(-0.5*(point-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(point-partsPosNorm[row][col].mean)) " << (-0.5*(point-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(point-partsPosNorm[row][col].mean)) << "\n";
+    std::cout << "exp(-0.5*(point-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(point-partsPosNorm[row][col].mean)) " << exp(-0.5*(point-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(point-partsPosNorm[row][col].mean)) << "\n";
+    //getchar();
+    double res = (1/sqrt(pow(2*M_PI,6)*partsPosNorm[row][col].mean.norm()))*exp(-0.5*(point-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(point-partsPosNorm[row][col].mean));
+    if (std::isnan(res))
+        return 0;
+    else
+        return res;
+}
+
+/// restore occluded subparts
+double ViewDependentPart::distanceStats(const ViewDependentPart& part) const{
+    double fit=0;
+    for (size_t i=0;i<part.partIds.size();++i){
+        for (size_t j=0;j<part.partIds[i].size();++j){
+            if ((part.partIds[i][j]==-1||part.partIds[i][j]==-2)&&(partIds[i][j]==-1||partIds[i][j]==-2)){
+                auto it = subpartsProb[i][j].find(part.partIds[i][j]);
+                if (it == subpartsProb[i][j].end())
+                    fit+=0;
+                else
+                    fit+=subpartsProb[i][j].at(part.partIds[i][j]);
+            }
+            if (partIds[i][j]>0){
+                auto it = subpartsProb[i][j].find(part.partIds[i][j]);
+                if (it == subpartsProb[i][j].end())
+                    fit+=0;
+                else
+                    fit+=subpartsProb[i][j].at(part.partIds[i][j])*subpartFitness(part.partsPosNorm[i][j].mean, i,j);
+            }
+        }
+    }
+    return fit;
+}
+
+/// restore occluded subparts
+void ViewDependentPart::restoreOccluded(const ViewDependentPart& fullPart){
+    //std::cout << "before\n";
+    //this->print();
+    for (size_t i=0;i<partIds.size();++i){
+        for (size_t j=0;j<partIds[i].size();++j){
+            if (partIds[i][j]==-3){
+                //std::cout << "restore subpart\n";
+                partsPosNorm[i][j]=fullPart.partsPosNorm[i][j];
+                partIds[i][j]=fullPart.partIds[i][j];
+                gaussians[i][j]=fullPart.gaussians[i][j];
+                subpartsProb[i][j]=fullPart.subpartsProb[i][j];
+                offsets[i][j]=fullPart.offsets[i][j];
+                restored[i][j]=true;
+            }
+        }
+    }
+    //std::cout << "after\n";
+    //this->print();
+    //getchar();
 }
 
 /// check if part is background
@@ -1155,17 +1228,25 @@ double ViewDependentPart::computeError(const ViewDependentPart& partA, const Vie
                     //std::cout << "error tmp " << errorRot << "\n";
                 }
             }
-            else if ((partA.partIds[i][j]<0)&&(partB.partIds[i][j]<0)){
+            else if ((partA.partIds[i][j]==-1||partA.partIds[i][j]==-2)&&(partB.partIds[i][j]==-1||partB.partIds[i][j]==-2)){
                 errorPos+=0.0;
                 errorRot+=0.0;
-                //std::cout << "error bckgr rot " << errorRot << "\n";
-                //std::cout << "error bckgr pos " << errorPos << "\n";
+            }
+            else if ((partA.partIds[i][j]==-3)&&(partB.partIds[i][j]==-3)){
+                errorPos+=0.0;
+                errorRot+=0.0;
             }
             else if ((partA.partIds[i][j]<0&&partB.partIds[i][j]>=0)||(partA.partIds[i][j]>=0&&partB.partIds[i][j]<0)){
                 errorPos+=0.5;
                 errorRot+=0.5;
-                //std::cout << "error bckgr diff rot " << errorRot << "\n";
-                //std::cout << "error bckgr diff pos " << errorPos << "\n";
+            }
+            /*else if ((partAids(i,j)==-3&&partBids(i,j)>=0)||(partAids(i,j)>=0&&partBids(i,j)==-3)){
+                errorPos+=0.5;
+                errorRot+=0.5;
+            }*/
+            else if ((partA.partIds[i][j]==-3&&(partB.partIds[i][j]==-1||partB.partIds[i][j]==-2))||((partA.partIds[i][j]==-1||partA.partIds[i][j]==-2)&&partB.partIds[i][j]==-3)){
+                errorPos+=0.5;
+                errorRot+=0.5;
             }
         }
     }
@@ -1210,7 +1291,7 @@ double ViewDependentPart::computeError(const PointsSecondLayer& partA, const Poi
                     //std::cout << "error rot " << errorRot << "\n";
                 }
             }
-            else if ((partAids(i,j)==-1||partAids(i,j)==-2)&&(partBids(i,j)==-1||partBids(i,j)<-2)){
+            else if ((partAids(i,j)==-1||partAids(i,j)==-2)&&(partBids(i,j)==-1||partBids(i,j)==-2)){
                 errorPos+=0.0;
                 errorRot+=0.0;
             }
@@ -1222,10 +1303,10 @@ double ViewDependentPart::computeError(const PointsSecondLayer& partA, const Poi
                 errorPos+=0.5;
                 errorRot+=0.5;
             }
-            else if ((partAids(i,j)==-3&&partBids(i,j)>=0)||(partAids(i,j)>=0&&partBids(i,j)==-3)){
+            /*else if ((partAids(i,j)==-3&&partBids(i,j)>=0)||(partAids(i,j)>=0&&partBids(i,j)==-3)){
                 errorPos+=0.5;
                 errorRot+=0.5;
-            }
+            }*/
             else if ((partAids(i,j)==-3&&(partBids(i,j)==-1||partBids(i,j)==-2))||((partAids(i,j)==-1||partAids(i,j)==-2)&&partBids(i,j)==-3)){
                 errorPos+=0.5;
                 errorRot+=0.5;
@@ -1269,7 +1350,7 @@ double ViewDependentPart::computeError(const PointsThirdLayer& partA, const Poin
                     //std::cout << "error rot " << errorRot << "\n";
                 }
             }
-            else if ((partAids(i,j)==-1||partAids(i,j)==-2)&&(partBids(i,j)==-1||partBids(i,j)<-2)){
+            else if ((partAids(i,j)==-1||partAids(i,j)==-2)&&(partBids(i,j)==-1||partBids(i,j)==-2)){
                 errorPos+=0.0;
                 errorRot+=0.0;
             }
@@ -1281,10 +1362,10 @@ double ViewDependentPart::computeError(const PointsThirdLayer& partA, const Poin
                 errorPos+=0.5;
                 errorRot+=0.5;
             }
-            else if ((partAids(i,j)==-3&&partBids(i,j)>=0)||(partAids(i,j)>=0&&partBids(i,j)==-3)){
+            /*else if ((partAids(i,j)==-3&&partBids(i,j)>=0)||(partAids(i,j)>=0&&partBids(i,j)==-3)){
                 errorPos+=0.5;
                 errorRot+=0.5;
-            }
+            }*/
             else if ((partAids(i,j)==-3&&(partBids(i,j)==-1||partBids(i,j)==-2))||((partAids(i,j)==-1||partAids(i,j)==-2)&&partBids(i,j)==-3)){
                 errorPos+=0.5;
                 errorRot+=0.5;
