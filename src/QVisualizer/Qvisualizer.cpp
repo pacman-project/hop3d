@@ -498,8 +498,8 @@ void QGLVisualizer::updateHierarchy(){
             }
             std::cout << "layer "<< i+2 << " size: " << hierarchy->viewDependentLayers[i].size() << "\n";
             for (auto &part : hierarchy->viewDependentLayers[i]){
-                if (!part.isComplete())
-                    hierarchy->reconstructPart(part, i);
+                //if (!part.isComplete())
+                    //hierarchy->reconstructPart(part, i);
                 cloudsListLayersVD[i+1].push_back(createPartList(part, int(i+1)));
                 clustersListVD[i+1].push_back(createClustersList(part, int(i+1)));
             }
@@ -821,35 +821,71 @@ void QGLVisualizer::drawPart(const ViewDependentPart& part, int layerNo, bool dr
     glPushMatrix();
     //flipIds(part.partIds);// because it's more natural for user
     //flipGaussians(part.gaussians);
-    for (size_t n = 0; n < part.partIds.size(); n++){
-        for (size_t m = 0; m < part.partIds[n].size(); m++){
-            int id = part.partIds[n][m];
-            Vec3 posPart(part.partsPosNorm[n][m].mean.block<3,1>(0,0));
-            if (n==1&&m==1)
-                posPart=Vec3(0,0,0);
-            double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1), posPart(2), 1};
-            glPushMatrix();
-                glMultMatrixd(GLmat1);
-                if (id<0){
-                    //glColor3ub(100,50,50);
-                    glCallList(backgroundList[layerNo-1]);
-                    if (id==-3)
-                        drawEllipsoid(Vec3(0,0,0),Mat33::Identity()*0.00001);
-                }
-                else{
-                    if (part.restored[n][m]){
-                        glColor3d(1.0,0,0);
-                        //drawEllipsoid(Vec3(0,0,0),Mat33::Identity()*0.00001);
+    if (layerNo==1){
+        for (size_t n = 0; n < part.partIds.size(); n++){
+            for (size_t m = 0; m < part.partIds[n].size(); m++){
+                int id = part.partIds[n][m];
+                Vec3 posPart(part.partsPosNorm[n][m].mean.block<3,1>(0,0));
+                if (n==1&&m==1)
+                    posPart=Vec3(0,0,0);
+                double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1), posPart(2), 1};
+                glPushMatrix();
+                    glMultMatrixd(GLmat1);
+                    if (id<0){
+                        //glColor3ub(100,50,50);
+                        glCallList(backgroundList[layerNo-1]);
+                        if (id==-3)
+                            drawEllipsoid(Vec3(0,0,0),Mat33::Identity()*0.00001);
                     }
-                    else
-                        glColor3d(r, g, b);
-                    drawPatch(Vec3(part.partsPosNorm[n][m].mean.block<3,1>(3,0)));
-                    if (drawEllipse){
-                        glColor3d(config.covarianceColor.red(), config.covarianceColor.green(), config.covarianceColor.blue());
-                        drawEllipsoid(Vec3(0,0,0),part.partsPosNorm[n][m].covariance.block<3,3>(0,0));
+                    else{
+                        if (part.restored[n][m]){
+                            glColor3d(1.0,0,0);
+                            //drawEllipsoid(Vec3(0,0,0),Mat33::Identity()*0.00001);
+                        }
+                        else
+                            glColor3d(r, g, b);
+                        drawPatch(Vec3(part.partsPosNorm[n][m].mean.block<3,1>(3,0)));
+                        if (drawEllipse){
+                            glColor3d(config.covarianceColor.red(), config.covarianceColor.green(), config.covarianceColor.blue());
+                            drawEllipsoid(Vec3(0,0,0),part.partsPosNorm[n][m].covariance.block<3,3>(0,0));
+                        }
                     }
-                }
-            glPopMatrix();
+                glPopMatrix();
+            }
+        }
+    }
+    else if (layerNo==2){
+        for (size_t n = 0; n < part.partIds.size(); n++){
+            for (size_t m = 0; m < part.partIds[n].size(); m++){
+                int id = part.partIds[n][m];
+                Vec3 posPart(part.partsPosNorm[n][m].mean.block<3,1>(0,0));
+                if (n==1&&m==1)
+                    posPart=Vec3(0,0,0);
+                double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1), posPart(2), 1};
+                glPushMatrix();
+                    glMultMatrixd(GLmat1);
+                    if (id<0){
+                        //glColor3ub(100,50,50);
+                        glCallList(backgroundList[layerNo-1]);
+                    }
+                    else{
+                        if (config.drawCovariance)
+                            drawEllipsoid(Vec3(0,0,0),part.partsPosNorm[n][m].covariance.block<3,3>(0,0));
+                        //drawNormal(part.partsPosNorm[n][m].mean.block<3,1>(3,0));
+                        glColor3d(0.1,0.9,0.1);
+                        Mat34 offset = part.offsets[n][m];
+                        double GLmat2[16]={offset(0,0), offset(1,0), offset(2,0), 0, offset(0,1), offset(1,1), offset(2,1), 0, offset(0,2), offset(1,2), offset(2,2), 0, offset(0,3), offset(1,3), offset(2,3), 1};
+                        glMultMatrixd(GLmat2);
+                        glPushMatrix();
+                        if (part.restored[n][m]){
+                            drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, config.drawCovariance, 1.0,0,0);
+                        }
+                        else
+                            drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, config.drawCovariance, r,g,b);
+                        glPopMatrix();
+                    }
+                glPopMatrix();
+            }
         }
     }
     glPopMatrix();
@@ -1048,44 +1084,43 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
     glNewList(index, GL_COMPILE);
     if (layerNo==1){
         glColor3d(0.5,0.5,0.5);
+        if (!part.isComplete()){
+            ViewDependentPart partCopy(part);
+            int idsimpart = hierarchy->reconstructPart(partCopy, layerNo-1);
+            //double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,0,0.01, 1};
+            //glPushMatrix();
+            //glMultMatrixd(GLmat1);
+            drawPart(partCopy, layerNo,config.drawCovariance, 0.0,0.5,0.0);
+            //glPopMatrix();
+            //drawPart(hierarchy->viewDependentLayers[0][idsimpart], layerNo,config.drawCovariance, 0.0,0.0,0.8);
+        }
         if (config.surfaceType==1)
             drawPartMesh(part,0.5,0.5,0.5);
         else if (config.surfaceType==0)
             drawPart(part, layerNo,config.drawCovariance, 0.5,0.5,0.5);
     }
     else if (layerNo==2){
-        for (size_t n = 0; n < part.partIds.size(); n++){
-            for (size_t m = 0; m < part.partIds[n].size(); m++){
-                int id = part.partIds[n][m];
-                Vec3 posPart(part.partsPosNorm[n][m].mean.block<3,1>(0,0));
-                if (n==1&&m==1)
-                    posPart=Vec3(0,0,0);
-                double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, posPart(0), posPart(1), posPart(2), 1};
-                glPushMatrix();
-                    glMultMatrixd(GLmat1);
-                    if (id<0){
-                        //glColor3ub(100,50,50);
-                        glCallList(backgroundList[layerNo-1]);
-                    }
-                    else{
-                        if (config.drawCovariance)
-                            drawEllipsoid(Vec3(0,0,0),part.partsPosNorm[n][m].covariance.block<3,3>(0,0));
-                        //drawNormal(part.partsPosNorm[n][m].mean.block<3,1>(3,0));
-                        glColor3d(0.1,0.9,0.1);
-                        Mat34 offset = part.offsets[n][m];
-                        double GLmat2[16]={offset(0,0), offset(1,0), offset(2,0), 0, offset(0,1), offset(1,1), offset(2,1), 0, offset(0,2), offset(1,2), offset(2,2), 0, offset(0,3), offset(1,3), offset(2,3), 1};
-                        glMultMatrixd(GLmat2);
-                        glPushMatrix();
-                        if (part.restored[n][m]){
-                            drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, config.drawCovariance, 1.0,0,0);
-                        }
-                        else
-                            drawPart(hierarchy.get()->viewDependentLayers[0][id], layerNo-1, config.drawCovariance, 0.5,0.5,0.5);
-                        glPopMatrix();
-                    }
-                glPopMatrix();
-            }
+        glColor3d(0.5,0.5,0.5);
+        if (!part.isComplete()){
+            ViewDependentPart partCopy(part);
+            int idsimpart = hierarchy->reconstructPart(partCopy, layerNo-1);
+            //double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,0,0.01, 1};
+            //glPushMatrix();
+            //glMultMatrixd(GLmat1);
+            drawPart(partCopy, layerNo,config.drawCovariance, 0.0,0.8,0.0);
+            //glPopMatrix();
+            Mat34 estTrans; int rotIdx;
+            ViewDependentPart::distanceInvariant(hierarchy->viewDependentLayers[1][idsimpart],part,3, hierarchy.get()->viewDependentLayers[0],estTrans, rotIdx);
+            double GLmat1[16]={estTrans(0,0), estTrans(1,0), estTrans(2,0), 0, estTrans(0,1), estTrans(1,1), estTrans(2,1), 0, estTrans(0,2), estTrans(1,2), estTrans(2,2), 0, estTrans(0,3),estTrans(1,3),estTrans(2,3), 1};
+            glPushMatrix();
+            glMultMatrixd(GLmat1);
+            drawPart(hierarchy->viewDependentLayers[1][idsimpart], layerNo,config.drawCovariance, 0.0,0.0,0.8);
+            glPopMatrix();
         }
+        if (config.surfaceType==1)
+            drawPartMesh(part,0.5,0.5,0.5);
+        else if (config.surfaceType==0)
+            drawPart(part, layerNo,config.drawCovariance, 0.5,0.5,0.5);
     }
     else if (layerNo==3){
         for (size_t n = 0; n < part.partIds.size(); n++){

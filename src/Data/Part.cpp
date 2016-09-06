@@ -1,6 +1,7 @@
 #include "hop3d/Data/Part.h"
 #include "hop3d/Data/Vocabulary.h"
 #include "hop3d/ImageFilter/normalImageFilter.h"
+#include "hop3d/Data/hop3dmath.h"
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl/io/pcd_io.h>
@@ -70,8 +71,8 @@ bool ViewDependentPart::isComplete(void) const{
 }
 
 /// fitness subpart
-double ViewDependentPart::subpartFitness(const Vec6& point, size_t row, size_t col) const{
-    std::cout << "point " << point.transpose() << "\n";
+double ViewDependentPart::subpartFitness(const Vec6& point, size_t row, size_t col, const Mat34& transform) const{
+    /*std::cout << "point " << point.transpose() << "\n";
     std::cout << "point2 " << partsPosNorm[row][col].mean.transpose() << "\n";
     std::cout << "res " << (1/sqrt(pow(2*M_PI,6)*partsPosNorm[row][col].mean.norm()))*exp(-0.5*(point-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(point-partsPosNorm[row][col].mean)) << "\n";
     std::cout << "(1/sqrt(pow(2*M_PI,6)*partsPosNorm[row][col].mean.norm())) " << (1/sqrt(pow(2*M_PI,6)*partsPosNorm[row][col].mean.norm())) << "\n";
@@ -79,54 +80,219 @@ double ViewDependentPart::subpartFitness(const Vec6& point, size_t row, size_t c
     std::cout << "partsPosNorm[row][col].covariance.inverse() " << partsPosNorm[row][col].covariance.inverse() << "\n";
     std::cout << "(-0.5*(point-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(point-partsPosNorm[row][col].mean)) " << (-0.5*(point-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(point-partsPosNorm[row][col].mean)) << "\n";
     std::cout << "exp(-0.5*(point-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(point-partsPosNorm[row][col].mean)) " << exp(-0.5*(point-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(point-partsPosNorm[row][col].mean)) << "\n";
-    //getchar();
-    double res = (1/sqrt(pow(2*M_PI,6)*partsPosNorm[row][col].mean.norm()))*exp(-0.5*(point-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(point-partsPosNorm[row][col].mean));
-    if (std::isnan(res))
+    //getchar();*/
+    //std::cout << "point subart " << partsPosNorm[row][col].mean.transpose() << "\n";
+    //std::cout << "point before transformation " << point.transpose() << "\n";
+    Vec6 pointTransformed(point);
+    hop3d::transform(pointTransformed,transform);
+    /*std::cout << "point transformed " << pointTransformed.transpose() << "\n";
+    std::cout << "dist bef trans " << (point.block<3,1>(0,0)-partsPosNorm[row][col].mean.block<3,1>(0,0)).norm() << "\n";
+    std::cout << "dist af trans " << (point.block<3,1>(0,0)-pointTransformed.block<3,1>(0,0)).norm() << "\n";
+    std::cout << "dist norm bef trans " << (point.block<3,1>(0,0)-partsPosNorm[row][col].mean.block<3,1>(3,0)).norm() << "\n";
+    std::cout << "dist norm af trans " << (point.block<3,1>(0,0)-pointTransformed.block<3,1>(3,0)).norm() << "\n";
+    */
+    double res = (1/sqrt(pow(2*M_PI,6)*partsPosNorm[row][col].mean.norm()))*exp(-0.5*(pointTransformed-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(pointTransformed-partsPosNorm[row][col].mean));
+    if (std::isnan(res)||std::isinf(res))
         return 0;
     else
         return res;
 }
 
 /// restore occluded subparts
-double ViewDependentPart::distanceStats(const ViewDependentPart& part) const{
+double ViewDependentPart::distanceStats(const ViewDependentPart& part, const ViewDependentPart::Seq& layer1, const ViewDependentPart::Seq& layer2, int& rotId, Mat34& estimatedTransform) const{
+    std::vector<std::pair<int, int>> pointCorrespondence = {{0,0}, {0,1}, {0,2}, {1,2}, {2,2}, {2,1}, {2,0}, {1,0}};
     double fit=0;
-    for (size_t i=0;i<part.partIds.size();++i){
-        for (size_t j=0;j<part.partIds[i].size();++j){
-            if ((part.partIds[i][j]==-1||part.partIds[i][j]==-2)&&(partIds[i][j]==-1||partIds[i][j]==-2)){
-                auto it = subpartsProb[i][j].find(part.partIds[i][j]);
-                if (it == subpartsProb[i][j].end())
-                    fit+=0;
-                else
-                    fit+=subpartsProb[i][j].at(part.partIds[i][j]);
+    /*std::cout << "this: \n";
+    this->print();
+    std::cout << "part: \n";*/
+    if (part.layerId==2){//first layer is slightly different
+        findOptimalTransformation(part,*this, 3, estimatedTransform, rotId);
+        int idx=rotId;
+        for (size_t i=0;i<pointCorrespondence.size()+1;i++){
+            int coordA[2]; int coordB[2];
+            if (i==pointCorrespondence.size()){
+                coordA[0]=1; coordA[1]=1;
+                coordB[0]=1; coordB[1]=1;
             }
-            if (partIds[i][j]>0){
-                auto it = subpartsProb[i][j].find(part.partIds[i][j]);
-                if (it == subpartsProb[i][j].end())
-                    fit+=0;
-                else
-                    fit+=subpartsProb[i][j].at(part.partIds[i][j])*subpartFitness(part.partsPosNorm[i][j].mean, i,j);
+            else{
+                coordA[0]=pointCorrespondence[i].first; coordA[1]=pointCorrespondence[i].second;//partA is not rotated
+                coordB[0]=pointCorrespondence[idx%(pointCorrespondence.size())].first; coordB[1]=pointCorrespondence[idx%(pointCorrespondence.size())].second;//partA is not rotated
             }
+            //std::cout << coordA[0] << ", " << coordA[1] << "->" << coordB[0] << ", " << coordB[1] << "\n";
+            //std::cout << "0part.partIds[i][j], thisids: " << part.partIds[coordA[0]][coordA[1]] << ", " << partIds[coordB[0]][coordB[1]] << "\n";
+            if (part.partIds[coordA[0]][coordA[1]]==-3){
+                fit+=0;
+                //std::cout << "0fit1+0\n";
+            }
+            if ((part.partIds[coordA[0]][coordA[1]]==-1||part.partIds[coordA[0]][coordA[1]]==-2)&&(partIds[coordB[0]][coordB[1]]==-1||partIds[coordB[0]][coordB[1]]==-2)){
+                //std::cout << "0fit2+1\n";
+                //fit+=0.0000001;
+                auto it = subpartsProb[coordB[0]][coordB[1]].find(-1);
+                if (it == subpartsProb[coordB[0]][coordB[1]].end()){
+                    fit+=0;
+                }
+                else {
+                    fit+=subpartsProb[coordB[0]][coordB[1]].at(-1);
+                }
+                it = subpartsProb[coordB[0]][coordB[1]].find(-2);
+                if (it == subpartsProb[coordB[0]][coordB[1]].end()){
+                    fit+=0;
+                }
+                else {
+                    fit+=subpartsProb[coordB[0]][coordB[1]].at(-2);
+                }
+            }
+            if (((part.partIds[coordA[0]][coordA[1]]==-1||part.partIds[coordA[0]][coordA[1]]==-2)&&partIds[coordB[0]][coordB[1]]>=0)||((partIds[coordB[0]][coordB[1]]==-1||partIds[coordB[0]][coordB[1]]==-2)&&part.partIds[coordA[0]][coordA[1]]>=0)){
+                //std::cout << "0fit3+0\n";
+                fit+=0;
+            }
+            if (part.partIds[coordA[0]][coordA[1]]>=0&&partIds[coordB[0]][coordB[1]]>=0){
+            //if (partIds[i][j]>0&&part.partIds[i][j]>0){
+                //std::cout << ", subpartFitness(part.partsPosNorm[i][j].mean, i,j) " << subpartFitness(part.partsPosNorm[coordA[0]][coordA[1]].mean, coordB[0],coordB[1], estimatedTransform) << "\n";
+                fit+=1+subpartFitness(part.partsPosNorm[coordA[0]][coordA[1]].mean, coordB[0],coordB[1], estimatedTransform);
+            }
+            //getchar();
+            idx++;
         }
+        /*size_t idx=rotId;
+        for (size_t i=0;i<pointCorrespondence.size()+1;i++){
+            findOptimalTransformation()
+            int coordA[2]; int coordB[2];
+            if (i==pointCorrespondence.size()){
+                coordA[0]=1; coordA[1]=1;
+                coordB[0]=1; coordB[1]=1;
+            }
+            else{
+                coordA[0]=pointCorrespondence[i].first; coordA[1]=pointCorrespondence[i].second;//partA is not rotated
+                coordB[0]=pointCorrespondence[idx%(pointCorrespondence.size())].first; coordB[1]=pointCorrespondence[idx%(pointCorrespondence.size())].second;//partA is not rotated
+            }
+            //std::cout << "0part.partIds[i][j], thisids: " << part.partIds[i][j] << ", " << partIds[i][j] << "\n";
+            if (part.partIds[coordA[0]][coordA[1]]==-3){
+                fit+=0;
+                //std::cout << "0fit1+0\n";
+            }
+            if ((part.partIds[coordA[0]][coordA[1]]==-1||part.partIds[coordA[0]][coordA[1]]==-2)&&(partIds[coordB[0]][coordB[1]]==-1||partIds[coordB[0]][coordB[1]]==-2)){
+                //std::cout << "0fit2+1\n";
+                fit+=1;
+            }
+            else if ((part.partIds[coordA[0]][coordA[1]]==-1||part.partIds[coordA[0]][coordA[1]]==-2)||(partIds[coordB[0]][coordB[1]]==-1||partIds[coordB[0]][coordB[1]]==-2)){
+                //std::cout << "0fit3+0\n";
+                fit+=0;
+            }
+            else{
+            //if (partIds[i][j]>0&&part.partIds[i][j]>0){
+                //std::cout << ", subpartFitness(part.partsPosNorm[i][j].mean, i,j) " << subpartFitness(part.partsPosNorm[i][j].mean, i,j) << "\n";
+                fit+=subpartFitness(part.partsPosNorm[coordA[0]][coordA[1]].mean, coordB[0],coordB[1]);
+            }
+            //getchar();
+            idx++;
+        }*/
+    }
+    else{
+        findOptimalTransformation(part,*this, layer1, 3, estimatedTransform, rotId);
+        int idx=rotId;
+        for (size_t i=0;i<pointCorrespondence.size()+1;i++){
+            int coordA[2]; int coordB[2];
+            if (i==pointCorrespondence.size()){
+                coordA[0]=1; coordA[1]=1;
+                coordB[0]=1; coordB[1]=1;
+            }
+            else{
+                coordA[0]=pointCorrespondence[i].first; coordA[1]=pointCorrespondence[i].second;//partA is not rotated
+                coordB[0]=pointCorrespondence[idx%(pointCorrespondence.size())].first; coordB[1]=pointCorrespondence[idx%(pointCorrespondence.size())].second;//partA is not rotated
+            }
+            //std::cout << coordA[0] << ", " << coordA[1] << "->" << coordB[0] << ", " << coordB[1] << "\n";
+            //std::cout << "0part.partIds[i][j], thisids: " << part.partIds[coordA[0]][coordA[1]] << ", " << partIds[coordB[0]][coordB[1]] << "\n";
+            if (part.partIds[coordA[0]][coordA[1]]==-3){
+                fit+=0;
+                //std::cout << "0fit1+0\n";
+            }
+            if ((part.partIds[coordA[0]][coordA[1]]==-1||part.partIds[coordA[0]][coordA[1]]==-2)&&(partIds[coordB[0]][coordB[1]]==-1||partIds[coordB[0]][coordB[1]]==-2)){
+                //std::cout << "0fit2+1\n";
+                auto it = subpartsProb[coordB[0]][coordB[1]].find(part.partIds[coordA[0]][coordA[1]]);
+                if (it == subpartsProb[coordB[0]][coordB[1]].end()){
+                    //std::cout << "fit+0\n";
+                    fit+=0;
+                }
+                else {
+                    //std::cout << "subpartsProb[i][j].at(part.partIds[i][j]): " << subpartsProb[i][j].at(part.partIds[i][j]) << "\n";
+                    fit+=subpartsProb[coordB[0]][coordB[1]].at(part.partIds[coordA[0]][coordA[1]]);
+                }
+            }
+            if (((part.partIds[coordA[0]][coordA[1]]==-1||part.partIds[coordA[0]][coordA[1]]==-2)&&partIds[coordB[0]][coordB[1]]>=0)||((partIds[coordB[0]][coordB[1]]==-1||partIds[coordB[0]][coordB[1]]==-2)&&part.partIds[coordA[0]][coordA[1]]>=0)){
+                //std::cout << "0fit3+0\n";
+                fit+=0;
+            }
+            if (part.partIds[coordA[0]][coordA[1]]>=0&&partIds[coordB[0]][coordB[1]]>=0){
+                auto it = subpartsProb[coordB[0]][coordB[1]].find(part.partIds[coordA[0]][coordA[1]]);
+                if (it == subpartsProb[coordB[0]][coordB[1]].end()){
+                    //std::cout << "fit1+0\n";
+                    fit+=0;
+                }
+                else{
+                    //std::cout << "subpartsProb[i][j].at(part.partIds[i][j]) " << subpartsProb[i][j].at(part.partIds[i][j]) << ", subpartFitness(part.partsPosNorm[i][j].mean, i,j) " << subpartFitness(part.partsPosNorm[i][j].mean, i,j) << "\n";
+                    //std::cout << "fit+ " << subpartsProb[i][j].at(part.partIds[i][j])*subpartFitness(part.partsPosNorm[i][j].mean, i,j) << "\n";
+                    fit+=1+subpartsProb[coordB[0]][coordB[1]].at(part.partIds[coordA[0]][coordA[1]])*subpartFitness(part.partsPosNorm[coordA[0]][coordA[1]].mean, coordB[0],coordB[1], estimatedTransform);
+                }
+            }
+            //getchar();
+            idx++;
+        }
+        /*for (size_t i=0;i<part.partIds.size();++i){
+            for (size_t j=0;j<part.partIds[i].size();++j){
+                //std::cout << "part.partIds[i][j], thisids: " << part.partIds[i][j] << ", " << partIds[i][j] << "\n";
+                if ((part.partIds[i][j]==-1||part.partIds[i][j]==-2)&&(partIds[i][j]==-1||partIds[i][j]==-2)){
+                    auto it = subpartsProb[i][j].find(part.partIds[i][j]);
+                    if (it == subpartsProb[i][j].end()){
+                        //std::cout << "fit+0\n";
+                        fit+=0;
+                    }
+                    else {
+                        //std::cout << "subpartsProb[i][j].at(part.partIds[i][j]): " << subpartsProb[i][j].at(part.partIds[i][j]) << "\n";
+                        fit+=subpartsProb[i][j].at(part.partIds[i][j]);
+                    }
+                }
+                else{
+                //if (partIds[i][j]>0&&part.partIds[i][j]>0){
+                    auto it = subpartsProb[i][j].find(part.partIds[i][j]);
+                    if (it == subpartsProb[i][j].end()){
+                        //std::cout << "fit1+0\n";
+                        fit+=0;
+                    }
+                    else{
+                        //std::cout << "subpartsProb[i][j].at(part.partIds[i][j]) " << subpartsProb[i][j].at(part.partIds[i][j]) << ", subpartFitness(part.partsPosNorm[i][j].mean, i,j) " << subpartFitness(part.partsPosNorm[i][j].mean, i,j) << "\n";
+                        //std::cout << "fit+ " << subpartsProb[i][j].at(part.partIds[i][j])*subpartFitness(part.partsPosNorm[i][j].mean, i,j) << "\n";
+                        fit+=subpartsProb[i][j].at(part.partIds[i][j])*subpartFitness(part.partsPosNorm[i][j].mean, i,j,Mat34::Identity());
+                    }
+                }
+                //getchar();
+            }
+        }*/
     }
     return fit;
 }
 
 /// restore occluded subparts
-void ViewDependentPart::restoreOccluded(const ViewDependentPart& fullPart){
+void ViewDependentPart::restoreOccluded(const ViewDependentPart& fullPart, int rotId, const Mat34& transform){
+    std::vector<std::pair<int, int>> pointCorrespondence = {{0,0}, {0,1}, {0,2}, {1,2}, {2,2}, {2,1}, {2,0}, {1,0}};
     //std::cout << "before\n";
     //this->print();
-    for (size_t i=0;i<partIds.size();++i){
-        for (size_t j=0;j<partIds[i].size();++j){
-            if (partIds[i][j]==-3){
-                //std::cout << "restore subpart\n";
-                partsPosNorm[i][j]=fullPart.partsPosNorm[i][j];
-                partIds[i][j]=fullPart.partIds[i][j];
-                gaussians[i][j]=fullPart.gaussians[i][j];
-                subpartsProb[i][j]=fullPart.subpartsProb[i][j];
-                offsets[i][j]=fullPart.offsets[i][j];
-                restored[i][j]=true;
-            }
+    size_t idx=rotId;
+    for (size_t j=0;j<pointCorrespondence.size();j++){
+        int coordA[2]={pointCorrespondence[j].first, pointCorrespondence[j].second};//partA is not rotated
+        int coordB[2]={pointCorrespondence[idx%(pointCorrespondence.size())].first, pointCorrespondence[idx%(pointCorrespondence.size())].second};//partA is not rotated
+        if (partIds[coordA[0]][coordA[1]]==-3){
+            //std::cout << "restore subpart\n";
+            Vec6 posNorm(fullPart.partsPosNorm[coordB[0]][coordB[1]].mean);
+            hop3d::transform(posNorm,transform);
+            partsPosNorm[coordA[0]][coordA[1]].mean=posNorm;
+            partIds[coordA[0]][coordA[1]]=fullPart.partIds[coordB[0]][coordB[1]];
+            gaussians[coordA[0]][coordA[1]]=fullPart.gaussians[coordB[0]][coordB[1]];
+            subpartsProb[coordA[0]][coordA[1]]=fullPart.subpartsProb[coordB[0]][coordB[1]];
+            offsets[coordA[0]][coordA[1]]=fullPart.offsets[coordB[0]][coordB[1]];
+            restored[coordA[0]][coordA[1]]=true;
         }
+        idx++;
     }
     //std::cout << "after\n";
     //this->print();
@@ -1205,6 +1371,7 @@ double ViewDependentPart::computeError(const ViewDependentPart& partA, const Vie
     //partA.print();
     //partB.print();
     //std::cout << "transformation \n" << transformation.matrix() << "\n";
+    double coeffC=1.0;
     for (size_t i=0; i<partA.partIds.size();i++){
         for (size_t j=0; j<partA.partIds.size();j++){
             if ((partA.partIds[i][j]>=0)&&(partB.partIds[i][j]>=0)){
@@ -1236,17 +1403,17 @@ double ViewDependentPart::computeError(const ViewDependentPart& partA, const Vie
                 errorPos+=0.0;
                 errorRot+=0.0;
             }
-            else if ((partA.partIds[i][j]<0&&partB.partIds[i][j]>=0)||(partA.partIds[i][j]>=0&&partB.partIds[i][j]<0)){
-                errorPos+=0.5;
-                errorRot+=0.5;
+            else if (((partA.partIds[i][j]==-1||partA.partIds[i][j]==-2)&&partB.partIds[i][j]>=0)||(partA.partIds[i][j]>=0&&(partB.partIds[i][j]==-1||partB.partIds[i][j]==-2))){
+                errorPos+=coeffC;
+                errorRot+=coeffC;
             }
-            /*else if ((partAids(i,j)==-3&&partBids(i,j)>=0)||(partAids(i,j)>=0&&partBids(i,j)==-3)){
-                errorPos+=0.5;
-                errorRot+=0.5;
-            }*/
+            else if ((partA.partIds[i][j]==-3&&partB.partIds[i][j]!=-3)||(partA.partIds[i][j]!=-3&&partB.partIds[i][j]==-3)){
+                errorPos+=coeffC;
+                errorRot+=coeffC;
+            }
             else if ((partA.partIds[i][j]==-3&&(partB.partIds[i][j]==-1||partB.partIds[i][j]==-2))||((partA.partIds[i][j]==-1||partA.partIds[i][j]==-2)&&partB.partIds[i][j]==-3)){
-                errorPos+=0.5;
-                errorRot+=0.5;
+                errorPos+=coeffC;
+                errorRot+=coeffC;
             }
         }
     }
@@ -1262,6 +1429,7 @@ double ViewDependentPart::computeError(const PointsSecondLayer& partA, const Poi
     double errorRot=0;
     double errorPos=0;
     int correspondencesNo=0;
+    double coeffC=1.0;
     for (size_t i=0; i<partA.size();i++){
         for (size_t j=0; j<partA[i].size();j++){
             if ((partAids(i,j)>=0)&&(partBids(i,j)>=0)){
@@ -1299,17 +1467,17 @@ double ViewDependentPart::computeError(const PointsSecondLayer& partA, const Poi
                 errorPos+=0.0;
                 errorRot+=0.0;
             }
-            else if ((partAids(i,j)<0&&partBids(i,j)>=0)||(partAids(i,j)>=0&&partBids(i,j)<0)){
-                errorPos+=0.5;
-                errorRot+=0.5;
+            else if (((partAids(i,j)==-1||partAids(i,j)==-2)&&partBids(i,j)>=0)||(partAids(i,j)>=0&&(partBids(i,j)==-1||partBids(i,j)==-2))){
+                errorPos+=coeffC;
+                errorRot+=coeffC;
             }
-            /*else if ((partAids(i,j)==-3&&partBids(i,j)>=0)||(partAids(i,j)>=0&&partBids(i,j)==-3)){
-                errorPos+=0.5;
-                errorRot+=0.5;
-            }*/
+            else if ((partAids(i,j)==-3&&partBids(i,j)!=-3)||(partAids(i,j)!=-3&&partBids(i,j)==-3)){
+                errorPos+=coeffC;
+                errorRot+=coeffC;
+            }
             else if ((partAids(i,j)==-3&&(partBids(i,j)==-1||partBids(i,j)==-2))||((partAids(i,j)==-1||partAids(i,j)==-2)&&partBids(i,j)==-3)){
-                errorPos+=0.5;
-                errorRot+=0.5;
+                errorPos+=coeffC;
+                errorRot+=coeffC;
             }
         }
     }
@@ -1321,6 +1489,7 @@ double ViewDependentPart::computeError(const PointsThirdLayer& partA, const Poin
     double errorRot=0;
     double errorPos=0;
     int correspondencesNo=0;
+    double coeffC =1.0;
     for (size_t i=0; i<partA.size();i++){
         for (size_t j=0; j<partA[i].size();j++){
             if ((partAids(i,j)>=0)&&(partBids(i,j)>=0)){
@@ -1358,17 +1527,17 @@ double ViewDependentPart::computeError(const PointsThirdLayer& partA, const Poin
                 errorPos+=0.0;
                 errorRot+=0.0;
             }
-            else if ((partAids(i,j)<0&&partBids(i,j)>=0)||(partAids(i,j)>=0&&partBids(i,j)<0)){
-                errorPos+=0.5;
-                errorRot+=0.5;
+            else if (((partAids(i,j)==-1||partAids(i,j)==-2)&&partBids(i,j)>=0)||(partAids(i,j)>=0&&(partBids(i,j)==-1||partBids(i,j)==-2))){
+                errorPos+=coeffC;
+                errorRot+=coeffC;
             }
-            /*else if ((partAids(i,j)==-3&&partBids(i,j)>=0)||(partAids(i,j)>=0&&partBids(i,j)==-3)){
-                errorPos+=0.5;
-                errorRot+=0.5;
-            }*/
+            else if ((partAids(i,j)==-3&&partBids(i,j)!=-3)||(partAids(i,j)!=-3&&partBids(i,j)==-3)){
+                errorPos+=coeffC;
+                errorRot+=coeffC;
+            }
             else if ((partAids(i,j)==-3&&(partBids(i,j)==-1||partBids(i,j)==-2))||((partAids(i,j)==-1||partAids(i,j)==-2)&&partBids(i,j)==-3)){
-                errorPos+=0.5;
-                errorRot+=0.5;
+                errorPos+=coeffC;
+                errorRot+=coeffC;
             }
         }
     }

@@ -155,7 +155,7 @@ void Hierarchy::computeStats(void){
 }
 
 /// reconstruct part
-void Hierarchy::reconstructPart(ViewDependentPart& _part, size_t layerNo) const{
+int Hierarchy::reconstructPart(ViewDependentPart& _part, size_t layerNo) const{
     if (layerNo>=viewDependentLayers.size()){
         throw std::runtime_error("Compute stats: wrong layer no \n");
     }
@@ -163,20 +163,78 @@ void Hierarchy::reconstructPart(ViewDependentPart& _part, size_t layerNo) const{
         double maxFit = std::numeric_limits<double>::min();
         int maxId=0;
         int partId=0;
+        int maxRotId=0;
+        Mat34 maxTransform;
         for (const auto& part : viewDependentLayers[layerNo]){
             if (part.isComplete()){
-                double fit=part.distanceStats(_part);
-                std::cout << "fit " << fit << " fit2 " << _part.distanceStats(part) << "\n";
+                int rotId; Mat34 estimatedTransform;
+                double fit=part.distanceStats(_part, viewDependentLayers[0], viewDependentLayers[1], rotId, estimatedTransform);
+                //std::cout << "fit " << fit << " rotId " << rotId << " estTrans \n" << estimatedTransform.matrix() << "\n";
+                //getchar();
+                //std::cout << "fit " << fit << " fit2 " << _part.distanceStats(part, rotId, estima) << "\n";
                 if (fit>maxFit){
                     maxFit=fit;
                     maxId=partId;
+                    maxRotId=rotId;
+                    maxTransform = estimatedTransform;
                 }
             }
             partId++;
         }
         //restore occluded subparts
-        _part.restoreOccluded(viewDependentLayers[layerNo][maxId]);
+
+        if (layerNo==1){
+            /*std::cout << "before restoration:\n";
+            for(int i=0;i<3;i++){
+                for(int j=0;j<3;j++){
+                    std::cout << _part.partIds[i][j] << ", ";
+                }
+                std::cout << "\n";
+            }
+            for(int i=0;i<3;i++){
+                for(int j=0;j<3;j++){
+                    std::cout << _part.partsPosNorm[i][j].mean.block<3,1>(0,0).transpose() << ", ";
+                }
+                std::cout << "\n";
+            }
+            std::cout << "most similar part:\n";
+            for(int i=0;i<3;i++){
+                for(int j=0;j<3;j++){
+                    std::cout << viewDependentLayers[layerNo][maxId].partIds[i][j] << ", ";
+                }
+                std::cout << "\n";
+            }
+            for(int i=0;i<3;i++){
+                for(int j=0;j<3;j++){
+                    std::cout << viewDependentLayers[layerNo][maxId].partsPosNorm[i][j].mean.block<3,1>(0,0).transpose() << ", ";
+                }
+                std::cout << "\n";
+            }*/
+        }
+        _part.restoreOccluded(viewDependentLayers[layerNo][maxId], maxRotId, maxTransform.inverse());
+        /*if (layerNo==1){
+            std::cout << "max roty id " << maxRotId << " transform \n" << maxTransform.matrix() << "\n";
+            std::cout << "after restoration:\n";
+            for(int i=0;i<3;i++){
+                for(int j=0;j<3;j++){
+                    std::cout << _part.partIds[i][j] << ", ";
+                }
+                std::cout << "\n";
+            }
+            for(int i=0;i<3;i++){
+                for(int j=0;j<3;j++){
+                    std::cout << _part.partsPosNorm[i][j].mean.block<3,1>(0,0).transpose() << ", ";
+                }
+                std::cout << "\n";
+            }
+            Vec4 pp(0,0.005,-0.001,1);
+            std::cout << "test " << (maxTransform*pp).transpose() << "\n";
+            std::cout << "test2 " << (maxTransform.inverse()*pp).transpose() << "\n";
+            //getchar();
+        }*/
+        return maxId;
     }
+    return -1;
 }
 
 // Insertion operator

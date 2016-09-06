@@ -212,13 +212,13 @@ public:
     bool isComplete(void) const;
 
     /// fitness subpart
-    double subpartFitness(const Vec6& point, size_t row, size_t col) const;
+    double subpartFitness(const Vec6& point, size_t row, size_t col, const Mat34& transform) const;
 
     /// restore occluded subparts
-    void restoreOccluded(const ViewDependentPart& fullPart);
+    void restoreOccluded(const ViewDependentPart& fullPart, int rotId, const Mat34& transform);
 
     /// restore occluded subparts
-    double distanceStats(const ViewDependentPart& part) const;
+    double distanceStats(const ViewDependentPart& part, const ViewDependentPart::Seq& layer1, const ViewDependentPart::Seq& layer2, int& rotId, Mat34& estimatedTransform) const;
 
     /// Print
     void print() const;

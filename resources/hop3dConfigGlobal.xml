@@ -4,7 +4,7 @@
   <!--type:
 	0 - Boris dataset
 	1 - Pacman dataset-->
-    <Dataset datasetType="0" configFilename="hop3dDatasetBorisGrasp.xml" configFilenameTest="hop3dDatasetBorisTest.xml" configFilenameIncremental="hop3dDatasetBorisIncremental.xml">
+    <Dataset datasetType="0" configFilename="hop3dDatasetBoris.xml" configFilenameTest="hop3dDatasetBorisTest.xml" configFilenameIncremental="hop3dDatasetBorisIncremental.xml">
 <!--      <Dataset datasetType="1" configFilename="hop3dDatasetPacman.xml" configFilenameTest="hop3dDatasetPacman.xml"> -->
   </Dataset>
   

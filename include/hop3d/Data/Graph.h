@@ -83,7 +83,7 @@ public:
     void computeVDStats(int layerNo);
 
     /// reconstruct part
-    void reconstructPart(ViewDependentPart& _part, size_t layerNo) const;
+    int reconstructPart(ViewDependentPart& _part, size_t layerNo) const;
 
     /// Construction
     Hierarchy(std::string configFilename);

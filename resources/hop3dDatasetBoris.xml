@@ -7,27 +7,7 @@
 		  1 -> show debug output 
     -->
     <parameters verbose="1" categoriesNo="1" type="pcl" path="../../Datasets/ObjectDB-2014-Boris-v7"></parameters>
-    <Category0 name="cup" objectsNo="1">
-      <Object0 name="cup1" imagesNo="7">
-	<Image0 name="data-points_raw-cup1-1.pcd" />
-	<Image1 name="data-points_raw-cup1-2.pcd" />
-	<Image2 name="data-points_raw-cup1-3.pcd" />
-	<Image3 name="data-points_raw-cup1-4.pcd" />
-	<Image4 name="data-points_raw-cup1-5.pcd" />
-	<Image5 name="data-points_raw-cup1-6.pcd" />
-	<Image6 name="data-points_raw-cup1-7.pcd" />
-      </Object0>
-      <Object1 name="cup2" imagesNo="7">
-	<Image0 name="data-points_raw-cup2-1.pcd" />
-	<Image1 name="data-points_raw-cup2-2.pcd" />
-	<Image2 name="data-points_raw-cup2-3.pcd" />
-	<Image3 name="data-points_raw-cup2-4.pcd" />
-	<Image4 name="data-points_raw-cup2-5.pcd" />
-	<Image5 name="data-points_raw-cup2-6.pcd" />
-	<Image6 name="data-points_raw-cup2-7.pcd" />
-      </Object1>
-    </Category0>
-    <Category1 name="mug" objectsNo="1">
+    <Category0 name="mug" objectsNo="1">
       <Object0 name="mug2" imagesNo="7">
 	<Image0 name="data2-points_raw-mug2-1.pcd" />
 	<Image1 name="data2-points_raw-mug2-2.pcd" />
@@ -73,6 +53,26 @@
 	<Image5 name="data-points_raw-mug5-6.pcd" />
 	<Image6 name="data-points_raw-mug5-7.pcd" />
       </Object4>
+    </Category0>
+    <Category1 name="cup" objectsNo="1">
+      <Object0 name="cup1" imagesNo="7">
+	<Image0 name="data-points_raw-cup1-1.pcd" />
+	<Image1 name="data-points_raw-cup1-2.pcd" />
+	<Image2 name="data-points_raw-cup1-3.pcd" />
+	<Image3 name="data-points_raw-cup1-4.pcd" />
+	<Image4 name="data-points_raw-cup1-5.pcd" />
+	<Image5 name="data-points_raw-cup1-6.pcd" />
+	<Image6 name="data-points_raw-cup1-7.pcd" />
+      </Object0>
+      <Object1 name="cup2" imagesNo="7">
+	<Image0 name="data-points_raw-cup2-1.pcd" />
+	<Image1 name="data-points_raw-cup2-2.pcd" />
+	<Image2 name="data-points_raw-cup2-3.pcd" />
+	<Image3 name="data-points_raw-cup2-4.pcd" />
+	<Image4 name="data-points_raw-cup2-5.pcd" />
+	<Image5 name="data-points_raw-cup2-6.pcd" />
+	<Image6 name="data-points_raw-cup2-7.pcd" />
+      </Object1>
     </Category1>
     <Category2 name="bowl" objectsNo="1">
       <Object0 name="bowl" imagesNo="7">
