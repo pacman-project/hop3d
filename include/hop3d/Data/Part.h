@@ -8,6 +8,7 @@
 #include <vector>
 #include <iostream>
 #include <set>
+#include <map>
 
 namespace hop3d {
 
