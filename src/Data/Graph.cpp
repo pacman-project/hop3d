@@ -57,6 +57,7 @@ void Hierarchy::computeVDStats(int layerNo){
                     }
                     if (part.partIds[coordA[0]][coordA[1]]>=0&&partFromCluster.partIds[coordB[0]][coordB[1]]>=0){
                         Vec4 posPoint(partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(0,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(1,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(2,0),1.0);
+                        //Mat34 offset(partFromCluster.offsets[coordB[0]][coordB[1]]);
                         //std::cout << "before trans " << posPoint.transpose() << "\n";
                         posPoint = estTrans*posPoint;
                         //std::cout << "after trans " << posPoint.transpose() << "\n";
@@ -127,7 +128,7 @@ void Hierarchy::computeVDStats(int layerNo){
                 }
                 partNo++;
             }
-            for (int i=0;i<3;i++){
+            for (int i=0;i<3;i++){//update part
                 for (int j=0;j<3;j++){
                     if (part.partIds[i][j]>=0){
                         subpartsPos[i][j].covariance*=1.0/double(subpartsNo[i][j]);
@@ -140,6 +141,7 @@ void Hierarchy::computeVDStats(int layerNo){
                             subpartsPos[i][j].covariance = Mat66::Identity()*std::numeric_limits<double>::epsilon();
                         }
                         part.partsPosNorm[i][j].covariance=subpartsPos[i][j].covariance;
+                        //part.offsets[i][j]=Mat34::Identity();
                     }
                 }
             }

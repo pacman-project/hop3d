@@ -85,13 +85,15 @@ double ViewDependentPart::subpartFitness(const Vec6& point, size_t row, size_t c
     //std::cout << "point before transformation " << point.transpose() << "\n";
     Vec6 pointTransformed(point);
     hop3d::transform(pointTransformed,transform);
+    Vec6 meanOffset(partsPosNorm[row][col].mean);
+    hop3d::transform(meanOffset,offsets[row][col]);
     /*std::cout << "point transformed " << pointTransformed.transpose() << "\n";
     std::cout << "dist bef trans " << (point.block<3,1>(0,0)-partsPosNorm[row][col].mean.block<3,1>(0,0)).norm() << "\n";
     std::cout << "dist af trans " << (point.block<3,1>(0,0)-pointTransformed.block<3,1>(0,0)).norm() << "\n";
     std::cout << "dist norm bef trans " << (point.block<3,1>(0,0)-partsPosNorm[row][col].mean.block<3,1>(3,0)).norm() << "\n";
     std::cout << "dist norm af trans " << (point.block<3,1>(0,0)-pointTransformed.block<3,1>(3,0)).norm() << "\n";
     */
-    double res = (1/sqrt(pow(2*M_PI,6)*partsPosNorm[row][col].mean.norm()))*exp(-0.5*(pointTransformed-partsPosNorm[row][col].mean).transpose()*partsPosNorm[row][col].covariance.inverse()*(pointTransformed-partsPosNorm[row][col].mean));
+    double res = (1/sqrt(pow(2*M_PI,6)*meanOffset.norm()))*exp(-0.5*(pointTransformed-meanOffset).transpose()*partsPosNorm[row][col].covariance.inverse()*(pointTransformed-meanOffset));
     if (std::isnan(res)||std::isinf(res))
         return 0;
     else
@@ -121,7 +123,10 @@ double ViewDependentPart::distanceStats(const ViewDependentPart& part, const Vie
             //std::cout << coordA[0] << ", " << coordA[1] << "->" << coordB[0] << ", " << coordB[1] << "\n";
             //std::cout << "0part.partIds[i][j], thisids: " << part.partIds[coordA[0]][coordA[1]] << ", " << partIds[coordB[0]][coordB[1]] << "\n";
             if (part.partIds[coordA[0]][coordA[1]]==-3){
-                fit+=0;
+                if (partIds[coordB[0]][coordB[1]]>=0)
+                    fit+=1;
+                else
+                    fit+=0;
                 //std::cout << "0fit1+0\n";
             }
             if ((part.partIds[coordA[0]][coordA[1]]==-1||part.partIds[coordA[0]][coordA[1]]==-2)&&(partIds[coordB[0]][coordB[1]]==-1||partIds[coordB[0]][coordB[1]]==-2)){
@@ -188,7 +193,7 @@ double ViewDependentPart::distanceStats(const ViewDependentPart& part, const Vie
             idx++;
         }*/
     }
-    else{
+    else if (part.layerId==3){
         findOptimalTransformation(part,*this, layer1, 3, estimatedTransform, rotId);
         int idx=rotId;
         for (size_t i=0;i<pointCorrespondence.size()+1;i++){
@@ -204,7 +209,10 @@ double ViewDependentPart::distanceStats(const ViewDependentPart& part, const Vie
             //std::cout << coordA[0] << ", " << coordA[1] << "->" << coordB[0] << ", " << coordB[1] << "\n";
             //std::cout << "0part.partIds[i][j], thisids: " << part.partIds[coordA[0]][coordA[1]] << ", " << partIds[coordB[0]][coordB[1]] << "\n";
             if (part.partIds[coordA[0]][coordA[1]]==-3){
-                fit+=0;
+                if (partIds[coordB[0]][coordB[1]]>=0)
+                    fit+=1;
+                else
+                    fit+=0;
                 //std::cout << "0fit1+0\n";
             }
             if ((part.partIds[coordA[0]][coordA[1]]==-1||part.partIds[coordA[0]][coordA[1]]==-2)&&(partIds[coordB[0]][coordB[1]]==-1||partIds[coordB[0]][coordB[1]]==-2)){
@@ -232,7 +240,9 @@ double ViewDependentPart::distanceStats(const ViewDependentPart& part, const Vie
                 else{
                     //std::cout << "subpartsProb[i][j].at(part.partIds[i][j]) " << subpartsProb[i][j].at(part.partIds[i][j]) << ", subpartFitness(part.partsPosNorm[i][j].mean, i,j) " << subpartFitness(part.partsPosNorm[i][j].mean, i,j) << "\n";
                     //std::cout << "fit+ " << subpartsProb[i][j].at(part.partIds[i][j])*subpartFitness(part.partsPosNorm[i][j].mean, i,j) << "\n";
-                    fit+=1+subpartsProb[coordB[0]][coordB[1]].at(part.partIds[coordA[0]][coordA[1]])*subpartFitness(part.partsPosNorm[coordA[0]][coordA[1]].mean, coordB[0],coordB[1], estimatedTransform);
+                    Vec6 meanOffset(part.partsPosNorm[coordA[0]][coordA[1]].mean);
+                    hop3d::transform(meanOffset,part.offsets[coordA[0]][coordA[1]]);
+                    fit+=1+subpartsProb[coordB[0]][coordB[1]].at(part.partIds[coordA[0]][coordA[1]])*subpartFitness(meanOffset, coordB[0],coordB[1], estimatedTransform);
                 }
             }
             //getchar();
@@ -289,7 +299,9 @@ void ViewDependentPart::restoreOccluded(const ViewDependentPart& fullPart, int r
             partIds[coordA[0]][coordA[1]]=fullPart.partIds[coordB[0]][coordB[1]];
             gaussians[coordA[0]][coordA[1]]=fullPart.gaussians[coordB[0]][coordB[1]];
             subpartsProb[coordA[0]][coordA[1]]=fullPart.subpartsProb[coordB[0]][coordB[1]];
-            offsets[coordA[0]][coordA[1]]=fullPart.offsets[coordB[0]][coordB[1]];
+            Mat34 transformRot(transform);//we need rotation only because translation is in mean value
+            transformRot.matrix().block<3,1>(0,3)=Vec3(0,0,0);
+            offsets[coordA[0]][coordA[1]]=transformRot*fullPart.offsets[coordB[0]][coordB[1]];
             restored[coordA[0]][coordA[1]]=true;
         }
         idx++;
