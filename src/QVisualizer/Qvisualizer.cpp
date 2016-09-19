@@ -132,7 +132,7 @@ QGLVisualizer::QGLVisualizer(std::string configFile) :
     std::string filename = configFile;
     configXML.LoadFile(filename.c_str());
     if (configXML.ErrorID())
-		throw std::runtime_error("unable to load visualizer config file: " + filename);
+        throw std::runtime_error("unable to load visualizer config file: " + filename);
 }
 
 /// Destruction
@@ -518,7 +518,7 @@ void QGLVisualizer::updateHierarchy(){
         mtxHierarchy.unlock();
     }
     else{
-		std::this_thread::sleep_for(std::chrono::microseconds(20000));
+        std::this_thread::sleep_for(std::chrono::microseconds(20000));
     }
 }
 
@@ -1103,28 +1103,20 @@ GLuint QGLVisualizer::createPartList(const ViewDependentPart& part, int layerNo)
         glColor3d(0.5,0.5,0.5);
         if (!part.isComplete()){
             ViewDependentPart partCopy(part);
-            //part.print();
-            std::cout << "przed rekonstruckjic\n";
-            partCopy.print();
             int idsimpart = hierarchy->reconstructPart(partCopy, layerNo-1);
-            //std::cout << "part id " << part.id << " reconstructed by part " << idsimpart << "\n";
             //double GLmat1[16]={1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,0,0.01, 1};
             //glPushMatrix();
             //glMultMatrixd(GLmat1);
-            drawPart(partCopy, layerNo, config.drawCovariance, 0.0,0.8,0.0);
-            /*std::cout << "po rekonstruckjic\n";
-            partCopy.print();
-            std::cout << "rekonstruckjic na podstawie\n";
-            hierarchy->viewDependentLayers[1][idsimpart].print();
-            std::cout << "\n\n\n\n\n\n\n\n";
-            getchar();*/
+            drawPart(partCopy, layerNo,config.drawCovariance, 0.0,0.8,0.0);
             //glPopMatrix();
             Mat34 estTrans; int rotIdx;
+            //ViewDependentPart::distanceInvariant(hierarchy->viewDependentLayers[1][idsimpart],part,3, hierarchy.get()->viewDependentLayers[0],estTrans, rotIdx);
+            //double GLmat1[16]={estTrans(0,0), estTrans(1,0), estTrans(2,0), 0, estTrans(0,1), estTrans(1,1), estTrans(2,1), 0, estTrans(0,2), estTrans(1,2), estTrans(2,2), 0, estTrans(0,3),estTrans(1,3),estTrans(2,3), 1};
             double ddd = ViewDependentPart::findOptimalTransformation(hierarchy->viewDependentLayers[1][idsimpart],part,hierarchy.get()->viewDependentLayers[0],3,estTrans, rotIdx);
             //std::cout << "distance " << ddd << " est trans:\n" << estTrans.matrix() << "\n";
             //hierarchy->viewDependentLayers[1][idsimpart].print();
             //getchar();
-            double GLmat1[16]={estTrans(0,0), estTrans(1,0), estTrans(2,0), 0, estTrans(0,1), estTrans(1,1), estTrans(2,1), 0, estTrans(0,2), estTrans(1,2), estTrans(2,2), 0, estTrans(0,3),estTrans(1,3),estTrans(2,3)+0.01, 1};
+            double GLmat1[16]={estTrans(0,0), estTrans(1,0), estTrans(2,0), 0, estTrans(0,1), estTrans(1,1), estTrans(2,1), 0, estTrans(0,2), estTrans(1,2), estTrans(2,2), 0, estTrans(0,3),estTrans(1,3),estTrans(2,3), 1};
             glPushMatrix();
             glMultMatrixd(GLmat1);
             drawPart(hierarchy->viewDependentLayers[1][idsimpart], layerNo,config.drawCovariance, 0.0,0.0,0.8);

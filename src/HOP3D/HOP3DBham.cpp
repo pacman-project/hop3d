@@ -855,14 +855,10 @@ void HOP3DBham::loadInference(std::string filename){
     //visualization
 #ifdef QVisualizerBuild
     if (config.useVisualization){
-        std::cout << "fd1\n";
         createObjsFromParts(true);
-        std::cout << "fd2\n";
         std::this_thread::sleep_for(std::chrono::seconds(5));
         notify3Dmodels();
-        std::cout << "fd3\n";
-        //createPartClouds(true);
-        std::cout << "fd4\n";
+        createPartClouds(true);
     }
 #endif
     std::cout << "Finished\n";
@@ -1187,10 +1183,10 @@ void HOP3DBham::notifyVisualizer(void){
 #ifdef QVisualizerBuild
     if (config.useVisualization){
         notify(*hierarchy);
-        //createObjsFromParts(false);
+        createObjsFromParts(false);
         std::this_thread::sleep_for(std::chrono::seconds(5));
-        //notify3Dmodels();
-        //createPartClouds(false);
+        notify3Dmodels();
+        createPartClouds(false);
         // draw parts coordinates
         /*std::vector<ViewIndependentPart::Part3D> parts;
         getPartsRealisation(0,0,0, parts);
