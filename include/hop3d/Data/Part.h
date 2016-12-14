@@ -165,10 +165,10 @@ public:
     static int createPointsMatrix(const ViewDependentPart& part, const ViewDependentPart::Seq& vocabularyLayer2, const ViewDependentPart::Seq& vocabularyLayer3, int rotIndex, PointsThirdLayer& points, Eigen::MatrixXd& partIds);
 
     /// find SE3 transformation
-    static bool findSE3Transformation(const PointsSecondLayer& pointsA, const PointsSecondLayer& pointsB, Mat34& trans);
+    static bool findSE3Transformation(const PointsSecondLayer& pointsA, const PointsSecondLayer& pointsB, Mat34& trans, int estType);
 
     /// find SE3 transformation
-    static bool findSE3Transformation(const PointsThirdLayer& pointsA, const PointsThirdLayer& pointsB, Mat34& trans);
+    static bool findSE3Transformation(const PointsThirdLayer& pointsA, const PointsThirdLayer& pointsB, Mat34& trans, int estType);
 
     /// compute distance between view dependent parts
     static double distance(const ViewDependentPart& partA, const ViewDependentPart& partB, const Filter::Seq& filters, int distanceMetric);
@@ -223,6 +223,9 @@ public:
 
     /// Print
     void print() const;
+private:
+    // The input 3D points are stored as columns.
+    static Eigen::Affine3d Find3DAffineTransform(Eigen::Matrix3Xd in, Eigen::Matrix3Xd out);
 };
 
 class ViewIndependentPart{

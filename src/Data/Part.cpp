@@ -907,6 +907,64 @@ bool ViewDependentPart::removeSecondSurface(ViewDependentPart& part, double dist
     return true;
 }
 
+// The input 3D points are stored as columns.
+Eigen::Affine3d ViewDependentPart::Find3DAffineTransform(Eigen::Matrix3Xd in, Eigen::Matrix3Xd out) {
+
+  // Default output
+  Eigen::Affine3d A;
+  A.linear() = Eigen::Matrix3d::Identity(3, 3);
+  A.translation() = Eigen::Vector3d::Zero();
+
+  if (in.cols() != out.cols())
+    throw "Find3DAffineTransform(): input data mis-match";
+
+  // First find the scale, by finding the ratio of sums of some distances,
+  // then bring the datasets to the same scale.
+  double dist_in = 0, dist_out = 0;
+  for (int col = 0; col < in.cols()-1; col++) {
+    dist_in  += (in.col(col+1) - in.col(col)).norm();
+    dist_out += (out.col(col+1) - out.col(col)).norm();
+  }
+  if (dist_in <= 0 || dist_out <= 0)
+    return A;
+  double scale = dist_out/dist_in;
+  out /= scale;
+
+  // Find the centroids then shift to the origin
+  Eigen::Vector3d in_ctr = Eigen::Vector3d::Zero();
+  Eigen::Vector3d out_ctr = Eigen::Vector3d::Zero();
+  for (int col = 0; col < in.cols(); col++) {
+    in_ctr  += in.col(col);
+    out_ctr += out.col(col);
+  }
+  in_ctr /= in.cols();
+  out_ctr /= out.cols();
+  for (int col = 0; col < in.cols(); col++) {
+    in.col(col)  -= in_ctr;
+    out.col(col) -= out_ctr;
+  }
+
+  // SVD
+  Eigen::MatrixXd Cov = in * out.transpose();
+  Eigen::JacobiSVD<Eigen::MatrixXd> svd(Cov, Eigen::ComputeThinU | Eigen::ComputeThinV);
+
+  // Find the rotation
+  double d = (svd.matrixV() * svd.matrixU().transpose()).determinant();
+  if (d > 0)
+    d = 1.0;
+  else
+    d = -1.0;
+  Eigen::Matrix3d I = Eigen::Matrix3d::Identity(3, 3);
+  I(2, 2) = d;
+  Eigen::Matrix3d R = svd.matrixV() * I * svd.matrixU().transpose();
+
+  // The final transform
+  A.linear() = scale * R;
+  A.translation() = scale*(out_ctr - R*in_ctr);
+
+  return A;
+}
+
 ///find optimal transformation between normals
 double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& partA, const ViewDependentPart& partB, int distanceMetric, Mat34& transOpt, int& rotId){
     std::vector<std::pair<int, int>> pointCorrespondence = {{0,0}, {0,1}, {0,2}, {1,2}, {2,2}, {2,1}, {2,0}, {1,0}};
@@ -961,9 +1019,15 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
                     pointsB(col,pairNo) = setB[pairNo](col);
                 }
             }
-            Eigen::Matrix4d trans1 = Eigen::umeyama(pointsA,pointsB,false);
-            trans.matrix() = trans1;
-            trans(2,3)=0;
+            //std::cout << "pointsA \n" << pointsA << "\n";
+            //std::cout << "pointsB \n" << pointsB << "\n";
+            Eigen::Matrix4d transUmeyama = Eigen::umeyama(pointsA,pointsB,false);
+            //std::cout << "trans without umeyama\n" << trans1 << "\n";
+            Eigen::Matrix4d transUmeyamaScale = Eigen::umeyama(pointsA,pointsB,true);
+            //std::cout << "trans with umeyama\n" << trans2 << "\n";
+            Eigen::Affine3d transNew = Find3DAffineTransform(pointsA,pointsB);
+            //std::cout << "new method \n" << A.matrix() << "\n";
+            //trans(2,3)=0;
             //trans = putslam::KabschEst::computeTrans(pointsA, pointsB);
             //std::cout << "transss\n" << trans.matrix() << "\n";
 
@@ -977,9 +1041,34 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
                 partD.offsets[coordA[0]][coordA[1]] = partB.offsets[coordB[0]][coordB[1]];
                 idx++;
             }
-
-            double error = computeError(partA, partD, trans, distanceMetric, 0.1);
-            trans(2,3)=trans1(2,3);
+            trans.matrix() = transUmeyama;
+            trans(2,3)=0;
+            double errorUmeyama = computeError(partA, partD, trans, distanceMetric, 0.1);
+            //std::cout << "error without umeyama: " << errorUmeyama <<" \n";
+            trans.matrix() = transUmeyamaScale;
+            trans(2,3)=0;
+            double errorUmeyamaScale = computeError(partA, partD, trans, distanceMetric, 0.1);
+            //std::cout << "error with umeyama: " << errorUmeyamaScale <<" \n";
+            trans.matrix() = transNew.matrix();
+            trans(2,3)=0;
+            double errorNew = computeError(partA, partD, trans, distanceMetric, 0.1);
+            //std::cout << "error with new method: " << errorNew <<" \n";
+            double error;
+            if (errorUmeyama<errorUmeyamaScale){
+                error=errorUmeyama;
+                trans.matrix()=transUmeyama;
+            }
+            else{
+                error=errorUmeyamaScale;
+                trans.matrix()=transUmeyamaScale;
+            }
+            if (errorNew<error){
+                error = errorNew;
+                trans.matrix() = transNew.matrix();
+            }
+            //std::cout << "min error " << error <<"\n";
+            //getchar();
+            //trans(2,3)=trans1(2,3);
             if (error<minDist){
                 minDist=error;
                 transOpt = trans;
@@ -1133,7 +1222,7 @@ int ViewDependentPart::createPointsMatrix(const ViewDependentPart& part, const V
 }
 
 /// find SE3 transformation
-bool ViewDependentPart::findSE3Transformation(const PointsSecondLayer& pointsA, const PointsSecondLayer& pointsB, Mat34& trans){
+bool ViewDependentPart::findSE3Transformation(const PointsSecondLayer& pointsA, const PointsSecondLayer& pointsB, Mat34& trans, int estType){
     std::vector<Vec3> setA; std::vector<Vec3> setB;
     int pairsNo=0;
     for (int i=0;i<(int)pointsA.size();i++){
@@ -1154,7 +1243,16 @@ bool ViewDependentPart::findSE3Transformation(const PointsSecondLayer& pointsA, 
                 psB(col,pairNo) = setB[pairNo](col);
             }
         }
-        Eigen::Matrix4d transform = Eigen::umeyama(psA,psB,false);
+        Eigen::Matrix4d transform;
+        if (estType==0)
+            transform= Eigen::umeyama(psA,psB,false);
+        else if (estType==1)
+            transform = Eigen::umeyama(psA,psB,true);
+        else if (estType==2){
+            Eigen::Affine3d transNew = Find3DAffineTransform(psA,psB);
+            transform = transNew.matrix();
+        }
+
         trans.matrix() = transform;
         return true;
     }
@@ -1165,7 +1263,7 @@ bool ViewDependentPart::findSE3Transformation(const PointsSecondLayer& pointsA, 
 }
 
 /// find SE3 transformation
-bool ViewDependentPart::findSE3Transformation(const PointsThirdLayer& pointsA, const PointsThirdLayer& pointsB, Mat34& trans){
+bool ViewDependentPart::findSE3Transformation(const PointsThirdLayer& pointsA, const PointsThirdLayer& pointsB, Mat34& trans, int estType){
     std::vector<Vec3> setA; std::vector<Vec3> setB;
     int pairsNo=0;
     for (int i=0;i<(int)pointsA.size();i++){
@@ -1186,7 +1284,15 @@ bool ViewDependentPart::findSE3Transformation(const PointsThirdLayer& pointsA, c
                 psB(col,pairNo) = setB[pairNo](col);
             }
         }
-        Eigen::Matrix4d transform = Eigen::umeyama(psA,psB,false);
+        Eigen::Matrix4d transform;
+        if (estType==0)
+            transform= Eigen::umeyama(psA,psB,false);
+        else if (estType==1)
+            transform = Eigen::umeyama(psA,psB,true);
+        else if (estType==2){
+            Eigen::Affine3d transNew = Find3DAffineTransform(psA,psB);
+            transform = transNew.matrix();
+        }
         trans.matrix() = transform;
         return true;
     }
@@ -1336,7 +1442,29 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
         int pointsNoB = createPointsMatrix(partB, vocabulary, (int)i, pointsB, partBids);
         if (pointsNoA>4&&pointsNoB>4){
             Mat34 trans;
-            if (findSE3Transformation(pointsA, pointsB,trans)){
+            if (findSE3Transformation(pointsA, pointsB,trans,0)){
+                Mat34 trans1(trans);
+                trans(2,3)=0;
+                double error = computeError(pointsA, pointsB, partAids, partBids, trans, distanceMetric, 1.0);
+                trans(2,3)=trans1(2,3);
+                if (error<minDist){
+                    minDist=error;
+                    transOpt = trans;
+                    rotId = (int)i;
+                }
+            }
+            if (findSE3Transformation(pointsA, pointsB,trans,1)){
+                Mat34 trans1(trans);
+                trans(2,3)=0;
+                double error = computeError(pointsA, pointsB, partAids, partBids, trans, distanceMetric, 1.0);
+                trans(2,3)=trans1(2,3);
+                if (error<minDist){
+                    minDist=error;
+                    transOpt = trans;
+                    rotId = (int)i;
+                }
+            }
+            if (findSE3Transformation(pointsA, pointsB,trans,2)){
                 Mat34 trans1(trans);
                 trans(2,3)=0;
                 double error = computeError(pointsA, pointsB, partAids, partBids, trans, distanceMetric, 1.0);
@@ -1363,7 +1491,29 @@ double ViewDependentPart::findOptimalTransformation(const ViewDependentPart& par
         int pointsNoB = createPointsMatrix(partB, vocabularyLayer2, vocabularyLayer3, (int)i, pointsB, partBids);
         if (pointsNoA>4&&pointsNoB>4){
             Mat34 trans;
-            if (findSE3Transformation(pointsA, pointsB,trans)){
+            if (findSE3Transformation(pointsA, pointsB,trans,0)){
+                Mat34 trans1(trans);
+                trans(2,3)=0;
+                double error = computeError(pointsA, pointsB, partAids, partBids, trans, distanceMetric, 1.0);
+                trans(2,3)=trans1(2,3);
+                if (error<minDist){
+                    minDist=error;
+                    transOpt = trans;
+                    rotId = (int)i;
+                }
+            }
+            if (findSE3Transformation(pointsA, pointsB,trans,1)){
+                Mat34 trans1(trans);
+                trans(2,3)=0;
+                double error = computeError(pointsA, pointsB, partAids, partBids, trans, distanceMetric, 1.0);
+                trans(2,3)=trans1(2,3);
+                if (error<minDist){
+                    minDist=error;
+                    transOpt = trans;
+                    rotId = (int)i;
+                }
+            }
+            if (findSE3Transformation(pointsA, pointsB,trans,2)){
                 Mat34 trans1(trans);
                 trans(2,3)=0;
                 double error = computeError(pointsA, pointsB, partAids, partBids, trans, distanceMetric, 1.0);
@@ -1393,9 +1543,12 @@ double ViewDependentPart::computeError(const ViewDependentPart& partA, const Vie
                 if ((type == 1)||((type == 3))){
                     Eigen::Matrix<double, 4, 1> posPrim;
                     posPrim(0) = partA.partsPosNorm[i][j].mean(0); posPrim(1) = partA.partsPosNorm[i][j].mean(1); posPrim(2) = partA.partsPosNorm[i][j].mean(2); posPrim(3) = 1;
+                    //std::cout << "point before " << posPrim << "\n";
                     posPrim = transformation * posPrim;
+                    //std::cout << " point transformed " << posPrim << "\n";
                     errorPos+= sqrt((posPrim.block<3,1>(0,0)-partB.partsPosNorm[i][j].mean.block<3,1>(0,0)).transpose()*(posPrim.block<3,1>(0,0)-partB.partsPosNorm[i][j].mean.block<3,1>(0,0)));
-                    //std::cout << "error pos " << errorPos << "\n";
+                    //std::cout << "should be " << partB.partsPosNorm[i][j].mean.block<3,1>(0,0) << "\n";
+                    //std::cout << "error pos " << sqrt((posPrim.block<3,1>(0,0)-partB.partsPosNorm[i][j].mean.block<3,1>(0,0)).transpose()*(posPrim.block<3,1>(0,0)-partB.partsPosNorm[i][j].mean.block<3,1>(0,0))) << "\n";
                 }
                 if ((type == 2)||((type == 3))){
                     double dotprodA = (transformation.rotation()*partA.partsPosNorm[i][j].mean.block<3,1>(3,0)).adjoint()*partB.partsPosNorm[i][j].mean.block<3,1>(3,0);

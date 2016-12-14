@@ -59,6 +59,7 @@ void Hierarchy::computeVDStats(int layerNo){
                         Vec4 posPoint(partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(0,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(1,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(2,0),1.0);
                         //Mat34 offset(partFromCluster.offsets[coordB[0]][coordB[1]]);
                         //std::cout << "before trans " << posPoint.transpose() << "\n";
+                        //Mat34 offset(partFromCluster.offsets[coordB[0]][coordB[1]]);
                         posPoint = estTrans*posPoint;
                         //std::cout << "after trans " << posPoint.transpose() << "\n";
                         Vec3 norm3(partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(3,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(4,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(5,0));
@@ -82,6 +83,7 @@ void Hierarchy::computeVDStats(int layerNo){
                 }
                 if (partFromCluster.partIds[1][1]>=0){
                     Vec4 posPoint(partFromCluster.partsPosNorm[1][1].mean(0,0), partFromCluster.partsPosNorm[1][1].mean(1,0), partFromCluster.partsPosNorm[1][1].mean(2,0),1.0);
+                    //Mat34 offset(partFromCluster.offsets[1][1]);
                     posPoint = estTrans*posPoint;
                     Vec3 norm3(partFromCluster.partsPosNorm[1][1].mean(3,0), partFromCluster.partsPosNorm[1][1].mean(4,0), partFromCluster.partsPosNorm[1][1].mean(5,0));
                     norm3 = estTrans.rotation()*norm3;
@@ -115,6 +117,7 @@ void Hierarchy::computeVDStats(int layerNo){
                     int coordB[2]={pointCorrespondence[idx%(pointCorrespondence.size())].first, pointCorrespondence[idx%(pointCorrespondence.size())].second};//partA is not rotated
                     if (partFromCluster.partIds[coordA[0]][coordA[1]]>=0&&partFromCluster.partIds[coordB[0]][coordB[1]]>=0){
                         Vec4 posPoint(partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(0,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(1,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(2,0),1.0);
+                        //Mat34 offset(partFromCluster.offsets[coordB[0]][coordB[1]]);
                         posPoint = estTrans*posPoint;
                         Vec3 norm3(partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(3,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(4,0), partFromCluster.partsPosNorm[coordB[0]][coordB[1]].mean(5,0));
                         norm3 = estTrans.rotation()*norm3;
