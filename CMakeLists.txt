@@ -433,7 +433,21 @@ endif(BUILD_HOP3D_DEMO AND BUILD_HOP3D_DEMO_NORMAL_FILTERER)
 
 ###############################################################################
 #
-# HOP3D demo Normal filterer
+# HOP3D demo Constellation test
+#
+###############################################################################
+
+if(BUILD_HOP3D_DEMO)
+        SET(DEMO_CONSTELLATION_SOURCES ./src/Apps/Constellation/constellation.cpp)
+        ADD_EXECUTABLE(constellation ${DEMO_CONSTELLATION_SOURCES})
+#        add_dependencies(demoVisualizer Map)
+        TARGET_LINK_LIBRARIES(constellation tinyxml2)
+        INSTALL(TARGETS constellation RUNTIME DESTINATION bin)
+endif(BUILD_HOP3D_DEMO)
+
+###############################################################################
+#
+# HOP3D demo
 #
 ###############################################################################
 
